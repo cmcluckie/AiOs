@@ -39,18 +39,24 @@ admitted; every entry is still `draft`.
     specs/          SPEC clauses: as-intended behaviour, one testable sentence each
     tests/          TST entries: each bound to the clause it can turn red
     sensors/        SNS entries: question, threshold, consumer
-    pool/           admitted source, one directory per component at a version
+    pool/           admitted source we wrote, one directory per component at a version
+    lifted/         admitted source from upstream, each part with an origin record saying exactly where it came from
+    flavors/        one TOML file per flavor: the set of petitions one machine runs
     findings/       what the schema or the plan could not express, and what was decided
     plan/           the project plan, brief and full
     jig/            the gen-zero build host, declared before it existed
     pi/             the bare repository that refuses unsigned pushes
 
-## Building hello
+## Running a flavor
 
-    sh jig/build-0000.sh run
+    sh jig/aios list
+    sh jig/aios run hello
 
-Needs gcc with 32-bit support and qemu-system-x86_64.  Prints the line, exits.
-This script is a placeholder for the builder (plan section 5).
+`aios` is the referee and the builder as one shell script until they are real
+components: `check` resolves every code in the flavor's petitions and refuses
+by rule number and code; `build` collects the components and compiles them;
+`run` boots the result on the flavor's machine.  Needs gcc with 32-bit support
+and qemu-system-x86_64.  In VS Code, Terminal > Run Task > "AiOS: run flavor".
 
 ## How this is made
 
@@ -58,6 +64,16 @@ Chris McLuckie decides and signs.  An AI (Claude) reads source, drafts entries,
 and stages files; it never commits.  The rules that bind both are in
 [CLAUDE.md](CLAUDE.md).  This GitHub repository is a mirror; the authority is a
 bare repository that verifies every signature on push.
+
+## Upstream
+
+Nothing is merged from Linux.  Parts are lifted, with line-numbered provenance
+in `origin.toml`, and watched:
+
+    LINUX=/path/to/linux sh jig/upstream verify    # the records match upstream
+    LINUX=/path/to/linux sh jig/upstream watch     # what upstream touched since
+
+A change that matters is a new version of the part through the door.
 
 ## Licence
 

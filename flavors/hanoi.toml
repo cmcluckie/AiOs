@@ -1,0 +1,3 @@
+name      = "hanoi"
+machine   = "CMP.machine.serial-only@1"
+petitions = ["0001"]

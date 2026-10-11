@@ -1,0 +1,4 @@
+# A flavor: the set of petitions one machine runs.  Flavor hello is petition 0000 alone.
+name      = "hello"
+machine   = "CMP.machine.serial-only@1"
+petitions = ["0000"]

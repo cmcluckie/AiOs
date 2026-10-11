@@ -45,7 +45,7 @@ means a petition's scope for it must be empty.
 ## CMP: a component  (index/cmp/)
 
     kind          = "program"            # program | kernel | driver | library | toolchain | hardware
-    source        = "pool/CMP.hello@1/"  # directory in the pool, nothing outside it
+    source        = "pool/CMP.hello@1/"  # directory under pool/ (ours) or lifted/ (upstream), nothing outside
     licence       = "MIT"
     depends       = []                   # CMP codes needed at run time; empty is a statement, not an omission
     build_depends = ["CMP.toolchain.c@1"]  # CMP codes needed to build; never in the image
@@ -95,6 +95,37 @@ visible: an admitted component with any test at 0 is a finding.
 
 `exercises` is the first answer to finding 13: a CAP no sensor and no test
 ever evidences is a candidate for revocation under tenet 10.
+
+## Origin  (lifted/<code>/origin.toml)
+
+Every part under lifted/ carries one.  It records exactly enough to lift the
+part again from upstream, and to prove the record against upstream.
+
+    [upstream]
+    name       = "linux"
+    repo       = "https://github.com/torvalds/linux.git"   # where it was read
+    canonical  = "git://git.kernel.org/..."                # the authority, if different
+    commit     = "a5ebb76233b7..."                         # full hash
+    committed  = 2026-10-10T16:57:30-07:00                 # that commit's date
+    subject    = "..."                                     # that commit's subject
+    licence    = "GPL-2.0-only"
+
+    [lift]
+    by         = "KEY.chris@1"
+    on         = 2026-10-10T23:30:00-07:00
+    into       = "serial8250.c"                            # the file in this directory
+
+    [[lift.from]]                                          # one per upstream range
+    file   = "drivers/tty/serial/8250/8250_early.c"
+    blob   = "44ec209f..."                                 # object id of that file at the commit
+    lines  = [[86, 98], [131, 152]]                        # inclusive, at that commit
+    what   = "serial_putc, init_port"
+
+    [cut]
+    removed = ["..."]                                      # what the lifted lines held onto
+
+`jig/upstream verify` checks each blob id against the commit; `jig/upstream
+watch` lists upstream commits that touched each range since.
 
 ## As-built spec  (index/cmp/<code>.as-built.md)
 

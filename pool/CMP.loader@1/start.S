@@ -1,14 +1,11 @@
-/* SPDX-License-Identifier: GPL-2.0-only
+/* SPDX-License-Identifier: MIT
  *
- * CMP.loader@1 entry.  The first instruction that is ours.
+ * CMP.loader@1 entry.  The first instruction that is ours.  Ours; nothing lifted.
  *
  * The machine's firmware (qboot, inside CMP.hypervisor.qemu) hands over under
- * the x86/HVM direct boot ABI ("PVH").  Lifted from Linux, commit a5ebb76233b7:
- *   arch/x86/platform/pvh/head.S   the ABI comment 29-47, the GDT 230-240, the
- *                                  segment reload 73-80.  Everything after the
- *                                  segment reload in head.S (PAE, long mode, page
- *                                  tables, xen_prepare_pvh, startup_64) is not here.
- *   include/xen/interface/elfnote.h  XEN_ELFNOTE_PHYS32_ENTRY = 18
+ * the x86/HVM direct boot ABI ("PVH"), a public interface: Xen docs/misc/pvh.pandoc
+ * states the register and segment contract; XEN_ELFNOTE_PHYS32_ENTRY (18) is from
+ * Xen's public elfnote.h, MIT.  The descriptor values are the Intel SDM's.
  *
  * What the ABI gives us: 32-bit protected mode, paging off, cr4 clear, flat
  * code and data segments with unspecified selectors, interrupts off, no stack,

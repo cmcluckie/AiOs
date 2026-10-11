@@ -18,8 +18,8 @@ The detailed plan is plan/full.md; this file is the one to read.
    2.3. Every installed tool has a complete row in the tool table, including how it leaves. [in progress]
    2.4. KVM and QEMU VM definition with one serial port and no NIC, as a petition. [in progress]
 
-3. Referee: no model, no judgment, fails loud. [coming up]
-   3.1. Resolver that checks every code reference resolves to an entry at a version. [coming up]
+3. Referee: no model, no judgment, fails loud. [in progress]
+   3.1. Resolver that checks every code reference resolves to an entry at a version. [in progress]
    3.2. Relation checker for rules 1 to 10 that reports a rule number and a code, nothing else. [coming up]
    3.3. Expiry, status and quorum enforcement. [coming up]
    3.4. Artifact check for rule 11: the built image and VM against the petition. [coming up]
@@ -31,8 +31,8 @@ The detailed plan is plan/full.md; this file is the one to read.
    4.3. Mutation script that breaks hello on purpose and proves the test goes red. [coming up]
    4.4. Sensor runner for SNS.hello.boot-to-output with the threshold as a number. [coming up]
 
-5. Builder: turn an approved petition into the system, deterministically. [coming up]
-   5.1. Translator from a petition file to a Nix expression. [coming up]
+5. Builder: turn an approved petition into the system, deterministically. [in progress]
+   5.1. Translator from a flavor to a build; a shell script now, a Nix expression when the jig exists. [in progress]
    5.2. Build that reproduces bit-identical on two hosts. [coming up]
    5.3. Live and shadow copies, swapped by the referee only on a passing shadow. [coming up]
 
@@ -75,7 +75,7 @@ The detailed plan is plan/full.md; this file is the one to read.
    10.4. First sealed run of hello with no model and no outbound connection. [coming up]
 
 11. Historian, cartographer and bare metal. [coming up]
-   11.1. Historian records what worked, pushes to the Pi, pulls upstream through the door. [coming up]
+   11.1. Historian records what worked, pushes to the Pi, watches upstream against every origin record and lifts again through the door. [in progress]
    11.2. Cartographer maps hardware on arrival from datasheets, never trial and error. [coming up]
    11.3. Purpose agent weights the committee's priorities per machine. [coming up]
    11.4. Gen two: a machine whose purpose is to build other instances of itself. [coming up]

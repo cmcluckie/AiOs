@@ -1,0 +1,20 @@
+{
+  // Press play: Terminal > Run Task > "AiOS: run flavor".  Runs on the jig over
+  // Remote-SSH, or anywhere with gcc -m32 and qemu-system-x86_64.
+  "version": "2.0.0",
+  "inputs": [
+    {
+      "id": "flavor",
+      "type": "pickString",
+      "description": "Which flavor?",
+      "options": ["hello", "hanoi", "both"],
+      "default": "hello"
+    }
+  ],
+  "tasks": [
+    { "label": "AiOS: list",         "type": "shell", "command": "sh jig/aios list",                 "problemMatcher": [] },
+    { "label": "AiOS: check flavor", "type": "shell", "command": "sh jig/aios check ${input:flavor}", "problemMatcher": [] },
+    { "label": "AiOS: build flavor", "type": "shell", "command": "sh jig/aios build ${input:flavor}", "problemMatcher": [], "group": "build" },
+    { "label": "AiOS: run flavor",   "type": "shell", "command": "sh jig/aios run ${input:flavor}",   "problemMatcher": [], "group": { "kind": "test", "isDefault": true } }
+  ]
+}

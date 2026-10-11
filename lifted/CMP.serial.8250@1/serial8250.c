@@ -3,7 +3,8 @@
  * CMP.serial.8250@1: the lines that put a byte on a 16550, and nothing holding
  * their hand.  Exposes CAP.tty.write.  Requires CAP.dev.serial.
  *
- * Lifted from Linux, commit a5ebb76233b79db01e82e061173cb73c6d2b5c6b (2026-10-10):
+ * Lifted from Linux, commit a5ebb76233b79db01e82e061173cb73c6d2b5c6b (2026-10-10).
+ * The machine-readable record is origin.toml beside this file; jig/upstream reads it.
  *   drivers/tty/serial/8250/8250_early.c   serial_putc 86-98, init_port 131-152
  *   arch/x86/kernel/early_printk.c         early_serial_putc 108-116, early_serial_hw_init 128-141
  *   arch/x86/include/asm/shared/io.h       BUILDIO 7-20: the inb/outb instructions

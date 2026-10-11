@@ -1,0 +1,5 @@
+# Two programs on one machine.  The referee refuses this until rung 9.6 exists;
+# it is here so that refusal is tested, not assumed.
+name      = "both"
+machine   = "CMP.machine.serial-only@1"
+petitions = ["0000", "0001"]

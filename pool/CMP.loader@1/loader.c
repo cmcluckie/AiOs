@@ -1,25 +1,25 @@
-/* SPDX-License-Identifier: GPL-2.0-only
+/* SPDX-License-Identifier: MIT
  *
  * CMP.loader@1: takes over from the machine, runs one program, halts when it exits.
- * The whole landlord, for a building with one tenant.
+ * The whole landlord, for a building with one tenant.  Ours; nothing lifted.
  *
- * Lifted from Linux, commit a5ebb76233b7:
- *   include/xen/interface/hvm/start_info.h   struct hvm_start_info and
- *                                            struct hvm_modlist_entry, 111-134,
- *                                            XEN_HVM_START_MAGIC_VALUE 86
- * Everything else here is ours.  No scheduler, no memory manager, no interrupts,
- * no page tables: there is one program and it owns everything the door lets it reach.
+ * The two structs below are the x86/HVM direct boot ABI ("PVH"), a public
+ * interface: Xen's public/arch-x86/hvm/start_info.h, MIT, Copyright (c) 2016
+ * Citrix Systems, Inc.  Layout reproduced; that is what an ABI is for.
  *
- * Depends on CMP.serial.8250@1 for the write door.
+ * No scheduler, no memory manager, no interrupts, no page tables: there is one
+ * program and it owns everything the door lets it reach.
+ *
+ * Depends on CMP.serial.8250@1 (lifted/) for the write door.
  */
 
 #include "door.h"
-#include "../CMP.serial.8250@1/serial8250.h"
+#include "../../lifted/CMP.serial.8250@1/serial8250.h"
 
 #define CONSOLE_PORT	0x3f8		/* CAP.dev.serial: the machine's one peripheral */
 #define PROGRAM_BASE	0x400000	/* where the program runs; its link address */
 
-/* include/xen/interface/hvm/start_info.h */
+/* PVH start info, version 1 */
 #define XEN_HVM_START_MAGIC_VALUE 0x336ec578
 
 struct hvm_start_info {

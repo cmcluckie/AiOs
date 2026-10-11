@@ -25,5 +25,5 @@ registers above during init.
 5 functions, 240 bytes of code.  Source: 57 lines of code, lifted; provenance in the file header.
 
 ## What was cut
-Listed in serial8250.c.  The init sequence is kept though the hypervisor does not
+Listed in serial8250.c and origin.toml.  The init sequence is kept though the hypervisor does not
 need it (findings 0002 #7).

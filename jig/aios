@@ -1,0 +1,117 @@
+#!/bin/sh
+# aios: the referee and the builder, as one shell script, until they are real
+# components (plan sections 3 and 5).  POSIX sh only; reads the repo's TOML with
+# sed, which is enough for the flat files the schema allows.
+#
+#   aios list                 flavors and petitions in this repo
+#   aios check <flavor>       referee: every code in every petition resolves,
+#                             and the flavor is one the builder can make
+#   aios build <flavor>       builder: collect the components, compile, image
+#   aios run <flavor>         check, build, boot on the flavor's machine
+#
+# Failures name codes, never tool output.
+set -eu
+repo=$(cd "$(dirname "$0")/.." && pwd)
+cd "$repo"
+
+die() { printf 'refused: %s\n' "$*" >&2; exit 1; }
+field() { sed -n "s/^$2 *= *\"\([^\"]*\)\".*/\1/p" "$1" | head -1; }
+list_field() { sed -n "s/^$2 *= *\[\(.*\)\].*/\1/p" "$1" | tr ',' '\n' | sed 's/[" ]//g' | grep . || true; }
+
+# code -> file.  CMP.loader@1 -> index/cmp/loader@1.toml
+code_file() {
+	t=${1%%.*}; rest=${1#*.}
+	case "$rest" in *@*) ;; *) rest="$rest@1" ;; esac
+	case "$t" in
+		PUR)  echo "constitution/purposes/$rest.toml" ;;
+		KEY)  echo "constitution/keys/$rest.toml" ;;
+		CAP)  echo "index/cap/$rest.toml" ;;
+		CMP)  echo "index/cmp/$rest.toml" ;;
+		SPEC) echo "specs/$rest.toml" ;;
+		TST)  echo "tests/$rest.toml" ;;
+		SNS)  echo "sensors/$rest.toml" ;;
+		*)    echo "" ;;
+	esac
+}
+
+# every code mentioned anywhere in a petition file
+petition_codes() {
+	sed -n 's/.*"\(\(PUR\|KEY\|CAP\|CMP\|SPEC\|TST\|SNS\)\.[a-z0-9.-]*\(@[0-9]*\)\?\)".*/\1/p' "$1" | sort -u
+}
+
+petition_primary() {
+	awk '/^\[\[component\]\]/{c="";r=""} /^code/{gsub(/[" ]/,"",$3);c=$3} /^role/{gsub(/[" ]/,"",$3);r=$3; if(r=="primary")print c}' "$1"
+}
+
+flavor_file() { f="flavors/$1.toml"; [ -f "$f" ] || die "no flavor named $1"; echo "$f"; }
+
+cmd_list() {
+	echo "flavors:";   for f in flavors/*.toml; do printf '  %-8s petitions %s\n' "$(field "$f" name)" "$(list_field "$f" petitions | tr '\n' ' ')"; done
+	echo "petitions:"; for p in petitions/*.toml; do printf '  %s  %s  %s\n' "$(field "$p" id)" "$(field "$p" status)" "$(field "$(code_file "$(field "$p" purpose)")" sentence)"; done
+}
+
+# referee, phase 1: well-formed.  Phase 2 (buildable) needs admissions, which do not exist yet.
+cmd_check() {
+	f=$(flavor_file "$1")
+	machine=$(field "$f" machine)
+	[ -f "$(code_file "$machine")" ] || die "missing $machine"
+	primaries=""
+	for id in $(list_field "$f" petitions); do
+		p="petitions/$id.toml"; [ -f "$p" ] || die "missing petition $id"
+		for code in $(petition_codes "$p"); do
+			cf=$(code_file "$code")
+			[ -n "$cf" ] || die "rule 1: $code is not a code"
+			[ -f "$cf" ] || die "rule 1: missing $code (petition $id)"
+			[ "$(field "$cf" code)" = "${code%@*}@${code#*@}" ] || [ "$(field "$cf" code)" = "$code@1" ] || true
+		done
+		exp=$(sed -n 's/^expires *= *\([0-9-]*\).*/\1/p' "$p")
+		[ "$exp" \> "$(date +%Y-%m-%d)" ] || die "rule 9: petition $id expired $exp"
+		pending=$(awk '/^admitted *= *false/{n++} END{print n+0}' "$p")
+		primaries="$primaries $(petition_primary "$p")"
+		printf 'petition %s: well-formed, %s component(s) pending admission\n' "$id" "$pending"
+	done
+	n=$(echo $primaries | wc -w)
+	[ "$n" -eq 1 ] || die "flavor $1 needs $n programs on one machine; the loader runs one (plan 9.6)"
+	printf 'flavor %s: buildable on %s, program %s\n' "$1" "$machine" "$primaries"
+}
+
+cmd_build() {
+	cmd_check "$1" >/dev/null
+	f=$(flavor_file "$1")
+	prog=$(for id in $(list_field "$f" petitions); do petition_primary "petitions/$id.toml"; done)
+	# walk run-time depends from the program down; the loader is whatever it depends on
+	loader=$(list_field "$(code_file "$prog")" depends)
+	[ -n "$loader" ] || die "$prog depends on nothing; a program needs a loader"
+	serial=$(list_field "$(code_file "$loader")" depends)
+	pdir=$(field "$(code_file "$prog")" source); ldir=$(field "$(code_file "$loader")" source); sdir=$(field "$(code_file "$serial")" source)
+	for d in "$pdir" "$ldir" "$sdir"; do [ -d "$d" ] || die "source $d is not in the pool"; done
+	out="out/$1"; mkdir -p "$out"
+	CC=${CC:-gcc}
+	CFLAGS="-m32 -std=c11 -ffreestanding -fno-pic -fno-pie -fno-stack-protector -fno-builtin -fno-asynchronous-unwind-tables -mno-sse -mno-mmx -mno-red-zone -mgeneral-regs-only -nostdlib -nostdinc -O2 -Wall -Wextra -Werror"
+	LDFLAGS="-static -no-pie -nostartfiles -Wl,--build-id=none -Wl,-z,noexecstack"
+	objs=""
+	for src in "$sdir"*.c "$ldir"*.S "$ldir"*.c; do
+		o="$out/$(basename "${src%.*}").o"; $CC $CFLAGS -c -o "$o" "$src"; objs="$objs $o"
+	done
+	$CC $CFLAGS $LDFLAGS -T "$ldir/loader.ld" -o "$out/loader.elf" $objs
+	pname=$(basename "${prog#CMP.}"); pname=${pname%@*}
+	$CC $CFLAGS -c -o "$out/$pname.o" "$pdir$pname.c"
+	$CC $CFLAGS $LDFLAGS -T "$ldir/program.ld" -o "$out/$pname.bin" "$out/$pname.o"
+	printf 'built flavor %s: %s (%s) + %s (%s) -> %s/\n' "$1" "$loader" "$(sha256sum < "$out/loader.elf" | cut -c1-16)" "$prog" "$(wc -c < "$out/$pname.bin") bytes" "$out"
+	echo "$pname" > "$out/program"
+}
+
+cmd_run() {
+	cmd_build "$1"
+	f=$(flavor_file "$1"); mdir=$(field "$(code_file "$(field "$f" machine)")" source)
+	pname=$(cat "out/$1/program")
+	exec sh "$mdir/machine.sh" "out/$1/loader.elf" "out/$1/$pname.bin"
+}
+
+case "${1:-}" in
+	list)  cmd_list ;;
+	check) cmd_check "${2:?flavor}" ;;
+	build) cmd_build "${2:?flavor}" ;;
+	run)   cmd_run "${2:?flavor}" ;;
+	*) sed -n '2,13p' "$0"; exit 2 ;;
+esac

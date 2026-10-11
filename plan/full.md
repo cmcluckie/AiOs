@@ -127,13 +127,16 @@ exit written down.
 - Done-when: strace of the QEMU process shows no socket syscalls; the VM has
   no NIC device in its device tree.
 
-## 3. Referee [coming up]
+## 3. Referee [in progress]
 
 Why: tenet 7.  Deliberately dumb.  Rewritten first among the sh scripts.
 
-### 3.1 Resolver [coming up]
+### 3.1 Resolver [in progress]
 - Input: a petition file.  Output: for each code, the file it resolves to at
   that version, or the code that failed.
+- 2026-10-11: `jig/aios check <flavor>` does this for every petition in a
+  flavor, plus rule 9 (expiry) and the one-program rule.  Shell; replaced
+  when the referee is a component.
 - Done-when: deleting any one entry file turns the resolver red naming
   exactly that code.
 
@@ -187,11 +190,13 @@ the mechanic.
   committee exists).
 - Done-when: an artificial 2 s delay in boot turns it red.
 
-## 5. Builder [coming up]
+## 5. Builder [in progress]
 
 Why: tenet 3; design "Nix is the builder".  Decides nothing.
 
-### 5.1 Translator [coming up]
+### 5.1 Translator [in progress]
+- 2026-10-11: `jig/aios build <flavor>` walks primary -> loader -> serial
+  from the index entries and compiles from the pool.  Shell now; Nix later.
 - petition.toml to a Nix expression listing exactly the CMP entries at their
   versions from pool/.  No channels, no Home Manager.
 - Done-when: the expression for 0000 builds; adding a component to the

@@ -1,0 +1,47 @@
+#!/bin/sh
+# upstream: the historian's placeholder.  Reads every lifted/*/origin.toml and asks
+# the upstream repository two questions.  Never changes anything; reports.
+#
+#   upstream verify [part]   does the record match upstream?  For every lifted
+#                            range: the blob id at the recorded commit equals the
+#                            recorded one.  Red means the record is wrong, not
+#                            that upstream moved.
+#   upstream watch  [part]   has upstream touched any lifted line since the
+#                            recorded commit?  One line per upstream commit per
+#                            range.  Silence means nothing moved.
+#
+# Needs a clone of upstream with history: LINUX=/path/to/linux (default ../linux).
+# A re-lift, if one is warranted, is a new version of the part through the door.
+set -eu
+repo=$(cd "$(dirname "$0")/.." && pwd); cd "$repo"
+LINUX=${LINUX:-$repo/../linux}
+[ -d "$LINUX/.git" ] || { echo "no upstream clone at $LINUX (set LINUX=)"; exit 2; }
+g() { git -C "$LINUX" "$@"; }
+
+each_range() {  # $1 origin.toml; emits: file blob start end
+	awk -F'=' '
+	/^\[\[lift.from\]\]/ {f="";b=""}
+	/^file/  {gsub(/[" ]/,"",$2); f=$2}
+	/^blob/  {gsub(/[" ]/,"",$2); b=$2}
+	/^lines/ {s=$2; gsub(/[\[\] ]/,"",s); n=split(s,a,","); for(i=1;i<n;i+=2) print f, b, a[i], a[i+1]}
+	' "$1"
+}
+commit_of() { sed -n 's/^commit *= *"\([0-9a-f]*\)".*/\1/p' "$1"; }
+
+CMD=${1:-watch}; shift 2>/dev/null || true
+rc=0
+for o in lifted/${1:-*}/origin.toml; do
+	part=$(basename "$(dirname "$o")"); c=$(commit_of "$o")
+	if [ "${CMD:-}" = verify ]; then
+		g cat-file -e "$c^{commit}" 2>/dev/null || { echo "$part: upstream clone lacks commit $c"; rc=1; continue; }
+		each_range "$o" | while read -r f b s e; do
+			have=$(g rev-parse "$c:$f" 2>/dev/null || echo none)
+			if [ "$have" = "$b" ]; then echo "$part: ok   $f $s-$e"; else echo "$part: WRONG $f recorded $b, upstream has $have"; exit 1; fi
+		done || rc=1
+	else
+		each_range "$o" | while read -r f b s e; do
+			g log --format="$part: moved $f $s-$e  %h %cs %s" -L "$s,$e:$f" "$c..HEAD" 2>/dev/null | grep "^$part: moved" || true
+		done
+	fi
+done
+exit $rc
