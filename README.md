@@ -1,6 +1,8 @@
-# AiOS
+# AiOs
 
 Pronounced AY-ohss.  Linux, re-admitted one justified line at a time.
+
+![The parts of AiOs, arranged around the running machine](docs/aios-components.png)
 
 ## Press play
 

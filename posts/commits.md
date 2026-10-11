@@ -29,4 +29,5 @@ Status: requested (hash unknown), confirmed (hash seen), pushed.
 | 2026-10-15 (part 5, memory) | Petition 0002: Conway's Game of Life; loader@2 with the alloc door | 6c21f6c | pushed |
 | 2026-10-16 (part 6, the calculator) | Petition 0003: a reverse-Polish calculator; loader@3 with the read door | 00099c4 | pushed |
 | 2026-10-17 (part 7, definition of done) | Definition of done: as-built specs, tests and the addenda | 6280a41 | pushed |
-| 2026-10-17 | Ledger and post links: close 6c21f6c, 00099c4, 6280a41 | | requested |
+| 2026-10-17 | Ledger and post links: close 6c21f6c, 00099c4, 6280a41 | 0a49b8b | pushed |
+| none | README: the parts of AiOs, in one picture | | requested |
