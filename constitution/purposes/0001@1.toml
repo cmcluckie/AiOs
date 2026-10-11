@@ -1,0 +1,6 @@
+code       = "PUR.0001@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+sentence   = "Print the moves that solve the Towers of Hanoi for four disks, then halt."
+holder     = "KEY.chris"

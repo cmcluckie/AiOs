@@ -1,5 +1,6 @@
-/* CMP.hello@1 link script.  A flat binary, linked at the address the loader runs
- * programs from (CMP.loader@1 PROGRAM_BASE), entry at byte 0. */
+/* CMP.loader@1: the program format.  A flat binary linked at PROGRAM_BASE with
+ * its entry at byte 0, called with the door (door.h).  Every program on the
+ * ladder links with this file; it belongs to the loader, not the program. */
 ENTRY(_start)
 OUTPUT_FORMAT(binary)
 
