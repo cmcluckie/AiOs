@@ -3,7 +3,8 @@
 Version 1 was written before any entry existed and could not say what a
 petition looks like while the things it names are still being admitted.
 Version 2 adds the pending state and the two-phase check.  Findings 0000
-records what forced each change.
+records what forced each change.  Amended once since: role gained the
+value `machine` for the VM definition and the hypervisor it runs on (finding 14).
 
 A petition is a bill of materials.  It carries no prose.  Every line is a code
 that resolves to an entry defined exactly once in one of five tables, and the
@@ -49,7 +50,7 @@ Format is TOML.
 
     [[component]]
     code        = "CMP.hello@1"
-    role        = "primary"              # primary | dependency | boot | toolchain
+    role        = "primary"              # primary | dependency | boot | toolchain | machine
     admitted    = false                  # true only when index/cmp/<code>.toml exists and carries a signed admission
 
     [[test]]

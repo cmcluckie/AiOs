@@ -1,0 +1,14 @@
+code          = "CMP.hypervisor.qemu@1"
+status        = "draft"
+admitted      = ""
+retired_by    = ""
+kind          = "program"
+source        = ""
+licence       = "GPL-2.0-only"
+depends       = []
+build_depends = []
+exposes       = []
+requires      = []
+scaffold      = true
+as_built      = ""
+reproducible  = ""

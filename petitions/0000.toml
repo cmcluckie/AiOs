@@ -17,6 +17,11 @@ code   = "CAP.proc.exit@1"
 reason = "SPEC.hello.1@1"
 scope  = ""
 
+[[capability]]
+code   = "CAP.dev.serial@1"
+reason = "SPEC.machine.1@1"
+scope  = ""
+
 [[component]]
 code     = "CMP.hello@1"
 role     = "primary"
@@ -28,18 +33,23 @@ role     = "toolchain"
 admitted = false
 
 [[component]]
-code     = "CMP.kernel.core@1"
+code     = "CMP.loader@1"
 role     = "boot"
 admitted = false
 
 [[component]]
-code     = "CMP.kernel.serial.8250@1"
-role     = "boot"
+code     = "CMP.serial.8250@1"
+role     = "dependency"
 admitted = false
 
 [[component]]
-code     = "CMP.kernel.initramfs@1"
-role     = "boot"
+code     = "CMP.machine.serial-only@1"
+role     = "machine"
+admitted = false
+
+[[component]]
+code     = "CMP.hypervisor.qemu@1"
+role     = "machine"
 admitted = false
 
 [[test]]
@@ -47,6 +57,24 @@ code = "TST.hello.exact-bytes@1"
 
 [[test]]
 code = "TST.hello.silent-boot@1"
+
+[[test]]
+code = "TST.machine.no-peripherals@1"
+
+[[test]]
+code = "TST.machine.no-sockets@1"
+
+[[test]]
+code = "TST.loader.runs-program@1"
+
+[[test]]
+code = "TST.loader.halts@1"
+
+[[test]]
+code = "TST.loader.door-layout@1"
+
+[[test]]
+code = "TST.serial.in-order@1"
 
 [[sensor]]
 code = "SNS.hello.boot-to-output@1"
