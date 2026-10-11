@@ -1,0 +1,38 @@
+#!/bin/sh
+# Plan item 2.2.  The repo's own constitution/keys decides who may push to it.
+# Every new commit must carry a valid SSH signature from a KEY entry with role
+# root or seat, as those entries stood BEFORE this push.  A key added in a push
+# counts from the next push on.  The very first push, when the repo is empty,
+# checks against allowed_signers.seed next to this hook.
+set -eu
+zero=0000000000000000000000000000000000000000
+signers=$(mktemp); trap 'rm -f "$signers"' EXIT
+
+allowed_from_tree() {  # $1 = commit; emits allowed_signers lines from constitution/keys at that commit
+  git ls-tree --name-only "$1" constitution/keys/ 2>/dev/null | grep '\.toml$' | while read -r f; do
+    entry=$(git show "$1:$f")
+    role=$(printf '%s\n' "$entry" | sed -n 's/^role *= *"\([^"]*\)".*/\1/p')
+    case "$role" in root|seat) ;; *) continue ;; esac
+    code=$(printf '%s\n' "$entry" | sed -n 's/^code *= *"\([^"]*\)".*/\1/p')
+    key=$(printf '%s\n' "$entry" | sed -n 's/^public *= *"\([^"]*\)".*/\1/p' | cut -d' ' -f1,2)
+    [ -n "$code" ] && [ -n "$key" ] && printf '%s namespaces="git" %s\n' "$code" "$key"
+  done
+}
+
+while read -r old new ref; do
+  [ "$new" = "$zero" ] && continue
+  if [ "$old" = "$zero" ]; then
+    base=$(git rev-parse --verify --quiet "$ref" 2>/dev/null || git rev-parse --verify --quiet HEAD 2>/dev/null || true)
+  else
+    base=$old
+  fi
+  if [ -n "$base" ]; then allowed_from_tree "$base" > "$signers"; else cat "$GIT_DIR/allowed_signers.seed" > "$signers"; fi
+  if [ ! -s "$signers" ]; then echo "refused: no signing keys known for $ref"; exit 1; fi
+  if [ -n "$base" ]; then range="$base..$new"; else range="$new"; fi
+  for c in $(git rev-list "$range"); do
+    if ! git -c gpg.format=ssh -c gpg.ssh.allowedSignersFile="$signers" verify-commit "$c" >/dev/null 2>&1; then
+      echo "refused: $c is not signed by a root or seat key in constitution/keys"
+      exit 1
+    fi
+  done
+done

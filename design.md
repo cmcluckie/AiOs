@@ -1,5 +1,7 @@
 # AiOS: A Purpose-Driven, Self-Building OS
 
+Pronounced AY-ohss, /ˈeɪ.oʊs/.  Linux, re-admitted one justified line at a time.
+
 Oct 9, 2026 · Chris McLuckie
 
 ## Premise
@@ -32,6 +34,8 @@ These are the rules the referee enforces and no agent, app or committee vote can
 We build on Linux source and Nix, and we write neither.
 
 **Linux source is the parts pool.**  Roughly two-thirds of its 30 million lines are drivers and another large share is architecture support; the core is a few million lines.  A given purpose needs a sliver.  The problem is not the volume, it is that selection is woven through the source as `#ifdef` directives, so the file you review is a superposition of every possible build and nobody can honestly say they have audited "the kernel."  The answer is a refactor, not a rewrite: pull the conditionals out of the files and into the structure.  One component, one directory, one petition, no `#ifdef` inside.  Compose, don't configure.  The index tells us which handful of components actually need that surgery; drivers, filesystems and protocols already come apart cleanly.
+
+**Linux is read, never booted.**  A kernel is a landlord: it shares one machine between tenants that do not trust each other.  A purpose with one program has no tenants to separate, so it gets no kernel; it gets a loader that takes over from the machine, runs the one program and halts, plus whatever drivers the purpose names, each lifted from Linux as its own segment with the hands it held cut and recorded.  Linux wrote no spec and no test for most of what we lift, so every segment arrives naked and we write both at the door.  Segments talk only through declared doors so a later petition stacks on an earlier one without removing anything; a kernel proper appears only when a petition asks for two things that must share.  Findings 0001 records why the first build plan got this backwards.
 
 **Nix is the builder.**  It already turns a declaration into exactly that set of components, reproducibly, with rollback for free.  We write the translator from approved petitions to a Nix configuration.
 
@@ -167,10 +171,11 @@ Every tool on the jig is bloat we are choosing on purpose, so every tool enters 
 | Tool | Why it is here | What we use of it | How it gets reduced |
 | --- | --- | --- | --- |
 | Git, bare repo on the Pi over SSH | The constitution, the pool and every petition live here; signed commits are the admission record | init, commit, tag, push, fetch, verify-commit; SSH-key signing, no GPG | Stays as plumbing only.  No forge, no web UI, no hooks beyond signature checks |
-| SSH | Reach the Pi repo; sign commits | client and signing only | Server side on the Pi replaced with something smaller once in the pool; the jig's client goes away with the jig |
+| SSH | Reach the Pi repo; sign commits; reach the jig from the Windows shell | client and signing on the Windows box; sshd on the jig, keys only | Server side on the Pi replaced with something smaller once in the pool; the jig's sshd and client go away with the jig |
 | Nix | The builder | `nix build` and a small set of expressions; no channels, no Home Manager, no services | Shrink to the exact subset the translator emits.  Nix is the first implementation of the builder, not the definition |
-| NixOS minimal (the jig) | Gen zero: turns the crank | one configuration file of roughly twenty lines | Absorbed: the quartermaster reads its configuration and drafts petitions for it; retired when gen two rebuilds itself bit-identical |
-| KVM + QEMU | Boots the system under its own kernel so the no-NIC, nothing-listening checks are physically true | one serial, no network device, no display | Admitted through the door as a recipe.  Sealed phase moves to a microVM; the VM definition is itself a petition |
+| NixOS minimal (the jig) | Gen zero: turns the crank | one flake pinning nixpkgs and one configuration of roughly twenty lines, in jig/ | Absorbed: the quartermaster reads its configuration and drafts petitions for it; retired when gen two rebuilds itself bit-identical |
+| Hyper-V (the Windows box) | The existing box runs Windows 11; the jig is a Gen 2 VM on it, Secure Boot off, nested virtualization on | New-VM and three Set-VM calls, in jig/hyperv.ps1 | Gone when the jig moves to bare metal or is retired; nothing inside the constitution knows it exists |
+| KVM + QEMU | Boots the system under its own kernel so the no-NIC, nothing-listening checks are physically true | the microvm machine type with PIC, PIT, RTC and option ROMs off; one ISA serial on stdio; -kernel and -initrd; no network, disk, display or monitor | Admitted through the door as a recipe (CMP.hypervisor.qemu, scaffold until then).  The VM definition is itself a petition: CMP.machine.serial-only |
 | C compiler + musl | The first pool components | a C compiler and one libc | The jig's compiler is scaffolding.  The pool's own chain bootstraps from a few hundred bytes upward; musl is the only libc in the pool |
 | strace | Prove a component touches nothing it did not petition for | file, directory and socket syscalls | Replaced by the kernel's own tracing once in the pool; leaves with the jig |
 | Mutation tool | Prove the tests can fail | source mutation, count caught mutants | A shell script with a fixed list of mutations, until something smaller and source-only earns admission |
@@ -184,7 +189,7 @@ Rule of thumb: nothing gets installed on the jig until it has a row here, and th
 
 Start with the constitution, not the code; everything else derives from it.
 
-**Petition 0000 is hello world.**  Purpose: write one line to the serial console and halt.  Two capabilities, console write and exit, written against raw syscalls so even libc stays outside the pool until something fails on it.  One test: the bytes on the serial port are exactly those bytes, with no kernel chatter before or after, which is the first time the quartermaster has to carve something out rather than add it.  The failure cascade is still the full depth (compiler, bootstrap chain, init, kernel, serial driver), so the whole trust chain gets admitted on the simplest possible program.  No disk, no filesystem, no init system: the hello binary is PID 1 in an initramfs, and the kernel halts when it exits.  0000's bloat figure (kernel lines in the build versus lines any petition justified) will be near 100 percent; that is the honest baseline the loop must pull down.
+**Petition 0000 is hello world.**  Purpose: write one line to the serial console and halt.  Two capabilities, console write and exit, plus the serial device the machine presents.  Three bricks, separate from the start: a loader that takes over from the machine, sets up the processor, runs one program and halts the machine when it exits; a serial segment lifted from Linux, the lines that put a byte on a 16550 and nothing holding its hand; and hello, which calls the loader's door for both capabilities and never touches hardware.  No kernel, no libc, no disk, no filesystem, no init.  Tests: the bytes on the serial port are exactly hello's bytes with nothing before or after, and the machine has no device no capability names.  The failure cascade still admits the toolchain and bootstrap chain on the simplest possible program.  0000's bloat figure, lines in the image no petition justifies, should be near zero by construction; where it is not, the line is a finding.
 
 **Petition 0001 is a Notepad-class text editor at a console.**  Purpose: open a text file, type, save.  Terminal, filesystem, keyboard and nothing else.  Because 0000 already admitted the chain, 0001 fails only on what is new: tty input, file read and write, libc.  Written in C; Rust comes later as `CMP.editor@2`.
 

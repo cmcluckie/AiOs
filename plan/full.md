@@ -91,36 +91,39 @@ else can start until petitions have a schema to be written against.
 - Note: #8 (one test, two causes) and #11 (scaffolding) may be accepted as
   design facts rather than fixed; record the decision.
 
-## 2. The jig [coming up]
+## 2. The jig [in progress]
 
 Why: design.md "Environment" and "Tool set and reduction plan".  The jig is
 outside the constitution and is bloat on purpose; every tool enters with its
 exit written down.
 
-### 2.1 NixOS minimal [coming up]
+### 2.1 NixOS minimal [in progress]
 - Produce: one configuration.nix of about twenty lines on the existing box.
-  The dev machine is Windows 11; the jig is a separate install or a VM on
-  it.  Decide which (open).
+  The dev machine is Windows 11.  Decided: the jig is a Gen 2 Hyper-V VM on
+  it, Secure Boot off, nested virtualization on, not WSL2.  Written in jig/
+  before the VM existed, with disk labels so the hardware file is true as
+  written.
 - Done-when: the configuration is committed under jig/ and a rebuild from it
   is bit-identical to the running system.
 
-### 2.2 Bare repo on the Pi [coming up]
+### 2.2 Bare repo on the Pi [in progress]
 - Produce: bare git repo over SSH on the Pi; a pre-receive hook that runs
   git verify-commit with the allowed signers from constitution/keys and
   rejects anything unsigned.  No forge, no web UI.
 - Done-when: an unsigned push is rejected; a signed push lands.
 
-### 2.3 Tool table complete [coming up]
+### 2.3 Tool table complete [in progress]
 - For each of: git, ssh, nix, nixos, kvm and qemu, c compiler and musl,
   strace, mutation script, model clients, sh.  The row is not complete until
   "how it gets reduced" is filled.  Python: default no.
 - Done-when: a script lists installed packages on the jig and every one maps
   to a row.
 
-### 2.4 VM definition as a petition [coming up]
+### 2.4 VM definition as a petition [in progress]
 - Produce: a QEMU invocation with -kernel, one serial, -nic none, no
   display, -no-reboot; committed as a petitioned component once the machine
-  table exists (1.7 #10).
+  table exists (1.7 #10).  Done as CMP.machine.serial-only@1 on the microvm
+  machine type, with CMP.hypervisor.qemu@1 as scaffold.
 - Done-when: strace of the QEMU process shows no socket syscalls; the VM has
   no NIC device in its device tree.
 
@@ -202,44 +205,69 @@ Why: tenet 3; design "Nix is the builder".  Decides nothing.
   back on a red sensor.
 - Done-when: a deliberately broken shadow is never promoted.
 
-## 6. Pool admission for 0000 [coming up]
+## 6. Pool admission for 0000: segments, not a kernel [in progress]
 
-Why: tenets 3, 4, 5; design "Failure builds the distribution".  Admit the
-smallest reviewable unit a failure asked for.  The order below is the
-expected failure order.
+Why: tenets 1 to 5; design "Linux is read, never booted"; findings 0001.
+Petition 0000 names no kernel.  Linux is the pool we read; each segment is
+lifted into its own pool directory with the hands it held cut, and arrives
+with a SPEC and a TST written here because upstream has neither.  The order
+below is the expected failure order.
 
-### 6.1 CMP.hello@1 [coming up]
-- C, raw syscalls (write, exit), no libc, static, _start entry.  As-built
-  spec derived from the source.  Index entry with depends = [] and
+### 6.1 CMP.hello@1 [in progress]
+- C, no libc, static, _start entry.  Calls the loader's two doors (6.5) and
+  nothing else; never touches hardware.  As-built spec derived from the
+  source.  Index entry with depends = [CMP.loader@1] and
   requires = [CAP.tty.write, CAP.proc.exit].
-- Done-when: index entry validates (1.5); test 4.2 green under a stock
-  kernel except for kernel chatter (which is 6.3's job).
+- Done-when: index entry validates (1.5); test 4.2 green against the loader.
 
 ### 6.2 CMP.toolchain.c@1 [coming up]
 - The jig's compiler is scaffolding; the pool's toolchain is a separate
   admission.  Decide the first pool compiler (tcc, or gcc at a pinned
-  version, or the Guix bootstrap chain head).  Findings #11 applies.
-- Done-when: hello builds with the pool compiler alone.
+  version, or the Guix bootstrap chain head).  Findings 0000 #11 applies.
+- Done-when: hello, the serial segment and the loader build with the pool
+  compiler alone.
 
-### 6.3 CMP.kernel.core@1 [coming up]
-- The first carve-out.  Requirements: no #ifdef inside the admitted
-  directory; console silent (no banner, no printk to the serial port); halt
-  when PID 1 exits instead of panic.  Each is a SPEC clause on the kernel,
-  which needs findings #7 resolved first.
-- Done-when: test 4.2 green from power-on to halt.
+### 6.3 CMP.serial.8250@1 [in progress]
+- Read drivers/tty/serial/8250/ and find the lines that put a byte on the
+  wire: wait for the transmitter, write the data register.  Lift those and
+  nothing holding their hand (no tty layer, no device model, no locking).
+  Record in the as-built spec what was cut and where it came from.  Write
+  the SPEC (bytes appear on the port, in order, complete) and the TST.
+- Done-when: the segment is a few dozen lines; its test goes red when one
+  line is mutated; it exposes CAP.tty.write and requires CAP.dev.serial.
 
-### 6.4 CMP.kernel.serial.8250@1 [coming up]
-### 6.5 CMP.kernel.initramfs@1 [coming up]
-- Each on its own, with its own as-built spec and index entry.
+### 6.4 CMP.loader@1 [in progress]
+- Takes over from the machine (the microvm firmware hands off via the
+  Linux boot protocol or a PVH entry; read arch/x86/platform/pvh/ and
+  arch/x86/boot/ for what is worth lifting), sets up the processor far
+  enough to run one flat program, jumps to it, and when it exits asks the
+  machine to reboot, which -no-reboot turns into a halt.  No scheduler, no
+  memory manager, no interrupts beyond what the handoff forces.  Every line
+  the handoff forces that no petition names is a finding.
+- Done-when: SPEC.hello.2 (silence) green; the loader's own spec and test
+  written; its as-built spec lists every port and register it touches.
+
+### 6.5 The doors [in progress]
+- How hello asks the loader to write bytes and to exit: a call table, a
+  software interrupt, or a syscall instruction.  Decide once, as SPEC
+  clauses on the loader, so that petition 0001 adds a door (file write)
+  without moving these two.
+- Done-when: a second toy program using only the doors runs under the same
+  loader with no change to the loader.
 
 ### 6.6 Signed admission [coming up]
 - Root key signs admission commits until committee seat keys exist (8.3).
 - Done-when: each index entry carries a signed admission the referee
   accepts (3.5).
 
-### 6.7 First green build and bloat figure [coming up]
-- Record: kernel lines in the build vs lines any petition justified.  Expect
-  near 100 percent bloat.  Where it is recorded is findings #11.
+### 6.7 First green build and bloat figure [in progress]
+- Record: lines in the image vs lines a petition justifies.  Expect near
+  zero by construction; each unjustified line is a finding naming the
+  segment that carries it.  Where it is recorded is findings 0000 #11.
+- 2026-10-10: first green boot under software emulation in a container,
+  14 bytes exact, machine exits by itself.  The figure is findings/0002.md.
+  Remaining for done: the same on the jig under KVM, with the runner (4)
+  recording it rather than a hand.
 
 ## 7. Quartermaster [coming up]
 
@@ -250,7 +278,7 @@ it.
 - From the forked Linux tree: components, dependencies, exposed CAPs,
   derived from code not docs.
 - Done-when: the derived entry for serial.8250 matches the hand-written one
-  from 6.4, or the diff is a finding.
+  from 6.3, or the diff is a finding.
 
 ### 7.2 Failure-to-code mapping [coming up]
 - Build failure text to index code.  "undefined reference to write" means a
@@ -260,8 +288,10 @@ it.
 ### 7.3 Petition drafting [coming up]
 - From a failure code, draft a pool-admission petition for review.
 
-### 7.4 Kernel classification [coming up]
-- needed, not needed, or tangled for the kernel core directories.
+### 7.4 Segment classification [coming up]
+- liftable, tangled, or not needed, for the Linux directories petition
+  0001 will reach into (block, a filesystem, tty input).  Tangled means the
+  hands to cut outnumber the lines wanted.
 
 ## 8. Committee [coming up]
 
