@@ -81,6 +81,8 @@ exactly; when a new one is needed, add it here in the same commit.
   needs with a spec clause as the reason for each, the components, the tests
   and sensors.  No prose.  The one door.
 - **Flavor.**  The set of petitions one machine runs, as flavors/<name>.toml.
+  Every flavor is also an entry in .vscode/launch.json so it appears in the
+  Run and Debug dropdown; adding a flavor means adding that entry.
   "Build flavor hello" is what pressing play means.  A flavor with more
   programs than the loader can run is refused until rung 9.6.
 - **Code.**  A name a petition can use: `TABLE.path@version`.  Seven tables:
