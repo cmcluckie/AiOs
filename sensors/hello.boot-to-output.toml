@@ -1,7 +1,0 @@
-code      = "SNS.hello.boot-to-output@1"
-proves    = "SPEC.hello.1@1"
-question  = "How long from power-on to the last byte of output?"
-threshold = 1000
-unit      = "ms"
-red       = "above"
-consumer  = "stability"

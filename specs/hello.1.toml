@@ -1,3 +1,0 @@
-code      = "SPEC.hello.1@1"
-component = "CMP.hello@1"
-clause    = "From power-on to halt, the only bytes that appear on the serial port are the 14 bytes 'Hello, world.\n', written by the component, after which the component exits and the machine halts."

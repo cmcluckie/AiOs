@@ -1,0 +1,6 @@
+code       = "PUR.0000@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+sentence   = "Write one line to the serial console and halt."
+holder     = "KEY.chris"

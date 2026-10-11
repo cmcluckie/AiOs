@@ -1,3 +1,0 @@
-code      = "CAP.proc.exit@1"
-touches   = "the component's own lifetime"
-mechanism = "exit(2); when the component is PID 1 the kernel halts the machine"

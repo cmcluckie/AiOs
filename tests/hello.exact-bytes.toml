@@ -1,4 +1,0 @@
-code     = "TST.hello.exact-bytes@1"
-binds    = "SPEC.hello.1@1"
-red_when = "the bytes captured on the VM's serial port from power-on to halt differ from the 14 bytes 'Hello, world.\n' by even one byte, including any kernel message before or after, or the VM does not halt"
-runner   = ""

@@ -1,0 +1,10 @@
+code       = "SNS.hello.boot-to-output@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+proves     = "SPEC.hello.1@1"
+question   = "How long from power-on to the last byte of output?"
+unit       = "ms"
+red_above  = 1000
+consumer   = "KEY.seat.stability"
+exercises  = ["CAP.tty.write@1"]

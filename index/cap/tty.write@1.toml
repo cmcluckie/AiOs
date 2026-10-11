@@ -1,0 +1,8 @@
+code       = "CAP.tty.write@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+touches    = "the serial console, output direction only"
+mechanism  = "write(2) on a file descriptor the kernel opened on the console device"
+scope      = "device"
+scope_rule = "^console[0-9]$"

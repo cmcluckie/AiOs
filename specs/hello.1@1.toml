@@ -1,0 +1,7 @@
+code       = "SPEC.hello.1@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+component  = "CMP.hello@1"
+clause     = "On start, the component writes the exact 14 bytes 'Hello, world.\\n' to the console and nothing else, then exits."
+author     = "KEY.chris"

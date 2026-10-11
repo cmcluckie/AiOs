@@ -1,0 +1,8 @@
+code       = "KEY.chris@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+public     = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFWosB2gEpFJosmm8AOu2Po49JDATCzMU9Sp3VVqZSw9 chris.mcluckie@gmail.com"
+holder     = "Chris McLuckie"
+role       = "root"
+seat       = ""
