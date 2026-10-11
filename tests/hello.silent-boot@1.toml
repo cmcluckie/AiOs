@@ -5,6 +5,6 @@ retired_by = ""
 binds      = "SPEC.hello.2@1"
 red_when   = "the bytes on the VM's serial port from power-on to halt, minus the component's own output, are not empty"
 timeout_ms = 10000
-isolates   = "CMP.kernel.core@1"
+isolates   = "CMP.loader@1"
 runner     = ""
 mutations  = 0
