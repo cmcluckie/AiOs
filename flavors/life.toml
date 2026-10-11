@@ -1,0 +1,3 @@
+name      = "life"
+machine   = "CMP.machine.serial-only@1"
+petitions = ["0002"]

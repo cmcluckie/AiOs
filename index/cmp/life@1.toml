@@ -1,0 +1,14 @@
+code          = "CMP.life@1"
+status        = "draft"
+admitted      = ""
+retired_by    = ""
+kind          = "program"
+source        = "pool/CMP.life@1/"
+licence       = "MIT"
+depends       = ["CMP.loader@2"]
+build_depends = ["CMP.toolchain.c@1"]
+exposes       = []
+requires      = ["CAP.tty.write@1", "CAP.proc.exit@1", "CAP.mem.alloc@1"]
+scaffold      = false
+as_built      = "index/cmp/life@1.as-built.md"
+reproducible  = ""

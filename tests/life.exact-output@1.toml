@@ -1,0 +1,10 @@
+code       = "TST.life.exact-output@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+binds      = "SPEC.life.1@1"
+red_when   = "the component's output, captured in isolation, differs from the 1992 bytes an independent reference implementation produces for the same rules, seed, universe and generation count"
+timeout_ms = 10000
+isolates   = "CMP.life@1"
+runner     = ""
+mutations  = 0

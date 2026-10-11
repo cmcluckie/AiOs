@@ -1,0 +1,7 @@
+code       = "SPEC.life.1@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+component  = "CMP.life@1"
+clause     = "On start, the component writes the population after 200 generations of the centred R-pentomino in a 256 by 96 universe with dead edges, the middle 80 by 24 cells as '#' and '.', and the result of asking for 128 MiB, exactly as a reference implementation produces them, then exits."
+author     = "KEY.chris"

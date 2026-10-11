@@ -1,0 +1,7 @@
+code       = "SPEC.loader.5@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+component  = "CMP.loader@2"
+clause     = "Every block the alloc door returns lies inside a region the firmware's memory map marks RAM, above the end of the program, and overlaps no earlier block, the loader, or its stack."
+author     = "KEY.chris"

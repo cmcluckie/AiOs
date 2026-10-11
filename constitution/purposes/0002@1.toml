@@ -1,0 +1,6 @@
+code       = "PUR.0002@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+sentence   = "Run Conway's Game of Life for 200 generations in a universe bigger than the stack, show it, and halt."
+holder     = "KEY.chris"

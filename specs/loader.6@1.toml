@@ -1,0 +1,7 @@
+code       = "SPEC.loader.6@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+component  = "CMP.loader@2"
+clause     = "When the alloc door cannot satisfy a request it returns 0 and changes nothing; it never halts, never returns memory outside the region, and a later smaller request can still succeed."
+author     = "KEY.chris"

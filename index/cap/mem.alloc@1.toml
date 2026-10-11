@@ -1,0 +1,8 @@
+code       = "CAP.mem.alloc@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+touches    = "RAM the firmware reported as free, above the program"
+mechanism  = "the loader's alloc door: a bump pointer over one RAM region from the memory map; nothing is freed, nothing is protected"
+scope      = "none"
+scope_rule = "^$"

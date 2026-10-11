@@ -1,0 +1,10 @@
+code       = "TST.loader.alloc-refuses@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+binds      = "SPEC.loader.6@1"
+red_when   = "a program that asks for more than the machine has gets a non-zero pointer, or the machine does not continue to a later smaller request that succeeds, or the machine halts before the program calls exit"
+timeout_ms = 10000
+isolates   = "CMP.loader@2"
+runner     = ""
+mutations  = 0
