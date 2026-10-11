@@ -1,0 +1,7 @@
+code       = "SPEC.loader.1@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+component  = "CMP.loader@1"
+clause     = "On entry the loader copies the machine's first module to 0x400000 and calls it with a pointer to the door, touching no device but the serial port."
+author     = "KEY.chris"

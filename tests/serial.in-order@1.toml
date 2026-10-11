@@ -1,0 +1,10 @@
+code       = "TST.serial.in-order@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+binds      = "SPEC.serial.1@1"
+red_when   = "the bytes captured on the serial port differ in value, order or count from the bytes handed to the write door, including any 0x0d that was not handed to it"
+timeout_ms = 5000
+isolates   = "CMP.serial.8250@1"
+runner     = ""
+mutations  = 0

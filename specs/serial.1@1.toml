@@ -1,0 +1,7 @@
+code       = "SPEC.serial.1@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+component  = "CMP.serial.8250@1"
+clause     = "Every byte handed to the write door appears on the serial port, in order, complete, and untranslated."
+author     = "KEY.chris"

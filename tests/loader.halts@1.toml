@@ -1,0 +1,10 @@
+code       = "TST.loader.halts@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+binds      = "SPEC.loader.2@1"
+red_when   = "the machine process is still alive when the timeout expires, or the last byte the program wrote is missing from the serial capture"
+timeout_ms = 5000
+isolates   = "CMP.loader@1"
+runner     = ""
+mutations  = 0
