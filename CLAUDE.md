@@ -164,31 +164,108 @@ exactly; when a new one is needed, add it here in the same commit.
 
 - Chris decides and judges whether what was built matches the purpose.  Claude
   digs, including reading kernel source, and stages files.  Chris signs and
-  commits; the key only works from his Windows shell.
-- Every time an item or sub-item in plan/brief.md moves to [done], Claude drafts
-  a LinkedIn post for it: short, plain English, no project vocabulary, numbered
-  "AiOS, part N", tagged #AiOS.  The post lives in posts/ as
-  posts/YYYY-MM-DD.md with the image beside it as posts/YYYY-MM-DD.png, same
-  name, one post per day: the date is the day it is meant to go out, the next
-  free day after the last post in the folder.  Chris posts one a day at most,
-  so the folder runs ahead of LinkedIn and that is fine; nobody is watching
-  the repo yet.  The post is also the body of the commit that moves the item to
-  done.  posts/commits.md is the ledger: every commit Claude asks for gets a
-  row naming the post it belongs to, and the hash once Chris reports it; a
-  commit is never requested without a row, and a row is never closed without a
-  hash.  Post format, learned from part 1:
-    - First line: "AiOS, part N." followed by a one-sentence pull quote from
-      the body in quotes and an ellipsis.  LinkedIn shows two lines above
-      "see more" when an image is attached; the quote is the hook.
-    - Posted with an image: real terminal output from the real build, never a
-      mock-up, so people can see what was made.  Claude produces the image;
-      it is the .png beside the post.
-    - Single spaces after periods in the post itself; LinkedIn collapses
-      double spaces anyway.
-    - Ends: "Come along!" on its own line, blank line, "#AiOS", then
-      "Here is the repo on GitHub: <link>".  LinkedIn rewrites URLs to
-      lnkd.in, so the label says where the link goes.
-    - Plain English.  No project vocabulary (petition, referee, jig, CAP)
-      without a plain-words gloss in the same sentence.
-    - Honest about state: emulation vs the jig, hand-checked vs recorded by
-      a runner, draft vs admitted.
+  commits; the key only works from his Windows shell.  Nothing reaches main
+  unsigned.
+- posts/commits.md is the ledger.  Every commit Claude asks for gets a row
+  naming the post it belongs to, and the hash once Chris reports it.  A commit
+  is never requested without a row; a row is never closed without a hash.
+  Commits that belong to different posts are never mixed into one commit.
+
+## Definition of done
+
+A component is done, and a post about it may be written, only when all of
+these are true.  `sh jig/donecheck` checks the ones a script can check and
+names the component and the rule that failed.
+
+1. It has an index entry, and the entry names its source directory.
+2. It has an as-built spec: what it does, every port, register and
+   instruction it touches, every byte it writes, its size.  Hand-written until
+   the generator exists (plan 7.1), and saying so.
+3. It has at least one spec clause, written by a human, one sentence, precise
+   enough to fail.
+4. Every spec clause has at least one test, and every test names what turns
+   it red and a time limit.
+5. Every test has been run, and the result is recorded: by the runner when it
+   exists (plan 4), until then by hand, with the date and the result, in the
+   post's addendum.  A test never run says so.
+6. If any line came from upstream, it lives in lifted/ with an origin record
+   that `jig/upstream verify` passes.
+7. Every earlier program on the ladder still runs under it, unchanged.
+8. The post, its image and its blog post exist and `jig/postcheck` passes,
+   including "As built" and "Addendum: the tests".
+9. Every commit for it is in the ledger with its post.
+
+## The series
+
+The series is for learning together, not showing off.  A reader should finish
+each post able to follow what was done at the same level.  `sh jig/postcheck`
+checks every post against the rules below and fails naming the file and the
+rule; run it before asking Chris to commit anything in posts/.
+
+**When.**  Every time an item or sub-item in plan/brief.md moves to [done],
+Claude drafts a post for it.  The post is also the body of the commit that
+moves the item to done.  One post per day: the date is the day it is meant to
+go out, the next free day after the last post.  Chris posts one a day at most,
+so the folder runs ahead of LinkedIn on purpose.
+
+**Files.**  Three per post, same date, same name, in posts/:
+- `YYYY-MM-DD.md`: the LinkedIn post.
+- `YYYY-MM-DD.png`: its image.  Real terminal output from the real build,
+  never a mock-up.  Claude produces it.
+- `YYYY-MM-DD.story.md`: the blog post.  GitHub renders it; there is no blog
+  site.
+
+**Voice.**  Chris's, every time.  Read posts/voice.md before drafting anything,
+and update it in the same change whenever he corrects a draft.  When the AI
+chose something, say so.  Never name his employer, its products or colleagues.
+
+**The LinkedIn post, top to bottom.**
+1. First line: `AiOS, part N.` then a one-sentence pull quote from the body in
+   double quotes, then `...`.  LinkedIn shows two lines above "see more".
+2. The body.  Plain English; any project word gets a plain gloss in the same
+   sentence.  Single spaces after periods (LinkedIn collapses doubles).
+3. `Want to follow along at your own pace?  The blog post walks through the
+   files to read, in order, and one small thing to try yourself.`
+4. `Come along!` on its own line, then a blank line.
+5. `#AiOS`
+6. `Blog post: <GitHub URL of the .story.md>`
+7. `Follow along, every line that changed, on one page: <GitHub compare URL
+   from the commit before the post's first to its last>`.  If the post's first
+   commit is the repo's first, instead: `Follow along, the repo exactly as it
+   stood when <what was done>: <GitHub tree URL at its last commit>`.
+8. `Code on GitHub, the commits behind this post in order:` then one line per
+   commit, two-space indent, `<subject>: <GitHub commit URL>`, from the ledger.
+9. `Code on GitHub, the whole repo: https://github.com/cmcluckie/aios`
+LinkedIn rewrites every URL to lnkd.in, which is why every link has a label.
+Until a commit exists, its line and the compare link read `(hash when committed)`.
+
+**The blog post, top to bottom.**
+1. `# <title>` then `*The story behind AiOS, part N.*`
+2. Prose sections, in this order where they apply: the problem (the textbook
+   exercise and why it was picked, including if the AI picked it); what we
+   built (how it works, in words, a few lines of code at most); what changed
+   underneath and why; what we found in Linux, what was taken and what was
+   cut; what nobody asked for.  A story, not a spec; keep it fun.
+3. `## Read along`: the files to read, in order, numbered, each a link to the
+   file at the post's last commit (`main` until it exists), one or two
+   sentences each on what to look for.
+4. `## Try this`: one small change a reader can make and run, and what they'll
+   see.  Claude runs it before it is published.
+5. `## As built`: a link to the as-built spec of every component the post
+   added or changed.  A component with no as-built spec is a finding, and the
+   post is not ready.
+6. `## Addendum: the tests`: every test for those components, grouped by
+   component, each with what it checks (its spec clause), what turns it red,
+   and its honest status: run by the runner, checked by hand (with the date
+   and the result), or not run yet.  A component with no test is not ready to
+   post.  The post itself need not mention the tests; the addendum must.
+
+**Honest.**  Every number and quote in a post is true of the repo at that
+commit and checked against its source.  Say emulation vs the jig, checked by
+hand vs recorded by a runner, written down vs actually run.  Jokes can
+exaggerate; facts can't.
+
+**Already posted.**  A post that is live on LinkedIn keeps its body exactly as
+posted unless Chris changes it there too.  Its ending (the follow-along line
+and the links) is kept to the current format in the repo, and Chris decides
+whether to edit the live one to match.  Part 1 is live.

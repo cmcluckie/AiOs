@@ -1,0 +1,74 @@
+#!/bin/sh
+# postcheck: every post in posts/ against the rules in CLAUDE.md, "The series".
+# Prints one line per failure, naming the file and the rule, and exits 1 if any.
+# Silence and exit 0 means every post is consistent.
+set -u
+repo=$(cd "$(dirname "$0")/.." && pwd); cd "$repo/posts"
+R="https://github.com/cmcluckie/aios"
+rc=0
+bad() { echo "$1: $2"; rc=1; }
+has() { grep -qF -- "$2" "$1"; }
+
+n=0
+for post in $(ls 20[0-9][0-9]-[0-9][0-9]-[0-9][0-9].md 2>/dev/null | sort); do
+	d=${post%.md}; n=$((n + 1))
+	[ -f "$d.png" ]      || bad "$post" "no image $d.png"
+	[ -f "$d.story.md" ] || bad "$post" "no blog post $d.story.md"
+
+	first=$(head -1 "$post")
+	case "$first" in
+		"AiOS, part $n.  \""*"\"...") ;;
+		*) bad "$post" "first line is not 'AiOS, part $n.  \"<pull quote>\"...'" ;;
+	esac
+	has "$post" "Want to follow along at your own pace?  The blog post walks through the files to read, in order, and one small thing to try yourself." \
+		|| bad "$post" "missing the follow-along line"
+	has "$post" "Come along!" || bad "$post" "missing 'Come along!'"
+	has "$post" "#AiOS"       || bad "$post" "missing #AiOS"
+	has "$post" "Blog post: $R/blob/main/posts/$d.story.md" || bad "$post" "missing or wrong 'Blog post:' link"
+	if ! has "$post" "Follow along, every line that changed, on one page: $R/compare/" && \
+	   ! has "$post" "Follow along, the repo exactly as it stood when" && \
+	   ! has "$post" "Follow along, every line that changed, on one page: (hash when committed)"; then
+		bad "$post" "missing the one-page compare link"
+	fi
+	has "$post" "Code on GitHub, the commits behind this post in order:" || bad "$post" "missing the commit list"
+	has "$post" "Code on GitHub, the whole repo: $R"                     || bad "$post" "missing the whole-repo link"
+	grep -q 'lnkd\.in' "$post" && bad "$post" "contains an lnkd.in link; use the GitHub URL"
+
+	# order of the ending
+	a=$(grep -nF "Come along!" "$post" | head -1 | cut -d: -f1)
+	b=$(grep -nF "#AiOS" "$post" | head -1 | cut -d: -f1)
+	c=$(grep -nF "Blog post:" "$post" | head -1 | cut -d: -f1)
+	e=$(grep -nF "Code on GitHub, the whole repo:" "$post" | head -1 | cut -d: -f1)
+	if [ -n "$a" ] && [ -n "$b" ] && [ -n "$c" ] && [ -n "$e" ]; then
+		[ "$a" -lt "$b" ] && [ "$b" -lt "$c" ] && [ "$c" -lt "$e" ] || bad "$post" "ending is out of order"
+	fi
+
+	s="$d.story.md"
+	[ -f "$s" ] || continue
+	head -1 "$s" | grep -q '^# ' || bad "$s" "first line is not a '# title'"
+	sed -n 3p "$s" | grep -qF "*The story behind AiOS, part $n.*" || bad "$s" "third line is not '*The story behind AiOS, part $n.*'"
+	has "$s" "## Read along" || bad "$s" "missing '## Read along'"
+	has "$s" "## Try this"   || bad "$s" "missing '## Try this'"
+	ra=$(grep -n '^## Read along' "$s" | cut -d: -f1); tt=$(grep -n '^## Try this' "$s" | cut -d: -f1)
+	[ -n "$ra" ] && [ -n "$tt" ] && [ "$ra" -gt "$tt" ] && bad "$s" "'Try this' comes before 'Read along'"
+	grep -q '^1\. \[' "$s" || bad "$s" "Read along has no numbered file links"
+	has "$s" "## As built"              || bad "$s" "missing '## As built'"
+	has "$s" "## Addendum: the tests"   || bad "$s" "missing '## Addendum: the tests'"
+	ab=$(grep -n '^## As built' "$s" | cut -d: -f1); ad=$(grep -n '^## Addendum: the tests' "$s" | cut -d: -f1)
+	[ -n "$tt" ] && [ -n "$ab" ] && [ "$ab" -lt "$tt" ] && bad "$s" "'As built' comes before 'Try this'"
+	[ -n "$ab" ] && [ -n "$ad" ] && [ "$ad" -lt "$ab" ] && bad "$s" "'Addendum: the tests' comes before 'As built'"
+	grep -q 'no as-built spec yet' "$s" && bad "$s" "a component has no as-built spec"
+	for t in $(grep -o 'tests/[a-z0-9.@-]*\.toml' "$s" | sort -u); do
+		[ -f "../$t" ] || bad "$s" "addendum links $t, which does not exist"
+	done
+	for a in $(grep -o 'index/cmp/[a-z0-9.@-]*\.as-built\.md' "$s" | sort -u); do
+		[ -f "../$a" ] || bad "$s" "as-built link $a does not exist"
+	done
+
+	for f in "$post" "$s"; do
+		grep -q '—' "$f" && bad "$f" "contains an em-dash"
+		grep -qiE '\b(thrilled to|excited to share|game.?changer|let that sink in|delve|fast-paced world)\b' "$f" && bad "$f" "corporate phrasing (voice.md, Not him)"
+	done
+done
+[ "$n" -gt 0 ] || bad posts "no posts found"
+exit $rc

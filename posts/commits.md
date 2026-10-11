@@ -21,8 +21,11 @@ Status: requested (hash unknown), confirmed (hash seen), pushed.
 | 2026-10-11 | Line endings: LF everywhere, CRLF for PowerShell | 7c6a876 | pushed |
 | 2026-10-13 (part 3, Hanoi) | The ladder, and the posts folder | 736d622 | pushed |
 | 2026-10-13 | Petition 0001: Towers of Hanoi | 25d3699 | pushed |
-| 2026-10-14 (part 4, ours and theirs: to be written) | Ours and theirs: lifted/, origin records, upstream watch; flavors and the referee placeholder | c246e58 | pushed |
+| 2026-10-14 (part 4, ours and theirs) | Ours and theirs: lifted/, origin records, upstream watch; flavors and the referee placeholder | c246e58 | pushed |
 | 2026-10-14 | Ledger: close c246e58 | fbebc14 | pushed |
 | 2026-10-14 | VS Code tasks via WSL; machine falls back to emulation without KVM | fbebc14 | pushed |
 | 2026-10-14 | Run and Debug lists the flavors | d3bfebb | pushed |
-| 2026-10-14 | Press play from a browser: devcontainer and README | | requested |
+| 2026-10-14 | Press play from a browser: devcontainer and README | e8dcf79 | pushed |
+| 2026-10-15 (part 5, memory) | Petition 0002: Conway's Game of Life; loader@2 with the alloc door | | requested |
+| 2026-10-16 (part 6, the calculator) | Petition 0003: a reverse-Polish calculator; loader@3 with the read door | | requested |
+| 2026-10-17 (part 7, definition of done) | Definition of done: as-built specs, tests and the addenda | | requested |

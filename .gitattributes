@@ -1,3 +1,5 @@
 # Everything in this repo is LF.  Scripts go to Linux hosts; CRLF breaks them.
 * text=auto eol=lf
 *.ps1 text eol=crlf
+# Test fixtures are bytes, not text.  calc.in carries a deliberate CRLF line.
+tests/fixtures/*.in -text

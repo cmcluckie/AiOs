@@ -1,0 +1,40 @@
+#!/bin/sh
+# donecheck: every component in the index against the definition of done in
+# CLAUDE.md.  One line per failure naming the component and the rule; exit 1 if
+# any.  Scaffold components (provided by the jig for now) are skipped.
+# Rule 5, "every test has been run", is reported as a count, not a failure,
+# until the runner exists (plan 4): today it would fail everything.
+set -u
+repo=$(cd "$(dirname "$0")/.." && pwd); cd "$repo"
+rc=0; never=0
+bad() { echo "$1: $2"; rc=1; }
+val() { sed -n "s/^$2 *= *\"\([^\"]*\)\".*/\1/p" "$1" | head -1; }
+
+for e in index/cmp/*.toml; do
+	code=$(val "$e" code)
+	grep -q '^scaffold *= *true' "$e" && continue
+	src=$(val "$e" source)
+	[ -n "$src" ] && [ -d "$src" ] || bad "$code" "rule 1: source directory '$src' missing"
+	ab=$(val "$e" as_built)
+	[ -n "$ab" ] && [ -f "$ab" ] || bad "$code" "rule 2: no as-built spec ($ab)"
+	specs=$(grep -l "^component *= *\"$code\"" specs/*.toml 2>/dev/null)
+	[ -n "$specs" ] || bad "$code" "rule 3: no spec clause"
+	for sp in $specs; do
+		sc=$(val "$sp" code)
+		tests=$(grep -l "^binds *= *\"$sc\"" tests/*.toml 2>/dev/null)
+		[ -n "$tests" ] || bad "$code" "rule 4: $sc has no test"
+		for t in $tests; do
+			grep -q '^red_when *= *"..*"' "$t" || bad "$code" "rule 4: $(val "$t" code) has no red_when"
+			grep -q '^timeout_ms *= *[1-9]' "$t" || bad "$code" "rule 4: $(val "$t" code) has no time limit"
+			[ -n "$(val "$t" runner)" ] || never=$((never + 1))
+		done
+	done
+	case "$src" in lifted/*)
+		[ -f "${src%/}/origin.toml" ] || bad "$code" "rule 6: lifted with no origin record" ;;
+	esac
+	case "$src" in pool/*)
+		grep -q 'SPDX-License-Identifier: MIT' "$src"* 2>/dev/null || true ;;
+	esac
+done
+echo "rule 5: $never test(s) not yet run by the runner (plan 4)"
+exit $rc
