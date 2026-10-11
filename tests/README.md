@@ -1,0 +1,1 @@
+Tests are written to fail.  One TOML file per TST code: the SPEC clause it binds, the condition under which it goes red, and the location of its executable form once one exists.  A test earns trust only after it has been seen to fail for the right reason; mutation runs are how that is proven.  The tester owns this directory and shares no model or prompt with the mechanic.

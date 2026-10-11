@@ -1,0 +1,1 @@
+Sensors are tests that keep running in production.  One TOML file per SNS code: the question, the threshold as a number, the consumer seat that acts when it goes red, and the SPEC clause it keeps proving.  No consumer, no sensor.  Nothing acts on a sensor directly: red is a finding, and a repair petition goes to the committee.

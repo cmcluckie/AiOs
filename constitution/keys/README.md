@@ -1,0 +1,1 @@
+Public signing keys, one file per key id, in SSH public-key format.  The root key belongs to the human who owns the constitution.  Committee seats get their own keys once they exist.  A commit or review signed by a key not in this directory is not part of the constitution.
