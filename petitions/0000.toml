@@ -5,7 +5,7 @@ submitted  = 2026-10-10
 submitter  = "KEY.chris@1"
 expires    = 2027-04-10
 supersedes = ""
-status     = "draft"
+status     = "pending"
 
 [[capability]]
 code   = "CAP.tty.write@1"

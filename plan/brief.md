@@ -3,14 +3,14 @@
 One sentence per item.  Status in brackets: [done], [in progress], [coming up].
 The detailed plan is plan/full.md; this file is the one to read.
 
-1. Constitution: the signed repo everything traces to. [in progress]
+1. Constitution: the signed repo everything traces to. [done]
    1.1. Repo rules, ten tenets and purpose 0000 committed. [done]
    1.2. Petition schema with the code tables and referee rules. [done]
    1.3. Petition 0000, hello world, written against the schema. [done]
    1.4. Findings 0000, the thirteen schema gaps, recorded. [done]
    1.5. Define the entry file formats for CAP, CMP, SPEC, TST and SNS. [done]
    1.6. Fix the review signing scheme so signatures live outside the file they sign. [done]
-   1.7. Resolve the remaining gaps and publish the schema at version 2. [coming up]
+   1.7. Resolve the remaining gaps and publish the schema at version 2. [done]
 
 2. The jig: the gen-zero host that turns the crank. [coming up]
    2.1. NixOS minimal on the existing box with one configuration of about twenty lines. [coming up]
