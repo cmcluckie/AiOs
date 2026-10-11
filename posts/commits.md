@@ -21,4 +21,6 @@ Status: requested (hash unknown), confirmed (hash seen), pushed.
 | 2026-10-11 | Line endings: LF everywhere, CRLF for PowerShell | 7c6a876 | pushed |
 | 2026-10-13 (part 3, Hanoi) | The ladder, and the posts folder | 736d622 | pushed |
 | 2026-10-13 | Petition 0001: Towers of Hanoi | 25d3699 | pushed |
-| 2026-10-14 (part 4, ours and theirs: to be written) | Ours and theirs: lifted/, origin records, upstream watch; flavors and the referee placeholder | | requested |
+| 2026-10-14 (part 4, ours and theirs: to be written) | Ours and theirs: lifted/, origin records, upstream watch; flavors and the referee placeholder | c246e58 | pushed |
+| 2026-10-14 | Ledger: close c246e58 | | requested |
+| 2026-10-14 | VS Code tasks via WSL; machine falls back to emulation without KVM | | requested |

@@ -1,6 +1,9 @@
 {
-  // Press play: Terminal > Run Task > "AiOS: run flavor".  Runs on the jig over
-  // Remote-SSH, or anywhere with gcc -m32 and qemu-system-x86_64.
+  // Press play: Terminal > Run Task > "AiOS: run flavor" (Ctrl+Shift+B builds).
+  // Runs on the jig over Remote-SSH, or anywhere with gcc -m32 and qemu-system-x86_64.
+  // On Windows the commands go through WSL; once there:
+  //   sudo apt install gcc-multilib qemu-system-x86
+  // WSL has no KVM, so the machine falls back to software emulation and says so.
   "version": "2.0.0",
   "inputs": [
     {
@@ -12,9 +15,13 @@
     }
   ],
   "tasks": [
-    { "label": "AiOS: list",         "type": "shell", "command": "sh jig/aios list",                 "problemMatcher": [] },
-    { "label": "AiOS: check flavor", "type": "shell", "command": "sh jig/aios check ${input:flavor}", "problemMatcher": [] },
-    { "label": "AiOS: build flavor", "type": "shell", "command": "sh jig/aios build ${input:flavor}", "problemMatcher": [], "group": "build" },
-    { "label": "AiOS: run flavor",   "type": "shell", "command": "sh jig/aios run ${input:flavor}",   "problemMatcher": [], "group": { "kind": "test", "isDefault": true } }
+    { "label": "AiOS: list",         "type": "shell", "command": "sh jig/aios list",
+      "windows": { "command": "wsl sh jig/aios list" }, "problemMatcher": [] },
+    { "label": "AiOS: check flavor", "type": "shell", "command": "sh jig/aios check ${input:flavor}",
+      "windows": { "command": "wsl sh jig/aios check ${input:flavor}" }, "problemMatcher": [] },
+    { "label": "AiOS: build flavor", "type": "shell", "command": "sh jig/aios build ${input:flavor}",
+      "windows": { "command": "wsl sh jig/aios build ${input:flavor}" }, "problemMatcher": [], "group": { "kind": "build", "isDefault": true } },
+    { "label": "AiOS: run flavor",   "type": "shell", "command": "sh jig/aios run ${input:flavor}",
+      "windows": { "command": "wsl sh jig/aios run ${input:flavor}" }, "problemMatcher": [], "group": { "kind": "test", "isDefault": true } }
   ]
 }

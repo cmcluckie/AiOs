@@ -9,9 +9,12 @@
 # QEMU process exiting.
 # usage: machine.sh <loader.elf> <program.bin>
 set -eu
+# KVM is the machine.  Without it (WSL, a container) fall back to software
+# emulation and say so on stderr; a run that way is evidence, not the done-when.
+if [ -w /dev/kvm ]; then accel="-enable-kvm -cpu host"; else accel="-accel tcg"; echo "machine: no /dev/kvm, software emulation" >&2; fi
 exec qemu-system-x86_64 \
   -M microvm,x-option-roms=off,pic=off,pit=off,rtc=off,acpi=off,isa-serial=on,auto-kernel-cmdline=off \
-  -enable-kvm -cpu host -smp 1 -m 64M \
+  $accel -smp 1 -m 64M \
   -nodefaults -no-user-config -display none -nic none -monitor none -no-reboot \
   -serial stdio \
   -kernel "$1" -initrd "$2"
