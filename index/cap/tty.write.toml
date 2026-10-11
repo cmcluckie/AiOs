@@ -1,0 +1,3 @@
+code      = "CAP.tty.write@1"
+touches   = "the serial console, output direction only"
+mechanism = "write(2) on a file descriptor the kernel opened on the console device"

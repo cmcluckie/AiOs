@@ -1,0 +1,82 @@
+[petition]
+id         = "0000"
+purpose    = "PUR.0000@1"
+submitted  = 2026-10-10
+submitter  = "chris"
+expires    = 2027-04-10
+supersedes = ""
+status     = "draft"
+
+[[capability]]
+code   = "CAP.tty.write@1"
+reason = "SPEC.hello.1@1"
+scope  = "console0"
+
+[[capability]]
+code   = "CAP.proc.exit@1"
+reason = "SPEC.hello.1@1"
+scope  = ""
+
+[[component]]
+code     = "CMP.hello@1"
+role     = "primary"
+admitted = false
+
+[[component]]
+code     = "CMP.toolchain.c@1"
+role     = "toolchain"
+admitted = false
+
+[[component]]
+code     = "CMP.kernel.core@1"
+role     = "boot"
+admitted = false
+
+[[component]]
+code     = "CMP.kernel.serial.8250@1"
+role     = "boot"
+admitted = false
+
+[[component]]
+code     = "CMP.kernel.initramfs@1"
+role     = "boot"
+admitted = false
+
+[[test]]
+code = "TST.hello.exact-bytes@1"
+
+[[sensor]]
+code = "SNS.hello.boot-to-output@1"
+
+[[review]]
+seat    = "security"
+verdict = ""
+reason  = ""
+signed  = ""
+
+[[review]]
+seat    = "performance"
+verdict = ""
+reason  = ""
+signed  = ""
+
+[[review]]
+seat    = "portability"
+verdict = ""
+reason  = ""
+signed  = ""
+
+[[review]]
+seat    = "stability"
+verdict = ""
+reason  = ""
+signed  = ""
+
+[[review]]
+seat    = "purpose-fit"
+verdict = ""
+reason  = ""
+signed  = ""
+
+[quorum]
+rule = "all"
