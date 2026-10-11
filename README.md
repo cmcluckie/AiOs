@@ -21,6 +21,11 @@ those lines are lifted from Linux's serial driver; the rest are a loader that
 runs one program and a program that only talks through the loader's door.
 [findings/0002.md](findings/0002.md) lists every line no petition justifies.
 
+Petition 0001, Towers of Hanoi, runs under the same loader binary with no
+change to it.  The ladder of petitions after that is in the plan: each one a
+program every CS student wrote once, chosen because it needs exactly one new
+thing from the machine.
+
 Built and run so far under software emulation.  The jig (the build host) is
 declared in [jig/](jig/) and not yet installed.  Nothing has been formally
 admitted; every entry is still `draft`.

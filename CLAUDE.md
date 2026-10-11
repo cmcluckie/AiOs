@@ -56,6 +56,25 @@ why.  The full design is in design.md; read it before doing anything.
   commits; the key only works from his Windows shell.
 - Every time an item or sub-item in plan/brief.md moves to [done], Claude drafts
   a LinkedIn post for it: short, plain English, no project vocabulary, numbered
-  "AiOS, part N", tagged #AiOS.  The post is the body of the commit message that
-  moves the item to done, under the subject line, so the history and the series
-  are the same record.
+  "AiOS, part N", tagged #AiOS.  The post lives in posts/ as
+  posts/YYYY-MM-DD.md with the image beside it as posts/YYYY-MM-DD.png, same
+  name, one post per day: the date is the day it is meant to go out, the next
+  free day after the last post in the folder.  Chris posts one a day at most,
+  so the folder runs ahead of LinkedIn and that is fine; nobody is watching
+  the repo yet.  The post is also the body of the commit that moves the item to
+  done.  Post format, learned from part 1:
+    - First line: "AiOS, part N." followed by a one-sentence pull quote from
+      the body in quotes and an ellipsis.  LinkedIn shows two lines above
+      "see more" when an image is attached; the quote is the hook.
+    - Posted with an image: real terminal output from the real build, never a
+      mock-up, so people can see what was made.  Claude produces the image;
+      it is the .png beside the post.
+    - Single spaces after periods in the post itself; LinkedIn collapses
+      double spaces anyway.
+    - Ends: "Come along!" on its own line, blank line, "#AiOS", then
+      "Here is the repo on GitHub: <link>".  LinkedIn rewrites URLs to
+      lnkd.in, so the label says where the link goes.
+    - Plain English.  No project vocabulary (petition, referee, jig, CAP)
+      without a plain-words gloss in the same sentence.
+    - Honest about state: emulation vs the jig, hand-checked vs recorded by
+      a runner, draft vs admitted.

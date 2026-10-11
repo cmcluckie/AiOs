@@ -250,7 +250,7 @@ below is the expected failure order.
 ### 6.5 The doors [in progress]
 - How hello asks the loader to write bytes and to exit: a call table, a
   software interrupt, or a syscall instruction.  Decide once, as SPEC
-  clauses on the loader, so that petition 0001 adds a door (file write)
+  clauses on the loader, so that a later petition adds a door
   without moving these two.
 - Done-when: a second toy program using only the doors runs under the same
   loader with no change to the loader.
@@ -290,7 +290,7 @@ it.
 
 ### 7.4 Segment classification [coming up]
 - liftable, tangled, or not needed, for the Linux directories petition
-  0001 will reach into (block, a filesystem, tty input).  Tangled means the
+  the ladder will reach into (block, a filesystem, tty input).  Tangled means the
   hands to cut outnumber the lines wanted.
 
 ## 8. Committee [coming up]
@@ -313,23 +313,75 @@ written down, quorum fixed in advance.
 ### 8.4 First review [coming up]
 - Petition 0000 goes from draft to approved by five signed reviews.
 
-## 9. The loop [coming up]
+## 9. The ladder [in progress]
 
-Why: design "Failure builds the distribution" and "The same model applied to
-the dev process".
+Why: design "Failure builds the distribution".  Each petition is a program
+every CS student wrote once, chosen because it needs exactly one thing from
+the machine that the last one did not.  Each rung adds one door and never
+moves an old one, so every earlier program keeps running under every later
+loader, and that is a test run every time (9.8).  Each rung is also a post.
 
-### 9.1 End-to-end loop [coming up]
+### 9.1 Petition 0001: Towers of Hanoi [done]
+- Recursion and output.  Needs nothing new.  Proves additivity: a second
+  program under CMP.loader@1 with a zero-line diff to the loader.  Closes
+  6.5's done-when.
+- Done-when: hello and hanoi both boot under the same loader binary; the
+  move list is exact (2^n - 1 lines for n disks).
+- 2026-10-11: done under software emulation.  Same loader binary, same hash,
+  for hello and hanoi; 15 moves, 360 bytes, exact against a reference solver.
+  Diff to the loader: zero lines.
+
+### 9.2 Petition 0002: linked lists [coming up]
+- The pointer chapter.  The program asks the door for memory.  Forces the
+  loader to read the memory map the firmware hands over (hvm_start_info
+  memmap) and to hand out pieces: a bump allocator first, free when a
+  program needs it.  CAP.mem.alloc; door entry 3.  One tenant, no
+  protection yet.
+- Done-when: a program builds and walks a list larger than its own stack;
+  a program asking for more than the machine has gets refused, not
+  corrupted.
+
+### 9.3 Petition 0003: guess the number [coming up]
+- The program reads.  CMP.serial.8250@2 gains receive (LSR data-ready,
+  RX); door entry 4, read.  Polling, no interrupts.
+- Done-when: bytes typed on the serial port reach the program in order; a
+  program that never reads leaves the port untouched.
+
+### 9.4 Petition 0004: Fibonacci timed [coming up]
+- The program needs a clock.  CAP.time.read; the TSC or the LAPIC timer,
+  whichever the machine petition can honestly present.  The clock debt from
+  findings 0002 becomes a named capability.  First real sensor: elapsed
+  time with a threshold.
+- Done-when: two runs report monotonic, plausible elapsed times; the
+  sensor goes red when the threshold is lowered below them.
+
+### 9.5 Petition 0005: save the sorted output [coming up]
+- Persistent storage.  A block device the machine petition adds
+  (virtio-blk is the smallest honest one on microvm), a driver lifted from
+  Linux, a filesystem lifted or written.  First expensive lift; the count
+  of hands cut is the finding.
+- Done-when: a file written by one boot is read back by the next.
+
+### 9.6 Petition 0006: two programs at once [coming up]
+- The first purpose that needs sharing.  The kernel appears: a scheduler
+  and whatever separation the purpose demands, every line named and
+  justified by this petition.  CMP.loader@2 or CMP.kernel@1, decided then.
+- Done-when: both programs produce their output; neither can corrupt the
+  other's memory, and a test proves it by trying.
+
+### 9.7 Petition 0007: the editor [coming up]
+- Open a text file, type, save.  Needs 9.3 and 9.5.  C now; Rust later as
+  CMP.editor@2.  libc (musl) enters here if anything fails on it, not before.
+
+### 9.8 The ladder holds [coming up]
+- Every program from 0000 up boots under the current loader with no change
+  to the program.  Run on every commit that touches the loader or a door.
+
+### 9.9 The loop [coming up]
 - try build, referee names a code, quartermaster drafts, committee reviews,
-  admit, retry.  Human in the loop at review until 8 exists.
-
-### 9.2 Petition 0001: editor [coming up]
-- Purpose: open a text file, type, save.  Terminal, filesystem, keyboard.
-  Fails only on what is new: tty input, file read and write, libc (musl).
-  C now; Rust later as CMP.editor@2.
-
-### 9.3 Mechanic [coming up]
-- Proposes patches and untangling refactors.  Never installs.  Separate
-  model and prompt from the tester.
+  admit, retry.  Human in the loop at review until 8 exists.  Mechanic
+  proposes patches and untangling refactors; never installs; separate model
+  and prompt from the tester.
 
 ## 10. Lifecycle [coming up]
 
