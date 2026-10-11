@@ -1,0 +1,360 @@
+# AiOS project plan (full)
+
+The detailed plan behind plan/brief.md.  Same numbering.  Each item carries:
+why (the tenet or design.md section it serves), what is produced, done-when
+(the check that can go red), depends-on, and open questions.  Status words
+match the brief: [done], [in progress], [coming up].  Update both files
+together; the brief is the one the owner reads.
+
+Order of work from design.md: constitution and petition schema, then tester,
+then builder and referee, then quartermaster, then committee, then the loop,
+then historian and first bare metal.  Items 2 (jig) and 6 (pool admission)
+are interleaved as the build fails on them.
+
+Standing rules for every item: no code until a petition names it; no tool on
+the jig without a tool-table row; every commit signed; every test seen red
+before it is trusted; failures name codes, never raw output.
+
+---
+
+## 1. Constitution [in progress]
+
+Why: tenets 1, 2, 7.  The repo is the thing everything traces to; nothing
+else can start until petitions have a schema to be written against.
+
+### 1.1 Repo rules, tenets, purpose 0000 [done]
+- Produced: CLAUDE.md, constitution/tenets.md (verbatim from design.md),
+  constitution/purposes/0000.md, design.md.  Commit 8167fbc "Article One".
+- Done-when: tenets diff clean against design.md (checked); commit signed
+  and verifies (checked).
+
+### 1.2 Petition schema [done]
+- Produced: schema/petition.md, READMEs for index, specs, tests, sensors and
+  pool, constitution/keys/README.md and chris.pub.  Commit d9c11f0.
+- Note: schema has six tables, not five; PUR was added (findings 0000 #1).
+
+### 1.3 Petition 0000 [done]
+- Produced: petitions/0000.toml, index/cap/tty.write.toml and
+  proc.exit.toml, specs/hello.1.toml, tests/hello.exact-bytes.toml,
+  sensors/hello.boot-to-output.toml.  Commit 3d691ac.
+- Deviations chosen: one test and one clause (brief and design say one);
+  no comments in the petition; numeric sensor threshold.
+
+### 1.4 Findings 0000 [done]
+- Produced: findings/0000.md, thirteen gaps.  Commit 007cc88.
+
+### 1.5 Entry file formats [coming up]
+- Why: findings #5.  The schema defines the petition but not the entries it
+  references, so "defined exactly once" is undefined.
+- Produce: one section per table in schema/petition.md (or schema/entries.md)
+  giving required and optional fields, types, and which fields are codes.
+  Fields already in use, to be ratified or replaced: CAP touches, mechanism;
+  SPEC component, clause; TST binds, red_when, runner; SNS proves, question,
+  threshold, unit, red, consumer.  CMP has no entry yet and needs: source
+  (pool path), depends (CMP list), exposes (CAP list), requires (CAP list),
+  as_built (spec text or path), admission (signature, signer, date,
+  reproducibility record).
+- Done-when: a validator script (sh, per tool table) rejects each existing
+  entry file when one required field is removed.
+- Depends on: nothing.  Open: whether the as-built spec is a field or a file.
+
+### 1.6 Review signing scheme [coming up]
+- Why: findings #4.  Signatures inside the signed file are circular.
+- Options: (a) sign a canonical form of the petition with the review block
+  stripped; (b) detached signatures in petitions/0000.sig.seat; (c) each
+  review is its own signed commit touching only the review block.
+  Lean: (c), because git already verifies commit signatures and the referee
+  gets rule 10 for free from git verify-commit.
+- Done-when: referee rule 10 passes on a petition with five signed reviews
+  and fails when any one review commit is unsigned or by a key not in
+  constitution/keys.
+
+### 1.7 Schema version 2 [coming up]
+- Resolve findings #2, #3, #6, #7, #9, #10, #12, #13.  Candidates:
+  - #2 negative requirements: a forbids list of CAP codes, or a CMP field
+    depends = [] meaning "nothing", enforced by rule 6.
+  - #3 unadmitted components: a petition status pending-admission that
+    rule 1 permits for codes listed with admitted = false, and that the
+    builder refuses.
+  - #6 scope grammar: per-CAP scope_syntax in the CAP entry.
+  - #7 clauses on dependencies: allow SPEC.component to be any CMP in the
+    petition; rule 2 becomes "belongs to a component in this petition".
+  - #9 test budget: TST field budget_ms.
+  - #10 machine: petition field machine = "MCH.id@v", a seventh table or a
+    folder under constitution/.
+  - #12 non-code references: a KEY table for signers and seats.
+  - #13 exercised grants: a per-CAP usage sensor the referee emits
+    automatically, exempt from the one-sensor rule because it is the
+    referee's, not the petition's.
+- Done-when: petitions/0000.toml rewritten against v2 with zero findings
+  left unaddressed or each one explicitly deferred in findings/0001.md.
+- Note: #8 (one test, two causes) and #11 (scaffolding) may be accepted as
+  design facts rather than fixed; record the decision.
+
+## 2. The jig [coming up]
+
+Why: design.md "Environment" and "Tool set and reduction plan".  The jig is
+outside the constitution and is bloat on purpose; every tool enters with its
+exit written down.
+
+### 2.1 NixOS minimal [coming up]
+- Produce: one configuration.nix of about twenty lines on the existing box.
+  The dev machine is Windows 11; the jig is a separate install or a VM on
+  it.  Decide which (open).
+- Done-when: the configuration is committed under jig/ and a rebuild from it
+  is bit-identical to the running system.
+
+### 2.2 Bare repo on the Pi [coming up]
+- Produce: bare git repo over SSH on the Pi; a pre-receive hook that runs
+  git verify-commit with the allowed signers from constitution/keys and
+  rejects anything unsigned.  No forge, no web UI.
+- Done-when: an unsigned push is rejected; a signed push lands.
+
+### 2.3 Tool table complete [coming up]
+- For each of: git, ssh, nix, nixos, kvm and qemu, c compiler and musl,
+  strace, mutation script, model clients, sh.  The row is not complete until
+  "how it gets reduced" is filled.  Python: default no.
+- Done-when: a script lists installed packages on the jig and every one maps
+  to a row.
+
+### 2.4 VM definition as a petition [coming up]
+- Produce: a QEMU invocation with -kernel, one serial, -nic none, no
+  display, -no-reboot; committed as a petitioned component once the machine
+  table exists (1.7 #10).
+- Done-when: strace of the QEMU process shows no socket syscalls; the VM has
+  no NIC device in its device tree.
+
+## 3. Referee [coming up]
+
+Why: tenet 7.  Deliberately dumb.  Rewritten first among the sh scripts.
+
+### 3.1 Resolver [coming up]
+- Input: a petition file.  Output: for each code, the file it resolves to at
+  that version, or the code that failed.
+- Done-when: deleting any one entry file turns the resolver red naming
+  exactly that code.
+
+### 3.2 Relation checker [coming up]
+- Rules 1 to 10 from schema/petition.md.  Report format: rule number and
+  code per failure, nothing else.
+- Done-when: for each rule, a fixture petition exists that violates only
+  that rule and the checker names it; disabling any single rule check makes
+  its fixture pass (the test goes red).
+
+### 3.3 Expiry, status, quorum [coming up]
+- Done-when: a petition with expires in the past is refused; a petition with
+  status approved and one missing seat is refused.
+
+### 3.4 Artifact check (rule 11) [coming up]
+- Compare the built image's component list and the VM device list to the
+  petition.  Needs the builder (5) to emit a manifest.
+- Done-when: adding one unpetitioned file to the initramfs is detected.
+
+### 3.5 Signature verification [coming up]
+- git verify-commit over the whole history against constitution/keys,
+  generated into an allowed_signers file.
+- Done-when: the current commits pass; a commit signed by a key not in the
+  directory fails.
+
+## 4. Tester [coming up]
+
+Why: tenet 8; build order "tester first".  Shares no model or prompt with
+the mechanic.
+
+### 4.1 Serial-capture runner [coming up]
+- Boot the shadow VM, capture the serial port to a file from power-on to
+  halt, with a budget (findings #9) after which the run is red.
+- Done-when: the runner goes red on a VM that never halts and on a VM that
+  prints a kernel banner.
+
+### 4.2 TST.hello.exact-bytes executable [coming up]
+- Byte-compare the capture to the 14 bytes.  Fill the runner field.
+- Done-when: 4.3 proves it can fail.
+
+### 4.3 Mutation script [coming up]
+- Fixed list of mutations to hello: wrong byte, missing newline, extra
+  write, no exit, exit before write.  Count caught mutants; all must be
+  caught.
+- Done-when: the script reports 5 of 5 caught, and removing the comparison
+  from the test reports 0 of 5.
+
+### 4.4 Sensor runner [coming up]
+- Time from QEMU start to last serial byte; compare to threshold 1000 ms;
+  deliver red to the stability seat (a file or a message until the
+  committee exists).
+- Done-when: an artificial 2 s delay in boot turns it red.
+
+## 5. Builder [coming up]
+
+Why: tenet 3; design "Nix is the builder".  Decides nothing.
+
+### 5.1 Translator [coming up]
+- petition.toml to a Nix expression listing exactly the CMP entries at their
+  versions from pool/.  No channels, no Home Manager.
+- Done-when: the expression for 0000 builds; adding a component to the
+  petition that is not in the pool fails naming the CMP code.
+
+### 5.2 Reproducibility [coming up]
+- Done-when: two hosts (jig and Pi, or jig and a VM) produce the same hash.
+
+### 5.3 Live and shadow [coming up]
+- Two QEMU definitions; the referee swaps only on a passing shadow; swaps
+  back on a red sensor.
+- Done-when: a deliberately broken shadow is never promoted.
+
+## 6. Pool admission for 0000 [coming up]
+
+Why: tenets 3, 4, 5; design "Failure builds the distribution".  Admit the
+smallest reviewable unit a failure asked for.  The order below is the
+expected failure order.
+
+### 6.1 CMP.hello@1 [coming up]
+- C, raw syscalls (write, exit), no libc, static, _start entry.  As-built
+  spec derived from the source.  Index entry with depends = [] and
+  requires = [CAP.tty.write, CAP.proc.exit].
+- Done-when: index entry validates (1.5); test 4.2 green under a stock
+  kernel except for kernel chatter (which is 6.3's job).
+
+### 6.2 CMP.toolchain.c@1 [coming up]
+- The jig's compiler is scaffolding; the pool's toolchain is a separate
+  admission.  Decide the first pool compiler (tcc, or gcc at a pinned
+  version, or the Guix bootstrap chain head).  Findings #11 applies.
+- Done-when: hello builds with the pool compiler alone.
+
+### 6.3 CMP.kernel.core@1 [coming up]
+- The first carve-out.  Requirements: no #ifdef inside the admitted
+  directory; console silent (no banner, no printk to the serial port); halt
+  when PID 1 exits instead of panic.  Each is a SPEC clause on the kernel,
+  which needs findings #7 resolved first.
+- Done-when: test 4.2 green from power-on to halt.
+
+### 6.4 CMP.kernel.serial.8250@1 [coming up]
+### 6.5 CMP.kernel.initramfs@1 [coming up]
+- Each on its own, with its own as-built spec and index entry.
+
+### 6.6 Signed admission [coming up]
+- Root key signs admission commits until committee seat keys exist (8.3).
+- Done-when: each index entry carries a signed admission the referee
+  accepts (3.5).
+
+### 6.7 First green build and bloat figure [coming up]
+- Record: kernel lines in the build vs lines any petition justified.  Expect
+  near 100 percent bloat.  Where it is recorded is findings #11.
+
+## 7. Quartermaster [coming up]
+
+Why: design "The index is the menu"; agent 2.  Reads source, never changes
+it.
+
+### 7.1 Index derivation [coming up]
+- From the forked Linux tree: components, dependencies, exposed CAPs,
+  derived from code not docs.
+- Done-when: the derived entry for serial.8250 matches the hand-written one
+  from 6.4, or the diff is a finding.
+
+### 7.2 Failure-to-code mapping [coming up]
+- Build failure text to index code.  "undefined reference to write" means a
+  missing CMP or CAP.
+- Done-when: every failure in the 0000 build loop has a code.
+
+### 7.3 Petition drafting [coming up]
+- From a failure code, draft a pool-admission petition for review.
+
+### 7.4 Kernel classification [coming up]
+- needed, not needed, or tangled for the kernel core directories.
+
+## 8. Committee [coming up]
+
+Why: tenet 9; design "The committee".  Five seats, five models, biases
+written down, quorum fixed in advance.
+
+### 8.1 Seats [coming up]
+- security, performance, portability, stability, purpose-fit.  Different
+  model per seat; at least one local (Ollama) so one voice never depends on
+  the network.  Model clients collapse into the gateway later (10.1).
+
+### 8.2 Quorum [coming up]
+- rule = all for now.  Add: timeouts, what a counter does, what happens when
+  a seat is unavailable.  Test deadlock deliberately.
+
+### 8.3 Seat keys [coming up]
+- One key per seat in constitution/keys; review signing per 1.6.
+
+### 8.4 First review [coming up]
+- Petition 0000 goes from draft to approved by five signed reviews.
+
+## 9. The loop [coming up]
+
+Why: design "Failure builds the distribution" and "The same model applied to
+the dev process".
+
+### 9.1 End-to-end loop [coming up]
+- try build, referee names a code, quartermaster drafts, committee reviews,
+  admit, retry.  Human in the loop at review until 8 exists.
+
+### 9.2 Petition 0001: editor [coming up]
+- Purpose: open a text file, type, save.  Terminal, filesystem, keyboard.
+  Fails only on what is new: tty input, file read and write, libc (musl).
+  C now; Rust later as CMP.editor@2.
+
+### 9.3 Mechanic [coming up]
+- Proposes patches and untangling refactors.  Never installs.  Separate
+  model and prompt from the tester.
+
+## 10. Lifecycle [coming up]
+
+Why: design "Lifecycle" and "Security consequences".
+
+### 10.1 Gateway [coming up]
+- Only outbound component; reaches the repo and the model provider,
+  signature-checked.  Does not exist after seal.
+
+### 10.2 Strip [coming up]
+- Remove everything without a live petition.  Referee's job: remove it and
+  confirm the seed can regrow it.
+- Done-when: strip, then regrow from the seed, produces a bit-identical
+  system.
+
+### 10.3 Watchman and molting rule [coming up]
+- Not a model.  Detects anomalies, triggers a molt.  Molting rule written
+  while the system is still smart.
+
+### 10.4 First sealed run [coming up]
+- Hello runs sealed: no model, no outbound connection, only the watchman and
+  the one sensor.
+- Done-when: strace shows no socket syscalls across the sealed run.
+
+## 11. Historian, cartographer, bare metal [coming up]
+
+### 11.1 Historian [coming up]
+- Records what worked where; pushes to the Pi; pulls upstream fixes through
+  the door.  Never bypasses review.
+
+### 11.2 Cartographer [coming up]
+- Probes CPU, memory, devices from datasheets.  Needs a sacrificial board.
+
+### 11.3 Purpose agent [coming up]
+- Translates purposes into committee weights.  Never adds a purpose.
+
+### 11.4 Gen two [coming up]
+- Purpose: build other instances of me.
+
+### 11.5 Self-rebuild and jig retirement [coming up]
+- Gen two rebuilds itself bit-identical to what gen zero made.  This is also
+  the trusting-trust check.  The jig is retired or absorbed.
+
+### 11.6 First bare metal [coming up]
+
+---
+
+## Decisions log
+- 2026-10-10: TOML for petitions.  Six tables (PUR added).  SSH-key signing
+  with ed25519, no passphrase, Windows ssh-agent on the dev box.
+- 2026-10-10: one test for 0000, not two; recorded as findings #8.
+
+## Open questions not yet assigned to an item
+- Where does the jig live: a second machine, a VM on the Windows box, or
+  WSL?  design.md says NixOS minimal on the existing box.
+- Which Pi, and is it already on the network?
+- Licence policy for admission (index/README mentions "a licence the
+  constitution accepts" but none is named).
