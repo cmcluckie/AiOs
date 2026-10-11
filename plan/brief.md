@@ -8,8 +8,8 @@ The detailed plan is plan/full.md; this file is the one to read.
    1.2. Petition schema with the code tables and referee rules. [done]
    1.3. Petition 0000, hello world, written against the schema. [done]
    1.4. Findings 0000, the thirteen schema gaps, recorded. [done]
-   1.5. Define the entry file formats for CAP, CMP, SPEC, TST and SNS. [coming up]
-   1.6. Fix the review signing scheme so signatures live outside the file they sign. [coming up]
+   1.5. Define the entry file formats for CAP, CMP, SPEC, TST and SNS. [done]
+   1.6. Fix the review signing scheme so signatures live outside the file they sign. [done]
    1.7. Resolve the remaining gaps and publish the schema at version 2. [coming up]
 
 2. The jig: the gen-zero host that turns the crank. [coming up]

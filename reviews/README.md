@@ -1,0 +1,1 @@
+One directory per petition id, one file per seat, each a detached signature over that petition at a named commit.  Format and the exact signed bytes are in schema/signing.md.  A review that names an older commit than the petition's last change does not count.

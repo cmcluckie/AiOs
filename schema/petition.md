@@ -53,15 +53,6 @@ Format is TOML.
     [[sensor]]
     code        = "SNS.hello.boot-to-output"
 
-    [[review]]
-    seat        = "security"             # security | performance | portability | stability | purpose-fit
-    verdict     = ""                     # approve | reject | counter
-    reason      = ""
-    signed      = ""                     # signature over this petition file at this commit
-
-    [quorum]
-    rule        = "all"                  # all: every seat approves; any reject blocks; any counter returns to draft
-
 ## Relation rules the referee enforces
 
 A petition that breaks any of these cannot be built.  The referee reports the
@@ -82,8 +73,9 @@ rule number and the offending code, nothing else.
    that names that code: that is the quartermaster's queue.
 8. Every SNS names a SPEC clause and a consumer seat.  No consumer, no sensor.
 9. `expires` is in the future at build time.
-10. `status = "approved"` requires a `[[review]]` for every seat satisfying
-    `[quorum]`, each with a valid signature.
+10. `status = "approved"` requires a valid detached review from every seat key, none
+    rejecting, none countering, all for the petition's current commit.  See
+    schema/signing.md.
 11. The built image contains no CMP not listed, exposes no CAP not granted,
     and the VM definition has no device no CAP requires.  Checked against the
     artifact, not the petition.

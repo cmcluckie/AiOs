@@ -45,38 +45,8 @@ admitted = false
 [[test]]
 code = "TST.hello.exact-bytes@1"
 
+[[test]]
+code = "TST.hello.silent-boot@1"
+
 [[sensor]]
 code = "SNS.hello.boot-to-output@1"
-
-[[review]]
-seat    = "security"
-verdict = ""
-reason  = ""
-signed  = ""
-
-[[review]]
-seat    = "performance"
-verdict = ""
-reason  = ""
-signed  = ""
-
-[[review]]
-seat    = "portability"
-verdict = ""
-reason  = ""
-signed  = ""
-
-[[review]]
-seat    = "stability"
-verdict = ""
-reason  = ""
-signed  = ""
-
-[[review]]
-seat    = "purpose-fit"
-verdict = ""
-reason  = ""
-signed  = ""
-
-[quorum]
-rule = "all"
