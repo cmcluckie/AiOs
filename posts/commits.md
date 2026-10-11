@@ -24,4 +24,5 @@ Status: requested (hash unknown), confirmed (hash seen), pushed.
 | 2026-10-14 (part 4, ours and theirs: to be written) | Ours and theirs: lifted/, origin records, upstream watch; flavors and the referee placeholder | c246e58 | pushed |
 | 2026-10-14 | Ledger: close c246e58 | fbebc14 | pushed |
 | 2026-10-14 | VS Code tasks via WSL; machine falls back to emulation without KVM | fbebc14 | pushed |
-| 2026-10-14 | Run and Debug lists the flavors | | requested |
+| 2026-10-14 | Run and Debug lists the flavors | d3bfebb | pushed |
+| 2026-10-14 | Press play from a browser: devcontainer and README | | requested |

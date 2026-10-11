@@ -2,6 +2,13 @@
 
 Pronounced AY-ohss.  Linux, re-admitted one justified line at a time.
 
+## Press play
+
+No commands needed.  Click **Code → Codespaces → Create codespace** on this
+page (or open the folder in VS Code with a WSL or Linux terminal), wait for it
+to set itself up, press **F5**, pick a flavor.  You will see it build, boot,
+print, and shut itself off.  Everything you see is explained below.
+
 An operating system that contains only what someone asked for.  Nothing enters
 without a petition that names its purpose, a spec that says what it must do, a
 test that can prove it wrong, and a signed commit that admitted it.  Anything

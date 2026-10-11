@@ -1,0 +1,9 @@
+{
+  // For readers, not for the system: "Open in Codespaces" on GitHub gives a machine
+  // with the compiler and QEMU installed.  Press F5, pick a flavor, watch it boot.
+  // The jig is the real build host; this is a window onto the repo.
+  "name": "AiOS reader",
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu-24.04",
+  "onCreateCommand": "sudo apt-get update && sudo apt-get install -y --no-install-recommends gcc-multilib qemu-system-x86",
+  "customizations": { "vscode": { "settings": { "files.eol": "\n" } } }
+}
