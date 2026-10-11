@@ -10,7 +10,7 @@
       "id": "flavor",
       "type": "pickString",
       "description": "Which flavor?",
-      "options": ["hello", "hanoi", "both"],
+      "options": ["hello", "hanoi", "life", "calc", "both"],
       "default": "hello"
     }
   ],

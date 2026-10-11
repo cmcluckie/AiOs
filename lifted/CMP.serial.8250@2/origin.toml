@@ -1,0 +1,60 @@
+# Where this part came from, exactly enough to lift it again.  Read by jig/upstream.
+# Format: schema/entries.md, "Origin".  @2 is @1 plus the receive side.
+
+[upstream]
+name       = "linux"
+repo       = "https://github.com/torvalds/linux.git"
+canonical  = "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git"
+commit     = "a5ebb76233b79db01e82e061173cb73c6d2b5c6b"
+committed  = 2026-10-10T16:57:30-07:00
+subject    = "Merge tag 'edac_urgent_for_v7.3_rc7' of git://git.kernel.org/pub/scm/linux/kernel/git/ras/ras"
+licence    = "GPL-2.0-only"
+
+[lift]
+by         = "KEY.chris@1"
+on         = 2026-10-11T11:40:00-07:00
+into       = "serial8250.c"
+from_part  = "CMP.serial.8250@1"
+
+[[lift.from]]
+file   = "drivers/tty/serial/8250/8250_early.c"
+blob   = "44ec209f37c4721c09cf3e60b4f334c78fefeb30"
+lines  = [[86, 98], [110, 126], [131, 152]]
+what   = "serial_putc, early_serial8250_read, init_port"
+
+[[lift.from]]
+file   = "arch/x86/kernel/early_printk.c"
+blob   = "cba75306e5b6289c26b734ad8bff614834643c86"
+lines  = [[108, 116], [128, 141]]
+what   = "early_serial_putc, early_serial_hw_init"
+
+[[lift.from]]
+file   = "arch/x86/include/asm/shared/io.h"
+blob   = "8009d781c2f97ea7f48178338387712d53a91957"
+lines  = [[7, 20]]
+what   = "BUILDIO: the inb and outb instructions"
+
+[[lift.from]]
+file   = "include/uapi/linux/serial_reg.h"
+blob   = "9c987b04e2d04b4a933f9b09e2b31af5b6fde95d"
+lines  = [[21, 24], [54, 54], [105, 105], [110, 110], [119, 119], [128, 128], [136, 137], [139, 139], [141, 142], [147, 147], [166, 167]]
+what   = "register offsets and bits, now including RX and data-ready"
+
+[[lift.from]]
+file   = "include/linux/serial.h"
+blob   = "bfda927dde155fd33b206774c68ed4dd6cc740ac"
+lines  = [[26, 29]]
+what   = "uart_lsr_tx_empty"
+
+[cut]
+removed = [
+  "struct uart_port, struct earlycon_device, struct console",
+  "the iotype switch (MMIO variants)",
+  "regshift",
+  "'\\n' -> '\\r\\n' translation in uart_console_write",
+  "the 0xffff timeout",
+  "cpu_relax",
+  "EARLYCON_DECLARE, OF_EARLYCON_DECLARE",
+  "CONFIG_CONSOLE_POLL, and early_serial8250_read's count loop and console argument",
+  "static_call indirection",
+]

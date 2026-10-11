@@ -1,0 +1,70 @@
+[petition]
+id         = "0003"
+purpose    = "PUR.0003@1"
+submitted  = 2026-10-11
+submitter  = "KEY.chris@1"
+expires    = 2027-04-11
+supersedes = ""
+status     = "pending"
+
+[[capability]]
+code   = "CAP.tty.read@1"
+reason = "SPEC.calc.1@1"
+scope  = "console0"
+
+[[capability]]
+code   = "CAP.tty.write@1"
+reason = "SPEC.calc.1@1"
+scope  = "console0"
+
+[[capability]]
+code   = "CAP.proc.exit@1"
+reason = "SPEC.calc.1@1"
+scope  = ""
+
+[[capability]]
+code   = "CAP.dev.serial@1"
+reason = "SPEC.machine.1@1"
+scope  = ""
+
+[[component]]
+code     = "CMP.calc@1"
+role     = "primary"
+admitted = false
+
+[[component]]
+code     = "CMP.toolchain.c@1"
+role     = "toolchain"
+admitted = false
+
+[[component]]
+code     = "CMP.loader@3"
+role     = "boot"
+admitted = false
+
+[[component]]
+code     = "CMP.serial.8250@2"
+role     = "dependency"
+admitted = false
+
+[[component]]
+code     = "CMP.machine.serial-only@1"
+role     = "machine"
+admitted = false
+
+[[component]]
+code     = "CMP.hypervisor.qemu@1"
+role     = "machine"
+admitted = false
+
+[[test]]
+code = "TST.calc.transcript@1"
+
+[[test]]
+code = "TST.serial.receive-order@1"
+
+[[test]]
+code = "TST.loader.same-binary@1"
+
+[[test]]
+code = "TST.hello.silent-boot@1"

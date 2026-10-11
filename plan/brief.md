@@ -59,8 +59,8 @@ The detailed plan is plan/full.md; this file is the one to read.
 
 9. The ladder: one textbook program per petition, each fails on exactly one new thing. [in progress]
    9.1. Petition 0001, Towers of Hanoi: recursion, output only; no new door, no new line in the loader, proving a second program changes nothing. [done]
-   9.2. Petition 0002, linked lists: the program asks for memory; the loader reads the machine's memory map and hands out pieces of it. [coming up]
-   9.3. Petition 0003, guess the number: the program reads; the serial segment gains a receive side and the door a read. [coming up]
+   9.2. Petition 0002, Conway's Game of Life: the program asks for memory; the loader reads the machine's memory map and hands out pieces of it. [done]
+   9.3. Petition 0003, a reverse-Polish calculator: the program reads; the serial part gains a receive side and the door a read. [done]
    9.4. Petition 0004, Fibonacci timed: the program needs a clock; the microvm clock debt becomes a petitioned capability and the first real sensor. [coming up]
    9.5. Petition 0005, save the sorted output: a disk driver and a filesystem lifted from Linux, the first expensive lift. [coming up]
    9.6. Petition 0006, two programs at once: the first thing that must be shared; the kernel appears, and every line of it is named. [coming up]

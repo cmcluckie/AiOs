@@ -1,0 +1,6 @@
+code       = "PUR.0003@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+sentence   = "Be a reverse-Polish calculator at the serial console until told to quit."
+holder     = "KEY.chris"

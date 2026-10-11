@@ -336,8 +336,8 @@ loader, and that is a test run every time (9.8).  Each rung is also a post.
   for hello and hanoi; 15 moves, 360 bytes, exact against a reference solver.
   Diff to the loader: zero lines.
 
-### 9.2 Petition 0002: linked lists [coming up]
-- The pointer chapter.  The program asks the door for memory.  Forces the
+### 9.2 Petition 0002: Conway's Game of Life [done]
+- The memory chapter.  Two grids far bigger than the stack.  The program asks the door for memory.  Forces the
   loader to read the memory map the firmware hands over (hvm_start_info
   memmap) and to hand out pieces: a bump allocator first, free when a
   program needs it.  CAP.mem.alloc; door entry 3.  One tenant, no
@@ -345,12 +345,21 @@ loader, and that is a test run every time (9.8).  Each rung is also a post.
 - Done-when: a program builds and walks a list larger than its own stack;
   a program asking for more than the machine has gets refused, not
   corrupted.
+- 2026-10-11: done under software emulation.  CMP.loader@2 adds the alloc
+  door (35 lines); Life runs 200 generations byte-exact against a reference;
+  128 MiB refused; hello and hanoi unchanged under @2.  Findings 0005.
 
-### 9.3 Petition 0003: guess the number [coming up]
-- The program reads.  CMP.serial.8250@2 gains receive (LSR data-ready,
+### 9.3 Petition 0003: a reverse-Polish calculator [done]
+- The program reads.  Guess-the-number needs randomness, which needs a clock
+  (9.4), so the input chapter became the stack chapter instead.  CMP.serial.8250@2 gains receive (LSR data-ready,
   RX); door entry 4, read.  Polling, no interrupts.
 - Done-when: bytes typed on the serial port reach the program in order; a
   program that never reads leaves the port untouched.
+- 2026-10-11: done under software emulation.  CMP.serial.8250@2 (receive
+  side, lifted), CMP.loader@3 (read door, 13 lines), CMP.calc@1.  Transcript
+  exact against an independent Python reference after the reference caught a
+  32-bit overflow bug.  Hello, Hanoi and Life unchanged under @3.  Findings
+  0006.
 
 ### 9.4 Petition 0004: Fibonacci timed [coming up]
 - The program needs a clock.  CAP.time.read; the TSC or the LAPIC timer,

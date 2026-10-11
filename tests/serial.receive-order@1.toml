@@ -1,0 +1,10 @@
+code       = "TST.serial.receive-order@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+binds      = "SPEC.serial.2@1"
+red_when   = "a program that echoes every byte it reads, fed 4096 bytes of every value but 3 and 4 in a fixed order, writes back anything other than those 4096 bytes in that order"
+timeout_ms = 20000
+isolates   = "CMP.serial.8250@2"
+runner     = ""
+mutations  = 0

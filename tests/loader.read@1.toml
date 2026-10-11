@@ -1,0 +1,10 @@
+code       = "TST.loader.read@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+binds      = "SPEC.loader.7@1"
+red_when   = "with tests/fixtures/calc.in fed to the serial port, CMP.calc@1 under this loader does not produce the reference transcript, or hello, hanoi or life under this loader differ by one byte from their outputs under the loader they were built for"
+timeout_ms = 30000
+isolates   = "CMP.loader@3"
+runner     = ""
+mutations  = 0

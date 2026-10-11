@@ -29,7 +29,11 @@ runs one program and a program that only talks through the loader's door.
 [findings/0002.md](findings/0002.md) lists every line no petition justifies.
 
 Petition 0001, Towers of Hanoi, runs under the same loader binary with no
-change to it.  The ladder of petitions after that is in the plan: each one a
+change to it.  Petition 0002, Conway's Game of Life, asks the loader for
+memory: the loader grew by 35 lines and one door entry, and the two earlier
+programs run under it unchanged.  Petition 0003, a reverse-Polish calculator,
+reads from the keyboard: the serial part we took from Linux gained its receive
+side, the loader a read door, and the three earlier programs run unchanged.  The ladder of petitions after that is in the plan: each one a
 program every CS student wrote once, chosen because it needs exactly one new
 thing from the machine.
 
@@ -53,6 +57,7 @@ admitted; every entry is still `draft`.
     plan/           the project plan, brief and full
     jig/            the gen-zero build host, declared before it existed
     pi/             the bare repository that refuses unsigned pushes
+    posts/          the series: each day a LinkedIn post, its image, and the longer story behind it
 
 ## Running a flavor
 

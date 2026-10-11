@@ -1,0 +1,14 @@
+code          = "CMP.loader@3"
+status        = "draft"
+admitted      = ""
+retired_by    = ""
+kind          = "kernel"
+source        = "pool/CMP.loader@3/"
+licence       = "MIT"
+depends       = ["CMP.serial.8250@2"]
+build_depends = ["CMP.toolchain.c@1"]
+exposes       = ["CAP.proc.exit@1", "CAP.mem.alloc@1"]
+requires      = []
+scaffold      = false
+as_built      = "index/cmp/loader@3.as-built.md"
+reproducible  = ""

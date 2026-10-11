@@ -1,0 +1,7 @@
+code       = "SPEC.calc.1@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+component  = "CMP.calc@1"
+clause     = "Given a sequence of typed bytes, the component writes exactly what an independent reference implementation of the same reverse-Polish rules writes for that sequence, including echo, errors and the final bye, and exits only on q, quit, Ctrl-C or Ctrl-D."
+author     = "KEY.chris"
