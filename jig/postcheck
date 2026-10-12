@@ -24,10 +24,11 @@ check_html() {
 
 	first=$(head -1 "$p")
 	case "$first" in
-		"AiOS, part $n.  \""*"\"...") ;;
-		*) bad "$h" "post's first line is not 'AiOS, part $n.  \"<pull quote>\"...'" ;;
+		"AiOS, part $n (Kernel code: "[0-9]*" lines). \""*"\"...") ;;
+		*) bad "$h" "post's first line is not 'AiOS, part $n (Kernel code: K lines). \"<pull quote>\"...'" ;;
 	esac
 	[ "$(grep -c . "$p")" -eq 1 ] || bad "$h" "post is more than its one line"
+	grep -q '\.  ' "$p" && bad "$h" "post has two spaces after a period; LinkedIn collapses them"
 
 	section title "$h" | grep -q '<h1>[^<][^<]*</h1>' || bad "$h" "title section has no <h1>title</h1>"
 

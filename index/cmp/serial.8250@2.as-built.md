@@ -25,7 +25,10 @@ The bytes it is handed, to `base+0`, unchanged.  Nine configuration bytes to the
 registers above during init.
 
 ## Size
-5 functions, 240 bytes of code.  Source: 57 lines of code, lifted; provenance in the file header.
+7 functions.  Source: 69 lines of code (57 from @1 plus 12), lifted; provenance
+in the file header.  Code size not yet re-measured with the jig's compiler; the
+240 bytes recorded for @1 no longer apply (another gcc puts @2 at 88 bytes more
+than @1).
 
 ## What was cut
 Listed in serial8250.c and origin.toml.  The init sequence is kept though the hypervisor does not

@@ -212,8 +212,13 @@ so the folder runs ahead of LinkedIn on purpose.
 - `YYYY-MM-DD.html`: everything Chris pastes into LinkedIn, in one file, in
   the order he pastes it.  He opens it in a browser and each section has a
   Copy button; LinkedIn keeps the formatting when pasted from a rendered page.
-- `YYYY-MM-DD.png`: its image.  Real terminal output from the real build,
-  never a mock-up.  Claude produces it.
+- `YYYY-MM-DD.png`: its image, 2400 by 1350.  One idea from the post made
+  visual, built only from things that really happened: real output, real
+  code, real numbers, drawn nicely (a transcript with the bug circled, Life's
+  real grid as cells, Hanoi's real board at a real move).  Dark background,
+  `AiOs · part N` top left in green, one big line in Chris's voice bottom
+  left with a smaller line under it.  Anything exaggerated says so on the
+  image.  Claude produces it.
 
 **Voice.**  Chris's, every time.  Read posts/voice.md before drafting anything,
 and update it in the same change whenever he corrects a draft.  When the AI
@@ -225,9 +230,12 @@ id="...">` with a label and a Copy button outside the copied part:
 2. `title`: the article's title, nothing else.
 3. `article`: the article body.
 
-**The post (section `post`).**  One line, nothing else: `AiOS, part N.` then
-a one-sentence pull quote from the article in double quotes, then `...`.
-LinkedIn attaches the article to it.
+**The post (section `post`).**  One line, nothing else: `AiOS, part N (Kernel
+code: K lines).` then a one-sentence pull quote from the article in double
+quotes, then `...`.  Single spaces after periods (LinkedIn collapses doubles).
+K is the lines of code taken from Linux (lifted/, the .c files, no blanks, no
+comments, as the as-built specs record them) on the day the post goes out:
+57 from part 1, 69 from part 6.  LinkedIn attaches the article to it.
 
 **The article (section `article`), top to bottom.**
 1. `<p><em>The story behind AiOS, part N.</em></p>`

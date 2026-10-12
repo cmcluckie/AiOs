@@ -379,7 +379,8 @@ loader, and that is a test run every time (9.8).  Each rung is also a post.
 ### 9.6 Petition 0006: two programs at once [coming up]
 - The first purpose that needs sharing.  The kernel appears: a scheduler
   and whatever separation the purpose demands, every line named and
-  justified by this petition.  CMP.loader@2 or CMP.kernel@1, decided then.
+  justified by this petition.  The next CMP.loader growing into it, or a
+  separate CMP.kernel@1 the loader hands off to; decided then, in a finding.
 - Done-when: both programs produce their output; neither can corrupt the
   other's memory, and a test proves it by trying.
 
@@ -396,6 +397,27 @@ loader, and that is a test run every time (9.8).  Each rung is also a post.
   admit, retry.  Human in the loop at review until 8 exists.  Mechanic
   proposes patches and untangling refactors; never installs; separate model
   and prompt from the tester.
+
+### 9.10 The first Linux binary [coming up]
+- A statically linked Linux hello world, unmodified, runs on AiOs.  It makes
+  two system calls, write and exit_group, both already behind the door: the
+  loader answers Linux's system-call entry for those two numbers and loads
+  the program the way Linux lays it out.  Nothing else of Linux's interface
+  exists.
+- From here each Linux system call is a capability of its own, petitioned by
+  the first program that needs it, found by tracing that program on Linux,
+  never by guessing.  The list of system calls AiOs answers is the record of
+  which programs asked for each one.
+- Done-when: the binary's output is byte-identical to the same binary on
+  Linux; a system call nobody petitioned fails loudly with its number.
+
+### 9.11 BusyBox vi, unmodified [coming up]
+- The capstone of the Linux-binary rungs: BusyBox's vi, built static, runs
+  on AiOs unchanged.  Expected to ask for files (on 9.5's filesystem),
+  terminal control (raw keys, screen size), signals enough for Ctrl-C and
+  resize, time and memory growth.  No fork, no exec.  The trace decides.
+- Done-when: open a file, edit it, save it, quit; the saved bytes match what
+  the same keystrokes produce in the same vi on Linux.
 
 ## 10. Lifecycle [coming up]
 

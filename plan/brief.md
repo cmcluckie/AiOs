@@ -67,6 +67,8 @@ The detailed plan is plan/full.md; this file is the one to read.
    9.7. Petition 0007, the console text editor: open, type, save; needs 0003 and 0005; C now, Rust later as CMP.editor@2. [coming up]
    9.8. Every earlier program runs under every later loader; no door ever moves. [coming up]
    9.9. Loop driven end to end by referee failures, with the mechanic proposing and never installing. [coming up]
+   9.10. The first Linux binary: a static Linux hello world runs unmodified on two system calls; every further Linux system call is petitioned by the first program that needs it. [coming up]
+   9.11. BusyBox vi, unmodified: the capstone Linux binary, its system calls found by tracing it, each one a petitioned capability. [coming up]
 
 10. Lifecycle: grow, prove, strip, seal, molt. [coming up]
    10.1. Gateway as the only component that talks to the outside. [coming up]

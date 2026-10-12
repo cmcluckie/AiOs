@@ -31,4 +31,5 @@ Status: requested (hash unknown), confirmed (hash seen), pushed.
 | 2026-10-17 (part 7, definition of done) | Definition of done: as-built specs, tests and the addenda | 6280a41 | pushed |
 | 2026-10-17 | Ledger and post links: close 6c21f6c, 00099c4, 6280a41 | 0a49b8b | pushed |
 | none | README: the parts of AiOs, in one picture | 5cdca86 | pushed |
-| none | Posts become one HTML file each: post, title and article, with Copy buttons | | requested |
+| none | Posts become one HTML file each: post, title and article, with Copy buttons | 6bf9a21 | pushed |
+| none | Post images drawn, kernel line counts, and two Linux-binary rungs in the plan | | requested |
