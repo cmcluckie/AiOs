@@ -16,4 +16,7 @@ Set-VM -VMName jig -CheckpointType Disabled -AutomaticStopAction ShutDown -Autom
 Add-VMDvdDrive -VMName jig -Path $Iso
 Set-VMFirmware -VMName jig -FirstBootDevice (Get-VMDvdDrive -VMName jig)
 Start-VM jig
-Write-Host "jig started from the ISO.  In the VM: sudo -i, set a root password with passwd, then scp jig/ in and run install.sh."
+Write-Host "jig started from the ISO.  In the VM: sudo -i, then:"
+Write-Host "  curl -L https://github.com/cmcluckie/aios/archive/main.tar.gz | tar xz"
+Write-Host "  sh aios-main/jig/install.sh"
+Write-Host "Then here: Stop-VM jig; Get-VMDvdDrive -VMName jig | Remove-VMDvdDrive; Start-VM jig"

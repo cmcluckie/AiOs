@@ -107,10 +107,10 @@ AiOS, part 11 (Kernel code: 844 lines). "I remember drooling over an Amiga at Ra
 <li><a href="https://github.com/cmcluckie/aios/blob/main/tests/machine.irq-only@1.toml">machine.irq-only@1</a>.  Checks: The machine presents the guest one 16550 serial port, one 8254 timer and the 8259 interrupt controllers, and no network, storage, display or input device; whatever else the hypervisor forces present is named in the as-built spec and touched by no component; a reset request ends the machine.  Goes red when: the device tree of the paused share machine contains any device other than: isa-serial, isa-pit or kvm-pit, isa-i8259 or kvm-i8259, isabus-bridge, ioapic, fw_cfg_io, kvmclock or kvmvapic, and the eight empty virtio-mmio transports microvm cannot omit, or not exactly one serial port, one 8254 and two 8259s.  Status: Passed by the runner (software emulation): 16 devices: the serial port, the 8254, the two 8259s, and what microvm forces.  Mutations caught: 1.</li>
 </ul>
 <h2>Code on GitHub</h2>
-<p>Every line that changed, on one page (hash when committed).</p>
+<p><a href="https://github.com/cmcluckie/aios/compare/9b980aa...9cbe6b7">Every line that changed, on one page</a>.</p>
 <p>The commits behind this post, in order:</p>
 <ol>
-<li>Petition 0006: two programs at once; the KERNAL becomes a kernel (hash when committed)</li>
+<li><a href="https://github.com/cmcluckie/aios/commit/9cbe6b7">Petition 0006: two programs at once; the KERNAL becomes a kernel</a></li>
 </ol>
 <p><a href="https://github.com/cmcluckie/aios">The whole repo</a>.</p>
 </div>

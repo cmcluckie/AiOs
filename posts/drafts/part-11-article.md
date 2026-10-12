@@ -96,10 +96,10 @@ ADDENDUM
 
 ## Code on GitHub
 
-Every line that changed, on one page (hash when committed).
+[Every line that changed, on one page](https://github.com/cmcluckie/aios/compare/9b980aa...9cbe6b7).
 
 The commits behind this post, in order:
 
-1. Petition 0006: two programs at once; the KERNAL becomes a kernel (hash when committed)
+1. [Petition 0006: two programs at once; the KERNAL becomes a kernel](https://github.com/cmcluckie/aios/commit/9cbe6b7)
 
 [The whole repo](https://github.com/cmcluckie/aios).

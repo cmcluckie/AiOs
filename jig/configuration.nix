@@ -6,12 +6,13 @@
   networking.hostName = "jig";
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
-  boot.kernelModules = [ "kvm-amd" ];
+  boot.kernelModules = [ "kvm-amd" ];        # the box is a Ryzen 9 5900X
+  virtualisation.hypervGuest.enable = true;  # Hyper-V's own drivers: disk, network, clean shutdown
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
   nix.channel.enable = false;
   documentation.enable = false;
   environment.defaultPackages = [ ];
-  environment.systemPackages = with pkgs; [ git qemu_kvm gcc strace ];
+  environment.systemPackages = with pkgs; [ git qemu_kvm gcc_multi strace ];  # gcc_multi: the loader is built -m32
   services.openssh.enable = true;
   services.openssh.settings.PasswordAuthentication = false;
   users.users.chris = {
