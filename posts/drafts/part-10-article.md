@@ -97,10 +97,10 @@ ADDENDUM
 
 ## Code on GitHub
 
-Every line that changed, on one page (hash when committed).
+[Every line that changed, on one page](https://github.com/cmcluckie/aios/compare/1d14857...8247a91).
 
 The commits behind this post, in order:
 
-1. Petition 0005: save the sorted output, on an IDE disk, in Minix (hash when committed)
+1. [Petition 0005: save the sorted output, on an IDE disk, in Minix](https://github.com/cmcluckie/aios/commit/8247a91)
 
 [The whole repo](https://github.com/cmcluckie/aios).

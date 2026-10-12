@@ -102,10 +102,10 @@ AiOS, part 10 (Kernel code: 638 lines). "AI writes code now, lots of it, fast. T
 <li><a href="https://github.com/cmcluckie/aios/blob/main/tests/machine.disk-only@1.toml">machine.disk-only@1</a>.  Checks: The machine presents the guest one 16550 serial port and one IDE disk that can interrupt nothing, and no network, timer, display or input device; whatever else the hypervisor forces present is named in the as-built spec and touched by no component; a reset request ends the machine.  Goes red when: the device tree of the paused sort machine contains any device other than: isa-serial, isa-ide and its ide-hd, isabus-bridge, ioapic, fw_cfg_io, kvmclock or kvmvapic, and the eight empty virtio-mmio transports microvm cannot omit, or not exactly one serial port and one disk.  Status: Passed by the runner (software emulation): 15 devices, one of them the disk, all on the list.  Mutations caught: 1.</li>
 </ul>
 <h2>Code on GitHub</h2>
-<p>Every line that changed, on one page (hash when committed).</p>
+<p><a href="https://github.com/cmcluckie/aios/compare/1d14857...8247a91">Every line that changed, on one page</a>.</p>
 <p>The commits behind this post, in order:</p>
 <ol>
-<li>Petition 0005: save the sorted output, on an IDE disk, in Minix (hash when committed)</li>
+<li><a href="https://github.com/cmcluckie/aios/commit/8247a91">Petition 0005: save the sorted output, on an IDE disk, in Minix</a></li>
 </ol>
 <p><a href="https://github.com/cmcluckie/aios">The whole repo</a>.</p>
 </div>

@@ -44,5 +44,6 @@ Status: requested (hash unknown), confirmed (hash seen), pushed.
 | none | Posts 1, 2, 4, 8 and 9: six claims a kernel developer would flag, corrected | 4d6c509 | pushed |
 | none | Part 1 back as published: warts and all | 9f872c2 | pushed |
 | none | The series' underlying message: safe, automated, agentic development | 9f872c2 | pushed |
-| none | Rule: when options would each do the job, default to the one with the history | | requested |
-| 2026-10-20 (part 10, the disk) | Petition 0005: save the sorted output, on an IDE disk, in Minix | | requested |
+| none | Rule: when options would each do the job, default to the one with the history | 1d14857 | pushed |
+| 2026-10-20 (part 10, the disk) | Petition 0005: save the sorted output, on an IDE disk, in Minix | 8247a91 | pushed |
+| 2026-10-20 | Part 10 links filled in | | requested |
