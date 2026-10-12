@@ -174,6 +174,10 @@ exactly; when a new one is needed, add it here in the same commit.
   naming the post it belongs to, and the hash once Chris reports it.  A commit
   is never requested without a row; a row is never closed without a hash.
   Commits that belong to different posts are never mixed into one commit.
+- When there's a choice between options that would each do the job, the
+  default is the one with the history: the 8254 over a newer clock, Minix
+  over a newer filesystem.  Say which one has the history when offering the
+  choice.  Chris still decides.
 
 ## Definition of done
 
