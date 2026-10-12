@@ -32,4 +32,5 @@ Status: requested (hash unknown), confirmed (hash seen), pushed.
 | 2026-10-17 | Ledger and post links: close 6c21f6c, 00099c4, 6280a41 | 0a49b8b | pushed |
 | none | README: the parts of AiOs, in one picture | 5cdca86 | pushed |
 | none | Posts become one HTML file each: post, title and article, with Copy buttons | 6bf9a21 | pushed |
-| none | Post images drawn, kernel line counts, and two Linux-binary rungs in the plan | | requested |
+| none | Post images drawn, kernel line counts, and two Linux-binary rungs in the plan | 7c0e7a9 | pushed |
+| 2026-10-18 (part 8, the testers) | Tests run themselves: jig/test, jig/mutate, expected outputs and probes | | requested |

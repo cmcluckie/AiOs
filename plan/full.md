@@ -162,27 +162,31 @@ Why: tenet 7.  Deliberately dumb.  Rewritten first among the sh scripts.
 - Done-when: the current commits pass; a commit signed by a key not in the
   directory fails.
 
-## 4. Tester [coming up]
+## 4. Tester [in progress]
 
 Why: tenet 8; build order "tester first".  Shares no model or prompt with
 the mechanic.
 
-### 4.1 Serial-capture runner [coming up]
+### 4.1 Serial-capture runner [done]
 - Boot the shadow VM, capture the serial port to a file from power-on to
   halt, with a budget (findings #9) after which the run is red.
 - Done-when: the runner goes red on a VM that never halts and on a VM that
   prints a kernel banner.
 
-### 4.2 TST.hello.exact-bytes executable [coming up]
+### 4.2 TST.hello.exact-bytes executable [done]
 - Byte-compare the capture to the 14 bytes.  Fill the runner field.
 - Done-when: 4.3 proves it can fail.
 
-### 4.3 Mutation script [coming up]
+### 4.3 Mutation script [done]
 - Fixed list of mutations to hello: wrong byte, missing newline, extra
   write, no exit, exit before write.  Count caught mutants; all must be
   caught.
 - Done-when: the script reports 5 of 5 caught, and removing the comparison
   from the test reports 0 of 5.
+- As built: jig/test and jig/mutate run every test and every mutation in
+  tests/mutations.txt, not just hello's.  5 of 5 caught; without the
+  comparison 1 of 5 is still caught, by the time limit, which is right
+  (findings 0007 #11).
 
 ### 4.4 Sensor runner [coming up]
 - Time from QEMU start to last serial byte; compare to threshold 1000 ms;

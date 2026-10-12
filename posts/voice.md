@@ -95,8 +95,9 @@ Chris included, and the posts say so.
 
 ## Mechanics
 
-- First line: "AiOS, part N." then the pull quote and an ellipsis (CLAUDE.md).
-- Single spaces after periods in posts; LinkedIn eats doubles anyway.
-- End: "Come along!", then #AiOS and the labelled links (CLAUDE.md).
+- The post is one line: "AiOS, part N (Kernel code: K lines)." then the pull
+  quote and an ellipsis (CLAUDE.md).  Single spaces after periods; LinkedIn
+  eats doubles anyway.
+- The article ends with "Code on GitHub" and its labelled links (CLAUDE.md).
 - Every factual claim in a post is true of the repo at that commit.  The jokes
   can exaggerate; the numbers can't.

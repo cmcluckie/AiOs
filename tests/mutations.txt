@@ -1,0 +1,33 @@
+# Mutations: jig/mutate breaks the code on purpose, one line at a time, and runs
+# the named test against the broken copy.  "red" means the test must go red; if
+# it stays green, the test is decoration (tenet 8).  "survives" records a
+# mutation we know no test catches yet, and why: each one is a finding.
+#
+# Fields are separated by space-bar-space; a sed expression may contain || but not " | ".
+# A mutation that stops the build proves nothing: jig/mutate reports it as NO-BUILD.
+#
+# test                  | expect   | file                                 | sed expression                                                             | what it breaks
+hello.exact-bytes@1     | red      | pool/CMP.hello@1/hello.c             | s/Hello, world/Jello, world/                                               | one wrong letter in hello's message
+hello.exact-bytes@1     | red      | pool/CMP.hello@1/hello.c             | s/world.\\n"/world."/                                                     | the newline goes missing
+hello.exact-bytes@1     | red      | pool/CMP.hello@1/hello.c             | s/\tdoor->exit(0);/\tdoor->write(message, 1);\n\tdoor->exit(0);/         | one extra write before exit
+hello.exact-bytes@1     | red      | pool/CMP.hello@1/hello.c             | s/\tdoor->exit(0);/\tfor (;;)\n\t\t;/                                       | hello never exits, so the machine never halts
+hello.exact-bytes@1     | red      | pool/CMP.hello@1/hello.c             | s/\tdoor->write(message, sizeof(message) - 1);/\tdoor->exit(0);\n\0/       | hello exits before it writes
+hello.silent-boot@1     | red      | pool/CMP.loader@1/loader.c           | s/serial8250_init(CONSOLE_PORT);/serial8250_init(CONSOLE_PORT); serial8250_putc(CONSOLE_PORT, 0x21);/ | the loader says one byte of its own at boot
+hanoi.exact-moves@1     | red      | pool/CMP.hanoi@1/hanoi.c             | s/hanoi(n - 1, via, from, to);/hanoi(n - 1, from, via, to);/              | the second recursive call moves the wrong stack
+life.exact-output@1     | red      | pool/CMP.life@1/life.c               | s/n == 3 ||/n == 4 ||/                                                     | a cell is born with four neighbours instead of three
+calc.transcript@1       | red      | pool/CMP.calc@1/calc.c               | s/if (acc > (limit - d) \/ 10) return 2;/if (0 \&\& acc > (limit - d) \/ 10) return 2;/ | the overflow check part 6 added, removed again
+loader.runs-program@1   | red      | pool/CMP.loader@1/loader.c           | s/dst = (unsigned char \*)PROGRAM_BASE;/dst = (unsigned char *)PROGRAM_BASE + 16;/ | the program is copied 16 bytes from where it runs
+loader.halts@1          | red      | pool/CMP.loader@1/loader.c           | s/serial8250_flush(CONSOLE_PORT);//                                        | exit no longer waits for the last byte to leave
+loader.door-layout@1    | red      | pool/CMP.loader@3/door.h             | s/\tvoid \*(\*alloc)/\tvoid *spare;\n\tvoid *(*alloc)/                     | an entry inserted in the middle of the door
+loader.alloc-in-ram@1   | red      | pool/CMP.loader@2/loader.c           | s/heap_next = (program_end + 15) \& ~15UL;/heap_next = (program_end - 4096) \& ~15UL;/ | the heap starts inside the program
+loader.alloc-refuses@1  | red      | pool/CMP.loader@2/loader.c           | s/ || n > heap_end - p//                                                   | alloc no longer checks there is room
+loader.read@1           | red      | pool/CMP.loader@3/loader.c           | s/p\[got++\] = serial8250_getc(CONSOLE_PORT);/p[got++] = (unsigned char)(serial8250_getc(CONSOLE_PORT) ^ 1);/ | the read door flips the low bit of every byte it hands over
+loader.read@1           | survives | pool/CMP.loader@3/loader.c           | s/\treturn got;/\treturn got + (got < n);/                                 | read reports one byte more than it received: the calculator only ever asks for one byte, so its transcript cannot see it (findings 0007)
+serial.receive-order@1  | red      | pool/CMP.loader@3/loader.c           | s/\treturn got;/\treturn got + (got < n);/                                 | the same broken read, caught by the echo probe, which asks for 256 bytes at a time
+serial.in-order@1       | red      | lifted/CMP.serial.8250@1/serial8250.c | s/\toutb(c, base + UART_TX);/\tif (c == 10) outb(13, base + UART_TX);\n\toutb(c, base + UART_TX);/ | the driver puts back the \r Linux adds before \n
+serial.receive-order@1  | red      | lifted/CMP.serial.8250@2/serial8250.c | s/return inb(base + UART_RX);/return inb(base + UART_RX) ^ 1;/            | every received byte has its low bit flipped
+serial.origin-matches@1 | red      | lifted/CMP.serial.8250@1/origin.toml | s/44ec209f37c4721c09cf3e60b4f334c78fefeb30/44ec209f37c4721c09cf3e60b4f334c78fefeb31/ | the origin record names the wrong blob
+machine.no-peripherals@1 | red     | pool/CMP.machine.serial-only@1/machine.sh | s/-nic none/-nic none -device isa-debug-exit/                         | the machine grows a device nobody asked for
+machine.no-sockets@1    | red      | pool/CMP.machine.serial-only@1/machine.sh | s/-monitor none/-monitor tcp:127.0.0.1:45454,server=on,wait=off/      | the machine opens a network socket
+serial.in-order@1       | survives | lifted/CMP.serial.8250@1/serial8250.c | s/while ((inb(base + UART_LSR) \& UART_LSR_THRE) == 0)/while (0 \&\& (inb(base + UART_LSR) \& UART_LSR_THRE) == 0)/ | the driver stops waiting for the chip to be ready before each byte: QEMU's port is always ready, so nothing notices (findings 0007)
+hello.exact-bytes@1     | survives | lifted/CMP.serial.8250@1/serial8250.c | s/outb(UART_LCR_WLEN8, base + UART_LCR);/outb(0, base + UART_LCR);/        | init sets 5 data bits instead of 8: QEMU's port ignores it (findings 0002 #7), and no spec covers init

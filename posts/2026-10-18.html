@@ -1,0 +1,141 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Where's the kernel?</title>
+<style>
+body{max-width:760px;margin:32px auto;padding:0 16px;font-family:Georgia,serif;font-size:18px;line-height:1.6;color:#222;background:#fff}
+section{border:1px solid #ddd;border-radius:10px;padding:0 20px 12px;margin:0 0 28px}
+.bar{display:flex;justify-content:space-between;align-items:center;margin:0 -20px 12px;padding:8px 20px;background:#f4f3ef;border-bottom:1px solid #ddd;border-radius:10px 10px 0 0;font:600 14px system-ui,sans-serif;color:#555;user-select:none}
+button{font:600 14px system-ui,sans-serif;padding:6px 16px;border-radius:16px;border:1px solid #0a66c2;background:#0a66c2;color:#fff;cursor:pointer}
+button.done{background:#fff;color:#0a66c2}
+.text{white-space:pre-wrap;font-family:system-ui,sans-serif;font-size:15px}
+.img{font:14px system-ui,sans-serif;color:#555}
+</style></head><body>
+<section id="post">
+<div class="bar"><span>1. Post</span><button onclick="copyText('post-body',this)">Copy</button></div>
+<div id="post-body" class="text">
+AiOS, part 8 (Kernel code: 69 lines). "I kept asking the AI where the kernel was. The honest answer is there isn't one yet."...
+</div>
+</section>
+<section id="title">
+<div class="bar"><span>2. Title</span><button onclick="copyText('title-body',this)">Copy</button></div>
+<div id="title-body"><h1>Where's the kernel?</h1></div>
+</section>
+<section id="article">
+<div class="bar"><span>3. Article</span><button onclick="copyRich('article-body',this)">Copy</button></div>
+<div id="article-body">
+<p><em>The story behind AiOS, part 8.</em></p>
+<h2>Who's been checking the homework</h2>
+<p>Up until now, the testing on this project has been done by the AI.  It runs the program, looks at what comes out, compares it with what it should be, and tells me it passed.  That's fine for getting started.  It is not where we want to be.  The whole point of writing tests down is that something other than the author runs them, every time, and doesn't get tired or optimistic.</p>
+<p>So this part is the testers.  A runner that boots every program and checks every byte, and a script that breaks the code on purpose to prove the tests would notice.  But to decide what to test, I first had to understand what the parts actually are.  And that's where the light bulb went on for me about what actually makes an operating system.</p>
+<h2>Where's the kernel?</h2>
+<p>I kept asking the AI where the kernel was.  The honest answer is there isn't one yet.</p>
+<p>It took me a few goes to get there, because I kept asking the question as if there had to be one.  What we have is a loader.  The firmware wakes the virtual machine up and hands control to the loader, and from then on the loader is the only thing in charge.  It sets the processor up, copies the program into memory, gives it a little table of things it's allowed to ask for (write, exit, memory, read), and runs it.  When the program says it's done, the loader shuts the machine off.</p>
+<p>If you know a bit about how processors work (I know just enough to be dangerous), the processor is already in protected mode, the 32-bit mode every modern PC runs in.  The loader turns that on in its first few instructions.  What it doesn't do is the part that makes a kernel a kernel: run the program with less power than itself.  Right now the program and the loader have exactly the same keys to the building.  There's no scheduler, no interrupts, no protection.  With one program on the machine, none of that has a job yet.</p>
+<p>It's a lot closer to the first operating systems on micro PCs than to Linux: a resident program directing traffic.  The old word for it is a monitor.  When a second program has to share the machine, that's when the kernel shows up (plan 9.6), and you'll be able to point at the exact commit.</p>
+<p>And why does the loader do any of this?  Because we told it to.  Every program on AiOS has a petition, and every flavor of the system is built from the petitions for the programs it runs.  No program, no petition.  No petition, nothing gets built.</p>
+<h2>How a byte gets out</h2>
+<p>Here's the bit I find really interesting.  The actual write, the code that puts a byte on the wire, lives in the serial driver, the lines we took from Linux.  The program never touches it.  Hello world hands its 14 bytes to the loader through the door.  The loader hands them to the driver.  The driver pokes them into the serial chip one at a time.</p>
+<p>So the loader is the handoff point.  Today every write goes to one place, the serial port.  As this grows, that routing is where it gets interesting: a write could go to a screen, a file, a network, and the program wouldn't know or care.  That's what the door is for.  The day the loader starts deciding where a write goes, it's starting to become a kernel.</p>
+<h2>Two kinds of tests</h2>
+<p>So what do you test?  Two things, really.</p>
+<p>The driver on its own: does it put every byte on the wire, in order, untranslated, and does it take every byte off the wire it's handed?  That's the unit test.</p>
+<p>Then everything together: boot the machine with the real loader, the real driver and the real program, type into it if it needs typing, capture every byte that comes out, and compare.  That's the integration test, and most of our tests are that shape.</p>
+<p>One honest wrinkle.  The normal way to unit test a driver is to swap the real hardware for a fake one that records everything.  We can't do that without editing the Linux lines, and the lifted code doesn't get edited.  So instead, the runner asks the virtual machine to log every single read and write to the serial chip's registers while the real thing runs.  Same evidence, nobody touches the driver.</p>
+<h2>The second opinion</h2>
+<p>For hello world you know the right answer by looking.  For Conway's Game of Life after 200 generations, you can't: it's 1,992 bytes of grid.  When I asked why the testing needed Python, this was the answer.  We need a second opinion.</p>
+<p>Think of two people adding up the same restaurant bill, separately.  If they both get the same total, you trust it.  If they don't, somebody made a mistake and you go find it.  So for Life, Hanoi and the calculator there's a second version of each program, written in Python from the same rules, run on a normal computer.  Its answer is saved as a file.  The runner boots the real program and compares every byte against that file.  That's exactly how the calculator bug in part 6 got caught: the second opinion said "too big", ours said 1215752191.</p>
+<p>The catch is that both people were the AI.  If it misread a rule, both versions carry the same mistake and happily agree.  That's evidence, not proof.  The saved answers are in the repo, along with the programs that made them, so anyone can check them against someone else's.</p>
+<p>And the jig, the machine that builds AiOS, still doesn't need Python.  It only compares bytes.</p>
+<h2>Breaking it on purpose</h2>
+<p>A test that has never failed proves nothing.  So the other half of this part is a script that breaks the code on purpose, one small change at a time, and checks the right test goes red.  Change "Hello" to "Jello".  Lose the newline.  Make hello never exit.  Delete the overflow check from the calculator again.  Copy the program 16 bytes off from where it should run.  Give the machine a device nobody asked for.  Make it open a network socket.</p>
+<p>24 sabotages.  21 caught.  The three that weren't are the best part.</p>
+<p>The serial driver normally waits for the chip to say "ready" before each byte.  Take that wait out and every single test still passes, because the virtual chip is always ready.  On a real chip, you'd lose bytes.  Nobody ever wrote down that the driver must wait, so nothing checks it.  Same story for the setup code that tells the chip to use 8-bit bytes.  The third one is a test that's honest but blind: the calculator only ever asks for one keystroke at a time, so a bug that only shows up when you ask for more than one byte sails past its test.  It's caught by a different test instead.</p>
+<p>None of those are fixed in this part.  They're written down (findings 0007), and the first two need someone, me, to write the rule they break.  That's how it's supposed to work: the system tells you exactly where your safety net has holes.</p>
+<h2>Where that leaves us</h2>
+<p>Every test we've written now runs with one command, and every one passes.  Most of them have been shown failing on purpose.  The "checked by hand" notes in the earlier parts' addenda were true when they were written; from here on, the addendum says what the runner says.</p>
+<p>The fine print: all of this ran under software emulation in a container, not on the jig and not on real virtualisation.  The jig is still a thing I need to sit down and install.</p>
+<p>If this is where things start to come together for you too, that makes two of us.</p>
+<h2>Read along</h2>
+<ol>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/jig/test">jig/test</a>.  The runner.  The comment at the top explains every kind of test it knows.  Look for <code>trace</code>: that's the register log standing in for a fake chip.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/results.txt">tests/results.txt</a>.  What the runner said, test by test, and what it ran on.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/mutations.txt">tests/mutations.txt</a>.  Every sabotage, one per line, with what it breaks.  The "survives" lines are the holes.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/fixtures/life_ref.py">tests/fixtures/life_ref.py</a>.  The second opinion for Life, in about 20 lines of Python.  Put it next to pool/CMP.life@1/life.c and compare.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/findings/0007.md">findings/0007.md</a>.  What the runner and the sabotage found, including the three survivors.</li>
+</ol>
+<h2>Try this</h2>
+<p>Open pool/CMP.hello@1/hello.c and change "Hello" to "Jello".  In a terminal (the Codespaces one works), run <code>sh jig/test hello</code>.  You'll get FAIL, and it tells you the very first byte that's wrong.  Change it back and run it again.  Then try <code>sh jig/mutate hello</code> to watch the sabotage script do the same thing five ways.</p>
+<h2>As built</h2>
+<p>No component changed in this part; it adds the tests around them.  These are the descriptions the tests check against:</p>
+<ul>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/index/cmp/loader@1.as-built.md">loader@1</a>, <a href="https://github.com/cmcluckie/aios/blob/main/index/cmp/loader@2.as-built.md">loader@2</a>, <a href="https://github.com/cmcluckie/aios/blob/main/index/cmp/loader@3.as-built.md">loader@3</a></li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/index/cmp/serial.8250@1.as-built.md">serial.8250@1</a>, <a href="https://github.com/cmcluckie/aios/blob/main/index/cmp/serial.8250@2.as-built.md">serial.8250@2</a></li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/index/cmp/machine.serial-only@1.as-built.md">machine.serial-only@1</a></li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/index/cmp/hello@1.as-built.md">hello@1</a>, <a href="https://github.com/cmcluckie/aios/blob/main/index/cmp/hanoi@1.as-built.md">hanoi@1</a>, <a href="https://github.com/cmcluckie/aios/blob/main/index/cmp/life@1.as-built.md">life@1</a>, <a href="https://github.com/cmcluckie/aios/blob/main/index/cmp/calc@1.as-built.md">calc@1</a></li>
+</ul>
+<h2>Addendum: the tests</h2>
+<p>Every test in the repo, from tests/results.txt and tests/mutations-results.txt.  All of them ran under software emulation, not on the jig.</p>
+<p><strong>calc@1</strong></p>
+<ul>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/calc.transcript@1.toml">calc.transcript@1</a>.  Checks: Given a sequence of typed bytes, the component writes exactly what an independent reference implementation of the same reverse-Polish rules writes for that sequence, including echo, errors and the final bye, and exits only on q, quit, Ctrl-C or Ctrl-D.  Goes red when: with tests/fixtures/calc.in fed to the serial port, the bytes written differ from what tests/fixtures/calc_ref.py writes for the same input, or the machine is still running at the timeout.  Status: Passed by the runner (software emulation): 424 bytes, exact.  Mutations caught: 1.</li>
+</ul>
+<p><strong>hanoi@1</strong></p>
+<ul>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/hanoi.exact-moves@1.toml">hanoi.exact-moves@1</a>.  Checks: On start, the component writes exactly the 15 moves of the standard four-disk solution, one per line as 'Move disk N from X to Y', 360 bytes, nothing else, then exits.  Goes red when: the component's output, captured in isolation, differs from the 360 bytes a reference solver produces for four disks.  Status: Passed by the runner (software emulation): 360 bytes, exact.  Mutations caught: 1.</li>
+</ul>
+<p><strong>hello@1</strong></p>
+<ul>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/hello.exact-bytes@1.toml">hello.exact-bytes@1</a>.  Checks: On start, the component writes the exact 14 bytes 'Hello, world.\n' to the console and nothing else, then exits.  Goes red when: the component's stdout, captured in isolation, is anything other than the 14 bytes 'Hello, world.\n'.  Status: Passed by the runner (software emulation): 14 bytes, exact.  Mutations caught: 5.</li>
+</ul>
+<p><strong>life@1</strong></p>
+<ul>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/life.exact-output@1.toml">life.exact-output@1</a>.  Checks: On start, the component writes the population after 200 generations of the centred R-pentomino in a 256 by 96 universe with dead edges, the middle 80 by 24 cells as '#' and '.', and the result of asking for 128 MiB, exactly as a reference implementation produces them, then exits.  Goes red when: the component's output, captured in isolation, differs from the 1992 bytes an independent reference implementation produces for the same rules, seed, universe and generation count.  Status: Passed by the runner (software emulation): 1992 bytes, exact.  Mutations caught: 1.</li>
+</ul>
+<p><strong>loader@1</strong></p>
+<ul>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/hello.silent-boot@1.toml">hello.silent-boot@1</a>.  Checks: From power-on to halt, no byte reaches the serial port that the program did not write.  Goes red when: the bytes on the VM's serial port from power-on to halt, minus the component's own output, are not empty.  Status: Passed by the runner (software emulation): 14 bytes, exact.  Mutations caught: 1.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/loader.door-layout@1.toml">loader.door-layout@1</a>.  Checks: The door is a table of 32-bit function pointers, write at offset 0 and exit at offset 4; a later version of the door appends entries and never moves one.  Goes red when: compiled against door.h, offsetof(struct door, write) is not 0, offsetof(struct door, exit) is not 4, or a program built against door.h@1 fails under the current loader.  Status: Passed by the runner (software emulation): door layout holds in 3 versions.  Mutations caught: 1.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/loader.halts@1.toml">loader.halts@1</a>.  Checks: When the program calls the exit door or returns, every byte handed to the write door has left the serial port before the machine resets.  Goes red when: the machine process is still alive when the timeout expires, or the last byte the program wrote is missing from the serial capture.  Status: Passed by the runner (software emulation): flushed after the last byte.  Mutations caught: 1.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/loader.runs-program@1.toml">loader.runs-program@1</a>.  Checks: On entry the loader copies the machine's first module to 0x400000 and calls it with a pointer to the door, touching no device but the serial port.  Goes red when: a program that writes one marker byte through the door and exits, given as the machine's first module, produces no marker on the serial port.  Status: Passed by the runner (software emulation): 14 bytes, exact.  Mutations caught: 1.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/loader.same-binary@1.toml">loader.same-binary@1</a>.  Checks: The loader binary that runs one program on the ladder runs every other program on the ladder, byte-identical, with no change.  Goes red when: the loader built for any program on the ladder differs by one byte from the loader built for any other, or any program on the ladder fails under the loader built for another.  Status: Passed by the runner (software emulation): one loader, 5b4601bf374c5f45.  Mutations caught: none yet (findings 0007).</li>
+</ul>
+<p><strong>loader@2</strong></p>
+<ul>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/loader.alloc-in-ram@1.toml">loader.alloc-in-ram@1</a>.  Checks: Every block the alloc door returns lies inside a region the firmware's memory map marks RAM, above the end of the program, and overlaps no earlier block, the loader, or its stack.  Goes red when: a program that allocates blocks until refused and prints each block's address and size shows any block outside the RAM region containing the program, below the program's end, or overlapping another.  Status: Passed by the runner (software emulation): 59 blocks, all inside RAM, none overlapping.  Mutations caught: 1.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/loader.alloc-refuses@1.toml">loader.alloc-refuses@1</a>.  Checks: When the alloc door cannot satisfy a request it returns 0 and changes nothing; it never halts, never returns memory outside the region, and a later smaller request can still succeed.  Goes red when: a program that asks for more than the machine has gets a non-zero pointer, or the machine does not continue to a later smaller request that succeeds, or the machine halts before the program calls exit.  Status: Passed by the runner (software emulation): 128 MiB refused, 16 bytes still granted after the refusal.  Mutations caught: 1.</li>
+</ul>
+<p><strong>loader@3</strong></p>
+<ul>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/loader.read@1.toml">loader.read@1</a>.  Checks: The read door waits for at least one byte, then returns the bytes already received, in order, up to the requested count, and never more; write, exit and alloc keep their offsets and their behaviour from CMP.loader@2.  Goes red when: with tests/fixtures/calc.in fed to the serial port, CMP.calc@1 under this loader does not produce the reference transcript, or hello, hanoi or life under this loader differ by one byte from their outputs under the loader they were built for.  Status: Passed by the runner (software emulation): 4 programs byte-identical under loader@3.  Mutations caught: 1.</li>
+</ul>
+<p><strong>machine.serial-only@1</strong></p>
+<ul>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/machine.no-peripherals@1.toml">machine.no-peripherals@1</a>.  Checks: The machine presents the guest one 16550 serial port and no network, storage, display or input device; whatever else the hypervisor forces present is named in the as-built spec and touched by no component; a reset request ends the machine.  Goes red when: the device tree of a machine started with -S and queried once over a stdio monitor contains any device other than: isa-serial, isabus-bridge, ioapic, fw_cfg_io, kvmclock or kvmvapic, and the eight empty virtio-mmio transports microvm cannot omit.  Status: Passed by the runner (software emulation): 13 devices, all on the list.  Mutations caught: 1.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/machine.no-sockets@1.toml">machine.no-sockets@1</a>.  Checks: The machine presents the guest one 16550 serial port and no network, storage, display or input device; whatever else the hypervisor forces present is named in the as-built spec and touched by no component; a reset request ends the machine.  Goes red when: strace of the machine process from start to exit records any socket, connect, bind or listen call.  Status: Passed by the runner (software emulation): 1060 syscalls traced, none on the network.  Mutations caught: 1.</li>
+</ul>
+<p><strong>serial.8250@1</strong></p>
+<ul>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/serial.in-order@1.toml">serial.in-order@1</a>.  Checks: Every byte handed to the write door appears on the serial port, in order, complete, and untranslated.  Goes red when: the bytes captured on the serial port differ in value, order or count from the bytes handed to the write door, including any 0x0d that was not handed to it.  Status: Passed by the runner (software emulation): 512 bytes, exact.  Mutations caught: 1.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/serial.origin-matches@1.toml">serial.origin-matches@1</a>.  Checks: Every line range in the part's origin record names a file whose object id at the recorded upstream commit equals the recorded blob.  Goes red when: jig/upstream verify, run against a clone of upstream with the recorded commit, reports any range of this part as WRONG.  Status: Passed by the runner (software emulation): CMP.serial.8250@2: ok   include/linux/serial.h 26-29.  Mutations caught: 1.</li>
+</ul>
+<p><strong>serial.8250@2</strong></p>
+<ul>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/serial.receive-order@1.toml">serial.receive-order@1</a>.  Checks: Every byte that arrives on the serial port is handed to the read door once, in order, with none lost and none invented.  Goes red when: a program that echoes every byte it reads, fed 4096 bytes of every value but 3 and 4 in a fixed order, writes back anything other than those 4096 bytes in that order.  Status: Passed by the runner (software emulation): 4096 bytes, exact.  Mutations caught: 2.</li>
+</ul>
+<h2>Code on GitHub</h2>
+<p>Every line that changed, on one page (hash when committed).</p>
+<p>The commits behind this post, in order:</p>
+<ol>
+<li>Tests run themselves: jig/test, jig/mutate, expected outputs and probes (hash when committed)</li>
+</ol>
+<p><a href="https://github.com/cmcluckie/aios">The whole repo</a>.</p>
+</div>
+</section>
+<p class="img">Image: 2026-10-18.png, in this folder.</p>
+<script>
+function flash(b){b.textContent='Copied';b.classList.add('done');setTimeout(function(){b.textContent='Copy';b.classList.remove('done')},1500)}
+function select(id){var r=document.createRange();r.selectNodeContents(document.getElementById(id));var s=getSelection();s.removeAllRanges();s.addRange(r);return s}
+function copyRich(id,b){var s=select(id);document.execCommand('copy');s.removeAllRanges();flash(b)}
+function copyText(id,b){var t=document.getElementById(id).innerText.trim();
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(function(){flash(b)},function(){copyRich(id,b)})}else{copyRich(id,b)}}
+</script>
+</body></html>

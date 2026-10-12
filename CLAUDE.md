@@ -185,9 +185,10 @@ names the component and the rule that failed.
    enough to fail.
 4. Every spec clause has at least one test, and every test names what turns
    it red and a time limit.
-5. Every test has been run, and the result is recorded: by the runner when it
-   exists (plan 4), until then by hand, with the date and the result, in the
-   post's addendum.  A test never run says so.
+5. Every test has been run by `sh jig/test` and passes in tests/results.txt,
+   and `sh jig/mutate` has shown it can go red (or findings say why it cannot
+   yet).  A test with no runner says so, in the index and in the post's
+   addendum.
 6. If any line came from upstream, it lives in lifted/ with an origin record
    that `jig/upstream verify` passes.
 7. Every earlier program on the ladder still runs under it, unchanged.
@@ -255,8 +256,10 @@ comments, as the as-built specs record them) on the day the post goes out:
    and the post is not ready.
 6. `<h2>Addendum: the tests</h2>`: every test for those components, grouped
    by component, each with what it checks (its spec clause), what turns it
-   red, and its honest status: run by the runner, checked by hand (with the
-   date and the result), or not run yet.  A component with no test is not
+   red, and its honest status from tests/results.txt and
+   tests/mutations-results.txt: passed by the runner (and under what: the
+   jig, KVM, or software emulation), failed, or no runner yet, and how many
+   mutations it has caught.  A component with no test is not
    ready to post.  The addendum must list them all.
 7. `<h2>Code on GitHub</h2>`, every link labelled:
    `<a href="<compare URL from the commit before the post's first to its

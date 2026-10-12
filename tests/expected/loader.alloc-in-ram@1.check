@@ -1,0 +1,19 @@
+# TST.loader.alloc-in-ram@1, run by jig/test as: sh this CAPTURE - PROBE
+# Green when every block the alloc door handed tests/programs/allocwalk.c lies
+# above the probe's end, inside the RAM the machine has (64 MiB, the one region
+# the firmware's map marks RAM above 1 MiB), is 16-aligned, and overlaps no
+# earlier block.
+cap=$1; probe=$3
+end=$(( 0x400000 + $(wc -c < "$probe") ))
+top=$(( 0x4000000 ))
+prev=$end; n=0
+while read -r what a s; do
+	[ "$what" = block ] || continue
+	a=$((a)); s=$((s)); n=$((n + 1))
+	[ $((a % 16)) -eq 0 ] || { echo "block $n at $a not 16-aligned"; exit 1; }
+	[ "$a" -ge "$prev" ] || { echo "block $n at $a below the program's end or overlapping block $((n - 1))"; exit 1; }
+	[ $((a + s)) -le "$top" ] || { echo "block $n runs past the end of RAM"; exit 1; }
+	prev=$((a + s))
+done < "$cap"
+[ "$n" -gt 0 ] || { echo "no blocks granted"; exit 1; }
+echo "$n blocks, all inside RAM, none overlapping"

@@ -1,0 +1,27 @@
+# tests/mutations-results.txt, written by jig/mutate.  Do not edit by hand.
+# run 2026-10-12T04:06Z at commit 7c0e7a9 + the runner's commit
+KILLED    hello.exact-bytes@1  one wrong letter in hello's message
+KILLED    hello.exact-bytes@1  the newline goes missing
+KILLED    hello.exact-bytes@1  one extra write before exit
+KILLED    hello.exact-bytes@1  hello never exits, so the machine never halts
+KILLED    hello.exact-bytes@1  hello exits before it writes
+KILLED    hello.silent-boot@1  the loader says one byte of its own at boot
+KILLED    hanoi.exact-moves@1  the second recursive call moves the wrong stack
+KILLED    life.exact-output@1  a cell is born with four neighbours instead of three
+KILLED    calc.transcript@1  the overflow check part 6 added, removed again
+KILLED    loader.runs-program@1  the program is copied 16 bytes from where it runs
+KILLED    loader.halts@1  exit no longer waits for the last byte to leave
+KILLED    loader.door-layout@1  an entry inserted in the middle of the door
+KILLED    loader.alloc-in-ram@1  the heap starts inside the program
+KILLED    loader.alloc-refuses@1  alloc no longer checks there is room
+KILLED    loader.read@1  the read door flips the low bit of every byte it hands over
+SURVIVED  loader.read@1  read reports one byte more than it received: the calculator only ever asks for one byte, so its transcript cannot see it (findings 0007)  (known, written down)
+KILLED    serial.receive-order@1  the same broken read, caught by the echo probe, which asks for 256 bytes at a time
+KILLED    serial.in-order@1  the driver puts back the \r Linux adds before \n
+KILLED    serial.receive-order@1  every received byte has its low bit flipped
+KILLED    serial.origin-matches@1  the origin record names the wrong blob
+KILLED    machine.no-peripherals@1  the machine grows a device nobody asked for
+KILLED    machine.no-sockets@1  the machine opens a network socket
+SURVIVED  serial.in-order@1  the driver stops waiting for the chip to be ready before each byte: QEMU's port is always ready, so nothing notices (findings 0007)  (known, written down)
+SURVIVED  hello.exact-bytes@1  init sets 5 data bits instead of 8: QEMU's port ignores it (findings 0002 #7), and no spec covers init  (known, written down)
+# 21 killed, 0 survived unexpectedly, 3 known survivors, 0 no-ops, 0 no-builds

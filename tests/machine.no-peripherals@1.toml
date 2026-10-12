@@ -6,5 +6,5 @@ binds      = "SPEC.machine.1@1"
 red_when   = "the device tree of a machine started with -S and queried once over a stdio monitor contains any device other than: isa-serial, isabus-bridge, ioapic, fw_cfg_io, kvmclock or kvmvapic, and the eight empty virtio-mmio transports microvm cannot omit"
 timeout_ms = 5000
 isolates   = "CMP.machine.serial-only@1"
-runner     = ""
-mutations  = 0
+runner     = "jig/test qtree hello"
+mutations  = 1

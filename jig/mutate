@@ -1,0 +1,56 @@
+#!/bin/sh
+# mutate: prove the tests can fail (plan 4.3, tenet 8).  For every line of
+# tests/mutations.txt: copy the repo, apply the one sed expression to the one
+# file, run the one test with jig/test in the copy, and report whether it went
+# red.  The working tree is never touched.
+#
+#   sh jig/mutate             every mutation
+#   sh jig/mutate calc        only mutations of tests whose name starts with calc
+#
+# KILLED   the test went red, as it should
+# SURVIVED the test stayed green: either the test is decoration, or (expect
+#          "survives") a gap we know about and have written down
+# NO-OP    the sed expression changed nothing: the mutation list is out of date
+# A full run writes the same lines to tests/mutations-results.txt.
+# NO-BUILD the broken copy does not compile, so the test went red for the wrong
+#          reason and proves nothing; the mutation has to be rewritten
+set -u
+repo=$(cd "$(dirname "$0")/.." && pwd); cd "$repo"
+tmp=$(mktemp -d); trap 'rm -rf "$tmp"' EXIT
+killed=0; survived=0; known=0; noop=0; nobuild=0
+log="$tmp/log"
+commit=$(git rev-parse --short HEAD 2>/dev/null || echo "${AIOS_COMMIT:-not a git checkout}")
+echo "# tests/mutations-results.txt, written by jig/mutate.  Do not edit by hand." > "$log"
+echo "# run $(date -u +%Y-%m-%dT%H:%MZ) at commit $commit" >> "$log"
+tr -d '\r' < tests/mutations.txt | grep -v '^#' | grep . |
+	awk -F' [|] ' '{for (i = 1; i <= NF; i++) { gsub(/^ +| +$/, "", $i) } print $1 "\t" $2 "\t" $3 "\t" $4 "\t" $5}' > "$tmp/list"
+tab=$(printf '\t')
+while IFS="$tab" read -r t expect file expr what; do
+	[ -n "${1:-}" ] && case "$t" in "$1"*) ;; *) continue ;; esac
+	rm -rf "$tmp/copy"; mkdir "$tmp/copy"
+	tar --exclude=./out --exclude=./.git -cf - . | tar -xf - -C "$tmp/copy"
+	cp "$file" "$tmp/orig"
+	sed -i "$expr" "$tmp/copy/$file"
+	if cmp -s "$tmp/orig" "$tmp/copy/$file"; then
+		printf '%s\n' "NO-OP     $t  $what"; noop=$((noop + 1)); continue
+	fi
+	if (cd "$tmp/copy" && sh jig/test "$t" > "$tmp/out" 2>&1); then :; else
+		if grep -q -e 'build of .* failed' -e 'does not build' "$tmp/out"; then
+			printf '%s\n' "NO-BUILD  $t  $what"; nobuild=$((nobuild + 1)); continue
+		fi
+	fi
+	if grep -q '^PASS' "$tmp/out"; then
+		if [ "$expect" = survives ]; then printf '%s\n' "SURVIVED  $t  $what  (known, written down)"; known=$((known + 1))
+		else printf '%s\n' "SURVIVED  $t  $what  <-- this test is decoration"; survived=$((survived + 1)); fi
+	else
+		printf '%s\n' "KILLED    $t  $what"; killed=$((killed + 1))
+		[ "$expect" = survives ] && echo "          (expected to survive; the mutation list is out of date)"
+	fi
+done < "$tmp/list" | tee -a "$log"
+# the loop ran in a subshell (the pipe): recount from the log
+killed=$(grep -c '^KILLED' "$log"); known=$(grep -c '^SURVIVED.*(known' "$log")
+survived=$(grep -c '^SURVIVED.*decoration' "$log"); noop=$(grep -c '^NO-OP' "$log"); nobuild=$(grep -c '^NO-BUILD' "$log")
+echo "# $killed killed, $survived survived unexpectedly, $known known survivors, $noop no-ops, $nobuild no-builds"
+echo "# $killed killed, $survived survived unexpectedly, $known known survivors, $noop no-ops, $nobuild no-builds" >> "$log"
+[ -z "${1:-}" ] && cp "$log" tests/mutations-results.txt
+[ $survived -eq 0 ] && [ $noop -eq 0 ] && [ $nobuild -eq 0 ]

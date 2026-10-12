@@ -2,11 +2,13 @@
 # donecheck: every component in the index against the definition of done in
 # CLAUDE.md.  One line per failure naming the component and the rule; exit 1 if
 # any.  Scaffold components (provided by the jig for now) are skipped.
-# Rule 5, "every test has been run", is reported as a count, not a failure,
-# until the runner exists (plan 4): today it would fail everything.
+# Rule 5, "every test has been run", reads tests/results.txt, which jig/test
+# writes: a test with a runner must be there as PASS.  A test with no runner yet
+# is reported as a count, not a failure.
 set -u
 repo=$(cd "$(dirname "$0")/.." && pwd); cd "$repo"
 rc=0; never=0
+results=tests/results.txt
 bad() { echo "$1: $2"; rc=1; }
 val() { sed -n "s/^$2 *= *\"\([^\"]*\)\".*/\1/p" "$1" | head -1; }
 
@@ -26,7 +28,11 @@ for e in index/cmp/*.toml; do
 		for t in $tests; do
 			grep -q '^red_when *= *"..*"' "$t" || bad "$code" "rule 4: $(val "$t" code) has no red_when"
 			grep -q '^timeout_ms *= *[1-9]' "$t" || bad "$code" "rule 4: $(val "$t" code) has no time limit"
-			[ -n "$(val "$t" runner)" ] || never=$((never + 1))
+			tc=$(val "$t" code)
+			if [ -z "$(val "$t" runner)" ]; then never=$((never + 1))
+			elif ! grep -q "^PASS  $tc " "$results" 2>/dev/null; then
+				bad "$code" "rule 5: $tc has a runner but no PASS in $results ($(grep "  $tc " "$results" 2>/dev/null | cut -c1-4 || true))"
+			fi
 		done
 	done
 	case "$src" in lifted/*)
@@ -36,5 +42,6 @@ for e in index/cmp/*.toml; do
 		grep -q 'SPDX-License-Identifier: MIT' "$src"* 2>/dev/null || true ;;
 	esac
 done
-echo "rule 5: $never test(s) not yet run by the runner (plan 4)"
+[ "$never" -eq 0 ] || echo "rule 5: $never test(s) with no runner yet"
+[ -f "$results" ] && sed -n '2s/^# /tests: /p' "$results"
 exit $rc

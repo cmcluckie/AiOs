@@ -1,0 +1,13 @@
+# TST.loader.halts@1, run by jig/test as: sh this CAPTURE TRACE BINARY
+# Green when the machine halted on its own (jig/test already failed it if not),
+# the last byte hello wrote is in the capture, and QEMU's register trace shows the
+# driver read the line status register with both "holding register empty" and
+# "transmitter empty" set (0x60) after the last byte went to the transmit register:
+# the flush that SPEC.loader.2@1 asks for, seen happening.
+cap=$1; trace=$2
+cmp -s "$cap" "$(dirname "$0")/hello.exact-bytes@1.out" || { echo "capture is not hello's 14 bytes"; exit 1; }
+last=$(grep -n 'serial_write.*addr 0x00 ' "$trace" | tail -1 | cut -d: -f1)
+[ -n "$last" ] || { echo "no byte reached the transmit register"; exit 1; }
+tail -n +"$((last + 1))" "$trace" | grep -q 'serial_read.*addr 0x05 val 0x6[0-9a-f]' \
+	|| { echo "no line-status read showing both empty bits after the last byte"; exit 1; }
+echo "flushed after the last byte"

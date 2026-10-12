@@ -6,5 +6,5 @@ binds      = "SPEC.loader.1@1"
 red_when   = "a program that writes one marker byte through the door and exits, given as the machine's first module, produces no marker on the serial port"
 timeout_ms = 5000
 isolates   = "CMP.loader@1"
-runner     = ""
-mutations  = 0
+runner     = "jig/test boot hello"
+mutations  = 1

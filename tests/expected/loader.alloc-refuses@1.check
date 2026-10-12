@@ -1,0 +1,13 @@
+# TST.loader.alloc-refuses@1, run by jig/test as: sh this CAPTURE - PROBE
+# Green when the 128 MiB request got 0, the walk was eventually refused, a
+# 16-byte request after the refusal still succeeded inside RAM, and the probe
+# reached its last line (nothing halted it).
+cap=$1
+big=$(sed -n 's/^big \(0x[0-9a-f]*\).*/\1/p' "$cap")
+small=$(sed -n 's/^small \(0x[0-9a-f]*\).*/\1/p' "$cap")
+[ -n "$big" ] && [ $((big)) -eq 0 ] || { echo "128 MiB was not refused (got ${big:-nothing})"; exit 1; }
+grep -q '^refused ' "$cap" || { echo "the 1 MiB walk was never refused"; exit 1; }
+[ -n "$small" ] && [ $((small)) -ne 0 ] || { echo "16 bytes after the refusal got 0"; exit 1; }
+[ $((small)) -lt $((0x4000000)) ] || { echo "16-byte block outside RAM"; exit 1; }
+grep -q '^end$' "$cap" || { echo "the probe never reached its end"; exit 1; }
+echo "128 MiB refused, 16 bytes still granted after the refusal"

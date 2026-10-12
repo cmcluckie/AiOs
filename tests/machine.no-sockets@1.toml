@@ -6,5 +6,5 @@ binds      = "SPEC.machine.1@1"
 red_when   = "strace of the machine process from start to exit records any socket, connect, bind or listen call"
 timeout_ms = 10000
 isolates   = "CMP.machine.serial-only@1"
-runner     = ""
-mutations  = 0
+runner     = "jig/test strace hello"
+mutations  = 1

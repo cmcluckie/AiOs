@@ -6,5 +6,5 @@ binds      = "SPEC.loader.3@1"
 red_when   = "compiled against door.h, offsetof(struct door, write) is not 0, offsetof(struct door, exit) is not 4, or a program built against door.h@1 fails under the current loader"
 timeout_ms = 5000
 isolates   = "CMP.loader@1"
-runner     = ""
-mutations  = 0
+runner     = "jig/test cmd sh tests/programs/door_layout.sh"
+mutations  = 1

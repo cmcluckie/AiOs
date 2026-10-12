@@ -1,0 +1,35 @@
+RPN calculator.  Numbers and + - * / %, dup swap drop clear, q to quit.
+> 3 4 +
+= 7
+> 2 *
+= 14
+> dup *
+= 196
+> 10 3 /
+= 3
+> -7 2 /
+= -3
+> -7 2 %
+= -1
+> 1 0 /
+error: divide by zero
+> drop drop drop drop drop
+= 196
+> swap
+error: stack empty
+> 2147483647 1 +
+= -2147483648
+> -2147483648 -1 /
+error: overflow
+> 99999999999
+error: too big
+> foo
+error: unknown 'foo'
+> 5 6 swap -
+= 1
+> clear
+(empty)
+> 12x  3 4 +
+= 17
+> q
+bye

@@ -1,0 +1,199 @@
+#!/bin/sh
+# test: the tester's runner (plan 4.1).  Runs every test in tests/ that has a
+# runner, prints PASS, FAIL or SKIP for each, and writes the same to
+# tests/results.txt, which gets committed: that file is the record the post
+# addenda and jig/donecheck read.  A test with no runner is SKIP, never PASS.
+#
+#   sh jig/test                  every test
+#   sh jig/test calc.transcript  only the tests whose file name starts with that
+#
+# Each test's TOML says how it runs, in its runner field:
+#   boot FLAVOR [INPUT]          boot the flavor, INPUT typed into the serial port;
+#                                the capture must equal tests/expected/<test>.out
+#   ladder FLAVOR                every program on the ladder, built for its own
+#                                loader, booted unchanged under FLAVOR's loader;
+#                                each must equal its own expected output
+#   same-loader A B              the loaders built for A and B are byte-identical,
+#                                and each program runs under the other's loader
+#   program SRC FLAVOR [INPUT]   a probe program from tests/programs, built against
+#                                FLAVOR's loader and booted; checked like boot
+#   trace FLAVOR [INPUT]         boot with QEMU's serial register trace on; the
+#                                check reads every register access the driver made
+#   strace FLAVOR                boot under strace; the check reads the syscalls
+#   qtree FLAVOR                 start the machine paused, list its devices, stop
+#   cmd COMMAND...               any command; exit 0 is green, exit 2 means it
+#                                cannot run on this host (SKIP), anything else red
+# Where tests/expected/<test>.check exists it decides instead of the .out file:
+# it is run as  sh <test>.check CAPTURE EXTRA BINARY  and exit 0 is green.
+#
+# The machine is always pool/CMP.machine.serial-only@1/machine.sh, unchanged.
+# trace, strace and qtree add observation flags through a stand-in for
+# qemu-system-x86_64 on PATH that appends them; nothing else differs.
+#
+# Expected outputs are files, made once by the reference programs in
+# tests/fixtures on a normal computer (tests/expected/README.md says how), so
+# the jig needs no Python.  Timeouts are the tests' own timeout_ms.
+set -u
+repo=$(cd "$(dirname "$0")/.." && pwd); cd "$repo"
+tmp=$(mktemp -d); trap 'rm -rf "$tmp"' EXIT
+field() { sed -n "s/^$2 *= *\"\([^\"]*\)\".*/\1/p" "$1" | head -1; }
+num()   { sed -n "s/^$2 *= *\([0-9][0-9]*\).*/\1/p" "$1" | head -1; }
+machine=pool/CMP.machine.serial-only@1/machine.sh
+[ -w /dev/kvm ] && accel=kvm || accel="software emulation (tcg)"
+
+# the stand-in: real QEMU plus whatever AIOS_QEMU_EXTRA says
+real=$(command -v qemu-system-x86_64) || { echo "no qemu-system-x86_64"; exit 2; }
+mkdir -p "$tmp/bin"
+printf '#!/bin/sh\nexec %s "$@" $AIOS_QEMU_EXTRA\n' "$real" > "$tmp/bin/qemu-system-x86_64"
+chmod +x "$tmp/bin/qemu-system-x86_64"
+export AIOS_QEMU_EXTRA=""
+
+built=""
+loader_of() { echo "out/$1/loader.elf"; }
+program_of() { echo "out/$1/$(cat "out/$1/program").bin"; }
+
+# boot LOADER BIN INPUT CAPTURE SECONDS: 0 = halted in time, 124 = still running
+boot() {
+	inp=${3:-/dev/null}
+	PATH="$tmp/bin:$PATH" timeout "$5" sh "$machine" "$1" "$2" < "$inp" > "$4" 2> "$tmp/machine.err"
+}
+
+# compare CAPTURE STEM [EXTRA BINARY]: the .check decides if there is one, else the .out
+judge() {
+	if [ -f "tests/expected/$2.check" ]; then
+		sh "tests/expected/$2.check" "$1" "${3:-}" "${4:-}" > "$tmp/why" 2>&1 && { why=$(tail -1 "$tmp/why"); return 0; }
+		why=$(head -3 "$tmp/why" | tr '\n' ' '); return 1
+	fi
+	[ -f "tests/expected/$2.out" ] || { why="no tests/expected/$2.out or .check"; return 1; }
+	if cmp -s "$1" "tests/expected/$2.out"; then why="$(wc -c < "$1" | tr -d ' ') bytes, exact"; return 0; fi
+	why=$(cmp "$1" "tests/expected/$2.out" 2>&1 | sed 's/^[^ ]* [^ ]* //' | head -1)
+	why="$why ($(wc -c < "$1") bytes, expected $(wc -c < "tests/expected/$2.out"))"
+	return 1
+}
+
+# the ladder: program, the flavor that builds it, its loader version, its input
+ladder="hello:hello:1: hanoi:hanoi:1: life:life:2: calc:calc:3:tests/fixtures/calc.in"
+expected_of() {	# a ladder program's own exact-output test
+	case "$1" in hello) echo hello.exact-bytes@1 ;; hanoi) echo hanoi.exact-moves@1 ;;
+	             life) echo life.exact-output@1 ;; calc) echo calc.transcript@1 ;; esac
+}
+
+run_one() {	# t secs kind args... ; sets why
+	t=$1; secs=$2; kind=$3; shift 3
+	cap="$tmp/capture"; why=""
+	case "$kind" in
+	boot)
+		build "$1" || { why="build of $1 failed"; return 1; }
+		boot "$(loader_of "$1")" "$(program_of "$1")" "${2:-}" "$cap" "$secs"
+		[ $? -eq 124 ] && { why="still running after ${secs}s"; return 1; }
+		judge "$cap" "$t" "" "$(program_of "$1")" ;;
+	ladder)
+		build "$1" || { why="build of $1 failed"; return 1; }
+		top=$(lv "$1"); n=0
+		for e in $ladder; do
+			p=${e%%:*}; r=${e#*:}; f=${r%%:*}; r=${r#*:}; v=${r%%:*}; inp=${r#*:}
+			[ "$v" -le "$top" ] || continue
+			build "$f" || { why="build of $f failed"; return 1; }
+			boot "$(loader_of "$1")" "$(program_of "$f")" "$inp" "$cap" "$secs"
+			[ $? -eq 124 ] && { why="$p under loader@$top: still running after ${secs}s"; return 1; }
+			judge "$cap" "$(expected_of "$p")" || { why="$p under loader@$top: $why"; return 1; }
+			n=$((n + 1))
+		done
+		why="$n programs byte-identical under loader@$top" ;;
+	same-loader)
+		build "$1" && build "$2" || { why="build failed"; return 1; }
+		cmp -s "$(loader_of "$1")" "$(loader_of "$2")" || { why="loaders built for $1 and $2 differ"; return 1; }
+		for pair in "$1:$2" "$2:$1"; do
+			a=${pair%:*}; b=${pair#*:}
+			boot "$(loader_of "$b")" "$(program_of "$a")" "" "$cap" "$secs"
+			judge "$cap" "$(expected_of "$a")" || { why="$a under $b's loader: $why"; return 1; }
+		done
+		why="one loader, $(sha256sum < "$(loader_of "$1")" | cut -c1-16)" ;;
+	program)
+		src=$1; build "$2" || { why="build of $2 failed"; return 1; }
+		ldir=$(field "index/cmp/loader@$(lv "$2").toml" source)
+		pb="$tmp/probe.bin"
+		CF="-m32 -std=c11 -ffreestanding -fno-pic -fno-pie -fno-stack-protector -fno-builtin -fno-asynchronous-unwind-tables -mno-sse -mno-mmx -mno-red-zone -mgeneral-regs-only -nostdlib -nostdinc -O2 -Wall -Wextra -Werror"
+		gcc $CF -I "$ldir" -c -o "$tmp/probe.o" "$src" 2> "$tmp/cc.err" &&
+		gcc $CF -static -no-pie -nostartfiles -Wl,--build-id=none -Wl,-z,noexecstack -T "$ldir/program.ld" -o "$pb" "$tmp/probe.o" 2>> "$tmp/cc.err" \
+			|| { why="probe $src does not build: $(head -1 "$tmp/cc.err")"; return 1; }
+		boot "$(loader_of "$2")" "$pb" "${3:-}" "$cap" "$secs"
+		[ $? -eq 124 ] && { why="still running after ${secs}s"; return 1; }
+		judge "$cap" "$t" "" "$pb" ;;
+	trace)
+		build "$1" || { why="build of $1 failed"; return 1; }
+		AIOS_QEMU_EXTRA="-trace serial_read -trace serial_write -D $tmp/trace"
+		boot "$(loader_of "$1")" "$(program_of "$1")" "${2:-}" "$cap" "$secs"; rc=$?
+		AIOS_QEMU_EXTRA=""
+		[ $rc -eq 124 ] && { why="still running after ${secs}s"; return 1; }
+		judge "$cap" "$t" "$tmp/trace" "$(program_of "$1")" ;;
+	strace)
+		build "$1" || { why="build of $1 failed"; return 1; }
+		command -v strace > /dev/null || { why="SKIP: strace is not on this host"; return 2; }
+		PATH="$tmp/bin:$PATH" timeout "$secs" strace -f -qq -o "$tmp/strace" sh "$machine" "$(loader_of "$1")" "$(program_of "$1")" < /dev/null > "$cap" 2> /dev/null
+		[ $? -eq 124 ] && { why="still running after ${secs}s"; return 1; }
+		judge "$cap" "$t" "$tmp/strace" ;;
+	qtree)
+		build "$1" || { why="build of $1 failed"; return 1; }
+		mkfifo "$tmp/mon.in" "$tmp/mon.out"
+		AIOS_QEMU_EXTRA="-S -chardev pipe,id=aiosmon,path=$tmp/mon -mon chardev=aiosmon,mode=readline"
+		PATH="$tmp/bin:$PATH" timeout "$secs" sh "$machine" "$(loader_of "$1")" "$(program_of "$1")" < /dev/null > /dev/null 2>&1 &
+		qpid=$!
+		AIOS_QEMU_EXTRA=""
+		exec 8> "$tmp/mon.in"; exec 9< "$tmp/mon.out"
+		printf 'info qtree\nquit\n' >&8
+		timeout "$secs" cat <&9 | tr -d '\r' > "$cap"
+		exec 8>&- 9<&-
+		wait $qpid 2> /dev/null
+		rm -f "$tmp/mon.in" "$tmp/mon.out"
+		judge "$cap" "$t" ;;
+	cmd)
+		timeout "$secs" "$@" > "$cap" 2>&1; rc=$?
+		[ $rc -eq 0 ] && { why=$(tail -1 "$cap"); return 0; }
+		[ $rc -eq 2 ] && { why="SKIP: $(tail -1 "$cap")"; return 2; }	# exit 2: cannot run on this host
+		[ $rc -eq 124 ] && why="still running after ${secs}s" || why=$(tail -2 "$cap" | tr '\n' ' ')
+		return 1 ;;
+	*)	why="runner kind '$kind' unknown"; return 1 ;;
+	esac
+}
+lv() { sed -n 's/^built flavor [a-z]*: CMP\.loader@\([0-9]*\).*/\1/p' "out/$1/build.txt"; }
+
+# build a flavor once per run, keeping aios's summary line: it names the loader
+build() {
+	case " $built " in *" $1 "*) return 0 ;; esac
+	sh jig/aios build "$1" > "$tmp/build.$1" 2>&1 || { cat "$tmp/build.$1"; return 1; }
+	cp "$tmp/build.$1" "out/$1/build.txt"
+	built="$built $1"
+}
+
+filter="$*"
+commit=$(git rev-parse --short HEAD 2>/dev/null || echo "${AIOS_COMMIT:-not a git checkout}")
+dirty=$(git status --porcelain 2>/dev/null | grep -v '^??' | grep -q . && echo ", with uncommitted changes" || true)
+pass=0; fail=0; skip=0
+out="$tmp/results"
+{
+	echo "# tests/results.txt, written by jig/test.  Do not edit by hand."
+	echo "# run $(date -u +%Y-%m-%dT%H:%MZ) at commit $commit$dirty, $accel"
+} > "$out"
+for f in tests/*.toml; do
+	stem=$(basename "$f" .toml)
+	if [ -n "$filter" ]; then m=0; for a in $filter; do case "$stem" in "$a"*) m=1 ;; esac; done; [ $m -eq 1 ] || continue; fi
+	code=$(field "$f" code); r=$(field "$f" runner)
+	ms=$(num "$f" timeout_ms); secs=$(( (${ms:-10000} + 999) / 1000 ))
+	if [ -z "$r" ]; then line="SKIP  $code  no runner yet"; skip=$((skip + 1))
+	else
+		set -- $r; [ "$1" = "jig/test" ] && shift
+		start=$(date +%s)
+		run_one "$stem" "$secs" "$@"; rc=$?
+		el=$(( $(date +%s) - start ))s
+		case $rc in
+			0) line="PASS  $code  $el  $why"; pass=$((pass + 1)) ;;
+			2) line="SKIP  $code  ${why#SKIP: }"; skip=$((skip + 1)) ;;
+			*) line="FAIL  $code  $el  $why"; fail=$((fail + 1)) ;;
+		esac
+	fi
+	echo "$line"; echo "$line" >> "$out"
+done
+echo "# $pass passed, $fail failed, $skip skipped" | tee -a "$out"
+[ -z "$filter" ] && cp "$out" tests/results.txt
+[ $fail -eq 0 ]

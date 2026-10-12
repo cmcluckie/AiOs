@@ -6,5 +6,5 @@ binds      = "SPEC.calc.1@1"
 red_when   = "with tests/fixtures/calc.in fed to the serial port, the bytes written differ from what tests/fixtures/calc_ref.py writes for the same input, or the machine is still running at the timeout"
 timeout_ms = 10000
 isolates   = "CMP.calc@1"
-runner     = ""
-mutations  = 0
+runner     = "jig/test boot calc tests/fixtures/calc.in"
+mutations  = 1
