@@ -1,0 +1,7 @@
+code       = "SPEC.sort.1@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+component  = "CMP.sort@1"
+clause     = "It prints the same twenty numbers every time, from K&R's rand() with seed 1, each under 1000, in order from smallest to largest, on one line."
+author     = "KEY.chris"

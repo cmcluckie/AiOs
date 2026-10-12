@@ -1,0 +1,14 @@
+# TST.fs.fsck-clean@1, run by jig/test as: sh this CAPTURE DISK
+# Green when Linux's own Minix checker, which nobody here wrote, finds nothing
+# wrong with the disk after sort saved to it, lists exactly one file, /sorted,
+# and the line sort printed is there on the raw disk.
+cap=$1; disk=$2
+command -v fsck.minix > /dev/null || { echo "no fsck.minix on this host"; exit 1; }
+[ -f "$disk" ] || { echo "no disk came back"; exit 1; }
+fsck.minix -fl "$disk" > "$disk.fsck" 2>&1 || { echo "fsck.minix found errors: $(grep -v -e '^Forcing' -e '^/' "$disk.fsck" | head -2 | tr '\n' ' ')"; exit 1; }
+files=$(grep '^/' "$disk.fsck")
+[ "$files" = "/sorted" ] || { echo "fsck.minix lists: $(echo $files)"; exit 1; }
+line=$(sed -n 's/^sorted 20 numbers: //p' "$cap" | head -1)
+[ -n "$line" ] || { echo "sort printed no line"; exit 1; }
+[ "$(grep -a -c -F "$line" "$disk")" -ge 1 ] || { echo "the sorted line is not on the disk"; exit 1; }
+echo "fsck.minix: clean, one file, /sorted; the line is on the disk"

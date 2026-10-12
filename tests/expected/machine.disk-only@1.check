@@ -1,0 +1,12 @@
+# TST.machine.disk-only@1, run by jig/test as: sh this QTREE
+# Green when the paused sort machine holds one serial port, one IDE disk, and
+# nothing that is not on SPEC.machine.3@1's list of what microvm forces.
+cap=$1
+grep -q 'dev: ' "$cap" || { echo "no device tree came back"; exit 1; }
+bad=$(sed -n 's/^ *dev: \([^,]*\),.*/\1/p' "$cap" | grep -v -x -e isa-serial -e isa-ide -e ide-hd -e isabus-bridge -e ioapic -e fw_cfg_io -e kvmclock -e kvmvapic -e virtio-mmio | sort -u | tr '\n' ' ')
+[ -z "$bad" ] || { echo "unexpected devices: $bad"; exit 1; }
+[ "$(grep -c 'dev: isa-serial,' "$cap")" -eq 1 ] || { echo "not exactly one serial port"; exit 1; }
+[ "$(grep -c 'dev: isa-ide,' "$cap")" -eq 1 ] || { echo "not exactly one IDE channel"; exit 1; }
+[ "$(grep -c 'dev: ide-hd,' "$cap")" -eq 1 ] || { echo "not exactly one disk"; exit 1; }
+[ "$(grep -c 'dev: virtio-mmio,' "$cap")" -le 8 ] || { echo "more than eight virtio-mmio transports"; exit 1; }
+echo "$(grep -c 'dev: ' "$cap") devices, one of them the disk, all on the list"

@@ -1,0 +1,87 @@
+[petition]
+id         = "0005"
+purpose    = "PUR.0005@1"
+submitted  = 2026-10-12
+submitter  = "KEY.chris@1"
+expires    = 2027-04-12
+supersedes = ""
+status     = "pending"
+
+[[capability]]
+code   = "CAP.tty.write@1"
+reason = "SPEC.sort.1@1"
+scope  = "console0"
+
+[[capability]]
+code   = "CAP.fs.read@1"
+reason = "SPEC.sort.2@1"
+scope  = "sorted"
+
+[[capability]]
+code   = "CAP.fs.write@1"
+reason = "SPEC.sort.2@1"
+scope  = "sorted"
+
+[[capability]]
+code   = "CAP.dev.serial@1"
+reason = "SPEC.machine.3@1"
+scope  = ""
+
+[[capability]]
+code   = "CAP.dev.disk@1"
+reason = "SPEC.disk.1@1"
+scope  = ""
+
+[[component]]
+code     = "CMP.sort@1"
+role     = "primary"
+admitted = false
+
+[[component]]
+code     = "CMP.toolchain.c@1"
+role     = "toolchain"
+admitted = false
+
+[[component]]
+code     = "CMP.loader@5"
+role     = "boot"
+admitted = false
+
+[[component]]
+code     = "CMP.serial.8250@2"
+role     = "dependency"
+admitted = false
+
+[[component]]
+code     = "CMP.timer.tsc-pit@1"
+role     = "dependency"
+admitted = false
+
+[[component]]
+code     = "CMP.fs.minix@1"
+role     = "dependency"
+admitted = false
+
+[[component]]
+code     = "CMP.disk.ata-pio@1"
+role     = "dependency"
+admitted = false
+
+[[component]]
+code     = "CMP.machine.serial-disk@1"
+role     = "machine"
+admitted = false
+
+[[component]]
+code     = "CMP.hypervisor.qemu@1"
+role     = "machine"
+admitted = false
+
+[[test]]
+code = "TST.sort.first-boot@1"
+
+[[test]]
+code = "TST.sort.second-boot@1"
+
+[[test]]
+code = "TST.fs.fsck-clean@1"

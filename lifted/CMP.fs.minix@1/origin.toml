@@ -1,0 +1,82 @@
+# Where this part came from, exactly enough to lift it again.  Read by jig/upstream.
+# Format: schema/entries.md, "Origin".
+
+[upstream]
+name       = "linux"
+repo       = "https://github.com/torvalds/linux.git"
+canonical  = "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git"
+commit     = "a5ebb76233b79db01e82e061173cb73c6d2b5c6b"
+committed  = 2026-10-10T16:57:30-07:00
+subject    = "Merge tag 'edac_urgent_for_v7.3_rc7' of git://git.kernel.org/pub/scm/linux/kernel/git/ras/ras"
+licence    = "GPL-2.0-only"
+
+[lift]
+by         = "KEY.chris@1"
+on         = 2026-10-12T10:30:00-07:00
+into       = "minix.c"
+from_part  = ""
+
+[[lift.from]]
+file   = "include/uapi/linux/minix_fs.h"
+blob   = "8d9ca8b2c3573ff6ab2e1e4a09f3bb000e9f6927"
+lines  = [[18, 18], [29, 29], [35, 43], [66, 77], [98, 101]]
+what   = "MINIX_ROOT_INO, MINIX_INODES_PER_BLOCK, the original inode, the superblock, the directory entry"
+
+[[lift.from]]
+file   = "include/uapi/linux/magic.h"
+blob   = "66a91c8b1cb918a5b938ae1f7c6c4f5651433f85"
+lines  = [[43, 43]]
+what   = "MINIX_SUPER_MAGIC, 0x137F: v1, 14-character names"
+
+[[lift.from]]
+file   = "include/uapi/linux/fs.h"
+blob   = "34c6f219462a592b75156ecc06ca19a6e5fbe0db"
+lines  = [[40, 41]]
+what   = "BLOCK_SIZE_BITS, BLOCK_SIZE"
+
+[[lift.from]]
+file   = "include/uapi/linux/stat.h"
+blob   = "1686861aae20a6e4f3aec35a301016deaecae870"
+lines  = [[12, 12]]
+what   = "S_IFREG"
+
+[[lift.from]]
+file   = "fs/minix/inode.c"
+blob   = "daf83e4ff25c81362cc33d339f63fe6599b8f2c5"
+lines  = [[182, 190], [247, 265], [317, 330], [646, 655]]
+what   = "minix_check_superblock, the superblock read and the V1 branch of minix_fill_super, where the bitmaps live, V1_minix_update_inode"
+
+[[lift.from]]
+file   = "fs/minix/bitmap.c"
+blob   = "abec438330a726d532f265c794eea085830cac53"
+lines  = [[71, 95], [106, 128], [213, 251]]
+what   = "minix_new_block, minix_V1_raw_inode, the bitmap half of minix_new_inode"
+
+[[lift.from]]
+file   = "fs/minix/dir.c"
+blob   = "2ca16f849d5ac01832e5fe35cdf0d4f3c4ffe2c8"
+lines  = [[33, 41], [78, 81], [137, 143], [154, 197], [199, 273]]
+what   = "minix_last_byte, minix_next_entry, namecompare, minix_find_entry, minix_add_link, V1 only"
+
+[[lift.from]]
+file   = "fs/minix/itree_v1.c"
+blob   = "1fed906042aa84e5affde1cd46d3a7ca4ba68404"
+lines  = [[37, 38]]
+what   = "block_to_path, the direct branch: block n is zone n, for n under 7"
+
+[[lift.from]]
+file   = "fs/minix/namei.c"
+blob   = "5525ba367ed7495bebbf7eb1c6eed329f37ff784"
+lines  = [[44, 50]]
+what   = "minix_mknod: the order a new file is made in"
+
+[cut]
+removed = [
+  "the VFS: struct inode, super_block, dentry, folios, buffer heads, the page cache, mark_*_dirty: one block at a time, read, changed, written back",
+  "bitmap_lock and pointers_lock: one program, nothing at the same time",
+  "minix V2 and V3 and 30-character names: the original only",
+  "indirect zones (get_branch, alloc_branch), truncate, the free_* functions: files up to 7 KiB, created once",
+  "s_state and MINIX_VALID_FS: no mount, no unmount; every change written through before save returns",
+  "times: no clock of day on this machine; new files are dated 1 January 1970",
+  "printk: the caller reports; failures are -1",
+]

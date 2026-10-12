@@ -1,0 +1,14 @@
+code          = "CMP.fs.minix@1"
+status        = "draft"
+admitted      = ""
+retired_by    = ""
+kind          = "driver"
+source        = "lifted/CMP.fs.minix@1/"
+licence       = "GPL-2.0-only"
+depends       = ["CMP.disk.ata-pio@1"]
+build_depends = ["CMP.toolchain.c@1"]
+exposes       = []
+requires      = []
+scaffold      = false
+as_built      = "index/cmp/fs.minix@1.as-built.md"
+reproducible  = ""

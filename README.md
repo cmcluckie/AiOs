@@ -38,9 +38,13 @@ reads from the keyboard: the serial part we took from Linux gained its receive
 side, the loader a read door, and the three earlier programs run unchanged.  Petition 0004, a stopwatch,
 counts seconds: the loader measures how fast the processor's counter ticks
 against the old PC timer chip at boot, the way Linux does when nothing will
-just tell it, and every earlier program runs unchanged under it.  The ladder of petitions after that is in the plan: each one a
-program every CS student wrote once, chosen because it needs exactly one new
-thing from the machine.
+just tell it, and every earlier program runs unchanged under it.  Petition
+0005 sorts twenty numbers and saves them: an IDE disk and the original Minix
+filesystem, the one Linux started on in 1991, both lifted from Linux; the next
+boot finds the file, and Linux's own fsck.minix finds the disk clean.  The
+ladder of petitions after that is in the plan: each one a program every CS
+student wrote once, chosen because it needs exactly one new thing from the
+machine.
 
 Built and run so far under software emulation.  The jig (the build host) is
 declared in [jig/](jig/) and not yet installed.  Nothing has been formally

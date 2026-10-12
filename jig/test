@@ -27,6 +27,10 @@
 #                                seconds by the host's clock, each line stamped with
 #                                the host's milliseconds as it arrives; the .check
 #                                gets the stamped capture and SECS
+#   disk FLAVOR BOOTS            a fresh empty disk, made the way the machine makes
+#                                one, then the flavor booted BOOTS times in a row on
+#                                it; the captures are joined, and a .check also gets
+#                                the disk image
 #   cmd COMMAND...               any command; exit 0 is green, exit 2 means it
 #                                cannot run on this host (SKIP), anything else red
 # Where tests/expected/<test>.check exists it decides instead of the .out file:
@@ -173,6 +177,18 @@ run_one() {	# t secs kind args... ; sets why
 			stdbuf -o0 tr '\r' '\n' |
 			while IFS= read -r l || [ -n "$l" ]; do echo "$(date +%s%3N) $l"; done > "$cap"
 		judge "$cap" "$t" "$2" "$bin" ;;
+	disk)
+		build "$1" || { why="build of $1 failed"; return 1; }
+		machine=$(machine_of "$1")
+		rm -f "$tmp/disk"; : > "$cap"; i=0
+		export AIOS_DISK="$tmp/disk"
+		while [ $i -lt "$2" ]; do
+			boot "$(loader_of "$1")" "$(program_of "$1")" "" "$tmp/one" "$secs"; rc=$?
+			[ $rc -eq 124 ] && { unset AIOS_DISK; why="boot $((i + 1)): still running after ${secs}s"; return 1; }
+			cat "$tmp/one" >> "$cap"; i=$((i + 1))
+		done
+		unset AIOS_DISK
+		judge "$cap" "$t" "$tmp/disk" "$(program_of "$1")" ;;
 	cmd)
 		timeout "$secs" "$@" > "$cap" 2>&1; rc=$?
 		[ $rc -eq 0 ] && { why=$(tail -1 "$cap"); return 0; }

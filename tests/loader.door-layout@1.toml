@@ -7,4 +7,4 @@ red_when   = "compiled against door.h, offsetof(struct door, write) is not 0, of
 timeout_ms = 5000
 isolates   = "CMP.loader@1"
 runner     = "jig/test cmd sh tests/programs/door_layout.sh"
-mutations  = 1
+mutations  = 2

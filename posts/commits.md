@@ -42,5 +42,7 @@ Status: requested (hash unknown), confirmed (hash seen), pushed.
 | 2026-10-19 (part 9, the stopwatch) | Petition 0004: a stopwatch, and the whole repository is GPL-2.0-only | 2876c14 | pushed |
 | 2026-10-19 | Part 9 links filled in; part 1's old article back so the LinkedIn link works | d9958c3 | pushed |
 | none | Posts 1, 2, 4, 8 and 9: six claims a kernel developer would flag, corrected | 4d6c509 | pushed |
-| none | Part 1 back as published: warts and all | | requested |
-| none | The series' underlying message: safe, automated, agentic development | | requested |
+| none | Part 1 back as published: warts and all | 9f872c2 | pushed |
+| none | The series' underlying message: safe, automated, agentic development | 9f872c2 | pushed |
+| none | Rule: when options would each do the job, default to the one with the history | | requested |
+| 2026-10-20 (part 10, the disk) | Petition 0005: save the sorted output, on an IDE disk, in Minix | | requested |

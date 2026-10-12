@@ -9,6 +9,8 @@ The .out files are made once, on a normal computer, never on the jig:
     python3 ../fixtures/hanoi_ref.py            > hanoi.exact-moves@1.out
     python3 ../fixtures/life_ref.py             > life.exact-output@1.out
     python3 ../fixtures/calc_ref.py ../fixtures/calc.in > calc.transcript@1.out
+    python3 ../fixtures/sort_ref.py 1          > sort.first-boot@1.out
+    python3 ../fixtures/sort_ref.py 2          > sort.second-boot@1.out
     serial.in-order@1.out      the bytes 0 to 255, then 255 down to 0
     serial.receive-order@1.out a copy of ../fixtures/receive.in: 4096 bytes,
                                every value but 3 and 4, repeating in order

@@ -1,0 +1,71 @@
+# Where this part came from, exactly enough to lift it again.  Read by jig/upstream.
+# Format: schema/entries.md, "Origin".
+
+[upstream]
+name       = "linux"
+repo       = "https://github.com/torvalds/linux.git"
+canonical  = "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git"
+commit     = "a5ebb76233b79db01e82e061173cb73c6d2b5c6b"
+committed  = 2026-10-10T16:57:30-07:00
+subject    = "Merge tag 'edac_urgent_for_v7.3_rc7' of git://git.kernel.org/pub/scm/linux/kernel/git/ras/ras"
+licence    = "GPL-2.0-only"
+
+[lift]
+by         = "KEY.chris@1"
+on         = 2026-10-12T10:30:00-07:00
+into       = "ata.c"
+from_part  = ""
+
+[[lift.from]]
+file   = "include/linux/ata.h"
+blob   = "c4fac5f8d4806c30481aea42173026cf08b25df5"
+lines  = [[28, 28], [157, 160], [162, 164], [166, 166], [169, 169], [187, 197], [212, 212], [234, 234], [236, 236], [1050, 1054]]
+what   = "ATA_SECT_SIZE, the device and status bits, the register offsets, the flush and PIO read/write commands, lba_28_ok"
+
+[[lift.from]]
+file   = "drivers/ata/libata-sff.c"
+blob   = "976e4e160494d380be47c5c90554e33402f7870d"
+lines  = [[63, 66], [83, 101], [139, 142], [156, 160], [226, 238], [254, 265], [342, 375], [430, 434], [475, 487]]
+what   = "check_status, altstatus, sync, pause without ndelay, set_devctl, dev_select, tf_load (LBA28), exec_command, data_xfer (whole words)"
+
+[[lift.from]]
+file   = "include/linux/libata.h"
+blob   = "48bde275968d09e7fb19925fe4932cfb124bffbc"
+lines  = [[2149, 2161], [2173, 2181]]
+what   = "ata_sff_busy_wait without udelay or its count, ata_wait_idle"
+
+[[lift.from]]
+file   = "drivers/ata/libata-core.c"
+blob   = "92233fb25051a56df0f68d216a4fbeaae798b772"
+lines  = [[795, 795], [816, 822]]
+what   = "the LBA28 taskfile ata_build_rw_tf builds: sector count, three address bytes, the top four bits in the device register, ATA_LBA"
+
+[[lift.from]]
+file   = "drivers/ata/pata_legacy.c"
+blob   = "80486f8820e4447a69c8bfd510e67bb7e9720913"
+lines  = [[92, 92], [285, 285]]
+what   = "the first legacy channel at 0x1f0, its control block at io + 0x0206"
+
+[[lift.from]]
+file   = "arch/x86/include/asm/io.h"
+blob   = "7f4847b2b904d027ab32df62c9f3b005a504b067"
+lines  = [[272, 302]]
+what   = "outs and ins, the rep forms only (the guest-unroll branch cut)"
+
+[[lift.from]]
+file   = "arch/x86/include/asm/shared/io.h"
+blob   = "8009d781c2f97ea7f48178338387712d53a91957"
+lines  = [[7, 20]]
+what   = "BUILDIO: the inb and outb instructions"
+
+[cut]
+removed = [
+  "udelay(10) and the count in ata_sff_busy_wait, so the 10 ms limit in ata_wait_idle: no clock on this machine, and a loop count would be the turbo bug (findings 0010)",
+  "ndelay(400) in ata_sff_pause: the same reason; the altstatus read stays",
+  "struct ata_port, ata_ioports, ata_taskfile, ata_queued_cmd: one channel, one disk, fixed ports",
+  "the LBA48 and CHS paths: a disk under 128 GiB needs neither",
+  "the PIO state machine, DMA and interrupts: one sector per command, polled",
+  "the slave device and ATAPI: one disk, the master",
+  "the trailing odd byte in ata_sff_data_xfer: sectors are always 512 bytes",
+  "the CC_ATTR_GUEST_UNROLL_STRING_IO branch of ins/outs: not a confidential guest",
+]

@@ -1,0 +1,10 @@
+code       = "TST.fs.fsck-clean@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+binds      = "SPEC.fs.1@1"
+red_when   = "after one boot of sort on a fresh disk, fsck.minix -f reports any error, does not list exactly one regular file, /sorted, or the sorted line is not on the raw disk"
+timeout_ms = 30000
+isolates   = "CMP.fs.minix@1"
+runner     = "jig/test disk sort 1"
+mutations  = 4

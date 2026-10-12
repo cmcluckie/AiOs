@@ -1,5 +1,5 @@
 # tests/mutations-results.txt, written by jig/mutate.  Do not edit by hand.
-# run 2026-10-12T05:37Z at commit a61e96a + the stopwatch commit
+# run 2026-10-12T17:11Z at commit 9f872c2
 KILLED    hello.exact-bytes@1  one wrong letter in hello's message
 KILLED    hello.exact-bytes@1  the newline goes missing
 KILLED    hello.exact-bytes@1  one extra write before exit
@@ -33,4 +33,19 @@ KILLED    loader.ms@1  the door counts from the host's power-on instead of the l
 KILLED    machine.timer-only@1  the stopwatch machine grows a device nobody asked for
 KILLED    machine.timer-no-sockets@1  the stopwatch machine opens a network socket
 KILLED    loader.ladder-4@1  loader@4 breaks the read door the calculator, built for loader@3, relies on
-# 33 killed, 0 survived unexpectedly, 0 known survivors, 0 no-ops, 0 no-builds
+KILLED    sort.first-boot@1  insertion sort slides the wrong way: largest first
+KILLED    sort.first-boot@1  K&R's rand() from seed 2: twenty different numbers
+KILLED    sort.first-boot@1  every sector read and written one along from where it was asked for
+KILLED    sort.second-boot@1  the load door forgets every file
+KILLED    sort.second-boot@1  the directory never finds a name, so the file is saved again
+KILLED    fs.fsck-clean@1  a zone is used without being marked busy in the zone map
+KILLED    fs.fsck-clean@1  the root directory forgets it grew, so the file has no name
+KILLED    fs.fsck-clean@1  the new file's inode says nothing links to it
+SURVIVED  fs.fsck-clean@1  save no longer flushes the drive's cache: QEMU writes straight through, so no test can see it; a real drive could lose the file at power-off (findings 0010 #6)  (known, written down)
+KILLED    disk.no-disk@1  a missing disk (0xff, busy bit and all) is waited on forever
+KILLED    loader.doors-wait@1  the loader looks at the disk at boot, before anyone asked
+KILLED    loader.ladder-5@1  loader@5 breaks the read door the calculator relies on
+KILLED    loader.door-layout@1  an entry inserted before load: load and save move
+KILLED    machine.disk-only@1  the sort machine grows a device nobody asked for
+KILLED    machine.disk-no-sockets@1  the sort machine opens a network socket
+# 47 killed, 0 survived unexpectedly, 1 known survivors, 0 no-ops, 0 no-builds

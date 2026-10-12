@@ -1,0 +1,6 @@
+code       = "PUR.0005@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+sentence   = "Sort twenty numbers, save the sorted line to a file on a disk, and find it again next time."
+holder     = "KEY.chris"

@@ -385,12 +385,19 @@ loader, and that is a test run every time (9.8).  Each rung is also a post.
   the sensor's threshold; the sensor goes red when the threshold is tightened
   below the error.
 
-### 9.5 Petition 0005: save the sorted output [coming up]
-- Persistent storage.  A block device the machine petition adds
-  (virtio-blk is the smallest honest one on microvm), a driver lifted from
-  Linux, a filesystem lifted or written.  First expensive lift; the count
-  of hands cut is the finding.
+### 9.5 Petition 0005: save the sorted output [done]
+- Persistent storage.  A block device the machine petition adds, a driver
+  lifted from Linux, a filesystem lifted or written.  First expensive lift;
+  the count of hands cut is the finding.  Chris chose on 2026-10-12, by the
+  history rule: an IDE disk (registers from the PC/AT, 1984) over
+  virtio-blk, and the original Minix filesystem (v1, 0x137F), Linux's first,
+  over FAT and ext2.
 - Done-when: a file written by one boot is read back by the next.
+- 2026-10-12: done under software emulation.  CMP.disk.ata-pio@1 (122 lines,
+  lifted from libata), CMP.fs.minix@1 (344 lines, lifted from fs/minix, about
+  120 of them glue), CMP.loader@5 (load and save doors), CMP.sort@1,
+  CMP.machine.serial-disk@1.  The second boot finds the first boot's file;
+  fsck.minix finds the disk clean.  Lines from Linux: 638.  Findings 0010.
 
 ### 9.6 Petition 0006: two programs at once [coming up]
 - The first purpose that needs sharing.  The kernel appears: a scheduler
