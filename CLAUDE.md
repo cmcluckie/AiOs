@@ -221,6 +221,9 @@ so the folder runs ahead of LinkedIn on purpose.
   left with a smaller line under it.  Anything exaggerated says so on the
   image.  Claude produces it.
 
+Chris schedules the articles on LinkedIn; they are listed at
+https://www.linkedin.com/article/manage/scheduled/ and edited from there.
+
 **Voice.**  Chris's, every time.  Read posts/voice.md before drafting anything,
 and update it in the same change whenever he corrects a draft.  When the AI
 chose something, say so.  Never name his employer, its products or colleagues.

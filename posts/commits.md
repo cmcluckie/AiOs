@@ -36,4 +36,5 @@ Status: requested (hash unknown), confirmed (hash seen), pushed.
 | 2026-10-18 (part 8, the testers) | Tests run themselves: jig/test, jig/mutate, expected outputs and probes | bd08552 | pushed |
 | none | Part 8 links: close bd08552 | ceddcf7 | pushed |
 | none | Plan: a stopwatch, not Fibonacci, for the clock rung; the wall clock gets its own | ae00f8f | pushed |
-| 2026-10-18 | Part 8 rewritten in the series voice | | requested |
+| 2026-10-18 | Part 8 rewritten in the series voice | daa495a | pushed |
+| 2026-10-18 | Part 8 back to the version scheduled on LinkedIn; the rewrite kept as a draft | | requested |
