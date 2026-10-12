@@ -35,4 +35,5 @@ Status: requested (hash unknown), confirmed (hash seen), pushed.
 | none | Post images drawn, kernel line counts, and two Linux-binary rungs in the plan | 7c0e7a9 | pushed |
 | 2026-10-18 (part 8, the testers) | Tests run themselves: jig/test, jig/mutate, expected outputs and probes | bd08552 | pushed |
 | none | Part 8 links: close bd08552 | ceddcf7 | pushed |
-| none | Plan: a stopwatch, not Fibonacci, for the clock rung; the wall clock gets its own | | requested |
+| none | Plan: a stopwatch, not Fibonacci, for the clock rung; the wall clock gets its own | ae00f8f | pushed |
+| 2026-10-18 | Part 8 rewritten in the series voice | | requested |
