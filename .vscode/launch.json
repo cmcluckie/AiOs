@@ -12,12 +12,14 @@
       "command": "sh jig/aios run life",   "windows": { "command": "wsl sh jig/aios run life" } },
     { "name": "AiOS: calc",   "type": "node-terminal", "request": "launch", "cwd": "${workspaceFolder}",
       "command": "sh jig/aios run calc",   "windows": { "command": "wsl sh jig/aios run calc" } },
+    { "name": "AiOS: stopwatch", "type": "node-terminal", "request": "launch", "cwd": "${workspaceFolder}",
+      "command": "sh jig/aios run stopwatch", "windows": { "command": "wsl sh jig/aios run stopwatch" } },
     { "name": "AiOS: both (refused until 9.6)", "type": "node-terminal", "request": "launch", "cwd": "${workspaceFolder}",
       "command": "sh jig/aios check both", "windows": { "command": "wsl sh jig/aios check both" } },
     { "name": "AiOS: pick a flavor", "type": "node-terminal", "request": "launch", "cwd": "${workspaceFolder}",
       "command": "sh jig/aios run ${input:flavor}", "windows": { "command": "wsl sh jig/aios run ${input:flavor}" } }
   ],
   "inputs": [
-    { "id": "flavor", "type": "pickString", "description": "Which flavor?", "options": ["hello", "hanoi", "life", "calc", "both"], "default": "hello" }
+    { "id": "flavor", "type": "pickString", "description": "Which flavor?", "options": ["hello", "hanoi", "life", "calc", "stopwatch", "both"], "default": "hello" }
   ]
 }

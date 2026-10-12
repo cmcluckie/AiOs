@@ -12,6 +12,7 @@ for h in pool/CMP.loader@*/door.h; do
 		echo "AT(write, 0) AT(exit, 4)"
 		[ "$v" -ge 2 ] && echo "AT(alloc, 8)"
 		[ "$v" -ge 3 ] && echo "AT(read, 12)"
+		[ "$v" -ge 4 ] && echo "AT(ms, 16)"
 		echo "_Static_assert(sizeof(void *) == 4, \"32-bit\");"
 	} > /tmp/door_layout.$$.c
 	gcc -m32 -ffreestanding -nostdinc -fsyntax-only /tmp/door_layout.$$.c

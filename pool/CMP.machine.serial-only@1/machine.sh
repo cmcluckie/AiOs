@@ -1,4 +1,5 @@
 #!/bin/sh
+# SPDX-License-Identifier: GPL-2.0-only
 # CMP.machine.serial-only@1: the machine petition 0000 runs on.
 # One CPU, 64 MiB, one ISA serial port on stdio, and as little else as microvm
 # allows: no PCI, no ACPI (which also selects qboot, the firmware that never

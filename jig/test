@@ -19,14 +19,20 @@
 #                                FLAVOR's loader and booted; checked like boot
 #   trace FLAVOR [INPUT]         boot with QEMU's serial register trace on; the
 #                                check reads every register access the driver made
-#   strace FLAVOR                boot under strace; the check reads the syscalls
+#   strace FLAVOR [SECS]         boot under strace (for SECS seconds, if the machine
+#                                never halts); the check reads the syscalls
 #   qtree FLAVOR                 start the machine paused, list its devices, stop
+#   timed FLAVOR SECS [PROBE]    for a machine that never halts: boot it (or a probe
+#                                built against its loader), watch for exactly SECS
+#                                seconds by the host's clock, each line stamped with
+#                                the host's milliseconds as it arrives; the .check
+#                                gets the stamped capture and SECS
 #   cmd COMMAND...               any command; exit 0 is green, exit 2 means it
 #                                cannot run on this host (SKIP), anything else red
 # Where tests/expected/<test>.check exists it decides instead of the .out file:
 # it is run as  sh <test>.check CAPTURE EXTRA BINARY  and exit 0 is green.
 #
-# The machine is always pool/CMP.machine.serial-only@1/machine.sh, unchanged.
+# The machine is always the flavor's own machine component, unchanged.
 # trace, strace and qtree add observation flags through a stand-in for
 # qemu-system-x86_64 on PATH that appends them; nothing else differs.
 #
@@ -38,7 +44,11 @@ repo=$(cd "$(dirname "$0")/.." && pwd); cd "$repo"
 tmp=$(mktemp -d); trap 'rm -rf "$tmp"' EXIT
 field() { sed -n "s/^$2 *= *\"\([^\"]*\)\".*/\1/p" "$1" | head -1; }
 num()   { sed -n "s/^$2 *= *\([0-9][0-9]*\).*/\1/p" "$1" | head -1; }
-machine=pool/CMP.machine.serial-only@1/machine.sh
+# the machine a flavor runs on: its machine component's machine.sh, unchanged
+machine_of() {
+	m=$(field "flavors/$1.toml" machine)
+	echo "$(field "index/cmp/${m#CMP.}.toml" source)machine.sh"
+}
 [ -w /dev/kvm ] && accel=kvm || accel="software emulation (tcg)"
 
 # the stand-in: real QEMU plus whatever AIOS_QEMU_EXTRA says
@@ -84,11 +94,13 @@ run_one() {	# t secs kind args... ; sets why
 	case "$kind" in
 	boot)
 		build "$1" || { why="build of $1 failed"; return 1; }
+		machine=$(machine_of "$1")
 		boot "$(loader_of "$1")" "$(program_of "$1")" "${2:-}" "$cap" "$secs"
 		[ $? -eq 124 ] && { why="still running after ${secs}s"; return 1; }
 		judge "$cap" "$t" "" "$(program_of "$1")" ;;
 	ladder)
 		build "$1" || { why="build of $1 failed"; return 1; }
+		machine=$(machine_of "$1")
 		top=$(lv "$1"); n=0
 		for e in $ladder; do
 			p=${e%%:*}; r=${e#*:}; f=${r%%:*}; r=${r#*:}; v=${r%%:*}; inp=${r#*:}
@@ -103,6 +115,7 @@ run_one() {	# t secs kind args... ; sets why
 	same-loader)
 		build "$1" && build "$2" || { why="build failed"; return 1; }
 		cmp -s "$(loader_of "$1")" "$(loader_of "$2")" || { why="loaders built for $1 and $2 differ"; return 1; }
+		machine=$(machine_of "$1")
 		for pair in "$1:$2" "$2:$1"; do
 			a=${pair%:*}; b=${pair#*:}
 			boot "$(loader_of "$b")" "$(program_of "$a")" "" "$cap" "$secs"
@@ -110,18 +123,15 @@ run_one() {	# t secs kind args... ; sets why
 		done
 		why="one loader, $(sha256sum < "$(loader_of "$1")" | cut -c1-16)" ;;
 	program)
-		src=$1; build "$2" || { why="build of $2 failed"; return 1; }
-		ldir=$(field "index/cmp/loader@$(lv "$2").toml" source)
-		pb="$tmp/probe.bin"
-		CF="-m32 -std=c11 -ffreestanding -fno-pic -fno-pie -fno-stack-protector -fno-builtin -fno-asynchronous-unwind-tables -mno-sse -mno-mmx -mno-red-zone -mgeneral-regs-only -nostdlib -nostdinc -O2 -Wall -Wextra -Werror"
-		gcc $CF -I "$ldir" -c -o "$tmp/probe.o" "$src" 2> "$tmp/cc.err" &&
-		gcc $CF -static -no-pie -nostartfiles -Wl,--build-id=none -Wl,-z,noexecstack -T "$ldir/program.ld" -o "$pb" "$tmp/probe.o" 2>> "$tmp/cc.err" \
-			|| { why="probe $src does not build: $(head -1 "$tmp/cc.err")"; return 1; }
+		build "$2" || { why="build of $2 failed"; return 1; }
+		machine=$(machine_of "$2")
+		probe "$1" "$2" || return 1; pb="$tmp/probe.bin"
 		boot "$(loader_of "$2")" "$pb" "${3:-}" "$cap" "$secs"
 		[ $? -eq 124 ] && { why="still running after ${secs}s"; return 1; }
 		judge "$cap" "$t" "" "$pb" ;;
 	trace)
 		build "$1" || { why="build of $1 failed"; return 1; }
+		machine=$(machine_of "$1")
 		AIOS_QEMU_EXTRA="-trace serial_read -trace serial_write -trace serial_update_parameters -D $tmp/trace"
 		boot "$(loader_of "$1")" "$(program_of "$1")" "${2:-}" "$cap" "$secs"; rc=$?
 		AIOS_QEMU_EXTRA=""
@@ -129,12 +139,15 @@ run_one() {	# t secs kind args... ; sets why
 		judge "$cap" "$t" "$tmp/trace" "$(program_of "$1")" ;;
 	strace)
 		build "$1" || { why="build of $1 failed"; return 1; }
+		machine=$(machine_of "$1")
 		command -v strace > /dev/null || { why="SKIP: strace is not on this host"; return 2; }
-		PATH="$tmp/bin:$PATH" timeout "$secs" strace -f -qq -o "$tmp/strace" sh "$machine" "$(loader_of "$1")" "$(program_of "$1")" < /dev/null > "$cap" 2> /dev/null
-		[ $? -eq 124 ] && { why="still running after ${secs}s"; return 1; }
+		# a machine that never halts is watched for SECS seconds instead (strace FLAVOR SECS)
+		PATH="$tmp/bin:$PATH" timeout "${2:-$secs}" strace -f -qq -o "$tmp/strace" sh "$machine" "$(loader_of "$1")" "$(program_of "$1")" < /dev/null > "$cap" 2> /dev/null
+		[ $? -eq 124 ] && [ -z "${2:-}" ] && { why="still running after ${secs}s"; return 1; }
 		judge "$cap" "$t" "$tmp/strace" ;;
 	qtree)
 		build "$1" || { why="build of $1 failed"; return 1; }
+		machine=$(machine_of "$1")
 		mkfifo "$tmp/mon.in" "$tmp/mon.out"
 		AIOS_QEMU_EXTRA="-S -chardev pipe,id=aiosmon,path=$tmp/mon -mon chardev=aiosmon,mode=readline"
 		PATH="$tmp/bin:$PATH" timeout "$secs" sh "$machine" "$(loader_of "$1")" "$(program_of "$1")" < /dev/null > /dev/null 2>&1 &
@@ -147,6 +160,19 @@ run_one() {	# t secs kind args... ; sets why
 		wait $qpid 2> /dev/null
 		rm -f "$tmp/mon.in" "$tmp/mon.out"
 		judge "$cap" "$t" ;;
+	timed)
+		build "$1" || { why="build of $1 failed"; return 1; }
+		machine=$(machine_of "$1")
+		bin=$(program_of "$1")
+		if [ -n "${3:-}" ]; then
+			probe "$3" "$1" || return 1; bin="$tmp/probe.bin"
+		fi
+		# the machine never halts: watch it for exactly $2 seconds by the host's
+		# clock, stamping every line (and every \r-redrawn value) as it arrives
+		PATH="$tmp/bin:$PATH" timeout "$2" sh "$machine" "$(loader_of "$1")" "$bin" < /dev/null 2> "$tmp/machine.err" |
+			stdbuf -o0 tr '\r' '\n' |
+			while IFS= read -r l || [ -n "$l" ]; do echo "$(date +%s%3N) $l"; done > "$cap"
+		judge "$cap" "$t" "$2" "$bin" ;;
 	cmd)
 		timeout "$secs" "$@" > "$cap" 2>&1; rc=$?
 		[ $rc -eq 0 ] && { why=$(tail -1 "$cap"); return 0; }
@@ -155,6 +181,14 @@ run_one() {	# t secs kind args... ; sets why
 		return 1 ;;
 	*)	why="runner kind '$kind' unknown"; return 1 ;;
 	esac
+}
+# probe SRC FLAVOR: build a probe program from tests/programs against the flavor's loader
+probe() {
+	ldir=$(field "index/cmp/loader@$(lv "$2").toml" source)
+	CF="-m32 -std=c11 -ffreestanding -fno-pic -fno-pie -fno-stack-protector -fno-builtin -fno-asynchronous-unwind-tables -mno-sse -mno-mmx -mno-red-zone -mgeneral-regs-only -nostdlib -nostdinc -O2 -Wall -Wextra -Werror"
+	gcc $CF -I "$ldir" -c -o "$tmp/probe.o" "$1" 2> "$tmp/cc.err" &&
+	gcc $CF -static -no-pie -nostartfiles -Wl,--build-id=none -Wl,-z,noexecstack -T "$ldir/program.ld" -o "$tmp/probe.bin" "$tmp/probe.o" 2>> "$tmp/cc.err" \
+		|| { why="probe $1 does not build: $(head -1 "$tmp/cc.err")"; return 1; }
 }
 lv() { sed -n 's/^built flavor [a-z]*: CMP\.loader@\([0-9]*\).*/\1/p' "out/$1/build.txt"; }
 

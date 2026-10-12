@@ -1,0 +1,10 @@
+code       = "TST.machine.timer-only@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+binds      = "SPEC.machine.2@1"
+red_when   = "the device tree of the paused stopwatch machine contains any device other than: isa-serial, isa-pit or kvm-pit, isabus-bridge, ioapic, fw_cfg_io, kvmclock or kvmvapic, and the eight empty virtio-mmio transports microvm cannot omit, or not exactly one serial port and one timer"
+timeout_ms = 5000
+isolates   = "CMP.machine.serial-timer@1"
+runner     = "jig/test qtree stopwatch"
+mutations  = 1

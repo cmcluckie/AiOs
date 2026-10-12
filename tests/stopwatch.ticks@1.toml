@@ -1,0 +1,10 @@
+code       = "TST.stopwatch.ticks@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+binds      = "SPEC.stopwatch.1@1"
+red_when   = "booted and watched for 10 seconds by the host's clock, the values it shows are not 00:00, 00:01, 00:02 and so on, each once and in order, or the last one is not 00:09 or 00:10"
+timeout_ms = 15000
+isolates   = "CMP.stopwatch@1"
+runner     = "jig/test timed stopwatch 10"
+mutations  = 2

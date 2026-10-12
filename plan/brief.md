@@ -61,7 +61,7 @@ The detailed plan is plan/full.md; this file is the one to read.
    9.1. Petition 0001, Towers of Hanoi: recursion, output only; no new door, no new line in the loader, proving a second program changes nothing. [done]
    9.2. Petition 0002, Conway's Game of Life: the program asks for memory; the loader reads the machine's memory map and hands out pieces of it. [done]
    9.3. Petition 0003, a reverse-Polish calculator: the program reads; the serial part gains a receive side and the door a read. [done]
-   9.4. Petition 0004, a stopwatch: counts up on one line until a key is pressed; the program needs time passing, the microvm clock debt becomes a petitioned capability and the first real sensor. [coming up]
+   9.4. Petition 0004, a stopwatch: ticks once a second, counting up on one line until switched off; the program needs time passing, the microvm clock debt becomes a petitioned capability and the first real sensor. [done]
    9.5. Petition 0005, save the sorted output: a disk driver and a filesystem lifted from Linux, the first expensive lift. [coming up]
    9.6. Petition 0006, two programs at once: the first thing that must be shared; the kernel appears, and every line of it is named. [coming up]
    9.7. Petition 0007, the console text editor: open, type, save; needs 0003 and 0005; C now, Rust later as CMP.editor@2. [coming up]

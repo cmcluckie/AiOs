@@ -38,4 +38,5 @@ Status: requested (hash unknown), confirmed (hash seen), pushed.
 | none | Plan: a stopwatch, not Fibonacci, for the clock rung; the wall clock gets its own | ae00f8f | pushed |
 | 2026-10-18 | Part 8 rewritten in the series voice | daa495a | pushed |
 | 2026-10-18 | Part 8 back to the version scheduled on LinkedIn; the rewrite kept as a draft | d25c384 | pushed |
-| none | Three clauses from the sabotage: the driver waits, sets 8N1, and reads never over-report | | requested |
+| none | Three clauses from the sabotage: the driver waits, sets 8N1, and reads never over-report | a61e96a | pushed |
+| 2026-10-19 (part 9, the stopwatch) | Petition 0004: a stopwatch, and the whole repository is GPL-2.0-only | | requested |

@@ -35,7 +35,10 @@ change to it.  Petition 0002, Conway's Game of Life, asks the loader for
 memory: the loader grew by 35 lines and one door entry, and the two earlier
 programs run under it unchanged.  Petition 0003, a reverse-Polish calculator,
 reads from the keyboard: the serial part we took from Linux gained its receive
-side, the loader a read door, and the three earlier programs run unchanged.  The ladder of petitions after that is in the plan: each one a
+side, the loader a read door, and the three earlier programs run unchanged.  Petition 0004, a stopwatch,
+counts seconds: the loader measures how fast the processor's counter ticks
+against the old PC timer chip at boot, the way Linux does when nothing will
+just tell it, and every earlier program runs unchanged under it.  The ladder of petitions after that is in the plan: each one a
 program every CS student wrote once, chosen because it needs exactly one new
 thing from the machine.
 
@@ -91,4 +94,5 @@ A change that matters is a new version of the part through the door.
 
 ## Licence
 
-MIT, except lifted source, which keeps its own.  See [LICENSE](LICENSE).
+GPL-2.0-only, the same as Linux, which AiOs is built from.  Lifted source also
+keeps its upstream notices.  See [LICENSE](LICENSE).

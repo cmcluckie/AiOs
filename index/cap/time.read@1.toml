@@ -1,0 +1,8 @@
+code       = "CAP.time.read@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+touches    = "time passing: milliseconds since the loader started the clock; never the time of day"
+mechanism  = "the loader's ms door: the processor's counter now, minus at boot, divided by its rate as measured against the 8254 at boot"
+scope      = "none"
+scope_rule = "^$"

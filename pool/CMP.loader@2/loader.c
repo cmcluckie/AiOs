@@ -1,4 +1,4 @@
-/* SPDX-License-Identifier: MIT
+/* SPDX-License-Identifier: GPL-2.0-only
  *
  * CMP.loader@2: takes over from the machine, runs one program, hands it memory
  * when asked, halts when it exits.  The whole landlord, for a building with one

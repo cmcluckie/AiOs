@@ -26,8 +26,12 @@ why.  The full design is in design.md; read it before doing anything.
 - Linux is read, never booted.  A segment is lifted from it into its own
   directory under lifted/ with the hands it held cut; the cut is recorded in
   the as-built spec.  Nothing enters as "the kernel".
-- Ours and theirs never share a directory.  pool/ holds what we wrote, MIT.
-  lifted/ holds what came from upstream, under its own licence, each part with
+- The whole repository is GPL-2.0-only, Linux's licence: every image we build
+  compiles Linux's lines in with ours, so the whole is a work based on Linux
+  (findings 0009).  A new upstream source with an incompatible licence is a
+  finding before it is a lift.
+- Ours and theirs never share a directory.  pool/ holds what we wrote.
+  lifted/ holds what came from upstream, keeping its upstream notices, each part with
   an origin.toml that records exactly enough to lift it again: repository,
   commit, commit date, file, blob id, line ranges, who lifted it and when, and
   what was cut.  A component with one lifted line lives in lifted/.

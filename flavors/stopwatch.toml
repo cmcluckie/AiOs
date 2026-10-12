@@ -1,0 +1,3 @@
+name      = "stopwatch"
+machine   = "CMP.machine.serial-timer@1"
+petitions = ["0004"]

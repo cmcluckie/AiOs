@@ -1,4 +1,4 @@
-/* SPDX-License-Identifier: MIT
+/* SPDX-License-Identifier: GPL-2.0-only
  *
  * CMP.loader@1 entry.  The first instruction that is ours.  Ours; nothing lifted.
  *

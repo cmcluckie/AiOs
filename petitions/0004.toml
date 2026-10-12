@@ -1,0 +1,69 @@
+[petition]
+id         = "0004"
+purpose    = "PUR.0004@1"
+submitted  = 2026-10-11
+submitter  = "KEY.chris@1"
+expires    = 2027-04-11
+supersedes = ""
+status     = "pending"
+
+[[capability]]
+code   = "CAP.tty.write@1"
+reason = "SPEC.stopwatch.1@1"
+scope  = "console0"
+
+[[capability]]
+code   = "CAP.time.read@1"
+reason = "SPEC.stopwatch.1@1"
+scope  = ""
+
+[[capability]]
+code   = "CAP.dev.serial@1"
+reason = "SPEC.machine.2@1"
+scope  = ""
+
+[[capability]]
+code   = "CAP.dev.pit@1"
+reason = "SPEC.timer.1@1"
+scope  = ""
+
+[[component]]
+code     = "CMP.stopwatch@1"
+role     = "primary"
+admitted = false
+
+[[component]]
+code     = "CMP.toolchain.c@1"
+role     = "toolchain"
+admitted = false
+
+[[component]]
+code     = "CMP.loader@4"
+role     = "boot"
+admitted = false
+
+[[component]]
+code     = "CMP.serial.8250@2"
+role     = "dependency"
+admitted = false
+
+[[component]]
+code     = "CMP.timer.tsc-pit@1"
+role     = "dependency"
+admitted = false
+
+[[component]]
+code     = "CMP.machine.serial-timer@1"
+role     = "machine"
+admitted = false
+
+[[component]]
+code     = "CMP.hypervisor.qemu@1"
+role     = "machine"
+admitted = false
+
+[[test]]
+code = "TST.stopwatch.ticks@1"
+
+[[sensor]]
+code = "SNS.stopwatch.drift@1"

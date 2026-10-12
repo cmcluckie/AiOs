@@ -1,5 +1,5 @@
 # tests/mutations-results.txt, written by jig/mutate.  Do not edit by hand.
-# run 2026-10-12T04:51Z at commit d25c384 + the spec commit
+# run 2026-10-12T05:37Z at commit a61e96a + the stopwatch commit
 KILLED    hello.exact-bytes@1  one wrong letter in hello's message
 KILLED    hello.exact-bytes@1  the newline goes missing
 KILLED    hello.exact-bytes@1  one extra write before exit
@@ -24,4 +24,13 @@ KILLED    machine.no-peripherals@1  the machine grows a device nobody asked for
 KILLED    machine.no-sockets@1  the machine opens a network socket
 KILLED    serial.waits-ready@1  the driver stops waiting for the chip to be ready before each byte (findings 0007 #3; caught since SPEC.serial.4@1)
 KILLED    serial.init-8n1@1  init sets 5 data bits instead of 8 (findings 0002 #7, 0007 #4; caught since SPEC.serial.5@1)
-# 24 killed, 0 survived unexpectedly, 0 known survivors, 0 no-ops, 0 no-builds
+KILLED    stopwatch.ticks@1  the 1985 bug: the stopwatch times itself by counting its own loops
+KILLED    stopwatch.ticks@1  the stopwatch skips a second
+KILLED    timer.rate@1  the 8254 assumed to tick at 1 MHz instead of 1.193182
+KILLED    timer.rate@1  the turbo button: the counter assumed to tick at 1 GHz instead of measured
+KILLED    timer.rate@1  the machine without its timer: nothing to measure against
+KILLED    loader.ms@1  the door counts from the host's power-on instead of the loader's start
+KILLED    machine.timer-only@1  the stopwatch machine grows a device nobody asked for
+KILLED    machine.timer-no-sockets@1  the stopwatch machine opens a network socket
+KILLED    loader.ladder-4@1  loader@4 breaks the read door the calculator, built for loader@3, relies on
+# 33 killed, 0 survived unexpectedly, 0 known survivors, 0 no-ops, 0 no-builds

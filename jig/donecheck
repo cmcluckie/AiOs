@@ -39,7 +39,7 @@ for e in index/cmp/*.toml; do
 		[ -f "${src%/}/origin.toml" ] || bad "$code" "rule 6: lifted with no origin record" ;;
 	esac
 	case "$src" in pool/*)
-		grep -q 'SPDX-License-Identifier: MIT' "$src"* 2>/dev/null || true ;;
+		grep -q 'SPDX-License-Identifier: GPL-2.0-only' "$src"* 2>/dev/null || bad "$code" "licence: no GPL-2.0-only SPDX header in $src" ;;
 	esac
 done
 [ "$never" -eq 0 ] || echo "rule 5: $never test(s) with no runner yet"

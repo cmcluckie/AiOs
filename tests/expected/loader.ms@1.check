@@ -1,0 +1,20 @@
+# TST.loader.ms@1, run by jig/test as: sh this STAMPED-CAPTURE SECONDS
+# Each line is: the host's milliseconds, then what the ms door said.  Green when
+# the door never went backwards and, between the first line and the last, it
+# counted the same milliseconds as the host to within 1%.  The drift, scaled to
+# ten seconds, is what SNS.stopwatch.drift@1 watches.
+awk '
+NF == 2 && $2 ~ /^[0-9]+$/ {
+	if (n && $2 + 0 < last) { printf "went backwards: %s after %s\n", $2, last; bad = 1; exit 1 }
+	if (!n) { h0 = $1; d0 = $2; if ($2 + 0 > 5) { printf "first reading %s ms, expected 5 or less: not counted from when the loader started the clock\n", $2; bad = 1; exit 1 } }
+	h1 = $1; d1 = $2; last = $2 + 0; n++
+}
+END {
+	if (bad) exit 1
+	if (n < 3) { printf "only %d readings\n", n; exit 1 }
+	host = h1 - h0; door = d1 - d0
+	if (host <= 0) { print "no time passed on the host"; exit 1 }
+	drift = door - host; if (drift < 0) drift = -drift
+	if (drift * 100 > host) { printf "door counted %d ms while the host counted %d ms\n", door, host; exit 1 }
+	printf "door %d ms, host %d ms: drift %.0f ms per 10 s\n", door, host, drift * 10000 / host
+}' "$1"

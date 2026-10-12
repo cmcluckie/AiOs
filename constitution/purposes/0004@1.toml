@@ -1,0 +1,6 @@
+code       = "PUR.0004@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+sentence   = "Be a stopwatch at the serial console: count up once a second from 00:00, on one line, until switched off."
+holder     = "KEY.chris"

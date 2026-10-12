@@ -1,0 +1,17 @@
+# TST.stopwatch.ticks@1, run by jig/test as: sh this STAMPED-CAPTURE SECONDS
+# Green when the stopwatch showed 00:00, 00:01, 00:02 ... each once and in order,
+# and after SECONDS seconds by the host's clock the last value was SECONDS or
+# SECONDS-1 (the machine takes a moment to boot before 00:00).
+awk -v secs="$2" '
+$2 ~ /^[0-9][0-9]:[0-9][0-9]$/ {
+	v = substr($2, 1, 2) * 60 + substr($2, 4, 2)
+	if (v != n) { printf "expected %02d:%02d, saw %s\n", int(n / 60), n % 60, $2; bad = 1; exit 1 }
+	n++
+}
+END {
+	if (bad) exit 1
+	if (n == 0) { print "it never showed 00:00"; exit 1 }
+	last = n - 1
+	if (last != secs && last != secs - 1) { printf "after %d s it showed %d s\n", secs, last; exit 1 }
+	printf "00:00 to %02d:%02d, every second once, in order, in %d s by the host\n", int(last / 60), last % 60, secs
+}' "$1"

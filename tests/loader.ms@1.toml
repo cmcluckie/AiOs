@@ -1,0 +1,10 @@
+code       = "TST.loader.ms@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+binds      = "SPEC.loader.9@1"
+red_when   = "a program that prints the ms door as soon as it starts and then every half second by the door, watched for 10 seconds by the host's clock, shows more than 5 ms at its first reading, a value lower than the one before it, or its milliseconds and the host's differ by more than 1% between the first line and the last"
+timeout_ms = 15000
+isolates   = "CMP.loader@4"
+runner     = "jig/test timed stopwatch 10 tests/programs/msprobe.c"
+mutations  = 1

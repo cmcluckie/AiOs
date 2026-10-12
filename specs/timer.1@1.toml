@@ -1,0 +1,7 @@
+code       = "SPEC.timer.1@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+component  = "CMP.timer.tsc-pit@1"
+clause     = "At boot it measures how fast the processor's counter ticks against the 8254's 1,193,182 Hz and reports that rate, or reports 0 if the measurement cannot be trusted; it never assumes a rate."
+author     = "KEY.chris"

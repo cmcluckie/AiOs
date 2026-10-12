@@ -82,15 +82,18 @@ cmd_build() {
 	# walk run-time depends from the program down; the loader is whatever it depends on
 	loader=$(list_field "$(code_file "$prog")" depends)
 	[ -n "$loader" ] || die "$prog depends on nothing; a program needs a loader"
-	serial=$(list_field "$(code_file "$loader")" depends)
-	pdir=$(field "$(code_file "$prog")" source); ldir=$(field "$(code_file "$loader")" source); sdir=$(field "$(code_file "$serial")" source)
-	for d in "$pdir" "$ldir" "$sdir"; do [ -d "$d" ] || die "source $d is not in the pool"; done
+	pdir=$(field "$(code_file "$prog")" source); ldir=$(field "$(code_file "$loader")" source)
+	ddirs=""	# everything the loader depends on (lifted parts), built into it
+	for dep in $(list_field "$(code_file "$loader")" depends); do
+		ddirs="$ddirs $(field "$(code_file "$dep")" source)"
+	done
+	for d in "$pdir" "$ldir" $ddirs; do [ -d "$d" ] || die "source $d is not in the pool"; done
 	out="out/$1"; mkdir -p "$out"
 	CC=${CC:-gcc}
 	CFLAGS="-m32 -std=c11 -ffreestanding -fno-pic -fno-pie -fno-stack-protector -fno-builtin -fno-asynchronous-unwind-tables -mno-sse -mno-mmx -mno-red-zone -mgeneral-regs-only -nostdlib -nostdinc -O2 -Wall -Wextra -Werror"
 	LDFLAGS="-static -no-pie -nostartfiles -Wl,--build-id=none -Wl,-z,noexecstack"
 	objs=""
-	for src in "$sdir"*.c "$ldir"*.S "$ldir"*.c; do
+	for src in $(for d in $ddirs; do echo "$d"*.c; done) "$ldir"*.S "$ldir"*.c; do
 		o="$out/$(basename "${src%.*}").o"; $CC $CFLAGS -c -o "$o" "$src"; objs="$objs $o"
 	done
 	$CC $CFLAGS $LDFLAGS -T "$ldir/loader.ld" -o "$out/loader.elf" $objs

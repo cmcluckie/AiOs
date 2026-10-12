@@ -1,4 +1,4 @@
-/* SPDX-License-Identifier: MIT
+/* SPDX-License-Identifier: GPL-2.0-only
  *
  * CMP.calc@1.  PUR.0003: a reverse-Polish calculator at the serial console.
  * Type numbers and operators, it keeps a stack, shows the top after each line,

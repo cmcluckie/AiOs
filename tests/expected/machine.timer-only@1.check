@@ -1,0 +1,11 @@
+# TST.machine.timer-only@1, run by jig/test as: sh this QTREE
+# Green when the paused stopwatch machine holds one serial port, one 8254 timer,
+# and nothing that is not on SPEC.machine.2@1's list of what microvm forces.
+cap=$1
+grep -q 'dev: ' "$cap" || { echo "no device tree came back"; exit 1; }
+bad=$(sed -n 's/^ *dev: \([^,]*\),.*/\1/p' "$cap" | grep -v -x -e isa-serial -e isa-pit -e kvm-pit -e isabus-bridge -e ioapic -e fw_cfg_io -e kvmclock -e kvmvapic -e virtio-mmio | sort -u | tr '\n' ' ')
+[ -z "$bad" ] || { echo "unexpected devices: $bad"; exit 1; }
+[ "$(grep -c 'dev: isa-serial,' "$cap")" -eq 1 ] || { echo "not exactly one serial port"; exit 1; }
+[ "$(grep -c -e 'dev: isa-pit,' -e 'dev: kvm-pit,' "$cap")" -eq 1 ] || { echo "not exactly one 8254 timer"; exit 1; }
+[ "$(grep -c 'dev: virtio-mmio,' "$cap")" -le 8 ] || { echo "more than eight virtio-mmio transports"; exit 1; }
+echo "$(grep -c 'dev: ' "$cap") devices, one of them the timer, all on the list"

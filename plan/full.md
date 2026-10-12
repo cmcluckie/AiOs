@@ -365,14 +365,20 @@ loader, and that is a test run every time (9.8).  Each rung is also a post.
   32-bit overflow bug.  Hello, Hanoi and Life unchanged under @3.  Findings
   0006.
 
-### 9.4 Petition 0004: a stopwatch [coming up]
-- Counts up from 00:00.0, redrawn in place on one line, until a key is
-  pressed (so the machine can halt and a test can end).  The one new thing:
+### 9.4 Petition 0004: a stopwatch [done]
+- Ticks once a second, counting up from 00:00, redrawn in place on one line,
+  until the machine is switched off (as built: no key; the tests watch it for
+  a fixed time instead).  Each
+  tick is aimed at start + n seconds, never at "a second after the last one",
+  so a late redraw does not drift.  Waiting is polling the time door: no
+  interrupts yet, and with one program nothing else wants the processor.  The one new thing:
   time passing.  CAP.time.read, elapsed time only, never the time of day;
   the processor's own counter or the LAPIC timer, whichever the machine
   petition can honestly present, and how fast it ticks has to be worked out,
   not assumed.  The clock debt from findings 0002 becomes a named capability.
-  First real sensor: elapsed time with a threshold.  Was Fibonacci timed;
+  First real sensor: elapsed time with a threshold.  As built (findings 0008):
+  the 8254 measures the processor's counter at boot, Linux's fallback method,
+  chosen on purpose; drift 0 to 4 ms in 10 s under emulation.  Was Fibonacci timed;
   Chris swapped it on 2026-10-11: recursion is done, and a number at the end
   of a calculation is a dull way to show a clock.
 - Done-when: a run of n seconds by the host's clock shows n seconds, within

@@ -1,0 +1,8 @@
+# TST.machine.timer-no-sockets@1, run by jig/test as: sh this CAPTURE STRACE (the stopwatch machine, watched for 3 s)
+# Green when strace saw the machine start (an execve of QEMU) and recorded no
+# socket, connect, bind or listen call from any process, start to exit.
+st=$2
+grep -q 'execve(".*qemu-system-x86_64' "$st" || { echo "strace never saw QEMU start"; exit 1; }
+hits=$(grep -E '(^|[^a-z_])(socket|connect|bind|listen)\(' "$st" | head -3)
+[ -z "$hits" ] || { echo "network calls: $hits"; exit 1; }
+echo "$(wc -l < "$st") syscalls traced, none on the network"

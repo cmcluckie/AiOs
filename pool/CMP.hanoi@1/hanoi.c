@@ -1,4 +1,4 @@
-/* SPDX-License-Identifier: MIT
+/* SPDX-License-Identifier: GPL-2.0-only
  *
  * CMP.hanoi@1.  PUR.0001: print the moves that solve the Towers of Hanoi for
  * four disks, then halt.  Recursion and output.  Requires CAP.tty.write and

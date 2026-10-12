@@ -1,4 +1,4 @@
-/* SPDX-License-Identifier: MIT
+/* SPDX-License-Identifier: GPL-2.0-only
  *
  * CMP.life@1.  PUR.0002: run Conway's Game of Life from an R-pentomino for 200
  * generations in a 256 x 96 universe, print the middle of it and the population,

@@ -1,0 +1,10 @@
+code       = "SNS.stopwatch.drift@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+proves     = "SPEC.loader.9@1"
+question   = "Over ten seconds by the host's clock, how far does the ms door drift from it?"
+unit       = "ms"
+red_above  = 100
+consumer   = "KEY.seat.stability"
+exercises  = ["CAP.time.read@1"]

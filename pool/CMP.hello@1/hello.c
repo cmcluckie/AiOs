@@ -1,4 +1,4 @@
-/* SPDX-License-Identifier: MIT
+/* SPDX-License-Identifier: GPL-2.0-only
  *
  * CMP.hello@1.  PUR.0000: write one line to the serial console and halt.
  * Requires CAP.tty.write and CAP.proc.exit, both reached through the loader's

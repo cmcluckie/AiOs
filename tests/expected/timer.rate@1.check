@@ -1,0 +1,6 @@
+# TST.timer.rate@1, run by jig/test as: sh this STAMPED-CAPTURE SECONDS
+# The ms door's only idea of a second is the rate CMP.timer.tsc-pit measured.
+# Green when that rate was measured at all (the door is not 0 forever) and the
+# door keeps pace with the host's clock to within 1%, as loader.ms@1 checks.
+grep -q ' [1-9][0-9]*$' "$1" || { echo "the door said 0 throughout: the rate was never measured"; exit 1; }
+sh "$(dirname "$0")/loader.ms@1.check" "$@"

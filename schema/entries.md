@@ -46,7 +46,7 @@ means a petition's scope for it must be empty.
 
     kind          = "program"            # program | kernel | driver | library | toolchain | hardware
     source        = "pool/CMP.hello@1/"  # directory under pool/ (ours) or lifted/ (upstream), nothing outside
-    licence       = "MIT"
+    licence       = "GPL-2.0-only"
     depends       = []                   # CMP codes needed at run time; empty is a statement, not an omission
     build_depends = ["CMP.toolchain.c@1"]  # CMP codes needed to build; never in the image
     exposes       = []                   # CAP codes this component provides to others
