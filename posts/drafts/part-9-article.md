@@ -93,10 +93,10 @@ ADDENDUM
 
 ## Code on GitHub
 
-Every line that changed, on one page (hash when committed).
+[Every line that changed, on one page](https://github.com/cmcluckie/aios/compare/a61e96a...2876c14).
 
 The commits behind this post, in order:
 
-1. Petition 0004: a stopwatch; loader@4 with the ms door, the 8254 back to measure the counter (hash when committed)
+1. [Petition 0004: a stopwatch, and the whole repository is GPL-2.0-only](https://github.com/cmcluckie/aios/commit/2876c14)
 
 [The whole repo](https://github.com/cmcluckie/aios).

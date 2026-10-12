@@ -76,7 +76,7 @@ n=0
 for d in $(ls 20[0-9][0-9]-[0-9][0-9]-[0-9][0-9].md 20[0-9][0-9]-[0-9][0-9]-[0-9][0-9].html 2>/dev/null | sed 's/\.[a-z]*$//' | sort -u); do
 	n=$((n + 1))
 	[ -f "$d.md" ] && bad "$d.md" "old format; posts are one .html file now"
-	[ -f "$d.story.md" ] && bad "$d.story.md" "old format; the article lives in $d.html"
+	[ -f "$d.story.md" ] && ! head -1 "$d.story.md" | grep -q "kept so links to it still work" && bad "$d.story.md" "old format; the article lives in $d.html"
 	[ -f "$d.html" ] && check_html "$d.html"
 done
 [ "$n" -gt 0 ] || bad posts "no posts found"

@@ -94,10 +94,10 @@ AiOS, part 9 (Kernel code: 172 lines). "I could never play my favourite games on
 <li><a href="https://github.com/cmcluckie/aios/blob/main/tests/machine.timer-only@1.toml">machine.timer-only@1</a>.  Checks: The machine presents the guest one 16550 serial port and one 8254 timer that can interrupt nothing, and no network, storage, display or input device; whatever else the hypervisor forces present is named in the as-built spec and touched by no component; a reset request ends the machine.  Goes red when: the device tree of the paused stopwatch machine contains any device other than: isa-serial, isa-pit or kvm-pit, isabus-bridge, ioapic, fw_cfg_io, kvmclock or kvmvapic, and the eight empty virtio-mmio transports microvm cannot omit, or not exactly one serial port and one timer.  Status: Passed by the runner (software emulation): 14 devices, one of them the timer, all on the list.  Mutations caught: 1.</li>
 </ul>
 <h2>Code on GitHub</h2>
-<p>Every line that changed, on one page (hash when committed).</p>
+<p><a href="https://github.com/cmcluckie/aios/compare/a61e96a...2876c14">Every line that changed, on one page</a>.</p>
 <p>The commits behind this post, in order:</p>
 <ol>
-<li>Petition 0004: a stopwatch; loader@4 with the ms door, the 8254 back to measure the counter (hash when committed)</li>
+<li><a href="https://github.com/cmcluckie/aios/commit/2876c14">Petition 0004: a stopwatch, and the whole repository is GPL-2.0-only</a></li>
 </ol>
 <p><a href="https://github.com/cmcluckie/aios">The whole repo</a>.</p>
 </div>
