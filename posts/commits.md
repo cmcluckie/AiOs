@@ -40,4 +40,5 @@ Status: requested (hash unknown), confirmed (hash seen), pushed.
 | 2026-10-18 | Part 8 back to the version scheduled on LinkedIn; the rewrite kept as a draft | d25c384 | pushed |
 | none | Three clauses from the sabotage: the driver waits, sets 8N1, and reads never over-report | a61e96a | pushed |
 | 2026-10-19 (part 9, the stopwatch) | Petition 0004: a stopwatch, and the whole repository is GPL-2.0-only | 2876c14 | pushed |
-| 2026-10-19 | Part 9 links filled in; part 1's old article back so the LinkedIn link works | | requested |
+| 2026-10-19 | Part 9 links filled in; part 1's old article back so the LinkedIn link works | d9958c3 | pushed |
+| none | Posts 1, 2, 4, 8 and 9: six claims a kernel developer would flag, corrected | | requested |

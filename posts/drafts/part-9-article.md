@@ -6,7 +6,7 @@ I'll be honest: I don't like modern video games much.  I love the old ones.  And
 
 I could never understand how programmers made that mistake.  This part is where I finally found out, because we nearly made it ourselves.
 
-Here's what was going on.  A lot of those games didn't have a clock.  To wait a second, they ran a loop a certain number of times, tuned on the machine they were written on.  On the original IBM PC at 4.77 MHz, some particular number of trips round the loop came out at about a second.  On a faster machine the same loop finished sooner, so the "second" shrank, and the whole game sped up with it.  The turbo button existed because of that mistake: switch it off and the PC slowed itself down to roughly original speed, so the old timing came out right again.
+Here's what was going on.  A lot of those games didn't have a clock.  To wait a second, they ran a loop a certain number of times, tuned on the machine they were written on.  On the original IBM PC at 4.77 MHz, some particular number of trips round the loop came out at about a second.  On a faster machine the same loop finished sooner, so the "second" shrank, and the whole game sped up with it.  The turbo button existed because of that mistake: switch it off and the PC slowed itself down, closer to the speed the old games expected.
 
 I could never play my favourite games on my friend's faster computer.  This week we made sure AiOS never has that problem.
 
@@ -26,7 +26,7 @@ So the AI went and asked the processor.  Modern processors can tell you their co
 
 ## Letting a 1981 chip back in
 
-When nobody will tell you how fast your clock ticks, you time it against one you trust.  On a PC, the one everybody trusts is the timer chip, the 8254 (an 8253 in the very first machines), which has ticked at exactly 1,193,182 times a second since the original IBM PC in 1981.  Count the processor's ticks while the old chip counts a known stretch, divide, and you know how fast the processor's counter runs.
+When nobody will tell you how fast your clock ticks, you time it against one you trust.  On a PC, the one everybody trusts is the timer chip, the 8254 (an 8253 in the very first machines), which has ticked about 1,193,182 times a second since the original IBM PC in 1981.  Count the processor's ticks while the old chip counts a known stretch, divide, and you know how fast the processor's counter runs.
 
 That's how Linux does it when it has to.  To be fair to Linux, modern Linux asks the processor first, then the hypervisor, and only falls back to the old chip when nobody answers.  We went straight to the old chip on purpose.  It's what our machine needs, and honestly, I just love the story: a 1981 chip brought back to stop a 1985 bug.
 
