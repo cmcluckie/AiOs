@@ -122,10 +122,10 @@ AiOS, part 8 (Kernel code: 69 lines). "I kept asking the AI where the kernel was
 <li><a href="https://github.com/cmcluckie/aios/blob/main/tests/serial.receive-order@1.toml">serial.receive-order@1</a>.  Checks: Every byte that arrives on the serial port is handed to the read door once, in order, with none lost and none invented.  Goes red when: a program that echoes every byte it reads, fed 4096 bytes of every value but 3 and 4 in a fixed order, writes back anything other than those 4096 bytes in that order.  Status: Passed by the runner (software emulation): 4096 bytes, exact.  Mutations caught: 2.</li>
 </ul>
 <h2>Code on GitHub</h2>
-<p>Every line that changed, on one page (hash when committed).</p>
+<p><a href="https://github.com/cmcluckie/aios/compare/7c0e7a9...bd08552">Every line that changed, on one page</a>.</p>
 <p>The commits behind this post, in order:</p>
 <ol>
-<li>Tests run themselves: jig/test, jig/mutate, expected outputs and probes (hash when committed)</li>
+<li><a href="https://github.com/cmcluckie/aios/commit/bd08552">Tests run themselves: jig/test, jig/mutate, expected outputs and probes</a></li>
 </ol>
 <p><a href="https://github.com/cmcluckie/aios">The whole repo</a>.</p>
 </div>
