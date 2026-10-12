@@ -1,0 +1,36 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>{{TITLE}}</title>
+<style>
+body{max-width:760px;margin:32px auto;padding:0 16px;font-family:Georgia,serif;font-size:18px;line-height:1.6;color:#222;background:#fff}
+section{border:1px solid #ddd;border-radius:10px;padding:0 20px 12px;margin:0 0 28px}
+.bar{display:flex;justify-content:space-between;align-items:center;margin:0 -20px 12px;padding:8px 20px;background:#f4f3ef;border-bottom:1px solid #ddd;border-radius:10px 10px 0 0;font:600 14px system-ui,sans-serif;color:#555;user-select:none}
+button{font:600 14px system-ui,sans-serif;padding:6px 16px;border-radius:16px;border:1px solid #0a66c2;background:#0a66c2;color:#fff;cursor:pointer}
+button.done{background:#fff;color:#0a66c2}
+.text{white-space:pre-wrap;font-family:system-ui,sans-serif;font-size:15px}
+.img{font:14px system-ui,sans-serif;color:#555}
+</style></head><body>
+<section id="post">
+<div class="bar"><span>1. Post</span><button onclick="copyText('post-body',this)">Copy</button></div>
+<div id="post-body" class="text">
+{{POST}}
+</div>
+</section>
+<section id="title">
+<div class="bar"><span>2. Title</span><button onclick="copyText('title-body',this)">Copy</button></div>
+<div id="title-body"><h1>{{TITLE}}</h1></div>
+</section>
+<section id="article">
+<div class="bar"><span>3. Article</span><button onclick="copyRich('article-body',this)">Copy</button></div>
+<div id="article-body">
+{{ARTICLE}}
+</div>
+</section>
+<p class="img">Image: {{DATE}}.png, in this folder.</p>
+<script>
+function flash(b){b.textContent='Copied';b.classList.add('done');setTimeout(function(){b.textContent='Copy';b.classList.remove('done')},1500)}
+function select(id){var r=document.createRange();r.selectNodeContents(document.getElementById(id));var s=getSelection();s.removeAllRanges();s.addRange(r);return s}
+function copyRich(id,b){var s=select(id);document.execCommand('copy');s.removeAllRanges();flash(b)}
+function copyText(id,b){var t=document.getElementById(id).innerText.trim();
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(function(){flash(b)},function(){copyRich(id,b)})}else{copyRich(id,b)}}
+</script>
+</body></html>

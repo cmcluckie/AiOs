@@ -1,6 +1,6 @@
 # Voice
 
-How the posts and blog posts sound.  They go out under Chris's name, and people
+How the posts and articles sound.  They go out under Chris's name, and people
 who know him will know in two sentences if they're not his.  Built from how he
 talks and writes in the design chats, his edits to part 1, and what he's said
 about himself.  Read this before drafting anything in posts/.
@@ -37,7 +37,7 @@ admit when he's still figuring out his own idea.
 - **Pushes back on hype, including his own.**  If it isn't Linux, or isn't
   first, or isn't finished, he says so before the comments do.
 - **Mild language only on LinkedIn.**  He swears in conversation; in a post a
-  "hell" or a "damn" at most, and not every post.  The blog posts can be a
+  "hell" or a "damn" at most, and not every post.  The articles can be a
   touch looser.
 
 ## Words and habits that are his

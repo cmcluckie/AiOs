@@ -1,0 +1,173 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>The machine listens</title>
+<style>
+body{max-width:760px;margin:32px auto;padding:0 16px;font-family:Georgia,serif;font-size:18px;line-height:1.6;color:#222;background:#fff}
+section{border:1px solid #ddd;border-radius:10px;padding:0 20px 12px;margin:0 0 28px}
+.bar{display:flex;justify-content:space-between;align-items:center;margin:0 -20px 12px;padding:8px 20px;background:#f4f3ef;border-bottom:1px solid #ddd;border-radius:10px 10px 0 0;font:600 14px system-ui,sans-serif;color:#555;user-select:none}
+button{font:600 14px system-ui,sans-serif;padding:6px 16px;border-radius:16px;border:1px solid #0a66c2;background:#0a66c2;color:#fff;cursor:pointer}
+button.done{background:#fff;color:#0a66c2}
+.text{white-space:pre-wrap;font-family:system-ui,sans-serif;font-size:15px}
+.img{font:14px system-ui,sans-serif;color:#555}
+</style></head><body>
+<section id="post">
+<div class="bar"><span>1. Post</span><button onclick="copyText('post-body',this)">Copy</button></div>
+<div id="post-body" class="text">
+AiOS, part 6.  "The test went red, and it was right: 99999999999 is not 1215752191."...
+</div>
+</section>
+<section id="title">
+<div class="bar"><span>2. Title</span><button onclick="copyText('title-body',this)">Copy</button></div>
+<div id="title-body"><h1>The machine listens</h1></div>
+</section>
+<section id="article">
+<div class="bar"><span>3. Article</span><button onclick="copyRich('article-body',this)">Copy</button></div>
+<div id="article-body">
+<p><em>The story behind AiOS, part 6.</em></p>
+<h2>Why a calculator</h2>
+<p>Every program so far talks and never listens.  Hello world, Hanoi and Life
+all start up, say their piece, and leave.  The next rung is input: a program
+that sits there and waits for a person.</p>
+<p>The obvious textbook pick was guess-the-number, and it has one small problem
+here: it needs a random number, and this machine has no clock and nothing
+random in it yet.  That's a later rung.  So we went with the reverse-Polish
+calculator instead, which is two textbook chapters for the price of one:
+input, and the stack.  "3 4 +" pushes 3, pushes 4, adds them.  "2 *" doubles
+it.  No brackets, no order of operations to fuss over, which is why HP put it
+in their calculators in the seventies and why every data structures course on
+earth uses it to teach stacks.  If you owned one of those HPs, you're smiling.</p>
+<h2>A short history of me and input</h2>
+<p>Input has always been the part of programming with a bit of personality for
+me.  In C, I grew to really appreciate stdio.h.  printf, scanf, getchar: plain
+functions with plain names that did what they said.  You could read the line
+and know what it did.</p>
+<p>Then I graduated to C++, and the first thing it handed me was this:</p>
+<pre><code>cin &gt;&gt; x;
+</code></pre>
+<p>Two greater-than signs, pointing at a variable, somehow meaning "read a number
+from the keyboard and put it here."  It made no sense to me then.  It's an
+operator that normally shifts bits, borrowed and dressed up to mean "flow into."
+I learned to use it.  I never learned to love it, and if I'm honest it's still
+a bit of a mystery to me today.</p>
+<p>Which makes this rung a little funny.  On AiOS there's no stdio and no <code>&gt;&gt;</code>.
+There's no library at all.  The program asks the machine for one byte, gets
+one byte, and builds everything else itself: the line, the echo, the backspace,
+the numbers.  All the stuff stdio did for me, and <code>&gt;&gt;</code> did mysteriously, is
+right there in the open.</p>
+<h2>What got built</h2>
+<p>The calculator is about a hundred and seventy lines of C.  It keeps a stack of
+64 numbers, reads one key at a time, builds up a line, and when you hit Enter
+it splits the line into pieces.  A number goes on the stack.  An operator
+takes two off and puts the answer back.  <code>dup</code>, <code>swap</code>, <code>drop</code> and <code>clear</code> do
+exactly what they sound like.  After every line it shows you the top of the
+stack.  <code>q</code> quits.</p>
+<p>The arithmetic is the easy part.  The interesting part is everything your
+terminal normally does for you without you ever noticing.  When you type on a
+normal computer, the operating system shows you your keys, deals with
+backspace, and hands the program a whole line when you hit Enter.  Here
+there's nothing in between, so the program does all of it itself.  Every key
+you type gets echoed back as it arrives.  Backspace erases with a little
+back-space-back dance.  And Enter is a different key depending on who's
+typing: a person sends one byte, a script sends another, and Windows, being
+Windows, sends both.  The emulator deliberately puts your terminal in a mode
+where nothing gets done for you, precisely so the machine has to handle it.
+Nothing hides anything.  I kind of love that.</p>
+<h2>What changed underneath</h2>
+<p>Two parts moved up a version, and the old versions stayed exactly as they
+were, because that's the rule.</p>
+<p><strong>The serial driver, version 2.</strong>  Linux's early console driver has a reading
+function almost nobody uses.  It asks the chip "got a byte waiting?" by
+checking one bit, and if so, takes the byte.  Seventeen lines in Linux, wrapped
+in a bunch of console plumbing and a config switch.  We took the question and
+the read and left the plumbing.  The new version has its own record of where
+it came from, and the upstream check now verifies both versions: thirty-four
+ranges, all green.</p>
+<p><strong>The loader, version 3.</strong>  The door gets a fourth entry, <code>read</code>: wait for one
+byte, then grab anything else that's already arrived.  It just keeps asking
+the chip.  No interrupts, because nothing has asked for the machine to do
+anything else while it waits, and with one program, waiting is the whole job.
+Thirteen lines.  <code>write</code>, <code>exit</code> and <code>alloc</code> didn't budge.</p>
+<h2>The test that went red</h2>
+<p>This is the part I want to remember.  Before we booted the calculator, the AI
+wrote it a second time in Python, from the same rules, as a reference.  The
+test types the same keys into both and compares every byte that comes out.</p>
+<p>It failed at byte 320.  I'd typed 99999999999 to make sure it would say "too
+big."  Instead it cheerfully told me "= 1215752191."</p>
+<p>The code built the number up digit by digit and checked whether it was too big
+after each multiply by ten.  On a 64-bit machine, no problem.  On this one,
+the number box is only 32 bits, so the multiply wrapped around before the
+check ever saw it, and the wrapped-around number was small enough to sail
+through.  The fix is to ask "is this already too big to take another digit?"
+before multiplying.  One line.  The edge cases, the biggest and smallest
+numbers that fit and one past each, now come out right both ways.</p>
+<p>That's the first time on this ladder a test caught something we got wrong.
+And it's the best argument I've got for the rule that every test has to be
+able to fail.  A test that checks the program against its own idea of the
+right answer would have passed with flying colours.</p>
+<h2>What can end the machine</h2>
+<p>Divide by zero.  On your laptop, the processor raises its hand, the operating
+system catches it, and your program dies with a message.  This machine has
+nobody to catch it, because nothing has asked for that yet.  So the fault
+turns into a bigger fault turns into a reset, and the virtual machine takes a
+reset to mean "we're done."  The calculator would just vanish mid-sentence.
+So it checks before dividing.  It also refuses the one sneaky division that
+overflows: the most negative 32-bit number divided by minus one, which has no
+32-bit answer at all.</p>
+<p>Catching crashes is a real job for an operating system, and a good one.  It's
+where the landlord learns to evict a tenant who breaks things.  It'll be its
+own rung when something needs it.</p>
+<h2>The ladder held</h2>
+<p>Hello world, Hanoi and Life all run on loader version 3 with no change to any
+of them.  Four programs, three loaders, and every old program still boots on
+every new one.</p>
+<p>Hit F5, pick calc, and type at it.  Try to break it.  I'd love to know if you
+can.</p>
+<h2>Read along</h2>
+<p>If you want to see it for yourself, these are the files to read, in this order.</p>
+<ol>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/pool/CMP.calc@1/calc.c">pool/CMP.calc@1/calc.c</a>.  Start with the function called number.  The comment in it is the bug the test caught, and the one-line fix.  Then _start at the bottom: the whole keyboard handling, echo and backspace included.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/fixtures/calc_ref.py">tests/fixtures/calc_ref.py</a>.  The same calculator, written again in Python from the same rules.  This is what the real one gets compared against, byte for byte.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/fixtures/calc.in">tests/fixtures/calc.in</a>.  The keystrokes the test types.  99999999999 is in there.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/lifted/CMP.serial.8250@2/serial8250.c">lifted/CMP.serial.8250@2/serial8250.c</a>.  Scroll to the bottom: serial8250_poll and serial8250_getc.  That's the whole receive side, taken from Linux.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/pool/CMP.loader@3/loader.c">pool/CMP.loader@3/loader.c</a>.  door_read.  Wait for one byte, then take whatever else is already there.</li>
+</ol>
+<h2>Try this</h2>
+<p>Press F5 → AiOS: calc and type <code>1 0 /</code> then Enter.  It says "error: divide by zero" instead of the machine vanishing.  Then try to break it some other way.  If you manage it, tell me how.</p>
+<h2>As built</h2>
+<p>What each part actually does, written down from its source: every port it touches, every byte it writes, how big it is.  These are hand-written for now; the tool that derives them from the code is plan section 7.1.</p>
+<ul>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/index/cmp/calc@1.as-built.md">calc@1</a></li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/index/cmp/loader@3.as-built.md">loader@3</a></li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/index/cmp/serial.8250@2.as-built.md">serial.8250@2</a></li>
+</ul>
+<h2>Addendum: the tests</h2>
+<p>Every test written for the parts above: what it checks, what turns it red, and whether it has actually been run.  "Checked by hand" means it was run and compared, but not yet by the automatic test runner (plan section 4), which doesn't exist yet.  Until it does, these are honest notes, not a scoreboard.</p>
+<p><strong>calc@1</strong></p>
+<ul>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/calc.transcript@1.toml">calc.transcript@1</a>.  Checks: Given a sequence of typed bytes, the component writes exactly what an independent reference implementation of the same reverse-Polish rules writes for that sequence, including echo, errors and the final bye, and exits only on q, quit, Ctrl-C or Ctrl-D.  Goes red when: with tests/fixtures/calc.in fed to the serial port, the bytes written differ from what tests/fixtures/calc_ref.py writes for the same input, or the machine is still running at the timeout.  Status: Checked by hand, 2026-10-11.  First run went red at byte 320 and caught a real bug (99999999999 wrapped around).  Green, 424 bytes exact, after the fix.</li>
+</ul>
+<p><strong>loader@3</strong></p>
+<ul>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/loader.read@1.toml">loader.read@1</a>.  Checks: The read door waits for at least one byte, then returns the bytes already received, in order, up to the requested count, and never more; write, exit and alloc keep their offsets and their behaviour from CMP.loader@2.  Goes red when: with tests/fixtures/calc.in fed to the serial port, CMP.calc@1 under this loader does not produce the reference transcript, or hello, hanoi or life under this loader differ by one byte from their outputs under the loader they were built for.  Status: Checked by hand, 2026-10-11: the calculator transcript is exact under this loader, and hello, Hanoi and Life are byte-identical under it.</li>
+</ul>
+<p><strong>serial.8250@2</strong></p>
+<ul>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/serial.receive-order@1.toml">serial.receive-order@1</a>.  Checks: Every byte that arrives on the serial port is handed to the read door once, in order, with none lost and none invented.  Goes red when: a program that echoes every byte it reads, fed 4096 bytes of every value but 3 and 4 in a fixed order, writes back anything other than those 4096 bytes in that order.  Status: Not run yet.  It needs an echo program.</li>
+</ul>
+<h2>Code on GitHub</h2>
+<p><a href="https://github.com/cmcluckie/aios/compare/6c21f6c...00099c4">Every line that changed, on one page</a>.</p>
+<p>The commits behind this post, in order:</p>
+<ol>
+<li><a href="https://github.com/cmcluckie/aios/commit/00099c4">Petition 0003: a reverse-Polish calculator</a></li>
+</ol>
+<p><a href="https://github.com/cmcluckie/aios">The whole repo</a>.</p>
+</div>
+</section>
+<p class="img">Image: 2026-10-16.png, in this folder.</p>
+<script>
+function flash(b){b.textContent='Copied';b.classList.add('done');setTimeout(function(){b.textContent='Copy';b.classList.remove('done')},1500)}
+function select(id){var r=document.createRange();r.selectNodeContents(document.getElementById(id));var s=getSelection();s.removeAllRanges();s.addRange(r);return s}
+function copyRich(id,b){var s=select(id);document.execCommand('copy');s.removeAllRanges();flash(b)}
+function copyText(id,b){var t=document.getElementById(id).innerText.trim();
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(function(){flash(b)},function(){copyRich(id,b)})}else{copyRich(id,b)}}
+</script>
+</body></html>

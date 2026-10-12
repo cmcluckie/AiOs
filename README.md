@@ -59,7 +59,7 @@ admitted; every entry is still `draft`.
     plan/           the project plan, brief and full
     jig/            the gen-zero build host, declared before it existed
     pi/             the bare repository that refuses unsigned pushes
-    posts/          the series: each day a LinkedIn post, its image, and the longer story behind it
+    posts/          the series: each day a LinkedIn post and article in one HTML file, and its image
 
 ## Running a flavor
 

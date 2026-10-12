@@ -64,7 +64,7 @@ why.  The full design is in design.md; read it before doing anything.
     plan/           the project plan, brief and full
     jig/            the gen-zero build host, declared before it existed; aios, the referee and builder placeholder
     pi/             the bare repository that refuses unsigned pushes
-    posts/          the LinkedIn series, one post per day with its image
+    posts/          the LinkedIn series: per day, one HTML file to paste from and its image
 
 ## Terms
 
@@ -191,7 +191,7 @@ names the component and the rule that failed.
 6. If any line came from upstream, it lives in lifted/ with an origin record
    that `jig/upstream verify` passes.
 7. Every earlier program on the ladder still runs under it, unchanged.
-8. The post, its image and its blog post exist and `jig/postcheck` passes,
+8. The post's HTML file and its image exist and `jig/postcheck` passes,
    including "As built" and "Addendum: the tests".
 9. Every commit for it is in the ledger with its post.
 
@@ -208,57 +208,58 @@ moves the item to done.  One post per day: the date is the day it is meant to
 go out, the next free day after the last post.  Chris posts one a day at most,
 so the folder runs ahead of LinkedIn on purpose.
 
-**Files.**  Three per post, same date, same name, in posts/:
-- `YYYY-MM-DD.md`: the LinkedIn post.
+**Files.**  Two per post, same date, same name, in posts/:
+- `YYYY-MM-DD.html`: everything Chris pastes into LinkedIn, in one file, in
+  the order he pastes it.  He opens it in a browser and each section has a
+  Copy button; LinkedIn keeps the formatting when pasted from a rendered page.
 - `YYYY-MM-DD.png`: its image.  Real terminal output from the real build,
   never a mock-up.  Claude produces it.
-- `YYYY-MM-DD.story.md`: the blog post.  GitHub renders it; there is no blog
-  site.
 
 **Voice.**  Chris's, every time.  Read posts/voice.md before drafting anything,
 and update it in the same change whenever he corrects a draft.  When the AI
 chose something, say so.  Never name his employer, its products or colleagues.
 
-**The LinkedIn post, top to bottom.**
-1. First line: `AiOS, part N.` then a one-sentence pull quote from the body in
-   double quotes, then `...`.  LinkedIn shows two lines above "see more".
-2. The body.  Plain English; any project word gets a plain gloss in the same
-   sentence.  Single spaces after periods (LinkedIn collapses doubles).
-3. `Want to follow along at your own pace?  The blog post walks through the
-   files to read, in order, and one small thing to try yourself.`
-4. `Come along!` on its own line, then a blank line.
-5. `#AiOS`
-6. `Blog post: <GitHub URL of the .story.md>`
-7. `Follow along, every line that changed, on one page: <GitHub compare URL
-   from the commit before the post's first to its last>`.  If the post's first
-   commit is the repo's first, instead: `Follow along, the repo exactly as it
-   stood when <what was done>: <GitHub tree URL at its last commit>`.
-8. `Code on GitHub, the commits behind this post in order:` then one line per
-   commit, two-space indent, `<subject>: <GitHub commit URL>`, from the ledger.
-9. `Code on GitHub, the whole repo: https://github.com/cmcluckie/aios`
-LinkedIn rewrites every URL to lnkd.in, which is why every link has a label.
-Until a commit exists, its line and the compare link read `(hash when committed)`.
+**The HTML file, top to bottom.**  Three sections, each `<section
+id="...">` with a label and a Copy button outside the copied part:
+1. `post`: the LinkedIn post that carries the article, as plain text.
+2. `title`: the article's title, nothing else.
+3. `article`: the article body.
 
-**The blog post, top to bottom.**
-1. `# <title>` then `*The story behind AiOS, part N.*`
-2. Prose sections, in this order where they apply: the problem (the textbook
-   exercise and why it was picked, including if the AI picked it); what we
-   built (how it works, in words, a few lines of code at most); what changed
-   underneath and why; what we found in Linux, what was taken and what was
-   cut; what nobody asked for.  A story, not a spec; keep it fun.
-3. `## Read along`: the files to read, in order, numbered, each a link to the
-   file at the post's last commit (`main` until it exists), one or two
+**The post (section `post`).**  One line, nothing else: `AiOS, part N.` then
+a one-sentence pull quote from the article in double quotes, then `...`.
+LinkedIn attaches the article to it.
+
+**The article (section `article`), top to bottom.**
+1. `<p><em>The story behind AiOS, part N.</em></p>`
+2. Prose sections, each under an `<h2>`, in this order where they apply: the
+   problem (the textbook exercise and why it was picked, including if the AI
+   picked it); what we built (how it works, in words, a few lines of code at
+   most); what changed underneath and why; what we found in Linux, what was
+   taken and what was cut; what nobody asked for.  A story, not a spec; keep
+   it fun.  LinkedIn has two heading sizes, so only `<h2>` and `<h3>`.
+3. `<h2>Read along</h2>`: the files to read, in order, numbered, each a link
+   to the file at the post's last commit (`main` until it exists), one or two
    sentences each on what to look for.
-4. `## Try this`: one small change a reader can make and run, and what they'll
-   see.  Claude runs it before it is published.
-5. `## As built`: a link to the as-built spec of every component the post
-   added or changed.  A component with no as-built spec is a finding, and the
-   post is not ready.
-6. `## Addendum: the tests`: every test for those components, grouped by
-   component, each with what it checks (its spec clause), what turns it red,
-   and its honest status: run by the runner, checked by hand (with the date
-   and the result), or not run yet.  A component with no test is not ready to
-   post.  The post itself need not mention the tests; the addendum must.
+4. `<h2>Try this</h2>`: one small change a reader can make and run, and what
+   they'll see.  Claude runs it before it is published.
+5. `<h2>As built</h2>`: a link to the as-built spec of every component the
+   post added or changed.  A component with no as-built spec is a finding,
+   and the post is not ready.
+6. `<h2>Addendum: the tests</h2>`: every test for those components, grouped
+   by component, each with what it checks (its spec clause), what turns it
+   red, and its honest status: run by the runner, checked by hand (with the
+   date and the result), or not run yet.  A component with no test is not
+   ready to post.  The addendum must list them all.
+7. `<h2>Code on GitHub</h2>`, every link labelled:
+   `<a href="<compare URL from the commit before the post's first to its
+   last>">Every line that changed, on one page</a>.`  If the post's first
+   commit is the repo's first, instead `<a href="<tree URL at its last
+   commit>">The repo exactly as it stood when <what was done></a>.`  Then
+   `The commits behind this post, in order:` and a numbered list, one per
+   commit, from the ledger, each `<a href="<commit URL>"><subject></a>`.
+   Then `<a href="https://github.com/cmcluckie/aios">The whole repo</a>.`
+   Until a commit exists, its item and the compare link read
+   `(hash when committed)` with no link.
 
 **Honest.**  Every number and quote in a post is true of the repo at that
 commit and checked against its source.  Say emulation vs the jig, checked by

@@ -1,0 +1,155 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>The rulebook</title>
+<style>
+body{max-width:760px;margin:32px auto;padding:0 16px;font-family:Georgia,serif;font-size:18px;line-height:1.6;color:#222;background:#fff}
+section{border:1px solid #ddd;border-radius:10px;padding:0 20px 12px;margin:0 0 28px}
+.bar{display:flex;justify-content:space-between;align-items:center;margin:0 -20px 12px;padding:8px 20px;background:#f4f3ef;border-bottom:1px solid #ddd;border-radius:10px 10px 0 0;font:600 14px system-ui,sans-serif;color:#555;user-select:none}
+button{font:600 14px system-ui,sans-serif;padding:6px 16px;border-radius:16px;border:1px solid #0a66c2;background:#0a66c2;color:#fff;cursor:pointer}
+button.done{background:#fff;color:#0a66c2}
+.text{white-space:pre-wrap;font-family:system-ui,sans-serif;font-size:15px}
+.img{font:14px system-ui,sans-serif;color:#555}
+</style></head><body>
+<section id="post">
+<div class="bar"><span>1. Post</span><button onclick="copyText('post-body',this)">Copy</button></div>
+<div id="post-body" class="text">
+AiOS, part 2.  "Linux can add forever.  It can never take anything back out."...
+</div>
+</section>
+<section id="title">
+<div class="bar"><span>2. Title</span><button onclick="copyText('title-body',this)">Copy</button></div>
+<div id="title-body"><h1>The rulebook</h1></div>
+</section>
+<section id="article">
+<div class="bar"><span>3. Article</span><button onclick="copyRich('article-body',this)">Copy</button></div>
+<div id="article-body">
+<p><em>The story behind AiOS, part 2.</em></p>
+<h2>Why I started with rules</h2>
+<p>Part 1 had a nice number in it.  170 lines.  But small isn't the point, lots
+of things are small.  What makes this different is that those 170 lines came
+out of a process, and the process is really the whole project.  So this one's
+about the process, written for people who would rather not read a repository.
+Which is most people.  Which is fair.</p>
+<p>Most projects start with code and add rules later, usually right after
+something blows up.  I went the other way.  The repository started with a
+document I'm calling the constitution, and no code got written for the first
+eight commits.  It says what a machine is for, what's allowed in, and what has
+to be true before anything gets in.  Thirty years of watching software grow
+sideways will do that to you.</p>
+<h2>The ten rules</h2>
+<p>There are ten rules at the top, and nobody gets to vote them away.  Plain
+English version: nothing exists without a written purpose.  There's exactly
+one way in.  Source code only, nothing pre-compiled.  Everything gets reviewed
+before it gets in.  Once it's in, it's ours, and we don't sit around waiting on
+someone upstream to fix it.  The core provides the levers and never decides
+when to pull them.  The smart thing that suggests changes and the dumb thing
+that approves them are never the same thing.  Every test is written so it can
+fail.  Nobody's confidence counts, only their track record.  And everything
+expires.</p>
+<p>That last one is the heart of it.  Linux can add forever and never take
+anything back out.  Here, if nobody's using it anymore, it goes.  Same parts,
+opposite rule.</p>
+<h2>Why is there a firewall?</h2>
+<p>This is the question that got me started down this road, so it deserves a
+spot.</p>
+<p>A firewall is a guard standing in front of a door, checking everyone who tries
+to come through.  Fine.  Useful, even.  But I keep asking: why is the door
+there?  If nothing on the machine asked to listen on that port, why does the
+port exist at all?  We build an operating system that can do everything, open
+up every possibility, and then bolt a guard on the front to close most of them
+again.  That's backwards.  It's like building a house with forty doors and
+then hiring forty security guards.</p>
+<p>Here, nothing listens unless a petition asked for it, with a reason, and when
+that reason goes away so does the listener.  The machine hello world boots on
+doesn't even have a network card.  Not a blocked network card.  No network
+card.  And there's a test written to go red if one ever shows up.</p>
+<p>So is a firewall necessary when the functionality isn't in the product?  I
+don't think it is.  You can't attack a door that was never built.  The day a
+petition actually needs the network, the "firewall" is just the petition
+itself: this program may talk to that address, for this reason, and nothing
+else.  The rules live in the same place as everything else, and they expire
+like everything else.</p>
+<h2>The petition</h2>
+<p>So how does something ask to get in?  It files a petition.  Yes, I know.  Bear
+with me.</p>
+<p>A petition is a small structured file, and the one rule I fought hardest for is
+that it has no prose in it.  None.  It says: here's the purpose I serve, here
+are the things I need to touch, and for each one, here's the one-sentence spec
+that explains why I need it.  Here are the parts I'm made of.  Here are the
+tests that can prove me wrong.  Every item is a short code that points at
+exactly one definition somewhere else.</p>
+<p>The no-prose thing sounds fussy.  It turned out to be the best decision in the
+whole design.  A request written in English can be argued with, and everyone
+who's ever sat in a change review meeting knows how that goes.  A request
+written as codes can be checked by a script with no opinions.  If a permission
+doesn't have a spec behind it, it's rejected, and no amount of "but it's
+really important" in a comment changes that.</p>
+<h2>The referee</h2>
+<p>The part that checks the petitions is called the referee, and it's dumb on
+purpose.  No AI in it.  It doesn't know what a serial port is.  It knows how to
+follow a code to a file, check the file is there, and apply eleven rules that
+all look like "every X must have a Y."  When it says no, it gives you a rule
+number and a code, and that's all you get.  "Rule 1: missing
+CMP.serial.8250@1."  Charming.</p>
+<p>This is my answer to the question everybody's asking about AI writing
+software: what stops the clever thing from talking its way past the gate?
+Here, the clever thing never gets near the gate.  The AI proposes.  The
+referee, which can't be persuaded because it can't understand, decides.  And
+my signing key sits above both of them.</p>
+<h2>Thirteen holes</h2>
+<p>The first time I wrote a real petition against those rules, the rules couldn't
+say thirteen things the petition needed to say.  There was no way to name a
+purpose.  No way to say "this depends on nothing at all."  No way to put a
+requirement on a part you depend on instead of on yourself.  No way to say how
+long a test gets to run before it counts as stuck.  And my favourite: the
+review signatures were stored inside the file they were signing, so every
+signature changed the file the next person had to sign.  Oops.</p>
+<p>I wrote all thirteen down, fixed eleven, and published the rulebook as version
+2 before a single line of code existed.  Those thirteen holes are probably the
+most useful thing I've produced on this project.  Every project has them.
+Almost nobody writes them down.</p>
+<h2>Why an operating system, of all things</h2>
+<p>An operating system is the one piece of software that says yes or no to every
+other piece of software.  Today it says yes to whatever got in at install time
+and then never asks again.  The constitution turns that into a question that
+never stops being asked: who asked for you, why, and is that still true?</p>
+<p>Every program on the ladder from here on is a program answering that question.</p>
+<h2>Read along</h2>
+<p>If you want to see it for yourself, these are the files to read, in this order.  The links go to the exact version from this post.</p>
+<ol>
+<li><a href="https://github.com/cmcluckie/aios/blob/6b41afe/constitution/tenets.md">constitution/tenets.md</a>.  The ten rules.  Short.  Everything else in the repo answers to these.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/6b41afe/petitions/0000.toml">petitions/0000.toml</a>.  Hello world's petition.  No prose: just codes.  Find the line that says it needs to write to the console, and the reason code next to it.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/6b41afe/specs/hello.1@1.toml">specs/hello.1@1.toml</a>.  That reason code, opened up.  One sentence saying exactly what hello world must do.  Precise enough to fail.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/6b41afe/schema/petition.md">schema/petition.md</a>.  Scroll to "Relation rules the referee enforces".  Eleven rules, all shaped like "every X must have a Y".  That's the whole referee.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/6b41afe/findings/0000.md">findings/0000.md</a>.  The thirteen holes the first petition found in the rules, and what was done about each one.</li>
+</ol>
+<h2>Try this</h2>
+<p>Pick any line in petitions/0000.toml with a code on it and follow it: code → file → the next code inside that file.  Every chain ends at a sentence a person wrote.  If you find one that doesn't, that's a finding, and I'd love to hear about it.</p>
+<h2>As built</h2>
+<p>Nothing was built in this part; it's the rulebook.  The rulebook is checked by the referee, whose own tests come with plan section 3.</p>
+<h2>Addendum: the tests</h2>
+<p>No code, so no code tests in this part.  The rulebook's own check is that every petition in the repo passes the referee, and the refusals are tested by hand: the flavor that asks for two programs is refused, and a petition naming a part that doesn't exist is refused by rule and code.</p>
+<h2>Code on GitHub</h2>
+<p><a href="https://github.com/cmcluckie/aios/tree/6b41afe">The repo exactly as it stood when the rulebook was done</a>.</p>
+<p>The commits behind this post, in order:</p>
+<ol>
+<li><a href="https://github.com/cmcluckie/aios/commit/8167fbc">Article One</a></li>
+<li><a href="https://github.com/cmcluckie/aios/commit/d9c11f0">Petition schema</a></li>
+<li><a href="https://github.com/cmcluckie/aios/commit/3d691ac">Petition 0000</a></li>
+<li><a href="https://github.com/cmcluckie/aios/commit/007cc88">Findings 0000</a></li>
+<li><a href="https://github.com/cmcluckie/aios/commit/d07d09a">Project plan</a></li>
+<li><a href="https://github.com/cmcluckie/aios/commit/84eb0fd">Entry formats</a></li>
+<li><a href="https://github.com/cmcluckie/aios/commit/4e4e1fb">Detached signatures</a></li>
+<li><a href="https://github.com/cmcluckie/aios/commit/6b41afe">Schema version 2</a></li>
+</ol>
+<p><a href="https://github.com/cmcluckie/aios">The whole repo</a>.</p>
+</div>
+</section>
+<p class="img">Image: 2026-10-12.png, in this folder.</p>
+<script>
+function flash(b){b.textContent='Copied';b.classList.add('done');setTimeout(function(){b.textContent='Copy';b.classList.remove('done')},1500)}
+function select(id){var r=document.createRange();r.selectNodeContents(document.getElementById(id));var s=getSelection();s.removeAllRanges();s.addRange(r);return s}
+function copyRich(id,b){var s=select(id);document.execCommand('copy');s.removeAllRanges();flash(b)}
+function copyText(id,b){var t=document.getElementById(id).innerText.trim();
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(function(){flash(b)},function(){copyRich(id,b)})}else{copyRich(id,b)}}
+</script>
+</body></html>

@@ -1,0 +1,156 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>The landlord learns what it owns</title>
+<style>
+body{max-width:760px;margin:32px auto;padding:0 16px;font-family:Georgia,serif;font-size:18px;line-height:1.6;color:#222;background:#fff}
+section{border:1px solid #ddd;border-radius:10px;padding:0 20px 12px;margin:0 0 28px}
+.bar{display:flex;justify-content:space-between;align-items:center;margin:0 -20px 12px;padding:8px 20px;background:#f4f3ef;border-bottom:1px solid #ddd;border-radius:10px 10px 0 0;font:600 14px system-ui,sans-serif;color:#555;user-select:none}
+button{font:600 14px system-ui,sans-serif;padding:6px 16px;border-radius:16px;border:1px solid #0a66c2;background:#0a66c2;color:#fff;cursor:pointer}
+button.done{background:#fff;color:#0a66c2}
+.text{white-space:pre-wrap;font-family:system-ui,sans-serif;font-size:15px}
+.img{font:14px system-ui,sans-serif;color:#555}
+</style></head><body>
+<section id="post">
+<div class="bar"><span>1. Post</span><button onclick="copyText('post-body',this)">Copy</button></div>
+<div id="post-body" class="text">
+AiOS, part 5.  "Pointers were my nightmare in computer science.  So naturally, a pointer is what broke."...
+</div>
+</section>
+<section id="title">
+<div class="bar"><span>2. Title</span><button onclick="copyText('title-body',this)">Copy</button></div>
+<div id="title-body"><h1>The landlord learns what it owns</h1></div>
+</section>
+<section id="article">
+<div class="bar"><span>3. Article</span><button onclick="copyRich('article-body',this)">Copy</button></div>
+<div id="article-body">
+<p><em>The story behind AiOS, part 5.</em></p>
+<h2>Why memory, and why I was nervous</h2>
+<p>Pointers.  Of everything in computer science, they were my nightmare.  A
+variable that doesn't hold a value, it holds the address of where the value
+lives.  Get the address right and it's elegant.  Get it wrong and you quietly
+write over whatever happens to be sitting there, and nothing tells you until
+something completely unrelated falls over an hour later.  I got through it in
+school.  I never really made peace with it.</p>
+<p>So when the next rung on the ladder was memory, that's exactly where I wanted
+to go.  Not to build anything clever.  To finally understand, from the bottom,
+how a program gets memory at all, where that memory comes from, and what's
+actually going on with those addresses.</p>
+<p>I asked the AI to find a common university problem that needs a lot of
+memory, the kind of thing everybody does in second year.  It came back with
+Conway's Game of Life.  I'll be honest: I'd never heard of it.  Never played
+it, didn't know what it was, and I'm still not that interested.  It's a grid
+of cells, each alive or dead, and every round a few simple rules decide which
+ones live on, die or get born.  People apparently stare at it for hours.  Fine.</p>
+<p>What I cared about is that it doesn't fit.  A 256 by 96 grid is 24 kilobytes
+and the program needs two of them, one for now and one for next.  It gets 4
+kilobytes of stack.  There's no faking it.  It has to ask the operating system
+for memory, and until this week the operating system had no idea how to say
+yes.</p>
+<h2>Teaching the landlord what it owns</h2>
+<p>When the firmware hands the machine over to our loader, it leaves a little
+table behind describing memory: this range is RAM, this range is reserved,
+this range is the firmware's.  The loader had been politely ignoring it.  To
+hand out memory, it first has to know what it actually owns.</p>
+<p>So now the loader reads that table, finds the chunk of RAM it's sitting in,
+and treats everything from the end of the program to the end of that chunk as
+the space it can hand out.  How it hands it out is about as simple as it gets:
+here's the next piece, move the marker along.  No giving memory back, because
+nothing has asked to give memory back.  No protection, because there's one
+program and nobody to protect it from.  Thirty-five lines, and a third entry
+on the door: write, exit, and now alloc.  The first two didn't move an inch.</p>
+<p>The one line in all that which can fail on its own is the "no."  Ask for more
+than there is and you get zero back, nothing changes, and the program carries
+on.  At the end of its run Life asks for 128 megabytes on a 64 megabyte
+machine, gets told no, prints "refused", and exits like a gentleman.  That's
+the test.</p>
+<h2>A history lesson hiding in a memory map</h2>
+<p>That table from the firmware is worth a look, because it isn't really the
+machine's.  The virtual machine reports one simple range: zero to 64
+megabytes, all RAM, enjoy.  The firmware rewrites it to look like a PC from
+the eighties: 639 kilobytes of RAM, then a one-kilobyte hole reserved for BIOS
+data nothing uses, then 128 kilobytes marked for power management tables on a
+machine where power management is switched off, then the firmware itself, then
+real RAM from one megabyte up.</p>
+<p>None of that is ours and nobody asked for it.  The loader just uses the chunk
+it lives in and leaves the rest alone, and the list of things nobody asked for
+gets one more entry.  It's a perfect little example of what this whole project
+is about: forty years of compatibility decisions showing up uninvited to a
+machine that asked for one serial port.</p>
+<h2>The bug, which was my nightmare showing up on cue</h2>
+<p>First run printed nothing.  Not a wrong answer.  Nothing.  Sixty seconds of
+silence and then the test gave up.</p>
+<p>Here's what happened, and it's the pointer horror story from every textbook.
+Life keeps a pointer that says where its grid is.  Programs here are in the
+simplest format there is: a blob of bytes copied to an address and jumped
+into, with no header.  So a program has no way to say "and I also need a bit
+of space after me for my own variables."  The compiler leaves that space off
+the end of the file.  The loader looked at where the file ended, decided
+everything after it was free, and started handing memory out from there.</p>
+<p>The very first chunk it handed Life landed exactly on top of Life's pointer to
+its grid.  Life filled its grid, which overwrote its own note about where its
+grid was, and then followed that now-garbage address off into the weeds.  A
+pointer pointing at the wrong thing, a program writing over its own memory,
+and no error message anywhere.  The exact thing I was scared of in school,
+happening for real, right in front of me, on the first try.</p>
+<p>And you know what?  I get it now.  Watching it happen, and seeing why, taught me
+more about pointers in one evening than a semester did.  If they scare you
+too, the commit is linked from the post.  Read the loader's thirty-five lines
+and watch where the memory comes from.  It's a lot less spooky up close.</p>
+<p>The fix is one line in the program format: write that empty space into the
+file, so the end of the file really is the end of the program.  Costs a few
+bytes.  Hello world and Hanoi had exactly the same gap the whole time and never
+noticed, because nobody else was using the memory after them.  Their versions
+are committed and committed versions don't change, but they also run fine on
+the new loader.  Which I checked.</p>
+<h2>The ladder held</h2>
+<p>That was the check I cared about most.  Hello world and Hanoi run on the new
+loader without a single change.  The door got one entry bigger, nothing moved,
+and the old programs have no idea anything happened.  Three rungs in, and the
+rule that makes the whole thing stackable just survived its first real test.</p>
+<p>Next up, the program reads.  The serial port grows ears, the door gets a read,
+and for the first time the machine listens.</p>
+<h2>Read along</h2>
+<p>If you want to see it for yourself, these are the files to read, in this order.</p>
+<ol>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/pool/CMP.life@1/life.c">pool/CMP.life@1/life.c</a>.  Near the bottom: two calls to door-&gt;alloc for the grids.  Those are the pointers.  The last line asks for 128 MB and expects to be told no.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/pool/CMP.loader@2/loader.c">pool/CMP.loader@2/loader.c</a>.  heap_init reads the firmware's memory map; door_alloc hands out the next piece.  About thirty lines between them.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/pool/CMP.loader@2/door.h">pool/CMP.loader@2/door.h</a>.  The door, one entry longer.  write and exit didn't move.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/pool/CMP.loader@2/program.ld">pool/CMP.loader@2/program.ld</a>.  Read the comment at the top.  That's the one-line fix for the pointer bug, and why.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/findings/0005.md">findings/0005.md</a>.  The full story of the bug, plus the memory map from 1985.</li>
+</ol>
+<h2>Try this</h2>
+<p>Open pool/CMP.life@1/life.c, find the line that asks for 128 MiB, change both 128s to 16, and press F5 → AiOS: life.  It says "16 MiB: granted".  The operating system just said yes to you.</p>
+<h2>As built</h2>
+<p>What each part actually does, written down from its source: every port it touches, every byte it writes, how big it is.  These are hand-written for now; the tool that derives them from the code is plan section 7.1.</p>
+<ul>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/index/cmp/life@1.as-built.md">life@1</a></li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/index/cmp/loader@2.as-built.md">loader@2</a></li>
+</ul>
+<h2>Addendum: the tests</h2>
+<p>Every test written for the parts above: what it checks, what turns it red, and whether it has actually been run.  "Checked by hand" means it was run and compared, but not yet by the automatic test runner (plan section 4), which doesn't exist yet.  Until it does, these are honest notes, not a scoreboard.</p>
+<p><strong>life@1</strong></p>
+<ul>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/life.exact-output@1.toml">life.exact-output@1</a>.  Checks: On start, the component writes the population after 200 generations of the centred R-pentomino in a 256 by 96 universe with dead edges, the middle 80 by 24 cells as '#' and '.', and the result of asking for 128 MiB, exactly as a reference implementation produces them, then exits.  Goes red when: the component's output, captured in isolation, differs from the 1992 bytes an independent reference implementation produces for the same rules, seed, universe and generation count.  Status: Checked by hand, 2026-10-11, against a separate Python version: passed, 1992 bytes exact.</li>
+</ul>
+<p><strong>loader@2</strong></p>
+<ul>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/loader.alloc-in-ram@1.toml">loader.alloc-in-ram@1</a>.  Checks: Every block the alloc door returns lies inside a region the firmware's memory map marks RAM, above the end of the program, and overlaps no earlier block, the loader, or its stack.  Goes red when: a program that allocates blocks until refused and prints each block's address and size shows any block outside the RAM region containing the program, below the program's end, or overlapping another.  Status: Not run yet.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/loader.alloc-refuses@1.toml">loader.alloc-refuses@1</a>.  Checks: When the alloc door cannot satisfy a request it returns 0 and changes nothing; it never halts, never returns memory outside the region, and a later smaller request can still succeed.  Goes red when: a program that asks for more than the machine has gets a non-zero pointer, or the machine does not continue to a later smaller request that succeeds, or the machine halts before the program calls exit.  Status: Partly checked by hand: 128 MB on a 64 MB machine is refused and the program carries on.  The "a later, smaller request still works" half isn't tested yet.</li>
+</ul>
+<h2>Code on GitHub</h2>
+<p><a href="https://github.com/cmcluckie/aios/compare/e8dcf79...6c21f6c">Every line that changed, on one page</a>.</p>
+<p>The commits behind this post, in order:</p>
+<ol>
+<li><a href="https://github.com/cmcluckie/aios/commit/6c21f6c">Petition 0002: Conway&#x27;s Game of Life</a></li>
+</ol>
+<p><a href="https://github.com/cmcluckie/aios">The whole repo</a>.</p>
+</div>
+</section>
+<p class="img">Image: 2026-10-15.png, in this folder.</p>
+<script>
+function flash(b){b.textContent='Copied';b.classList.add('done');setTimeout(function(){b.textContent='Copy';b.classList.remove('done')},1500)}
+function select(id){var r=document.createRange();r.selectNodeContents(document.getElementById(id));var s=getSelection();s.removeAllRanges();s.addRange(r);return s}
+function copyRich(id,b){var s=select(id);document.execCommand('copy');s.removeAllRanges();flash(b)}
+function copyText(id,b){var t=document.getElementById(id).innerText.trim();
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(function(){flash(b)},function(){copyRich(id,b)})}else{copyRich(id,b)}}
+</script>
+</body></html>

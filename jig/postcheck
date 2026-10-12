@@ -9,66 +9,74 @@ rc=0
 bad() { echo "$1: $2"; rc=1; }
 has() { grep -qF -- "$2" "$1"; }
 
-n=0
-for post in $(ls 20[0-9][0-9]-[0-9][0-9]-[0-9][0-9].md 2>/dev/null | sort); do
-	d=${post%.md}; n=$((n + 1))
-	[ -f "$d.png" ]      || bad "$post" "no image $d.png"
-	[ -f "$d.story.md" ] || bad "$post" "no blog post $d.story.md"
+# section NAME FILE: the lines strictly inside <section id="NAME"> ... </section>
+section() { awk -v id="$1" '$0 ~ "<section id=\""id"\">" {on=1; next} on && /<\/section>/ {on=0} on' "$2"; }
 
-	first=$(head -1 "$post")
+check_html() {
+	h=$1; d=${h%.html}
+	[ -f "$d.png" ] || bad "$h" "no image $d.png"
+	for id in post title article; do
+		grep -q "<section id=\"$id\">" "$h" || bad "$h" "missing section '$id'"
+	done
+	p=$(mktemp); a=$(mktemp)
+	section post "$h" | sed '1,/<div id="post-body"/d; /^<\/div>$/,$d' > "$p"
+	section article "$h" > "$a"
+
+	first=$(head -1 "$p")
 	case "$first" in
 		"AiOS, part $n.  \""*"\"...") ;;
-		*) bad "$post" "first line is not 'AiOS, part $n.  \"<pull quote>\"...'" ;;
+		*) bad "$h" "post's first line is not 'AiOS, part $n.  \"<pull quote>\"...'" ;;
 	esac
-	has "$post" "Want to follow along at your own pace?  The blog post walks through the files to read, in order, and one small thing to try yourself." \
-		|| bad "$post" "missing the follow-along line"
-	has "$post" "Come along!" || bad "$post" "missing 'Come along!'"
-	has "$post" "#AiOS"       || bad "$post" "missing #AiOS"
-	has "$post" "Blog post: $R/blob/main/posts/$d.story.md" || bad "$post" "missing or wrong 'Blog post:' link"
-	if ! has "$post" "Follow along, every line that changed, on one page: $R/compare/" && \
-	   ! has "$post" "Follow along, the repo exactly as it stood when" && \
-	   ! has "$post" "Follow along, every line that changed, on one page: (hash when committed)"; then
-		bad "$post" "missing the one-page compare link"
+	[ "$(grep -c . "$p")" -eq 1 ] || bad "$h" "post is more than its one line"
+
+	section title "$h" | grep -q '<h1>[^<][^<]*</h1>' || bad "$h" "title section has no <h1>title</h1>"
+
+	has "$a" "<em>The story behind AiOS, part $n.</em>" || bad "$h" "article does not open with 'The story behind AiOS, part $n.'"
+	grep -q '<h1' "$a" && bad "$h" "article uses <h1>; LinkedIn has two heading sizes, use <h2> and <h3>"
+	l() { grep -n "<h2>$1</h2>" "$a" | head -1 | cut -d: -f1; }
+	ra=$(l "Read along"); tt=$(l "Try this"); ab=$(l "As built"); ad=$(l "Addendum: the tests")
+	[ -n "$ra" ] || bad "$h" "article is missing 'Read along'"
+	[ -n "$tt" ] || bad "$h" "article is missing 'Try this'"
+	[ -n "$ab" ] || bad "$h" "article is missing 'As built'"
+	[ -n "$ad" ] || bad "$h" "article is missing 'Addendum: the tests'"
+	cg=$(l "Code on GitHub")
+	[ -n "$cg" ] || bad "$h" "article is missing 'Code on GitHub'"
+	if [ -n "$ra" ] && [ -n "$tt" ] && [ -n "$ab" ] && [ -n "$ad" ] && [ -n "$cg" ]; then
+		[ "$ra" -lt "$tt" ] && [ "$tt" -lt "$ab" ] && [ "$ab" -lt "$ad" ] && [ "$ad" -lt "$cg" ] \
+			|| bad "$h" "article sections out of order (Read along, Try this, As built, Addendum, Code on GitHub)"
 	fi
-	has "$post" "Code on GitHub, the commits behind this post in order:" || bad "$post" "missing the commit list"
-	has "$post" "Code on GitHub, the whole repo: $R"                     || bad "$post" "missing the whole-repo link"
-	grep -q 'lnkd\.in' "$post" && bad "$post" "contains an lnkd.in link; use the GitHub URL"
-
-	# order of the ending
-	a=$(grep -nF "Come along!" "$post" | head -1 | cut -d: -f1)
-	b=$(grep -nF "#AiOS" "$post" | head -1 | cut -d: -f1)
-	c=$(grep -nF "Blog post:" "$post" | head -1 | cut -d: -f1)
-	e=$(grep -nF "Code on GitHub, the whole repo:" "$post" | head -1 | cut -d: -f1)
-	if [ -n "$a" ] && [ -n "$b" ] && [ -n "$c" ] && [ -n "$e" ]; then
-		[ "$a" -lt "$b" ] && [ "$b" -lt "$c" ] && [ "$c" -lt "$e" ] || bad "$post" "ending is out of order"
+	g=$(mktemp); sed -n '/<h2>Code on GitHub<\/h2>/,$p' "$a" > "$g"
+	if ! grep -q "href=\"$R/compare/[0-9a-f]*\.\.\.[0-9a-f]*\">Every line that changed, on one page</a>" "$g" && \
+	   ! grep -q "href=\"$R/tree/[0-9a-f]*\">The repo exactly as it stood when" "$g" && \
+	   ! grep -q "Every line that changed, on one page (hash when committed)" "$g"; then
+		bad "$h" "Code on GitHub is missing the one-page compare link"
 	fi
-
-	s="$d.story.md"
-	[ -f "$s" ] || continue
-	head -1 "$s" | grep -q '^# ' || bad "$s" "first line is not a '# title'"
-	sed -n 3p "$s" | grep -qF "*The story behind AiOS, part $n.*" || bad "$s" "third line is not '*The story behind AiOS, part $n.*'"
-	has "$s" "## Read along" || bad "$s" "missing '## Read along'"
-	has "$s" "## Try this"   || bad "$s" "missing '## Try this'"
-	ra=$(grep -n '^## Read along' "$s" | cut -d: -f1); tt=$(grep -n '^## Try this' "$s" | cut -d: -f1)
-	[ -n "$ra" ] && [ -n "$tt" ] && [ "$ra" -gt "$tt" ] && bad "$s" "'Try this' comes before 'Read along'"
-	grep -q '^1\. \[' "$s" || bad "$s" "Read along has no numbered file links"
-	has "$s" "## As built"              || bad "$s" "missing '## As built'"
-	has "$s" "## Addendum: the tests"   || bad "$s" "missing '## Addendum: the tests'"
-	ab=$(grep -n '^## As built' "$s" | cut -d: -f1); ad=$(grep -n '^## Addendum: the tests' "$s" | cut -d: -f1)
-	[ -n "$tt" ] && [ -n "$ab" ] && [ "$ab" -lt "$tt" ] && bad "$s" "'As built' comes before 'Try this'"
-	[ -n "$ab" ] && [ -n "$ad" ] && [ "$ad" -lt "$ab" ] && bad "$s" "'Addendum: the tests' comes before 'As built'"
-	grep -q 'no as-built spec yet' "$s" && bad "$s" "a component has no as-built spec"
-	for t in $(grep -o 'tests/[a-z0-9.@-]*\.toml' "$s" | sort -u); do
-		[ -f "../$t" ] || bad "$s" "addendum links $t, which does not exist"
+	has "$g" "The commits behind this post, in order:" || bad "$h" "Code on GitHub is missing the commit list"
+	grep -q "href=\"$R/commit/[0-9a-f]*\">" "$g" || grep -q "(hash when committed)" "$g" || bad "$h" "Code on GitHub lists no commits"
+	has "$g" "<a href=\"$R\">The whole repo</a>" || bad "$h" "Code on GitHub is missing the whole-repo link"
+	rm -f "$g"
+	sed -n "/<h2>Read along<\/h2>/,/<h2>Try this<\/h2>/p" "$a" | grep -q '<ol>' || bad "$h" "Read along has no numbered list"
+	grep -q 'no as-built spec yet' "$a" && bad "$h" "a component has no as-built spec"
+	for t in $(grep -o 'tests/[a-z0-9.@-]*\.toml' "$a" | sort -u); do
+		[ -f "../$t" ] || bad "$h" "addendum links $t, which does not exist"
 	done
-	for a in $(grep -o 'index/cmp/[a-z0-9.@-]*\.as-built\.md' "$s" | sort -u); do
-		[ -f "../$a" ] || bad "$s" "as-built link $a does not exist"
+	for x in $(grep -o 'index/cmp/[a-z0-9.@-]*\.as-built\.md' "$a" | sort -u); do
+		[ -f "../$x" ] || bad "$h" "as-built link $x does not exist"
 	done
 
-	for f in "$post" "$s"; do
-		grep -q '—' "$f" && bad "$f" "contains an em-dash"
-		grep -qiE '\b(thrilled to|excited to share|game.?changer|let that sink in|delve|fast-paced world)\b' "$f" && bad "$f" "corporate phrasing (voice.md, Not him)"
-	done
+	grep -q 'lnkd\.in' "$h" && bad "$h" "contains an lnkd.in link; use the GitHub URL"
+	grep -q '—' "$h" && bad "$h" "contains an em-dash"
+	grep -qiE '\b(thrilled to|excited to share|game.?changer|let that sink in|delve|fast-paced world)\b' "$h" && bad "$h" "corporate phrasing (voice.md, Not him)"
+	rm -f "$p" "$a"
+}
+
+# Posts in date order, one .html each.
+n=0
+for d in $(ls 20[0-9][0-9]-[0-9][0-9]-[0-9][0-9].md 20[0-9][0-9]-[0-9][0-9]-[0-9][0-9].html 2>/dev/null | sed 's/\.[a-z]*$//' | sort -u); do
+	n=$((n + 1))
+	[ -f "$d.md" ] && bad "$d.md" "old format; posts are one .html file now"
+	[ -f "$d.story.md" ] && bad "$d.story.md" "old format; the article lives in $d.html"
+	[ -f "$d.html" ] && check_html "$d.html"
 done
 [ "$n" -gt 0 ] || bad posts "no posts found"
 exit $rc

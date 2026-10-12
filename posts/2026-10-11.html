@@ -1,0 +1,167 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>170 lines</title>
+<style>
+body{max-width:760px;margin:32px auto;padding:0 16px;font-family:Georgia,serif;font-size:18px;line-height:1.6;color:#222;background:#fff}
+section{border:1px solid #ddd;border-radius:10px;padding:0 20px 12px;margin:0 0 28px}
+.bar{display:flex;justify-content:space-between;align-items:center;margin:0 -20px 12px;padding:8px 20px;background:#f4f3ef;border-bottom:1px solid #ddd;border-radius:10px 10px 0 0;font:600 14px system-ui,sans-serif;color:#555;user-select:none}
+button{font:600 14px system-ui,sans-serif;padding:6px 16px;border-radius:16px;border:1px solid #0a66c2;background:#0a66c2;color:#fff;cursor:pointer}
+button.done{background:#fff;color:#0a66c2}
+.text{white-space:pre-wrap;font-family:system-ui,sans-serif;font-size:15px}
+.img{font:14px system-ui,sans-serif;color:#555}
+</style></head><body>
+<section id="post">
+<div class="bar"><span>1. Post</span><button onclick="copyText('post-body',this)">Copy</button></div>
+<div id="post-body" class="text">
+AiOS, part 1.  "Linux is tens of millions of lines of code.  I took 57 of them"...
+</div>
+</section>
+<section id="title">
+<div class="bar"><span>2. Title</span><button onclick="copyText('title-body',this)">Copy</button></div>
+<div id="title-body"><h1>170 lines</h1></div>
+</section>
+<section id="article">
+<div class="bar"><span>3. Article</span><button onclick="copyRich('article-body',this)">Copy</button></div>
+<div id="article-body">
+<p><em>The story behind AiOS, part 1.</em></p>
+<h2>What I was trying to do</h2>
+<p>Boot a computer and have it print one line.  That's it.  The oldest exercise
+in the book, literally: it's on page one of the orange C book most of us
+learned from.</p>
+<p>Except I wanted one more thing, and it's the thing that turned an evening into
+a project.  I wanted to be able to point at every line of code that ran between
+the power button and that one line of text and say who asked for it, and why.</p>
+<p>Linux can't do that.  Nobody can.  The smallest Linux you can build is still a
+few hundred thousand lines, and most of them are there because somebody needed
+them in 1997 and nothing is ever allowed to leave.  I'm not knocking Linux.
+It's probably the most successful piece of software ever written, and it won
+precisely because it kept everything.  But "keep everything" is the exact
+opposite of what I was after.</p>
+<p>So the rule is: nothing exists unless someone wrote down a reason.  Hello
+world was the first test of whether that rule could produce a working machine
+at all, or whether I was about to spend a weekend proving it couldn't.</p>
+<h2>What got built</h2>
+<p>Three pieces, and I was stubborn about keeping them separate.</p>
+<p><strong>The serial port.</strong>  A virtual machine with no screen has one way to talk to
+you: a serial port, the same kind of thing you'd have plugged a modem into
+back when modems made that noise.  Linux's driver for it is a few thousand
+lines, because it has to cope with every serial chip ever made, plus
+terminals, flow control, locking, hot-plugging and so on.  Buried in there
+are about ten lines that actually put a byte on the wire: wait until the chip
+says it's ready, hand it the byte.  The AI went and found those ten lines and
+the nine that set the chip up, and nothing else.  Fifty-seven lines in total,
+every one of them traceable back to a line number in Linux, on a specific day,
+at a specific commit.</p>
+<p><strong>The loader.</strong>  Something has to take over from the machine's firmware, get
+the processor ready to run C, find the program and run it.  Normally that's
+the kernel, and the kernel shows up with a scheduler, a memory manager, a
+filesystem, a device model and a logging system, none of which hello world
+asked for.  So this one doesn't bring any of that.  It sets up a tiny table
+the processor insists on, gives itself four kilobytes of stack, copies the
+program into place and calls it.  When the program's done, it asks the
+processor to reset, and the virtual machine takes that as "we're done here"
+and exits.  A hundred and six lines.</p>
+<p><strong>Hello.</strong>  Seven lines.  It gets handed a little table with two things on it,
+write and exit, and it uses them.  It never touches the hardware.  The
+compiled program is 43 bytes, which I find hilarious.</p>
+<h2>The door</h2>
+<p>That little table is the part I care about most.  Hello doesn't talk to the
+serial port.  It talks to the loader, and the loader talks to the serial port.
+That's an extra step hello world absolutely does not need, and I insisted on
+it anyway.</p>
+<p>Here's why.  If hello world talked to the hardware directly, then the first
+program that wanted a disk would have to throw hello world out and start over.
+That's a cardboard box: fine until you want to build on it.  With the table,
+the next program just gets a table with one more thing on it.  Nothing moves.
+Hello keeps working.  We call the table the door, and it's how every program
+on this thing is going to talk to the machine from now on.</p>
+<h2>What we found inside Linux</h2>
+<p>Linux isn't really a pile of parts.  It's one giant program, and everything in
+it assumes everything else is there.  Those ten lines that put a byte on the
+wire are holding hands with the terminal layer, the device framework, the
+memory allocator and the locking, and you can't pick them up without cutting
+the hands.  So "just take what you need from Linux" turns out to mean "take a
+few lines and rewrite the edges."  For a serial port that's an evening.  For a
+network card it's going to be a lot more than an evening, and I'd rather say
+that now than pretend otherwise.</p>
+<p>One small thing I loved: Linux's version of those lines quietly turns every
+newline into a carriage return plus a newline, because old terminals needed
+it.  Ours doesn't, because the test is "exactly these fourteen bytes and
+nothing else," and a byte nobody asked for is a failure.  You only notice that
+stuff when you've promised to account for every single byte.</p>
+<h2>What nobody asked for</h2>
+<p>Ten things in the build have no request behind them, and there's a file in the
+repo that lists every one with why it's there and whether it could go.  Most
+of them are the firmware's fault: the table the processor wants, the stack, a
+particular wrapper format so the virtual machine will agree to load us, and
+crashing the processor on purpose to shut down because the machine doesn't
+have a power button.  A couple are devices the virtual machine insists on
+including that we never touch.  And nine lines set up the serial chip in a way
+the emulated chip doesn't actually need, but a real one would, so I kept them
+and wrote down that no test can currently prove they're right.</p>
+<p>That list is the product, really.  Hello world is just proof the list is
+honest.</p>
+<h2>Read along</h2>
+<p>If you want to see it for yourself, these are the files to read, in this order.  The links go to the exact version from this post.</p>
+<ol>
+<li><a href="https://github.com/cmcluckie/aios/blob/7c6a876/pool/CMP.hello@1/hello.c">pool/CMP.hello@1/hello.c</a>.  Seven lines.  Notice it never touches hardware.  It only calls the two things it's handed: write and exit.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/7c6a876/pool/CMP.loader@1/door.h">pool/CMP.loader@1/door.h</a>.  That's the door.  Two function pointers, write and exit.  Every program on the ladder gets this table, and later ones just get a longer one.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/7c6a876/pool/CMP.loader@1/loader.c">pool/CMP.loader@1/loader.c</a>.  Read it from the bottom up.  loader_main finds the program, copies it into place, and calls it with the door.  halt() is the reset trick.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/7c6a876/pool/CMP.serial.8250@1/serial8250.c">pool/CMP.serial.8250@1/serial8250.c</a>.  The 57 lines from Linux.  The comment at the top lists exactly which Linux lines each piece came from, and everything that was cut away.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/7c6a876/findings/0002.md">findings/0002.md</a>.  The list of everything nobody asked for, and why it's there anyway.  This is the honest part.</li>
+</ol>
+<h2>Try this</h2>
+<p>Open the repo in Codespaces (or VS Code), open pool/CMP.hello@1/hello.c, change "Hello, world." to anything you like, and press F5 → AiOS: hello.  The machine prints your line instead.  You've just changed a program on an operating system without touching the operating system.</p>
+<h2>As built</h2>
+<p>What each part actually does, written down from its source: every port it touches, every byte it writes, how big it is.  These are hand-written for now; the tool that derives them from the code is plan section 7.1.</p>
+<ul>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/index/cmp/hello@1.as-built.md">hello@1</a></li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/index/cmp/loader@1.as-built.md">loader@1</a></li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/index/cmp/serial.8250@1.as-built.md">serial.8250@1</a></li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/index/cmp/machine.serial-only@1.as-built.md">machine.serial-only@1</a></li>
+</ul>
+<h2>Addendum: the tests</h2>
+<p>Every test written for the parts above: what it checks, what turns it red, and whether it has actually been run.  "Checked by hand" means it was run and compared, but not yet by the automatic test runner (plan section 4), which doesn't exist yet.  Until it does, these are honest notes, not a scoreboard.</p>
+<p><strong>hello@1</strong></p>
+<ul>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/hello.exact-bytes@1.toml">hello.exact-bytes@1</a>.  Checks: On start, the component writes the exact 14 bytes 'Hello, world.\n' to the console and nothing else, then exits.  Goes red when: the component's stdout, captured in isolation, is anything other than the 14 bytes 'Hello, world.\n'.  Status: Checked by hand, 2026-10-10: passed, 14 bytes exact.  Broken on purpose (one letter changed) and it went red at byte 11, as it should.</li>
+</ul>
+<p><strong>loader@1</strong></p>
+<ul>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/hello.silent-boot@1.toml">hello.silent-boot@1</a>.  Checks: From power-on to halt, no byte reaches the serial port that the program did not write.  Goes red when: the bytes on the VM's serial port from power-on to halt, minus the component's own output, are not empty.  Status: Checked by hand, 2026-10-10: passed, nothing on the port but hello's 14 bytes.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/loader.door-layout@1.toml">loader.door-layout@1</a>.  Checks: The door is a table of 32-bit function pointers, write at offset 0 and exit at offset 4; a later version of the door appends entries and never moves one.  Goes red when: compiled against door.h, offsetof(struct door, write) is not 0, offsetof(struct door, exit) is not 4, or a program built against door.h@1 fails under the current loader.  Status: Not run yet.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/loader.halts@1.toml">loader.halts@1</a>.  Checks: When the program calls the exit door or returns, every byte handed to the write door has left the serial port before the machine resets.  Goes red when: the machine process is still alive when the timeout expires, or the last byte the program wrote is missing from the serial capture.  Status: Checked by hand on every boot: the machine exits by itself.  Broken on purpose (a program that returns instead of exiting) and the loader still halted cleanly.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/loader.runs-program@1.toml">loader.runs-program@1</a>.  Checks: On entry the loader copies the machine's first module to 0x400000 and calls it with a pointer to the door, touching no device but the serial port.  Goes red when: a program that writes one marker byte through the door and exits, given as the machine's first module, produces no marker on the serial port.  Status: Not run as written yet (it needs a one-byte marker program).  Every program on the ladder exercises it.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/loader.same-binary@1.toml">loader.same-binary@1</a>.  Checks: The loader binary that runs one program on the ladder runs every other program on the ladder, byte-identical, with no change.  Goes red when: the loader built for any program on the ladder differs by one byte from the loader built for any other, or any program on the ladder fails under the loader built for another.  Status: Checked by hand, 2026-10-11: the loader built for hello and for Hanoi has the same hash.</li>
+</ul>
+<p><strong>serial.8250@1</strong></p>
+<ul>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/serial.in-order@1.toml">serial.in-order@1</a>.  Checks: Every byte handed to the write door appears on the serial port, in order, complete, and untranslated.  Goes red when: the bytes captured on the serial port differ in value, order or count from the bytes handed to the write door, including any 0x0d that was not handed to it.  Status: Not run on its own yet.  Every byte-exact boot exercises it, and all of them pass.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/serial.origin-matches@1.toml">serial.origin-matches@1</a>.  Checks: Every line range in the part's origin record names a file whose object id at the recorded upstream commit equals the recorded blob.  Goes red when: jig/upstream verify, run against a clone of upstream with the recorded commit, reports any range of this part as WRONG.  Status: Run, 2026-10-11, with jig/upstream verify: all 16 ranges match.  Not yet seen going red.</li>
+</ul>
+<p><strong>machine.serial-only@1</strong></p>
+<ul>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/machine.no-peripherals@1.toml">machine.no-peripherals@1</a>.  Checks: The machine presents the guest one 16550 serial port and no network, storage, display or input device; whatever else the hypervisor forces present is named in the as-built spec and touched by no component; a reset request ends the machine.  Goes red when: the device tree of a machine started with -S and queried once over a stdio monitor contains any device other than: isa-serial, isabus-bridge, ioapic, fw_cfg_io, kvmclock or kvmvapic, and the eight empty virtio-mmio transports microvm cannot omit.  Status: Checked by hand, 2026-10-10, against QEMU's own device list: passed.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/machine.no-sockets@1.toml">machine.no-sockets@1</a>.  Checks: The machine presents the guest one 16550 serial port and no network, storage, display or input device; whatever else the hypervisor forces present is named in the as-built spec and touched by no component; a reset request ends the machine.  Goes red when: strace of the machine process from start to exit records any socket, connect, bind or listen call.  Status: Not run yet.  Needs strace, which lives on the build machine that isn't set up yet.</li>
+</ul>
+<h2>Code on GitHub</h2>
+<p><a href="https://github.com/cmcluckie/aios/compare/6b41afe...7c6a876">Every line that changed, on one page</a>.</p>
+<p>The commits behind this post, in order:</p>
+<ol>
+<li><a href="https://github.com/cmcluckie/aios/commit/7537cfc">The jig</a></li>
+<li><a href="https://github.com/cmcluckie/aios/commit/4b1b4a6">The machine</a></li>
+<li><a href="https://github.com/cmcluckie/aios/commit/6ecfafc">Findings 0001: segments, not a kernel</a></li>
+<li><a href="https://github.com/cmcluckie/aios/commit/2fdd428">Petition 0000 boots</a></li>
+<li><a href="https://github.com/cmcluckie/aios/commit/7c6a876">Line endings</a></li>
+</ol>
+<p><a href="https://github.com/cmcluckie/aios">The whole repo</a>.</p>
+</div>
+</section>
+<p class="img">Image: 2026-10-11.png, in this folder.</p>
+<script>
+function flash(b){b.textContent='Copied';b.classList.add('done');setTimeout(function(){b.textContent='Copy';b.classList.remove('done')},1500)}
+function select(id){var r=document.createRange();r.selectNodeContents(document.getElementById(id));var s=getSelection();s.removeAllRanges();s.addRange(r);return s}
+function copyRich(id,b){var s=select(id);document.execCommand('copy');s.removeAllRanges();flash(b)}
+function copyText(id,b){var t=document.getElementById(id).innerText.trim();
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(function(){flash(b)},function(){copyRich(id,b)})}else{copyRich(id,b)}}
+</script>
+</body></html>
