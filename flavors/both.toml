@@ -1,5 +1,7 @@
-# Two programs on one machine.  The referee refuses this until rung 9.6 exists;
-# it is here so that refusal is tested, not assumed.
+# Two programs on one machine.  The referee refused this until rung 9.6 existed,
+# and still does: hello and Hanoi ask for loader@1, which runs one program, and
+# nothing in either petition asks to share.  The share flavor is the one that
+# runs two at once.  Kept so the refusal is tested, not assumed.
 name      = "both"
 machine   = "CMP.machine.serial-only@1"
 petitions = ["0000", "0001"]

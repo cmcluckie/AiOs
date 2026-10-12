@@ -1,0 +1,10 @@
+code       = "TST.machine.irq-only@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+binds      = "SPEC.machine.4@1"
+red_when   = "the device tree of the paused share machine contains any device other than: isa-serial, isa-pit or kvm-pit, isa-i8259 or kvm-i8259, isabus-bridge, ioapic, fw_cfg_io, kvmclock or kvmvapic, and the eight empty virtio-mmio transports microvm cannot omit, or not exactly one serial port, one 8254 and two 8259s"
+timeout_ms = 5000
+isolates   = "CMP.machine.serial-irq@1"
+runner     = "jig/test qtree share"
+mutations  = 1

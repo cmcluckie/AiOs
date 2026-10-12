@@ -1,0 +1,94 @@
+[petition]
+id         = "0006"
+purpose    = "PUR.0006@1"
+submitted  = 2026-10-12
+submitter  = "KEY.chris@1"
+expires    = 2027-04-12
+supersedes = ""
+status     = "pending"
+
+[[capability]]
+code   = "CAP.tty.write@1"
+reason = "SPEC.sieve.1@1"
+scope  = "console0"
+
+[[capability]]
+code   = "CAP.time.read@1"
+reason = "SPEC.sieve.1@1"
+scope  = ""
+
+[[capability]]
+code   = "CAP.cpu.share@1"
+reason = "SPEC.loader.11@1"
+scope  = ""
+
+[[capability]]
+code   = "CAP.dev.serial@1"
+reason = "SPEC.machine.4@1"
+scope  = ""
+
+[[capability]]
+code   = "CAP.dev.pit@1"
+reason = "SPEC.tick.1@1"
+scope  = ""
+
+[[capability]]
+code   = "CAP.dev.pic@1"
+reason = "SPEC.pic.1@1"
+scope  = ""
+
+[[component]]
+code     = "CMP.sieve@1"
+role     = "primary"
+admitted = false
+
+[[component]]
+code     = "CMP.toolchain.c@1"
+role     = "toolchain"
+admitted = false
+
+[[component]]
+code     = "CMP.loader@6"
+role     = "boot"
+admitted = false
+
+[[component]]
+code     = "CMP.serial.8250@2"
+role     = "dependency"
+admitted = false
+
+[[component]]
+code     = "CMP.timer.tsc-pit@1"
+role     = "dependency"
+admitted = false
+
+[[component]]
+code     = "CMP.irq.pic@1"
+role     = "dependency"
+admitted = false
+
+[[component]]
+code     = "CMP.timer.pit-tick@1"
+role     = "dependency"
+admitted = false
+
+[[component]]
+code     = "CMP.archive.cpio@1"
+role     = "dependency"
+admitted = false
+
+[[component]]
+code     = "CMP.machine.serial-irq@1"
+role     = "machine"
+admitted = false
+
+[[component]]
+code     = "CMP.hypervisor.qemu@1"
+role     = "machine"
+admitted = false
+
+[[test]]
+code = "TST.share.on-time@1"
+
+[[test]]
+code = "TST.share.separate@1"

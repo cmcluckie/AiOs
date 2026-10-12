@@ -1,0 +1,8 @@
+# TST.sieve.primes@1, run by jig/test as: sh this STAMPED-CAPTURE SECONDS
+# Green when the sieve's one line says 1899 primes, 800 times over, in some
+# milliseconds greater than 0, and appears exactly once.
+n=$(grep -c ' BYTE sieve: ' "$1")
+[ "$n" -eq 1 ] || { echo "the sieve's line appeared $n times"; exit 1; }
+line=$(grep ' BYTE sieve: ' "$1" | cut -d' ' -f2-)
+echo "$line" | grep -q -E '^BYTE sieve: 1899 primes, 800 times over, in [1-9][0-9]* ms$' || { echo "the sieve said: $line"; exit 1; }
+echo "$line"

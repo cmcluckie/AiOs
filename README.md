@@ -41,7 +41,11 @@ against the old PC timer chip at boot, the way Linux does when nothing will
 just tell it, and every earlier program runs unchanged under it.  Petition
 0005 sorts twenty numbers and saves them: an IDE disk and the original Minix
 filesystem, the one Linux started on in 1991, both lifted from Linux; the next
-boot finds the file, and Linux's own fsck.minix finds the disk clean.  The
+boot finds the file, and Linux's own fsck.minix finds the disk clean.
+Petition 0006 runs two programs at once: the loader becomes a kernel, takes
+the processor back a hundred times a second the way the Amiga did, and gives
+each program its own memory; the stopwatch keeps time next to a program that
+never lets go, and one that writes past its own memory is stopped alone.  The
 ladder of petitions after that is in the plan: each one a program every CS
 student wrote once, chosen because it needs exactly one new thing from the
 machine.

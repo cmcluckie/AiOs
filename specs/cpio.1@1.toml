@@ -1,0 +1,7 @@
+code       = "SPEC.cpio.1@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+component  = "CMP.archive.cpio@1"
+clause     = "Walking a newc cpio archive from its start, it finds every regular file in order, with its exact bytes and size, and stops at the trailer or at anything malformed."
+author     = "KEY.chris"

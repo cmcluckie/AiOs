@@ -1,0 +1,64 @@
+# Where this part came from, exactly enough to lift it again.  Read by jig/upstream.
+# Format: schema/entries.md, "Origin".
+
+[upstream]
+name       = "linux"
+repo       = "https://github.com/torvalds/linux.git"
+canonical  = "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git"
+commit     = "a5ebb76233b79db01e82e061173cb73c6d2b5c6b"
+committed  = 2026-10-10T16:57:30-07:00
+subject    = "Merge tag 'edac_urgent_for_v7.3_rc7' of git://git.kernel.org/pub/scm/linux/kernel/git/ras/ras"
+licence    = "GPL-2.0-only"
+
+[lift]
+by         = "KEY.chris@1"
+on         = 2026-10-12T13:30:00-07:00
+into       = "pic.c"
+from_part  = ""
+
+[[lift.from]]
+file   = "arch/x86/kernel/i8259.c"
+blob   = "f7a86b94a0dd53588bd27d3ad921b2e76cf0ffe8"
+lines  = [[79, 91], [190, 190], [349, 399]]
+what   = "unmask_8259A_irq (master half), the specific EOI from mask_and_ack_8259A, init_8259A with normal EOI"
+
+[[lift.from]]
+file   = "arch/x86/include/asm/i8259.h"
+blob   = "c715097e92fd2d740860a2c50e78bc762005c716"
+lines  = [[15, 16], [20, 21], [26, 28]]
+what   = "the master and slave command and mask ports, PIC_CASCADE_IR, the ICW4 defaults"
+
+[[lift.from]]
+file   = "arch/x86/include/asm/irq_vectors.h"
+blob   = "85253fc8e3845d53364764dd0e9cc8d6c5e3cc2c"
+lines  = [[36, 36], [44, 44], [54, 54]]
+what   = "FIRST_EXTERNAL_VECTOR, ISA_IRQ_VECTOR, SPURIOUS_APIC_VECTOR"
+
+[[lift.from]]
+file   = "arch/x86/kernel/apic/apic.c"
+blob   = "90025451ace2fa9edac0d22f3d6358ffaae7c16e"
+lines  = [[1335, 1337], [1346, 1348], [1353, 1354], [1358, 1359]]
+what   = "init_bsp_APIC: enable the APIC with the spurious vector, then the virtual wire (LVT0 ExtINT, LVT1 NMI masked)"
+
+[[lift.from]]
+file   = "arch/x86/include/asm/apicdef.h"
+blob   = "bc125c4429dcd1213b86ffef9419f3252cf9253f"
+lines  = [[15, 15], [60, 60], [62, 63], [95, 95], [98, 99], [106, 106], [110, 110], [121, 121]]
+what   = "the local APIC's address and the SPIV, LVT0 and LVT1 registers and bits"
+
+[[lift.from]]
+file   = "arch/x86/include/asm/shared/io.h"
+blob   = "8009d781c2f97ea7f48178338387712d53a91957"
+lines  = [[7, 20]]
+what   = "BUILDIO: the inb and outb instructions"
+
+[cut]
+removed = [
+  "i8259A_lock and cached_irq_mask as a lock and a cache: one processor, interrupts off whenever these run",
+  "auto-EOI and the irq_chip plumbing: normal EOI only, from the one handler",
+  "mask_and_ack's mask before the EOI: the handler is short and runs with interrupts off",
+  "i8259A_irq_real and the spurious-IRQ path: the kernel's vector 0x37 handler does nothing, which is what a spurious IRQ 7 needs",
+  "udelay(100) after init and outb_pic's slow-down: no microsecond clock here (findings 0011)",
+  "clear_local_APIC, the SMP and APIC-feature checks, the Pentium 4 focus bit: one processor that has an APIC",
+  "the slave's lines: nothing on them has a petition",
+]

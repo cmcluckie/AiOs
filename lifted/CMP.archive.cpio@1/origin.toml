@@ -1,0 +1,35 @@
+# Where this part came from, exactly enough to lift it again.  Read by jig/upstream.
+# Format: schema/entries.md, "Origin".
+
+[upstream]
+name       = "linux"
+repo       = "https://github.com/torvalds/linux.git"
+canonical  = "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git"
+commit     = "a5ebb76233b79db01e82e061173cb73c6d2b5c6b"
+committed  = 2026-10-10T16:57:30-07:00
+subject    = "Merge tag 'edac_urgent_for_v7.3_rc7' of git://git.kernel.org/pub/scm/linux/kernel/git/ras/ras"
+licence    = "GPL-2.0-only"
+
+[lift]
+by         = "KEY.chris@1"
+on         = 2026-10-12T13:30:00-07:00
+into       = "earlycpio.c"
+from_part  = ""
+
+[[lift.from]]
+file   = "lib/earlycpio.c"
+blob   = "d2c37d64fd0c390311fee22ab2a75de1d4fd5d56"
+lines  = [[24, 40], [59, 123], [129, 141]]
+what   = "enum cpio_fields and find_cpio_data, without the pr_warn"
+
+[[lift.from]]
+file   = "include/linux/earlycpio.h"
+blob   = "c70519267c7781375b7bf9c1baba783ceeabfc02"
+lines  = [[7, 16]]
+what   = "MAX_CPIO_FILE_NAME, struct cpio_data, find_cpio_data's declaration"
+
+[cut]
+removed = [
+  "the pr_warn on a long file name: no console layer; the name is cut short, as strscpy does",
+  "strscpy, strlen, memcmp and PTR_ALIGN from lib/ and kernel.h: four lines each of our own instead",
+]

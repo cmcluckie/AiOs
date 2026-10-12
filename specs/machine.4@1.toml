@@ -1,0 +1,7 @@
+code       = "SPEC.machine.4@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+component  = "CMP.machine.serial-irq@1"
+clause     = "The machine presents the guest one 16550 serial port, one 8254 timer and the 8259 interrupt controllers, and no network, storage, display or input device; whatever else the hypervisor forces present is named in the as-built spec and touched by no component; a reset request ends the machine."
+author     = "KEY.chris"

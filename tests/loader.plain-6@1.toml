@@ -1,0 +1,10 @@
+code       = "TST.loader.plain-6@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+binds      = "SPEC.loader.11@1"
+red_when   = "hello alone under loader@6 on the share machine differs by one byte from its expected output, or the 8259 sees any write at all"
+timeout_ms = 15000
+isolates   = "CMP.loader@6"
+runner     = "jig/test cmd sh tests/programs/irqtrace.sh plain"
+mutations  = 1

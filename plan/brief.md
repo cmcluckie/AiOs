@@ -63,7 +63,7 @@ The detailed plan is plan/full.md; this file is the one to read.
    9.3. Petition 0003, a reverse-Polish calculator: the program reads; the serial part gains a receive side and the door a read. [done]
    9.4. Petition 0004, a stopwatch: ticks once a second, counting up on one line until switched off; the program needs time passing, the microvm clock debt becomes a petitioned capability and the first real sensor. [done]
    9.5. Petition 0005, save the sorted output: an IDE disk driver and the original Minix filesystem lifted from Linux, the first expensive lift. [done]
-   9.6. Petition 0006, two programs at once: the first thing that must be shared; the kernel appears, and every line of it is named. [coming up]
+   9.6. Petition 0006, two programs at once: the first thing that must be shared; the kernel appears, and every line of it is named. [done]
    9.7. Petition 0007, the console text editor: open, type, save; needs 0003 and 0005; C now, Rust later as CMP.editor@2. [coming up]
    9.8. Every earlier program runs under every later loader; no door ever moves. [in progress]
    9.9. Loop driven end to end by referee failures, with the mechanic proposing and never installing. [coming up]

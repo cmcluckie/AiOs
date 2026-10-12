@@ -1,0 +1,54 @@
+# Where this part came from, exactly enough to lift it again.  Read by jig/upstream.
+# Format: schema/entries.md, "Origin".
+
+[upstream]
+name       = "linux"
+repo       = "https://github.com/torvalds/linux.git"
+canonical  = "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git"
+commit     = "a5ebb76233b79db01e82e061173cb73c6d2b5c6b"
+committed  = 2026-10-10T16:57:30-07:00
+subject    = "Merge tag 'edac_urgent_for_v7.3_rc7' of git://git.kernel.org/pub/scm/linux/kernel/git/ras/ras"
+licence    = "GPL-2.0-only"
+
+[lift]
+by         = "KEY.chris@1"
+on         = 2026-10-12T13:30:00-07:00
+into       = "pittick.c"
+from_part  = ""
+
+[[lift.from]]
+file   = "drivers/clocksource/i8253.c"
+blob   = "b603c25f3dfaac57c77f8fa3feeaebc4ed5add1e"
+lines  = [[158, 161]]
+what   = "pit_set_periodic: mode 2 on counter 0, then the latch, low byte first"
+
+[[lift.from]]
+file   = "include/linux/i8253.h"
+blob   = "56c280eb2d4fd4f044c91f40346ca146fc62c83a"
+lines  = [[17, 18], [21, 21]]
+what   = "PIT_MODE, PIT_CH0, PIT_LATCH"
+
+[[lift.from]]
+file   = "include/linux/timex.h"
+blob   = "7014ccc638fc7bb1abd7397c67ffbfc6b8c6e5f7"
+lines  = [[160, 160]]
+what   = "PIT_TICK_RATE"
+
+[[lift.from]]
+file   = "include/uapi/asm-generic/param.h"
+blob   = "3ed505dfea13054e8abcd14ceed3e42e1fd44237"
+lines  = [[5, 11]]
+what   = "__USER_HZ and HZ: 100"
+
+[[lift.from]]
+file   = "arch/x86/include/asm/shared/io.h"
+blob   = "8009d781c2f97ea7f48178338387712d53a91957"
+lines  = [[7, 20]]
+what   = "BUILDIO: the outb instruction"
+
+[cut]
+removed = [
+  "i8253_lock: one processor, interrupts off at start",
+  "outb_p's slow-down: no clock to slow down by (findings 0011)",
+  "the clockevent framework, oneshot mode and shutdown: one periodic tick, never stopped",
+]

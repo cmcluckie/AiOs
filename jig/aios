@@ -8,6 +8,8 @@
 #                             and the flavor is one the builder can make
 #   aios build <flavor>       builder: collect the components, compile, image
 #   aios run <flavor>         check, build, boot on the flavor's machine
+#   aios pack <archive> <name> <file>...   programs into one cpio archive, in
+#                             order, the way build does for a flavor of several
 #
 # Failures name codes, never tool output.
 set -eu
@@ -71,23 +73,49 @@ cmd_check() {
 		printf 'petition %s: well-formed, %s component(s) pending admission\n' "$id" "$pending"
 	done
 	n=$(echo $primaries | wc -w)
-	[ "$n" -eq 1 ] || die "flavor $1 needs $n programs on one machine; the loader runs one (plan 9.6)"
+	if [ "$n" -gt 1 ]; then
+		# more than one program: the newest loader any of them asks for must share the processor
+		loader=$(loader_for $primaries)
+		list_field "$(code_file "$loader")" exposes | grep -q '^CAP\.cpu\.share@' ||
+			die "flavor $1 needs $n programs on one machine; $loader runs one (CAP.cpu.share, plan 9.6)"
+	fi
 	printf 'flavor %s: buildable on %s, program %s\n' "$1" "$machine" "$primaries"
+}
+
+# the loader for a set of programs: the newest one any of them depends on
+loader_for() {
+	for p in "$@"; do list_field "$(code_file "$p")" depends; done | sort -t@ -k2,2n | tail -1
+}
+
+# newc ARCHIVE NAME FILE...: a cpio archive in the "new ASCII" format (magic 070701),
+# the one Linux's initramfs uses, one regular file per program, in order.
+newc() {
+	arc=$1; shift; : > "$arc"; ino=1
+	pad() { n=$(( (4 - $(wc -c < "$arc") % 4) % 4 )); [ $n -eq 0 ] || head -c $n /dev/zero >> "$arc"; }
+	hdr() {	# name size mode
+		printf '070701%08X%08X%08X%08X%08X%08X%08X%08X%08X%08X%08X%08X%08X' \
+			$ino $3 0 0 1 0 $2 0 0 0 0 $(( ${#1} + 1 )) 0 >> "$arc"
+		printf '%s\0' "$1" >> "$arc"; pad; ino=$((ino + 1))
+	}
+	while [ $# -gt 0 ]; do
+		hdr "$1" "$(wc -c < "$2")" $((0100644)); cat "$2" >> "$arc"; pad; shift 2
+	done
+	hdr TRAILER!!! 0 0
 }
 
 cmd_build() {
 	cmd_check "$1" >/dev/null
 	f=$(flavor_file "$1")
-	prog=$(for id in $(list_field "$f" petitions); do petition_primary "petitions/$id.toml"; done)
-	# walk run-time depends from the program down; the loader is whatever it depends on
-	loader=$(list_field "$(code_file "$prog")" depends)
-	[ -n "$loader" ] || die "$prog depends on nothing; a program needs a loader"
-	pdir=$(field "$(code_file "$prog")" source); ldir=$(field "$(code_file "$loader")" source)
+	progs=$(for id in $(list_field "$f" petitions); do petition_primary "petitions/$id.toml"; done)
+	# walk run-time depends from the programs down; the loader is the newest any of them depends on
+	for prog in $progs; do [ -n "$(list_field "$(code_file "$prog")" depends)" ] || die "$prog depends on nothing; a program needs a loader"; done
+	loader=$(loader_for $progs)
+	ldir=$(field "$(code_file "$loader")" source)
 	ddirs=""	# everything the loader depends on (lifted parts), built into it
 	for dep in $(list_field "$(code_file "$loader")" depends); do
 		ddirs="$ddirs $(field "$(code_file "$dep")" source)"
 	done
-	for d in "$pdir" "$ldir" $ddirs; do [ -d "$d" ] || die "source $d is not in the pool"; done
+	for d in "$ldir" $ddirs; do [ -d "$d" ] || die "source $d is not in the pool"; done
 	out="out/$1"; mkdir -p "$out"
 	CC=${CC:-gcc}
 	CFLAGS="-m32 -std=c11 -ffreestanding -fno-pic -fno-pie -fno-stack-protector -fno-builtin -fno-asynchronous-unwind-tables -mno-sse -mno-mmx -mno-red-zone -mgeneral-regs-only -nostdlib -nostdinc -O2 -Wall -Wextra -Werror"
@@ -97,10 +125,23 @@ cmd_build() {
 		o="$out/$(basename "${src%.*}").o"; $CC $CFLAGS -c -o "$o" "$src"; objs="$objs $o"
 	done
 	$CC $CFLAGS $LDFLAGS -T "$ldir/loader.ld" -o "$out/loader.elf" $objs
-	pname=$(basename "${prog#CMP.}"); pname=${pname%@*}
-	$CC $CFLAGS -c -o "$out/$pname.o" "$pdir$pname.c"
-	$CC $CFLAGS $LDFLAGS -T "$ldir/program.ld" -o "$out/$pname.bin" "$out/$pname.o"
-	printf 'built flavor %s: %s (%s) + %s (%s) -> %s/\n' "$1" "$loader" "$(sha256sum < "$out/loader.elf" | cut -c1-16)" "$prog" "$(wc -c < "$out/$pname.bin") bytes" "$out"
+	# each program is built against its own loader's program format, unchanged
+	members=""; summary=""
+	for prog in $progs; do
+		pdir=$(field "$(code_file "$prog")" source)
+		[ -d "$pdir" ] || die "source $pdir is not in the pool"
+		pl=$(list_field "$(code_file "$prog")" depends | head -1)
+		pldir=$(field "$(code_file "$pl")" source)
+		pname=$(basename "${prog#CMP.}"); pname=${pname%@*}
+		$CC $CFLAGS -c -o "$out/$pname.o" "$pdir$pname.c"
+		$CC $CFLAGS $LDFLAGS -T "$pldir/program.ld" -o "$out/$pname.bin" "$out/$pname.o"
+		members="$members $pname $out/$pname.bin"; summary="$summary + $prog ($(wc -c < "$out/$pname.bin") bytes)"
+	done
+	if [ "$(echo $progs | wc -w)" -gt 1 ]; then
+		newc "$out/programs.bin" $members
+		pname=programs
+	fi
+	printf 'built flavor %s: %s (%s)%s -> %s/\n' "$1" "$loader" "$(sha256sum < "$out/loader.elf" | cut -c1-16)" "$summary" "$out"
 	echo "$pname" > "$out/program"
 }
 
@@ -116,5 +157,6 @@ case "${1:-}" in
 	check) cmd_check "${2:?flavor}" ;;
 	build) cmd_build "${2:?flavor}" ;;
 	run)   cmd_run "${2:?flavor}" ;;
-	*) sed -n '2,13p' "$0"; exit 2 ;;
+	pack)  shift; newc "$@" ;;
+	*) sed -n '2,14p' "$0"; exit 2 ;;
 esac

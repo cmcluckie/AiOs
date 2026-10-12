@@ -1,0 +1,8 @@
+code       = "CAP.cpu.share@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+touches    = "the processor and the RAM, shared between the programs one machine runs: each gets its turn and its own memory"
+mechanism  = "the kernel: the 8254's tick through the 8259 takes the processor back HZ times a second; a page directory per program maps its own 8 MiB at 0x400000"
+scope      = "none"
+scope_rule = "^$"

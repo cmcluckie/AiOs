@@ -46,4 +46,5 @@ Status: requested (hash unknown), confirmed (hash seen), pushed.
 | none | The series' underlying message: safe, automated, agentic development | 9f872c2 | pushed |
 | none | Rule: when options would each do the job, default to the one with the history | 1d14857 | pushed |
 | 2026-10-20 (part 10, the disk) | Petition 0005: save the sorted output, on an IDE disk, in Minix | 8247a91 | pushed |
-| 2026-10-20 | Part 10 links filled in | | requested |
+| 2026-10-20 | Part 10 links filled in | 9b980aa | pushed |
+| 2026-10-21 (part 11, two at once) | Petition 0006: two programs at once; the KERNAL becomes a kernel | | requested |

@@ -1,0 +1,16 @@
+# TST.share.on-time@1, run by jig/test as: sh this STAMPED-CAPTURE SECONDS
+# Green when, with the sieve hogging the processor next to it, the stopwatch
+# still showed every second once and in order and kept up with the host's clock
+# (as TST.stopwatch.ticks@1 asks of it alone), the sieve reported 1899 primes
+# inside the window, and at least two seconds ticked over while the sieve was
+# still working: the two really ran at once.
+sh "$(dirname "$0")/stopwatch.ticks@1.check" "$1" "$2" > /tmp/share.$$ 2>&1 || { cat /tmp/share.$$; rm -f /tmp/share.$$; exit 1; }
+rm -f /tmp/share.$$
+awk '
+$2 == "BYTE" { if ($4 != "1899") { print "the sieve found " $4 " primes, not 1899"; exit 1 } done = $1; ms = $10; next }
+$2 ~ /^[0-9][0-9]:[0-9][0-9]$/ { if (!done) during++; else after++ }
+END {
+	if (!done) { print "the sieve never finished inside the window"; exit 1 }
+	if (during < 3) { print "only " during " stopwatch values while the sieve worked"; exit 1 }
+	printf "stopwatch on time; the sieve took %d ms and the clock showed %d values while it worked\n", ms, during
+}' "$1"

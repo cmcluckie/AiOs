@@ -399,13 +399,21 @@ loader, and that is a test run every time (9.8).  Each rung is also a post.
   CMP.machine.serial-disk@1.  The second boot finds the first boot's file;
   fsck.minix finds the disk clean.  Lines from Linux: 638.  Findings 0010.
 
-### 9.6 Petition 0006: two programs at once [coming up]
+### 9.6 Petition 0006: two programs at once [done]
 - The first purpose that needs sharing.  The kernel appears: a scheduler
   and whatever separation the purpose demands, every line named and
   justified by this petition.  The next CMP.loader growing into it, or a
   separate CMP.kernel@1 the loader hands off to; decided then, in a finding.
 - Done-when: both programs produce their output; neither can corrupt the
   other's memory, and a test proves it by trying.
+- 2026-10-12: done under software emulation.  Preemptive, the Amiga way
+  (Chris's choice).  CMP.loader@6 grew into the kernel: a cpio archive of
+  programs, one page directory and 8 MiB each, the 8254 ticking at 100 Hz
+  through the 8259, a fault stops one program with a Guru Meditation line.
+  The stopwatch keeps time next to BYTE's sieve; a probe that writes past
+  its own memory is stopped and the stopwatch carries on.  Programs still run
+  in ring 0: the door must become a gate first (findings 0011 #4).  Lines from
+  Linux: 844.
 
 ### 9.7 Petition 0007: the editor [coming up]
 - Open a text file, type, save.  Needs 9.3 and 9.5.  C now; Rust later as
