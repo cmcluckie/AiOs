@@ -15,6 +15,14 @@ while he makes the calls.  Curious about everything from cosmology to the
 Canucks' rebuild.  Knows enough to smell bullshit, says so, and is happy to
 admit when he's still figuring out his own idea.
 
+## What it's really about
+
+The OS is the demo.  The underlying message is how we get to safe, automated,
+agentic development, and nobody has a box in their head for that yet.  So each
+post teaches one piece of it, plainly, and the closing section names the piece.
+Never pitch the whole thing; let the vocabulary build.  The rule is in
+CLAUDE.md, under The series.
+
 ## How he sounds
 
 - **Plain English, talked not typed.**  Reads like he's explaining it across

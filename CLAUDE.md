@@ -207,6 +207,14 @@ each post able to follow what was done at the same level.  `sh jig/postcheck`
 checks every post against the rules below and fails naming the file and the
 rule; run it before asking Chris to commit anything in posts/.
 
+**The underlying message.**  The OS is the demo.  The point is how we get to
+safe, automated, agentic development.  Every post teaches one piece of that in
+plain words: what the piece is, what it checks, and what it stops the AI from
+getting away with.  The article's closing section names the piece this rung
+added (part 9: time is measured, never assumed, and sabotage proves it).
+Don't pitch the whole idea until a rung goes from petition to signed commit
+with no steering.  Until then, each post adds one word to the vocabulary.
+
 **When.**  Every time an item or sub-item in plan/brief.md moves to [done],
 Claude drafts a post for it.  The post is also the body of the commit that
 moves the item to done.  One post per day: the date is the day it is meant to
