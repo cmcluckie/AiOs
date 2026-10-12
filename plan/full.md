@@ -365,13 +365,19 @@ loader, and that is a test run every time (9.8).  Each rung is also a post.
   32-bit overflow bug.  Hello, Hanoi and Life unchanged under @3.  Findings
   0006.
 
-### 9.4 Petition 0004: Fibonacci timed [coming up]
-- The program needs a clock.  CAP.time.read; the TSC or the LAPIC timer,
-  whichever the machine petition can honestly present.  The clock debt from
-  findings 0002 becomes a named capability.  First real sensor: elapsed
-  time with a threshold.
-- Done-when: two runs report monotonic, plausible elapsed times; the
-  sensor goes red when the threshold is lowered below them.
+### 9.4 Petition 0004: a stopwatch [coming up]
+- Counts up from 00:00.0, redrawn in place on one line, until a key is
+  pressed (so the machine can halt and a test can end).  The one new thing:
+  time passing.  CAP.time.read, elapsed time only, never the time of day;
+  the processor's own counter or the LAPIC timer, whichever the machine
+  petition can honestly present, and how fast it ticks has to be worked out,
+  not assumed.  The clock debt from findings 0002 becomes a named capability.
+  First real sensor: elapsed time with a threshold.  Was Fibonacci timed;
+  Chris swapped it on 2026-10-11: recursion is done, and a number at the end
+  of a calculation is a dull way to show a clock.
+- Done-when: a run of n seconds by the host's clock shows n seconds, within
+  the sensor's threshold; the sensor goes red when the threshold is tightened
+  below the error.
 
 ### 9.5 Petition 0005: save the sorted output [coming up]
 - Persistent storage.  A block device the machine petition adds
@@ -422,6 +428,14 @@ loader, and that is a test run every time (9.8).  Each rung is also a post.
   resize, time and memory growth.  No fork, no exec.  The trace decides.
 - Done-when: open a file, edit it, save it, quit; the saved bytes match what
   the same keystrokes produce in the same vi on Linux.
+
+### 9.12 The clock on the screen [coming up]
+- A wall clock: shows the time of day and keeps it.  The one new thing over
+  the stopwatch: knowing what time it actually is.  The petition has to argue
+  for where that comes from, a battery-backed clock chip on the machine or
+  asking the host, and either is a hole in "nothing nobody asked for".  Its
+  place on the ladder is decided when it is petitioned; numbered last so no
+  earlier number moves.
 
 ## 10. Lifecycle [coming up]
 

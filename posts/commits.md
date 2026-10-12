@@ -34,4 +34,5 @@ Status: requested (hash unknown), confirmed (hash seen), pushed.
 | none | Posts become one HTML file each: post, title and article, with Copy buttons | 6bf9a21 | pushed |
 | none | Post images drawn, kernel line counts, and two Linux-binary rungs in the plan | 7c0e7a9 | pushed |
 | 2026-10-18 (part 8, the testers) | Tests run themselves: jig/test, jig/mutate, expected outputs and probes | bd08552 | pushed |
-| none | Part 8 links: close bd08552 | | requested |
+| none | Part 8 links: close bd08552 | ceddcf7 | pushed |
+| none | Plan: a stopwatch, not Fibonacci, for the clock rung; the wall clock gets its own | | requested |
