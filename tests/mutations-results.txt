@@ -1,5 +1,5 @@
 # tests/mutations-results.txt, written by jig/mutate.  Do not edit by hand.
-# run 2026-10-12T04:06Z at commit 7c0e7a9 + the runner's commit
+# run 2026-10-12T04:51Z at commit d25c384 + the spec commit
 KILLED    hello.exact-bytes@1  one wrong letter in hello's message
 KILLED    hello.exact-bytes@1  the newline goes missing
 KILLED    hello.exact-bytes@1  one extra write before exit
@@ -15,13 +15,13 @@ KILLED    loader.door-layout@1  an entry inserted in the middle of the door
 KILLED    loader.alloc-in-ram@1  the heap starts inside the program
 KILLED    loader.alloc-refuses@1  alloc no longer checks there is room
 KILLED    loader.read@1  the read door flips the low bit of every byte it hands over
-SURVIVED  loader.read@1  read reports one byte more than it received: the calculator only ever asks for one byte, so its transcript cannot see it (findings 0007)  (known, written down)
+KILLED    loader.read-many@1  read reports one byte more than it received (findings 0007 #5; caught since SPEC.loader.8@1)
 KILLED    serial.receive-order@1  the same broken read, caught by the echo probe, which asks for 256 bytes at a time
 KILLED    serial.in-order@1  the driver puts back the \r Linux adds before \n
 KILLED    serial.receive-order@1  every received byte has its low bit flipped
 KILLED    serial.origin-matches@1  the origin record names the wrong blob
 KILLED    machine.no-peripherals@1  the machine grows a device nobody asked for
 KILLED    machine.no-sockets@1  the machine opens a network socket
-SURVIVED  serial.in-order@1  the driver stops waiting for the chip to be ready before each byte: QEMU's port is always ready, so nothing notices (findings 0007)  (known, written down)
-SURVIVED  hello.exact-bytes@1  init sets 5 data bits instead of 8: QEMU's port ignores it (findings 0002 #7), and no spec covers init  (known, written down)
-# 21 killed, 0 survived unexpectedly, 3 known survivors, 0 no-ops, 0 no-builds
+KILLED    serial.waits-ready@1  the driver stops waiting for the chip to be ready before each byte (findings 0007 #3; caught since SPEC.serial.4@1)
+KILLED    serial.init-8n1@1  init sets 5 data bits instead of 8 (findings 0002 #7, 0007 #4; caught since SPEC.serial.5@1)
+# 24 killed, 0 survived unexpectedly, 0 known survivors, 0 no-ops, 0 no-builds

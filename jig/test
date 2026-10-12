@@ -122,7 +122,7 @@ run_one() {	# t secs kind args... ; sets why
 		judge "$cap" "$t" "" "$pb" ;;
 	trace)
 		build "$1" || { why="build of $1 failed"; return 1; }
-		AIOS_QEMU_EXTRA="-trace serial_read -trace serial_write -D $tmp/trace"
+		AIOS_QEMU_EXTRA="-trace serial_read -trace serial_write -trace serial_update_parameters -D $tmp/trace"
 		boot "$(loader_of "$1")" "$(program_of "$1")" "${2:-}" "$cap" "$secs"; rc=$?
 		AIOS_QEMU_EXTRA=""
 		[ $rc -eq 124 ] && { why="still running after ${secs}s"; return 1; }

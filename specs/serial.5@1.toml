@@ -1,0 +1,7 @@
+code       = "SPEC.serial.5@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+component  = "CMP.serial.8250@1"
+clause     = "After init, the serial port is set for 8 data bits, no parity, 1 stop bit, at 115200 baud."
+author     = "KEY.chris"

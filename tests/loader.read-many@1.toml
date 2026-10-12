@@ -1,0 +1,10 @@
+code       = "TST.loader.read-many@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+binds      = "SPEC.loader.8@1"
+red_when   = "a program that reads 256 bytes at a time and writes back exactly what each read returned, fed 4096 bytes of every value but 3 and 4 in a fixed order, writes back anything other than those 4096 bytes in that order"
+timeout_ms = 20000
+isolates   = "CMP.loader@3"
+runner     = "jig/test program tests/programs/echo.c calc tests/fixtures/receive.in"
+mutations  = 1

@@ -1,0 +1,22 @@
+# TST.serial.init-8n1@1, run by jig/test as: sh this CAPTURE TRACE BINARY
+# Green when, before the first byte is sent: the divisor latch was written as 1
+# (115200 baud from the 1.8432 MHz clock) while the latch bit was set, the last
+# line control value is 0x03 (8 data bits, no parity, 1 stop bit, latch off),
+# and QEMU's own reading of the port agrees: 115200 baud, N, 8, 1.
+trace=$2
+awk '
+function hex(s,  i, c, v) { v = 0; s = tolower(substr(s, 3)); for (i = 1; i <= length(s); i++) { c = index("0123456789abcdef", substr(s, i, 1)) - 1; v = v * 16 + c } return v }
+/serial_write/ && $4 == "0x03" { lcr = hex($6); next }
+/serial_write/ && $4 == "0x00" && int(lcr / 128) % 2 == 1 { dll = hex($6); dlab_seen = 1; next }
+/serial_write/ && $4 == "0x01" && int(lcr / 128) % 2 == 1 { dlm = hex($6); next }
+/serial_update_parameters/ { params = $0; next }
+/serial_write/ && $4 == "0x00" { first = 1; exit }
+END {
+	if (!first) { print "no byte was ever sent"; exit 1 }
+	if (!dlab_seen) { print "the divisor was never written"; exit 1 }
+	if (dll + 256 * dlm != 1) { printf "divisor is %d, not 1\n", dll + 256 * dlm; exit 1 }
+	if (lcr != 3) { printf "line control is 0x%02x, not 0x03\n", lcr; exit 1 }
+	if (params !~ /baudrate=115200 parity=.N. data=8 stop=1/) { print "QEMU reads the port as: " params; exit 1 }
+	print "115200 8N1 before the first byte, by the registers and by QEMU"
+}
+' "$trace"

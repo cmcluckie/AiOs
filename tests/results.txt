@@ -1,5 +1,5 @@
 # tests/results.txt, written by jig/test.  Do not edit by hand.
-# run 2026-10-12T04:06Z at commit 7c0e7a9 + the runner's commit, software emulation (tcg)
+# run 2026-10-12T04:51Z at commit d25c384 + the spec commit, software emulation (tcg)
 PASS  TST.calc.transcript@1  0s  424 bytes, exact
 PASS  TST.hanoi.exact-moves@1  1s  360 bytes, exact
 PASS  TST.hello.exact-bytes@1  0s  14 bytes, exact
@@ -7,14 +7,17 @@ PASS  TST.hello.silent-boot@1  0s  14 bytes, exact
 PASS  TST.life.exact-output@1  1s  1992 bytes, exact
 PASS  TST.loader.alloc-in-ram@1  0s  59 blocks, all inside RAM, none overlapping
 PASS  TST.loader.alloc-refuses@1  0s  128 MiB refused, 16 bytes still granted after the refusal
-PASS  TST.loader.door-layout@1  0s  door layout holds in 3 versions
+PASS  TST.loader.door-layout@1  1s  door layout holds in 3 versions
 PASS  TST.loader.halts@1  0s  flushed after the last byte
+PASS  TST.loader.read-many@1  0s  4096 bytes, exact
 PASS  TST.loader.read@1  1s  4 programs byte-identical under loader@3
 PASS  TST.loader.runs-program@1  0s  14 bytes, exact
 PASS  TST.loader.same-binary@1  0s  one loader, 5b4601bf374c5f45
-PASS  TST.machine.no-peripherals@1  1s  13 devices, all on the list
-PASS  TST.machine.no-sockets@1  0s  1060 syscalls traced, none on the network
+PASS  TST.machine.no-peripherals@1  0s  13 devices, all on the list
+PASS  TST.machine.no-sockets@1  0s  1019 syscalls traced, none on the network
 PASS  TST.serial.in-order@1  0s  512 bytes, exact
-PASS  TST.serial.origin-matches@1  0s  CMP.serial.8250@2: ok   include/linux/serial.h 26-29
-PASS  TST.serial.receive-order@1  1s  4096 bytes, exact
-# 17 passed, 0 failed, 0 skipped
+PASS  TST.serial.init-8n1@1  0s  115200 8N1 before the first byte, by the registers and by QEMU
+PASS  TST.serial.origin-matches@1  1s  CMP.serial.8250@2: ok   include/linux/serial.h 26-29
+PASS  TST.serial.receive-order@1  0s  4096 bytes, exact
+PASS  TST.serial.waits-ready@1  0s  14 bytes, each after THRE was seen
+# 20 passed, 0 failed, 0 skipped

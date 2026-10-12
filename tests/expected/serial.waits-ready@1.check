@@ -1,0 +1,17 @@
+# TST.serial.waits-ready@1, run by jig/test as: sh this CAPTURE TRACE BINARY
+# Green when, in QEMU's register trace, every byte written to the transmit
+# register (offset 0 with the divisor latch off) comes after a read of the line
+# status register (offset 5) showing THRE (0x20) set, since the byte before it.
+cap=$1; trace=$2
+cmp -s "$cap" "$(dirname "$0")/hello.exact-bytes@1.out" || { echo "capture is not hello's 14 bytes"; exit 1; }
+awk '
+function hex(s,  i, c, v) { v = 0; s = tolower(substr(s, 3)); for (i = 1; i <= length(s); i++) { c = index("0123456789abcdef", substr(s, i, 1)) - 1; v = v * 16 + c } return v }
+/serial_write/ && $4 == "0x03" { lcr = hex($6) }
+/serial_read/  && $4 == "0x05" { if (int(hex($6) / 32) % 2 == 1) ready = 1 }
+/serial_write/ && $4 == "0x00" && int(lcr / 128) % 2 == 0 {
+	n++
+	if (!ready) { printf "byte %d (%s) went out without THRE seen first\n", n, $6; bad = 1; exit 1 }
+	ready = 0
+}
+END { if (bad) exit 1; if (n == 0) { print "no byte reached the transmit register"; exit 1 } printf "%d bytes, each after THRE was seen\n", n }
+' "$trace"
