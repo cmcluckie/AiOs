@@ -53,4 +53,5 @@ Status: requested (hash unknown), confirmed (hash seen), pushed.
 | 2026-10-22 (part 12, the jig) | install.sh: wait for udev before mounting by label, lock the flake before installing: the jig's first two bugs | 224de12 | pushed |
 | 2026-10-22 (part 12, the jig) | jig: flake.lock pinned, tools.sh reads the added packages, /boot root-only, Claude's voice | 1f8a7a4 | pushed |
 | 2026-10-22 (part 12, the jig) | jig's first run: CMP.timer.tsc-pit@2 (150 ms window), loaders 4-6 re-pointed, disk strace limit 120 s, pitprobe, findings 0012 | e160203 | pushed |
-| 2026-10-22 (part 12, the jig) | clock: ask KVM first (CMP.timer.kvmclock@1), the 8254 as backup; nopit/nokvm runners; share.on-time@2 with a hog that never yields; findings 0012 #9-13 | | requested |
+| 2026-10-22 (part 12, the jig) | clock: ask KVM first (CMP.timer.kvmclock@1), the 8254 as backup; nopit/nokvm runners; share.on-time@2 with a hog that never yields; findings 0012 #9-13 | 0296132 | pushed |
+| 2026-10-22 (part 12, the jig) | findings 0012 #14-16: the strace slowness was the 8254, not the disk; loader.ms survivor recorded | | requested |
