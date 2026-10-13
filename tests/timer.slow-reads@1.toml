@@ -6,5 +6,5 @@ binds      = "SPEC.timer.2@1"
 red_when   = "on the jig, under KVM, the ms door has not passed 1000 ms within 3 seconds of the host's clock: the measurement gave up and the door says 0 forever"
 timeout_ms = 8000
 isolates   = "CMP.timer.tsc-pit@2"
-runner     = "jig/test timed stopwatch 3 tests/programs/msprobe.c"
+runner     = "jig/test nokvm timed stopwatch 3 tests/programs/msprobe.c"
 mutations  = 1

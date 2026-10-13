@@ -1,0 +1,10 @@
+code       = "TST.timer.kvm@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+binds      = "SPEC.timer.3@1"
+red_when   = "under KVM, on the stopwatch's machine with the 8254 taken away, the ms door is 0 forever or drifts from the host's clock by more than 1% over 10 seconds; SKIP without KVM, where nothing but the 8254 can say the rate"
+timeout_ms = 15000
+isolates   = "CMP.timer.kvmclock@1"
+runner     = "jig/test nopit timed stopwatch 10 tests/programs/msprobe.c"
+mutations  = 2

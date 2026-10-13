@@ -1,0 +1,7 @@
+code       = "SPEC.timer.3@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+component  = "CMP.timer.kvmclock@1"
+clause     = "Under KVM it reports the processor counter's rate as KVM states it, without the 8254, and takes back the memory it lent KVM before it returns; with no KVM it reports 0 and writes nothing."
+author     = "KEY.chris"

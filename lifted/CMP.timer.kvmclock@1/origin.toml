@@ -1,0 +1,87 @@
+# Where this part came from, exactly enough to lift it again.  Read by jig/upstream.
+# Format: schema/entries.md, "Origin".
+
+[upstream]
+name       = "linux"
+repo       = "https://github.com/torvalds/linux.git"
+canonical  = "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git"
+commit     = "a5ebb76233b79db01e82e061173cb73c6d2b5c6b"
+committed  = 2026-10-10T16:57:30-07:00
+subject    = "Merge tag 'edac_urgent_for_v7.3_rc7' of git://git.kernel.org/pub/scm/linux/kernel/git/ras/ras"
+licence    = "GPL-2.0-only"
+
+[lift]
+by         = "KEY.chris@1"
+on         = 2026-10-12T18:30:00-07:00
+into       = "kvmclock.c"
+from_part  = ""
+
+[[lift.from]]
+file   = "arch/x86/include/asm/cpuid/api.h"
+blob   = "82eddfa2347b32b76c2ea9b85f005ca5416ac71f"
+lines  = [[26, 37], [60, 60], [69, 76], [92, 99], [110, 117], [192, 193], [195, 213]]
+what   = "native_cpuid, __cpuid, cpuid, cpuid_eax, cpuid_ecx, cpuid_base_hypervisor with its loop macro; __builtin_memcmp replaced by a 12-byte loop"
+
+[[lift.from]]
+file   = "arch/x86/kernel/kvm.c"
+blob   = "6b0a5861ccb8eb2c9fc6d568e07e01fbc60277cf"
+lines  = [[889, 898], [916, 919]]
+what   = "__kvm_cpuid_base without the cpuid_level check, kvm_arch_para_features calling it directly"
+
+[[lift.from]]
+file   = "include/linux/kvm_para.h"
+blob   = "f23b90b02898a4474e55bcc2582516da7272977e"
+lines  = [[8, 11]]
+what   = "kvm_para_has_feature, returning int"
+
+[[lift.from]]
+file   = "arch/x86/include/uapi/asm/kvm_para.h"
+blob   = "a1efa7907a0b100840f6c13c33e5abaa36ef822b"
+lines  = [[11, 11], [18, 18], [25, 25], [53, 53]]
+what   = "KVM_SIGNATURE, KVM_CPUID_FEATURES, KVM_FEATURE_CLOCKSOURCE2, MSR_KVM_SYSTEM_TIME_NEW"
+
+[[lift.from]]
+file   = "arch/x86/include/asm/pvclock-abi.h"
+blob   = "b9fece5fc96d6fb3470fb5fc3d241240a9bcc71a"
+lines  = [[26, 35]]
+what   = "struct pvclock_vcpu_time_info"
+
+[[lift.from]]
+file   = "arch/x86/include/asm/msr.h"
+blob   = "2f41a9289d79890c227d4b2a967243cae7c8b951"
+lines  = [[78, 84]]
+what   = "__wrmsrq without the exception table"
+
+[[lift.from]]
+file   = "arch/x86/include/asm/div64.h"
+blob   = "8a2d343f977ec788f29104b1fa76c7f3b7576e47"
+lines  = [[22, 25], [30, 41]]
+what   = "do_div, without its power-of-two branch (lines 26-29)"
+
+[[lift.from]]
+file   = "arch/x86/kernel/pvclock.c"
+blob   = "b3f81379c2fc06fd127728ea6ca6db65d5a7b34a"
+lines  = [[27, 37]]
+what   = "pvclock_tsc_khz"
+
+[[lift.from]]
+file   = "arch/x86/kernel/kvmclock.c"
+blob   = "cb3d0ca1fa225acd1dfd447f4ee60271973501df"
+lines  = [[139, 143], [190, 201], [219, 223], [318, 326]]
+what   = "kvm_get_tsc_khz, kvm_register_clock, kvmclock_disable, kvmclock_init's MSR choice"
+
+[cut]
+removed = [
+  "boot_cpu_data.cpuid_level check: every processor this runs on has CPUID",
+  "kvm_cpuid_base()'s cache: asked once, at boot",
+  "MSR_KVM_SYSTEM_TIME (0x12), the pre-2010 MSR: without CLOCKSOURCE2 the 8254 answers",
+  "per-CPU clock pages, the wall clock, sched_clock, vsyscall: one processor, one rate, read once",
+  "slow_virt_to_phys(): the loader's memory is identity-mapped",
+  "the exception table on wrmsr: the MSR is written only after KVM said it exists",
+  "setup_force_cpu_cap(), the write_msr tracepoint, pr_info/pr_debug",
+  "do_div's power-of-two branch",
+]
+changed = [
+  "__builtin_memcmp(sig, signature, 12) in cpuid_base_hypervisor: a 12-byte loop, since -fno-builtin would make it a call to a memcmp nobody provides",
+  "boot_cpu_has(X86_FEATURE_HYPERVISOR): read straight from CPUID 1, ECX bit 31",
+]

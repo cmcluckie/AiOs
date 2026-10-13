@@ -37,7 +37,7 @@
  * Inc.  Layout reproduced; that is what an ABI is for.  The page table and
  * descriptor bits are the Intel SDM's.
  *
- * Depends on CMP.serial.8250@2, CMP.timer.tsc-pit@2, CMP.fs.minix@1,
+ * Depends on CMP.serial.8250@2, CMP.timer.kvmclock@1, CMP.timer.tsc-pit@2, CMP.fs.minix@1,
  * CMP.disk.ata-pio@1, CMP.irq.pic@1, CMP.timer.pit-tick@1 and
  * CMP.archive.cpio@1 (lifted/).
  * Exposes CAP.proc.exit, CAP.mem.alloc, CAP.time.read, CAP.fs.read,
@@ -47,6 +47,7 @@
 #include "door.h"
 #include "../../lifted/CMP.serial.8250@2/serial8250.h"
 #include "../../lifted/CMP.timer.tsc-pit@2/tsccal.h"
+#include "../../lifted/CMP.timer.kvmclock@1/kvmclock.h"
 #include "../../lifted/CMP.fs.minix@1/minix.h"
 #include "../../lifted/CMP.irq.pic@1/pic.h"
 #include "../../lifted/CMP.timer.pit-tick@1/pittick.h"
@@ -488,6 +489,7 @@ void __attribute__((noreturn)) loader_main(const struct hvm_start_info *si)
 
 	serial8250_init(CONSOLE_PORT);
 	/* Up to 150 ms against the 8254 per try (findings 0012), then never again.  Findings 0008. */
+	clock_khz = kvmclock_khz();	/* KVM's word first, as Linux does under KVM; 0 if there is no KVM (findings 0012) */
 	for (tries = 0; tries < 5 && !clock_khz; tries++)
 		clock_khz = tsccal_khz();
 	clock_start = tsccal_cycles();

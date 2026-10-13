@@ -19,13 +19,14 @@
  * nothing is protected because there is nobody to protect it from.
  *
  * Depends on CMP.serial.8250@2 (lifted/) for the write and read doors and on
- * CMP.timer.tsc-pit@2 (lifted/) for the counter's rate.
+ * CMP.timer.kvmclock@1 and CMP.timer.tsc-pit@2 (lifted/) for the counter's rate.
  * Exposes CAP.proc.exit, CAP.mem.alloc and CAP.time.read.
  */
 
 #include "door.h"
 #include "../../lifted/CMP.serial.8250@2/serial8250.h"
 #include "../../lifted/CMP.timer.tsc-pit@2/tsccal.h"
+#include "../../lifted/CMP.timer.kvmclock@1/kvmclock.h"
 
 #define CONSOLE_PORT	0x3f8		/* CAP.dev.serial: the machine's one peripheral */
 #define PROGRAM_BASE	0x400000	/* where the program runs; its link address */
@@ -182,6 +183,7 @@ void __attribute__((noreturn)) loader_main(const struct hvm_start_info *si)
 	 * rather than guess when the reads were not steady (under emulation the
 	 * first try usually fails while the emulator warms up); five tries, then
 	 * the door says 0 forever.  Findings 0008. */
+	clock_khz = kvmclock_khz();	/* KVM's word first, as Linux does under KVM; 0 if there is no KVM (findings 0012) */
 	for (tries = 0; tries < 5 && !clock_khz; tries++)
 		clock_khz = tsccal_khz();
 	clock_start = tsccal_cycles();

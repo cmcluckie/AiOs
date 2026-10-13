@@ -33,10 +33,18 @@
 #                                the disk image
 #   cmd COMMAND...               any command; exit 0 is green, exit 2 means it
 #                                cannot run on this host (SKIP), anything else red
+#   nokvm KIND ARGS...           the run KIND ARGS describes, with KVM's CPUID leaves
+#                                hidden (-cpu host,kvm=off), so the loader cannot ask
+#                                KVM and has to measure against the 8254; without
+#                                KVM it is the plain run, which measures anyway
+#   nopit KIND ARGS...           the run KIND ARGS describes, on the same machine
+#                                without the 8254 (-M microvm,pit=off), so only KVM
+#                                can say the rate; SKIP without KVM
 # Where tests/expected/<test>.check exists it decides instead of the .out file:
 # it is run as  sh <test>.check CAPTURE EXTRA BINARY  and exit 0 is green.
 #
-# The machine is always the flavor's own machine component, unchanged.
+# The machine is always the flavor's own machine component, unchanged, except
+# under nokvm and nopit, which each take one named thing away (findings 0012).
 # trace, strace and qtree add observation flags through a stand-in for
 # qemu-system-x86_64 on PATH that appends them; nothing else differs.
 #
@@ -195,6 +203,15 @@ run_one() {	# t secs kind args... ; sets why
 		[ $rc -eq 2 ] && { why="SKIP: $(tail -1 "$cap")"; return 2; }	# exit 2: cannot run on this host
 		[ $rc -eq 124 ] && why="still running after ${secs}s" || why=$(tail -2 "$cap" | tr '\n' ' ')
 		return 1 ;;
+	nokvm)
+		[ -w /dev/kvm ] && AIOS_QEMU_EXTRA="-cpu host,kvm=off"
+		run_one "$t" "$secs" "$@"; rc=$?
+		AIOS_QEMU_EXTRA=""; return $rc ;;
+	nopit)
+		[ -w /dev/kvm ] || { why="SKIP: needs KVM; without it only the 8254 can say the rate"; return 2; }
+		AIOS_QEMU_EXTRA="-M microvm,pit=off"
+		run_one "$t" "$secs" "$@"; rc=$?
+		AIOS_QEMU_EXTRA=""; return $rc ;;
 	*)	why="runner kind '$kind' unknown"; return 1 ;;
 	esac
 }
@@ -230,7 +247,9 @@ for f in tests/*.toml; do
 	if [ -n "$filter" ]; then m=0; for a in $filter; do case "$stem" in "$a"*) m=1 ;; esac; done; [ $m -eq 1 ] || continue; fi
 	code=$(field "$f" code); r=$(field "$f" runner)
 	ms=$(num "$f" timeout_ms); secs=$(( (${ms:-10000} + 999) / 1000 ))
-	if [ -z "$r" ]; then line="SKIP  $code  no runner yet"; skip=$((skip + 1))
+	ret=$(field "$f" retired_by)
+	if [ -n "$ret" ]; then line="SKIP  $code  retired by $ret"; skip=$((skip + 1))
+	elif [ -z "$r" ]; then line="SKIP  $code  no runner yet"; skip=$((skip + 1))
 	else
 		set -- $r; [ "$1" = "jig/test" ] && shift
 		start=$(date +%s)
