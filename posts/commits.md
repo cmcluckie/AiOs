@@ -48,5 +48,7 @@ Status: requested (hash unknown), confirmed (hash seen), pushed.
 | 2026-10-20 (part 10, the disk) | Petition 0005: save the sorted output, on an IDE disk, in Minix | 8247a91 | pushed |
 | 2026-10-20 | Part 10 links filled in | 9b980aa | pushed |
 | 2026-10-21 (part 11, two at once) | Petition 0006: two programs at once; the KERNAL becomes a kernel | 9cbe6b7 | pushed |
-| 2026-10-21 | Part 11 links filled in | | requested |
-| 2026-10-22 (part 12, the jig) | The jig, before its first boot: gcc_multi for -m32, Hyper-V guest drivers, install from the public repo | | requested |
+| 2026-10-21 | Part 11 links filled in (one commit with the jig fixes below) | 5ea8f27 | pushed |
+| 2026-10-22 (part 12, the jig) | The jig, before its first boot: gcc_multi for -m32, Hyper-V guest drivers, install from the public repo (in the part 11 links commit) | 5ea8f27 | pushed |
+| 2026-10-22 (part 12, the jig) | install.sh: wait for udev before mounting by label, lock the flake before installing: the jig's first two bugs | | requested |
+| 2026-10-22 (part 12, the jig) | jig: flake.lock pinned, tools.sh reads the added packages, /boot root-only, Claude's voice | | requested |
