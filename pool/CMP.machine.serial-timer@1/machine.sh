@@ -4,7 +4,7 @@
 # CMP.machine.serial-only@1 plus one device: the 8254 programmable interval
 # timer (pit=on), so the loader can measure how fast the processor's counter
 # ticks.  Still no PIC, so the timer can never interrupt anything; the loader
-# reads its counter for about 50 ms at boot and never touches it again.
+# reads its counter for up to 150 ms at boot and never touches it again.
 # Everything else is as serial-only@1: one CPU, 64 MiB, one ISA serial port on
 # stdio, no PCI, no ACPI, no RTC, no option ROMs, no NIC, no disk, no display.
 # usage: machine.sh <loader.elf> <program.bin>

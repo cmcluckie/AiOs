@@ -123,6 +123,7 @@ part again from upstream, and to prove the record against upstream.
 
     [cut]
     removed = ["..."]                                      # what the lifted lines held onto
+    changed = ["..."]                                      # optional: lifted lines kept but altered, each with why
 
 `jig/upstream verify` checks each blob id against the commit; `jig/upstream
 watch` lists upstream commits that touched each range since.

@@ -24,14 +24,14 @@
  * nothing is protected because there is nobody to protect it from.
  *
  * Depends on CMP.serial.8250@2 (lifted/) for the write and read doors, on
- * CMP.timer.tsc-pit@1 (lifted/) for the counter's rate, and on CMP.fs.minix@1
+ * CMP.timer.tsc-pit@2 (lifted/) for the counter's rate, and on CMP.fs.minix@1
  * and CMP.disk.ata-pio@1 (lifted/) for the load and save doors.
  * Exposes CAP.proc.exit, CAP.mem.alloc, CAP.time.read, CAP.fs.read and CAP.fs.write.
  */
 
 #include "door.h"
 #include "../../lifted/CMP.serial.8250@2/serial8250.h"
-#include "../../lifted/CMP.timer.tsc-pit@1/tsccal.h"
+#include "../../lifted/CMP.timer.tsc-pit@2/tsccal.h"
 #include "../../lifted/CMP.fs.minix@1/minix.h"
 
 #define CONSOLE_PORT	0x3f8		/* CAP.dev.serial: the machine's one peripheral */
@@ -197,7 +197,7 @@ void __attribute__((noreturn)) loader_main(const struct hvm_start_info *si)
 	unsigned long n;
 
 	serial8250_init(CONSOLE_PORT);
-	/* About 50 ms against the 8254 per try, then never again.  A try fails
+	/* Up to 150 ms against the 8254 per try (findings 0012), then never again.  A try fails
 	 * rather than guess when the reads were not steady (under emulation the
 	 * first try usually fails while the emulator warms up); five tries, then
 	 * the door says 0 forever.  Findings 0008. */

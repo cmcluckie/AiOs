@@ -5,6 +5,6 @@ retired_by = ""
 binds      = "SPEC.timer.1@1"
 red_when   = "the ms door, whose only notion of a second is the rate this part measured, is 0 forever (the measurement failed) or drifts from the host's clock by more than 1% over 10 seconds"
 timeout_ms = 15000
-isolates   = "CMP.timer.tsc-pit@1"
+isolates   = "CMP.timer.tsc-pit@2"
 runner     = "jig/test timed stopwatch 10 tests/programs/msprobe.c"
 mutations  = 3

@@ -50,5 +50,6 @@ Status: requested (hash unknown), confirmed (hash seen), pushed.
 | 2026-10-21 (part 11, two at once) | Petition 0006: two programs at once; the KERNAL becomes a kernel | 9cbe6b7 | pushed |
 | 2026-10-21 | Part 11 links filled in (one commit with the jig fixes below) | 5ea8f27 | pushed |
 | 2026-10-22 (part 12, the jig) | The jig, before its first boot: gcc_multi for -m32, Hyper-V guest drivers, install from the public repo (in the part 11 links commit) | 5ea8f27 | pushed |
-| 2026-10-22 (part 12, the jig) | install.sh: wait for udev before mounting by label, lock the flake before installing: the jig's first two bugs | | requested |
-| 2026-10-22 (part 12, the jig) | jig: flake.lock pinned, tools.sh reads the added packages, /boot root-only, Claude's voice | | requested |
+| 2026-10-22 (part 12, the jig) | install.sh: wait for udev before mounting by label, lock the flake before installing: the jig's first two bugs | 224de12 | pushed |
+| 2026-10-22 (part 12, the jig) | jig: flake.lock pinned, tools.sh reads the added packages, /boot root-only, Claude's voice | 1f8a7a4 | pushed |
+| 2026-10-22 (part 12, the jig) | jig's first run: CMP.timer.tsc-pit@2 (150 ms window), loaders 4-6 re-pointed, disk strace limit 120 s, pitprobe, findings 0012 | | requested |

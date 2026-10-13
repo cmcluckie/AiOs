@@ -1,0 +1,7 @@
+code       = "SPEC.timer.2@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+component  = "CMP.timer.tsc-pit@2"
+clause     = "On a machine where one read of the 8254 costs as much as 100,000 of the processor's counter cycles, as on the jig under KVM inside Hyper-V, it still reports the rate, never 0, within the loader's five tries."
+author     = "KEY.chris"

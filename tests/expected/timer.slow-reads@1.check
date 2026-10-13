@@ -1,0 +1,7 @@
+# TST.timer.slow-reads@1, run by jig/test as: sh this STAMPED-CAPTURE SECONDS
+# Green when the ms door got past one second: the rate was measured even though
+# every read of the 8254 was slow.  Only the jig's slow reads make this a
+# real test; under software emulation reads are cheap and it passes either way.
+last=$(sed -n 's/^[0-9]* \([0-9][0-9]*\)$/\1/p' "$1" | tail -1)
+[ -n "$last" ] && [ "$last" -ge 1000 ] || { echo "the door reached only ${last:-nothing} ms: the measurement gave up"; exit 1; }
+echo "the door reached $last ms in $2 s: measured"
