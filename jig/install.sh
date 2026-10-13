@@ -10,11 +10,14 @@ parted -s "$disk" mklabel gpt \
   mkpart nixos ext4 513MiB 100%
 mkfs.fat -F 32 -n BOOT "${disk}1"
 mkfs.ext4 -F -L nixos "${disk}2"
+udevadm settle	# the by-label links appear only once udev has seen the new labels; mounting before that fails
 mount /dev/disk/by-label/nixos /mnt
 mkdir -p /mnt/boot /mnt/etc/nixos
 mount /dev/disk/by-label/BOOT /mnt/boot
 cp "$here"/flake.nix "$here"/configuration.nix "$here"/hardware-configuration.nix /mnt/etc/nixos/
 [ -f "$here/flake.lock" ] && cp "$here/flake.lock" /mnt/etc/nixos/
+# Lock before installing: a lock written during the install changes the flake under it and Nix refuses (NAR hash mismatch).
+nix --extra-experimental-features "nix-command flakes" flake lock /mnt/etc/nixos
 nixos-install --no-root-passwd --root /mnt \
   --option experimental-features "nix-command flakes" \
   --flake /mnt/etc/nixos#jig
