@@ -67,21 +67,21 @@ If this is where things start to come together for you too, that makes two of us
 1. [jig/test](https://github.com/cmcluckie/aios/blob/main/jig/test).  The runner.  The comment at the top explains every kind of test it knows.  Look for `trace`: that's the register log standing in for a fake chip.
 2. [tests/results.txt](https://github.com/cmcluckie/aios/blob/main/tests/results.txt).  What the runner said, test by test, and what it ran on.
 3. [tests/mutations.txt](https://github.com/cmcluckie/aios/blob/main/tests/mutations.txt).  Every sabotage, one per line, with what it breaks.  The "survives" lines are the holes.
-4. [tests/fixtures/life_ref.py](https://github.com/cmcluckie/aios/blob/main/tests/fixtures/life_ref.py).  The second opinion for Life, in about 20 lines of Python.  Put it next to pool/CMP.life@1/life.c and compare.
+4. [tests/fixtures/life_ref.py](https://github.com/cmcluckie/aios/blob/main/tests/fixtures/life_ref.py).  The second opinion for Life, in about 20 lines of Python.  Put it next to pool/PART.life@1/life.c and compare.
 5. [findings/0007.md](https://github.com/cmcluckie/aios/blob/main/findings/0007.md).  What the runner and the sabotage found, including the three survivors.
 
 ## Try this
 
-Open pool/CMP.hello@1/hello.c and change "Hello" to "Jello".  In a terminal (the Codespaces one works), run `sh jig/test hello`.  You'll get FAIL, and it tells you the very first byte that's wrong.  Change it back and run it again.  Then try `sh jig/mutate hello` to watch the sabotage script do the same thing five ways.
+Open pool/PART.hello@1/hello.c and change "Hello" to "Jello".  In a terminal (the Codespaces one works), run `sh jig/test hello`.  You'll get FAIL, and it tells you the very first byte that's wrong.  Change it back and run it again.  Then try `sh jig/mutate hello` to watch the sabotage script do the same thing five ways.
 
 ## As built
 
 No component changed in this part; it adds the tests around them.  These are the descriptions the tests check against:
 
-- [loader@1](https://github.com/cmcluckie/aios/blob/main/index/cmp/loader@1.as-built.md), [loader@2](https://github.com/cmcluckie/aios/blob/main/index/cmp/loader@2.as-built.md), [loader@3](https://github.com/cmcluckie/aios/blob/main/index/cmp/loader@3.as-built.md)
-- [serial.8250@1](https://github.com/cmcluckie/aios/blob/main/index/cmp/serial.8250@1.as-built.md), [serial.8250@2](https://github.com/cmcluckie/aios/blob/main/index/cmp/serial.8250@2.as-built.md)
-- [machine.serial-only@1](https://github.com/cmcluckie/aios/blob/main/index/cmp/machine.serial-only@1.as-built.md)
-- [hello@1](https://github.com/cmcluckie/aios/blob/main/index/cmp/hello@1.as-built.md), [hanoi@1](https://github.com/cmcluckie/aios/blob/main/index/cmp/hanoi@1.as-built.md), [life@1](https://github.com/cmcluckie/aios/blob/main/index/cmp/life@1.as-built.md), [calc@1](https://github.com/cmcluckie/aios/blob/main/index/cmp/calc@1.as-built.md)
+- [loader@1](https://github.com/cmcluckie/aios/blob/main/index/part/loader@1.as-built.md), [loader@2](https://github.com/cmcluckie/aios/blob/main/index/part/loader@2.as-built.md), [loader@3](https://github.com/cmcluckie/aios/blob/main/index/part/loader@3.as-built.md)
+- [serial.8250@1](https://github.com/cmcluckie/aios/blob/main/index/part/serial.8250@1.as-built.md), [serial.8250@2](https://github.com/cmcluckie/aios/blob/main/index/part/serial.8250@2.as-built.md)
+- [machine.serial-only@1](https://github.com/cmcluckie/aios/blob/main/index/machine/serial-only@1.as-built.md)
+- [hello@1](https://github.com/cmcluckie/aios/blob/main/index/part/hello@1.as-built.md), [hanoi@1](https://github.com/cmcluckie/aios/blob/main/index/part/hanoi@1.as-built.md), [life@1](https://github.com/cmcluckie/aios/blob/main/index/part/life@1.as-built.md), [calc@1](https://github.com/cmcluckie/aios/blob/main/index/part/calc@1.as-built.md)
 
 ## Addendum: the tests
 

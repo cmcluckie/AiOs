@@ -5,6 +5,6 @@ retired_by = ""
 binds      = "SPEC.pic.1@1"
 red_when   = "with QEMU's 8259 trace on, the share flavor's writes to the 8259s are not Linux's init_8259A sequence with vectors 0x30 and 0x38, then every line masked, then only IRQ 0 unmasked, then nothing but one specific EOI for IRQ 0 per tick"
 timeout_ms = 15000
-isolates   = "CMP.irq.pic@1"
+isolates   = "PART.irq.pic@1"
 runner     = "jig/test cmd sh tests/programs/irqtrace.sh pic"
 mutations  = 1

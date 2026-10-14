@@ -70,24 +70,24 @@ And the piece this rung added to the process: a checker from outside.  Every tes
 
 ## Read along
 
-1. [pool/CMP.sort@1/sort.c](https://github.com/cmcluckie/aios/blob/main/pool/CMP.sort@1/sort.c).  The program.  Find `rand`, copied from K&R, and the short insertion sort under it.
-2. [lifted/CMP.fs.minix@1/minix.c](https://github.com/cmcluckie/aios/blob/main/lifted/CMP.fs.minix@1/minix.c).  Read the comment at the top for what came from where and what was cut.  Then `add_link`: that's Linux's code for adding a name to a directory, almost line for line.
-3. [lifted/CMP.disk.ata-pio@1/ata.c](https://github.com/cmcluckie/aios/blob/main/lifted/CMP.disk.ata-pio@1/ata.c).  The disk driver.  Look at `command`: seven port writes and the disk knows what you want.
-4. [pool/CMP.machine.serial-disk@1/machine.sh](https://github.com/cmcluckie/aios/blob/main/pool/CMP.machine.serial-disk@1/machine.sh).  The new machine: the old one, plus one IDE disk.  It formats its own disk the first time, like it came from the shop.
+1. [pool/PART.sort@1/sort.c](https://github.com/cmcluckie/aios/blob/main/pool/PART.sort@1/sort.c).  The program.  Find `rand`, copied from K&R, and the short insertion sort under it.
+2. [lifted/PART.fs.minix@1/minix.c](https://github.com/cmcluckie/aios/blob/main/lifted/PART.fs.minix@1/minix.c).  Read the comment at the top for what came from where and what was cut.  Then `add_link`: that's Linux's code for adding a name to a directory, almost line for line.
+3. [lifted/PART.disk.ata-pio@1/ata.c](https://github.com/cmcluckie/aios/blob/main/lifted/PART.disk.ata-pio@1/ata.c).  The disk driver.  Look at `command`: seven port writes and the disk knows what you want.
+4. [pool/MACHINE.serial-disk@1/machine.sh](https://github.com/cmcluckie/aios/blob/main/pool/MACHINE.serial-disk@1/machine.sh).  The new machine: the old one, plus one IDE disk.  It formats its own disk the first time, like it came from the shop.
 5. [tests/expected/fs.fsck-clean@1.check](https://github.com/cmcluckie/aios/blob/main/tests/expected/fs.fsck-clean@1.check).  The second opinion nobody here wrote, in a dozen lines.
 6. [findings/0010.md](https://github.com/cmcluckie/aios/blob/main/findings/0010.md).  What we found, including the missing clock and the flush no test can see.
 
 ## Try this
 
-Press F5 and pick AiOS: sort, twice.  The first time it saves the file; the second time it finds it.  Now open pool/CMP.sort@1/sort.c, change the seed `next = 1` to the year you were born, and run it again.  It sorts twenty new numbers, finds last time's file still on the disk, and tells you it's different.  The disk remembered.  Delete out/disk.minix to start over.
+Press F5 and pick AiOS: sort, twice.  The first time it saves the file; the second time it finds it.  Now open pool/PART.sort@1/sort.c, change the seed `next = 1` to the year you were born, and run it again.  It sorts twenty new numbers, finds last time's file still on the disk, and tells you it's different.  The disk remembered.  Delete out/disk.minix to start over.
 
 ## As built
 
-- [loader@5](https://github.com/cmcluckie/aios/blob/main/index/cmp/loader@5.as-built.md)
-- [fs.minix@1](https://github.com/cmcluckie/aios/blob/main/index/cmp/fs.minix@1.as-built.md)
-- [disk.ata-pio@1](https://github.com/cmcluckie/aios/blob/main/index/cmp/disk.ata-pio@1.as-built.md)
-- [sort@1](https://github.com/cmcluckie/aios/blob/main/index/cmp/sort@1.as-built.md)
-- [machine.serial-disk@1](https://github.com/cmcluckie/aios/blob/main/index/cmp/machine.serial-disk@1.as-built.md)
+- [loader@5](https://github.com/cmcluckie/aios/blob/main/index/part/loader@5.as-built.md)
+- [fs.minix@1](https://github.com/cmcluckie/aios/blob/main/index/part/fs.minix@1.as-built.md)
+- [disk.ata-pio@1](https://github.com/cmcluckie/aios/blob/main/index/part/disk.ata-pio@1.as-built.md)
+- [sort@1](https://github.com/cmcluckie/aios/blob/main/index/part/sort@1.as-built.md)
+- [machine.serial-disk@1](https://github.com/cmcluckie/aios/blob/main/index/machine/serial-disk@1.as-built.md)
 
 ## Addendum: the tests
 

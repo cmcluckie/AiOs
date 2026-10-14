@@ -20,7 +20,7 @@ die() { printf 'refused: %s\n' "$*" >&2; exit 1; }
 field() { sed -n "s/^$2 *= *\"\([^\"]*\)\".*/\1/p" "$1" | head -1; }
 list_field() { sed -n "s/^$2 *= *\[\(.*\)\].*/\1/p" "$1" | tr ',' '\n' | sed 's/[" ]//g' | grep . || true; }
 
-# code -> file.  CMP.loader@1 -> index/cmp/loader@1.toml
+# code -> file.  PART.loader@1 -> index/part/loader@1.toml
 code_file() {
 	t=${1%%.*}; rest=${1#*.}
 	case "$rest" in *@*) ;; *) rest="$rest@1" ;; esac
@@ -28,7 +28,9 @@ code_file() {
 		PUR)  echo "constitution/purposes/$rest.toml" ;;
 		KEY)  echo "constitution/keys/$rest.toml" ;;
 		CAP)  echo "index/cap/$rest.toml" ;;
-		CMP)  echo "index/cmp/$rest.toml" ;;
+		PART) echo "index/part/$rest.toml" ;;
+		MACHINE) echo "index/machine/$rest.toml" ;;
+		TOOL) echo "index/tool/$rest.toml" ;;
 		SPEC) echo "specs/$rest.toml" ;;
 		TST)  echo "tests/$rest.toml" ;;
 		SNS)  echo "sensors/$rest.toml" ;;
@@ -38,7 +40,7 @@ code_file() {
 
 # every code mentioned anywhere in a petition file
 petition_codes() {
-	sed -n 's/.*"\(\(PUR\|KEY\|CAP\|CMP\|SPEC\|TST\|SNS\)\.[a-z0-9.-]*\(@[0-9]*\)\?\)".*/\1/p' "$1" | sort -u
+	sed -n 's/.*"\(\(PUR\|KEY\|CAP\|PART\|MACHINE\|TOOL\|SPEC\|TST\|SNS\)\.[a-z0-9.-]*\(@[0-9]*\)\?\)".*/\1/p' "$1" | sort -u
 }
 
 petition_primary() {
@@ -62,7 +64,7 @@ cmd_check() {
 		p="petitions/$id.toml"; [ -f "$p" ] || die "missing petition $id"
 		for code in $(petition_codes "$p"); do
 			cf=$(code_file "$code")
-			[ -n "$cf" ] || die "rule 1: $code is not a code"
+			[ -n "$cf" ] || die "rule 1: $code is not a catalogue number"
 			[ -f "$cf" ] || die "rule 1: missing $code (petition $id)"
 			[ "$(field "$cf" code)" = "${code%@*}@${code#*@}" ] || [ "$(field "$cf" code)" = "$code@1" ] || true
 		done
@@ -132,7 +134,7 @@ cmd_build() {
 		[ -d "$pdir" ] || die "source $pdir is not in the pool"
 		pl=$(list_field "$(code_file "$prog")" depends | head -1)
 		pldir=$(field "$(code_file "$pl")" source)
-		pname=$(basename "${prog#CMP.}"); pname=${pname%@*}
+		pname=$(basename "${prog#PART.}"); pname=${pname%@*}
 		$CC $CFLAGS -c -o "$out/$pname.o" "$pdir$pname.c"
 		$CC $CFLAGS $LDFLAGS -T "$pldir/program.ld" -o "$out/$pname.bin" "$out/$pname.o"
 		members="$members $pname $out/$pname.bin"; summary="$summary + $prog ($(wc -c < "$out/$pname.bin") bytes)"

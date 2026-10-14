@@ -9,10 +9,10 @@ cd "$(dirname "$0")/../.."
 sh jig/aios build share > /dev/null && sh jig/aios build stopwatch > /dev/null || { echo "build failed"; exit 1; }
 t=$(mktemp -d); trap 'rm -rf "$t"' EXIT
 CF="-m32 -std=c11 -ffreestanding -fno-pic -fno-pie -fno-stack-protector -fno-builtin -fno-asynchronous-unwind-tables -mno-sse -mno-mmx -mno-red-zone -mgeneral-regs-only -nostdlib -nostdinc -O2 -Wall -Wextra -Werror"
-gcc $CF -I pool/CMP.loader@6 -c -o "$t/hog.o" tests/programs/hog.c &&
-gcc $CF -static -no-pie -nostartfiles -Wl,--build-id=none -Wl,-z,noexecstack -T pool/CMP.loader@6/program.ld -o "$t/hog.bin" "$t/hog.o" || { echo "probe does not build"; exit 1; }
+gcc $CF -I pool/PART.loader@6 -c -o "$t/hog.o" tests/programs/hog.c &&
+gcc $CF -static -no-pie -nostartfiles -Wl,--build-id=none -Wl,-z,noexecstack -T pool/PART.loader@6/program.ld -o "$t/hog.bin" "$t/hog.o" || { echo "probe does not build"; exit 1; }
 sh jig/aios pack "$t/both.bin" hog "$t/hog.bin" stopwatch out/stopwatch/stopwatch.bin
-timeout 10 sh pool/CMP.machine.serial-irq@1/machine.sh out/share/loader.elf "$t/both.bin" < /dev/null 2> /dev/null |
+timeout 10 sh pool/MACHINE.serial-irq@1/machine.sh out/share/loader.elf "$t/both.bin" < /dev/null 2> /dev/null |
 	stdbuf -o0 tr '\r' '\n' |
 	while IFS= read -r l || [ -n "$l" ]; do echo "$(date +%s%3N) $l"; done > "$t/out"
 sh tests/expected/stopwatch.ticks@1.check "$t/out" 10 || exit 1

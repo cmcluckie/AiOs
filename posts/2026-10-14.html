@@ -124,7 +124,7 @@ tested.  That's very much the kind of thing this project is for.</p>
 <h2>Read along</h2>
 <p>If you want to see it for yourself, these are the files to read, in this order.  The links go to the exact version from this post.</p>
 <ol>
-<li><a href="https://github.com/cmcluckie/aios/blob/e8dcf79/lifted/CMP.serial.8250@1/origin.toml">lifted/CMP.serial.8250@1/origin.toml</a>.  The record of where the 57 lines came from: repo, commit, date, file, fingerprint, line ranges.  Enough to take them again from scratch.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/e8dcf79/lifted/CMP.serial.8250@1/origin.toml">lifted/PART.serial.8250@1/origin.toml</a>.  The record of where the 57 lines came from: repo, commit, date, file, fingerprint, line ranges.  Enough to take them again from scratch.</li>
 <li><a href="https://github.com/cmcluckie/aios/blob/e8dcf79/jig/upstream">jig/upstream</a>.  The watch script.  The interesting line is the one with git log -L in it.  That's the whole trick.</li>
 <li><a href="https://github.com/cmcluckie/aios/blob/e8dcf79/LICENSE">LICENSE</a>.  Read the bottom paragraph: what's ours, what's theirs, and where the line between them is.</li>
 <li><a href="https://github.com/cmcluckie/aios/blob/e8dcf79/flavors/both.toml">flavors/both.toml</a>.  A flavor that asks for two programs on one machine.  The referee refuses it, and that refusal is on purpose.</li>
@@ -135,7 +135,7 @@ tested.  That's very much the kind of thing this project is for.</p>
 <h2>As built</h2>
 <p>What each part actually does, written down from its source: every port it touches, every byte it writes, how big it is.  These are hand-written for now; the tool that derives them from the code is plan section 7.1.</p>
 <ul>
-<li><a href="https://github.com/cmcluckie/aios/blob/main/index/cmp/serial.8250@1.as-built.md">serial.8250@1</a></li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/index/part/serial.8250@1.as-built.md">serial.8250@1</a></li>
 </ul>
 <h2>Addendum: the tests</h2>
 <p>Every test written for the parts above: what it checks, what turns it red, and whether it has actually been run.  "Checked by hand" means it was run and compared, but not yet by the automatic test runner (plan section 4), which doesn't exist yet.  Until it does, these are honest notes, not a scoreboard.</p>

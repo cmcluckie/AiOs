@@ -1,6 +1,6 @@
 # Entry formats
 
-What it means to "define a code exactly once."  One TOML file per code at a
+What it means to "define a catalogue number exactly once."  One TOML file per catalogue number at a
 version, in the directory its table owns.  File name is the code path with the
 version: `index/cap/tty.write@1.toml`.  Every entry carries the same header;
 the body is per table.  A field not listed here is a schema violation, not an
@@ -28,7 +28,7 @@ publishing the next version and setting `retired_by` on this one.
     role        = "root"                 # root | seat | agent
     seat        = ""                     # for role = seat: security | performance | portability | stability | purpose-fit
 
-Resolves finding 12: submitter, consumer and reviewer all become KEY codes, so
+Resolves finding 12: submitter, consumer and reviewer all become KEY catalogue numbers, so
 rule 1 covers them.  Seat names are not an enum in prose; they are whichever
 KEY entries carry `role = "seat"`.
 
@@ -42,33 +42,36 @@ KEY entries carry `role = "seat"`.
 Resolves finding 6: each CAP declares what its scope looks like, and `none`
 means a petition's scope for it must be empty.
 
-## CMP: a component  (index/cmp/)
+## PART, MACHINE, TOOL: a component  (index/part/, index/machine/, index/tool/)
+
+One format for all three tables; `kind` says which.  Until 2026-10-13 they
+were one table, @@component@@ (findings 0014).
 
     kind          = "program"            # program | kernel | driver | library | toolchain | hardware
-    source        = "pool/CMP.hello@1/"  # directory under pool/ (ours) or lifted/ (upstream), nothing outside
+    source        = "pool/PART.hello@1/"  # directory under pool/ (ours) or lifted/ (upstream), nothing outside
     licence       = "GPL-2.0-only"
-    depends       = []                   # CMP codes needed at run time; empty is a statement, not an omission
-    build_depends = ["CMP.toolchain.c@1"]  # CMP codes needed to build; never in the image
-    exposes       = []                   # CAP codes this component provides to others
-    requires      = ["CAP.tty.write@1", "CAP.proc.exit@1"]   # CAP codes it needs
+    depends       = []                   # component catalogue numbers needed at run time; empty is a statement, not an omission
+    build_depends = ["TOOL.c@1"]  # component catalogue numbers needed to build; never in the image
+    exposes       = []                   # CAP catalogue numbers this component provides to others
+    requires      = ["CAP.tty.write@1", "CAP.proc.exit@1"]   # CAP catalogue numbers it needs
     scaffold      = false                # true: provided by the jig for now; rebuilt when its pool version is admitted
-    as_built      = "index/cmp/hello@1.as-built.md"   # derived from source, regenerated on every admission
+    as_built      = "index/part/hello@1.as-built.md"   # derived from source, regenerated on every admission
     reproducible  = ""                   # hash of the artifact two hosts both produced, or empty
 
 Resolves finding 2 (`depends = []` says "nothing"), finding 11
 (`build_depends` and `scaffold`), and lets rule 6 mean run-time dependencies
-only.  `kind = "hardware"` is how a VM definition enters the index: a CMP
+only.  `kind = "hardware"` is how a VM definition enters the catalogue: a MACHINE
 whose `exposes` are the device CAPs and whose source is the machine file.
 Closes finding 10 without a new table.
 
 ## SPEC: an as-intended clause  (specs/)
 
-    component   = "CMP.kernel.serial.8250@1"   # any CMP, not only the petition's primary
+    component   = "PART.kernel.serial.8250@1"   # any component, not only the petition's primary
     clause      = "From power-on to halt, no byte reaches the serial port that a component did not write."
     author      = "KEY.chris"            # specs are human claims; never an agent key
 
 Resolves finding 7: a clause may constrain a dependency.  Petition rule 2
-becomes "the reason's SPEC belongs to a CMP in this petition's component
+becomes "the reason's SPEC belongs to a component in this petition's component
 list."
 
 ## TST: a test  (tests/)
@@ -76,7 +79,7 @@ list."
     binds       = "SPEC.hello.1@1"       # exactly one clause
     red_when    = "stdout differs from the 14 bytes 'Hello, world.\n'"
     timeout_ms  = 5000                   # red when exceeded; required
-    isolates    = "CMP.hello@1"          # the one CMP whose fault a red run indicates
+    isolates    = "PART.hello@1"          # the one component whose fault a red run indicates
     runner      = ""                     # path to the executable form, or empty before one exists
     mutations   = 0                      # mutants this test has been seen to catch; 0 means never seen red
 
@@ -128,7 +131,7 @@ part again from upstream, and to prove the record against upstream.
 `jig/upstream verify` checks each blob id against the commit; `jig/upstream
 watch` lists upstream commits that touched each range since.
 
-## As-built spec  (index/cmp/<code>.as-built.md)
+## As-built spec  (index/<table>/<code>.as-built.md)
 
 Markdown, generated from source, regenerated on every admission.  Sections,
 in order: what it does, every syscall or hardware access it makes, every
@@ -140,4 +143,4 @@ human never edits it; a human edits the SPEC it is diffed against.
 Findings 1 (PUR is now a table, so closed), 3 (pending-admission state: the
 header's `status` is the start, rule 3 in petition.md still needs rewording),
 4 (detached signatures: plan item 1.6), and the bloat figure (needs a SPEC
-clause to prove; likely a SPEC on the machine CMP).
+clause to prove; likely a SPEC on the machine component).

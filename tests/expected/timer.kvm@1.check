@@ -1,6 +1,6 @@
 # TST.timer.kvm@1, run by jig/test as: sh this STAMPED-CAPTURE SECONDS
 # The machine has no 8254, so the ms door's only idea of a second is the rate
-# KVM stated through CMP.timer.kvmclock.  Green when that rate came at all and the
+# KVM stated through PART.timer.kvmclock.  Green when that rate came at all and the
 # door keeps pace with the host's clock to within 1%, as loader.ms@1 checks.
 grep -q ' [1-9][0-9]*$' "$1" || { echo "the door said 0 throughout: KVM never said the rate"; exit 1; }
 sh "$(dirname "$0")/loader.ms@1.check" "$@"

@@ -5,6 +5,6 @@ retired_by = ""
 binds      = "SPEC.machine.2@1"
 red_when   = "strace of the stopwatch machine from start to the end of its 3-second watch records any socket, connect, bind or listen call"
 timeout_ms = 10000
-isolates   = "CMP.machine.serial-timer@1"
+isolates   = "MACHINE.serial-timer@1"
 runner     = "jig/test strace stopwatch 3"
 mutations  = 1

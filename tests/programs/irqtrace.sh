@@ -16,7 +16,7 @@ real=$(command -v qemu-system-x86_64) || { echo "no qemu-system-x86_64"; exit 2;
 mkdir "$t/bin"
 printf '#!/bin/sh\nexec %s "$@" -trace pic_interrupt -trace pic_ioport_write -D %s/trace\n' "$real" "$t" > "$t/bin/qemu-system-x86_64"
 chmod +x "$t/bin/qemu-system-x86_64"
-m=pool/CMP.machine.serial-irq@1/machine.sh
+m=pool/MACHINE.serial-irq@1/machine.sh
 case "${1:-}" in
 tick)
 	PATH="$t/bin:$PATH" timeout 5 sh $m out/share/loader.elf out/share/programs.bin < /dev/null > /dev/null 2>&1

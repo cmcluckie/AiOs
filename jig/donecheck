@@ -1,5 +1,5 @@
 #!/bin/sh
-# donecheck: every component in the index against the definition of done in
+# donecheck: every component in the catalogue against the definition of done in
 # CLAUDE.md.  One line per failure naming the component and the rule; exit 1 if
 # any.  Scaffold components (provided by the jig for now) are skipped.
 # Rule 5, "every test has been run", reads tests/results.txt, which jig/test
@@ -12,7 +12,7 @@ results=tests/results.txt
 bad() { echo "$1: $2"; rc=1; }
 val() { sed -n "s/^$2 *= *\"\([^\"]*\)\".*/\1/p" "$1" | head -1; }
 
-for e in index/cmp/*.toml; do
+for e in index/part/*.toml index/machine/*.toml index/tool/*.toml; do
 	code=$(val "$e" code)
 	grep -q '^scaffold *= *true' "$e" && continue
 	src=$(val "$e" source)
@@ -26,6 +26,7 @@ for e in index/cmp/*.toml; do
 		tests=$(grep -l "^binds *= *\"$sc\"" tests/*.toml 2>/dev/null)
 		[ -n "$tests" ] || bad "$code" "rule 4: $sc has no test"
 		for t in $tests; do
+			[ -n "$(val "$t" retired_by)" ] && continue	# retired: its successor carries the rule
 			grep -q '^red_when *= *"..*"' "$t" || bad "$code" "rule 4: $(val "$t" code) has no red_when"
 			grep -q '^timeout_ms *= *[1-9]' "$t" || bad "$code" "rule 4: $(val "$t" code) has no time limit"
 			tc=$(val "$t" code)

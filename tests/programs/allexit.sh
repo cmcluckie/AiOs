@@ -8,7 +8,7 @@ cd "$(dirname "$0")/../.."
 sh jig/aios build share > /dev/null && sh jig/aios build hello > /dev/null && sh jig/aios build hanoi > /dev/null || { echo "build failed"; exit 1; }
 t=$(mktemp -d); trap 'rm -rf "$t"' EXIT
 sh jig/aios pack "$t/two.bin" hello out/hello/hello.bin hanoi out/hanoi/hanoi.bin
-timeout 20 sh pool/CMP.machine.serial-irq@1/machine.sh out/share/loader.elf "$t/two.bin" < /dev/null > "$t/out" 2> /dev/null
+timeout 20 sh pool/MACHINE.serial-irq@1/machine.sh out/share/loader.elf "$t/two.bin" < /dev/null > "$t/out" 2> /dev/null
 [ $? -eq 124 ] && { echo "still running 20 s after both should have exited"; exit 1; }
 grep -v '^Move disk' "$t/out" > "$t/hello"
 grep '^Move disk' "$t/out" > "$t/hanoi"

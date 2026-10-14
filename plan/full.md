@@ -13,7 +13,7 @@ are interleaved as the build fails on them.
 
 Standing rules for every item: no code until a petition names it; no tool on
 the jig without a tool-table row; every commit signed; every test seen red
-before it is trusted; failures name codes, never raw output.
+before it is trusted; failures name catalogue numbers, never raw output.
 
 ---
 
@@ -29,7 +29,7 @@ else can start until petitions have a schema to be written against.
   and verifies (checked).
 
 ### 1.2 Petition schema [done]
-- Produced: schema/petition.md, READMEs for index, specs, tests, sensors and
+- Produced: schema/petition.md, READMEs for catalogue, specs, tests, sensors and
   pool, constitution/keys/README.md and chris.pub.  Commit d9c11f0.
 - Note: schema has six tables, not five; PUR was added (findings 0000 #1).
 
@@ -47,11 +47,11 @@ else can start until petitions have a schema to be written against.
 - Why: findings #5.  The schema defines the petition but not the entries it
   references, so "defined exactly once" is undefined.
 - Produce: one section per table in schema/petition.md (or schema/entries.md)
-  giving required and optional fields, types, and which fields are codes.
+  giving required and optional fields, types, and which fields are catalogue numbers.
   Fields already in use, to be ratified or replaced: CAP touches, mechanism;
   SPEC component, clause; TST binds, red_when, runner; SNS proves, question,
-  threshold, unit, red, consumer.  CMP has no entry yet and needs: source
-  (pool path), depends (CMP list), exposes (CAP list), requires (CAP list),
+  threshold, unit, red, consumer.  component has no entry yet and needs: source
+  (pool path), depends (component list), exposes (CAP list), requires (CAP list),
   as_built (spec text or path), admission (signature, signer, date,
   reproducibility record).
 - Done-when: a validator script (sh, per tool table) rejects each existing
@@ -71,18 +71,18 @@ else can start until petitions have a schema to be written against.
 
 ### 1.7 Schema version 2 [coming up]
 - Resolve findings #2, #3, #6, #7, #9, #10, #12, #13.  Candidates:
-  - #2 negative requirements: a forbids list of CAP codes, or a CMP field
+  - #2 negative requirements: a forbids list of CAP catalogue numbers, or a component field
     depends = [] meaning "nothing", enforced by rule 6.
   - #3 unadmitted components: a petition status pending-admission that
-    rule 1 permits for codes listed with admitted = false, and that the
+    rule 1 permits for catalogue numbers listed with admitted = false, and that the
     builder refuses.
   - #6 scope grammar: per-CAP scope_syntax in the CAP entry.
-  - #7 clauses on dependencies: allow SPEC.component to be any CMP in the
+  - #7 clauses on dependencies: allow SPEC.component to be any component in the
     petition; rule 2 becomes "belongs to a component in this petition".
   - #9 test budget: TST field budget_ms.
   - #10 machine: petition field machine = "MCH.id@v", a seventh table or a
     folder under constitution/.
-  - #12 non-code references: a KEY table for signers and seats.
+  - #12 references that are not catalogue numbers: a KEY table for signers and seats.
   - #13 exercised grants: a per-CAP usage sensor the referee emits
     automatically, exempt from the one-sensor rule because it is the
     referee's, not the petition's.
@@ -122,8 +122,8 @@ exit written down.
 ### 2.4 VM definition as a petition [in progress]
 - Produce: a QEMU invocation with -kernel, one serial, -nic none, no
   display, -no-reboot; committed as a petitioned component once the machine
-  table exists (1.7 #10).  Done as CMP.machine.serial-only@1 on the microvm
-  machine type, with CMP.hypervisor.qemu@1 as scaffold.
+  table exists (1.7 #10).  Done as MACHINE.serial-only@1 on the microvm
+  machine type, with TOOL.qemu@1 as scaffold.
 - Done-when: strace of the QEMU process shows no socket syscalls; the VM has
   no NIC device in its device tree.
 
@@ -132,13 +132,13 @@ exit written down.
 Why: tenet 7.  Deliberately dumb.  Rewritten first among the sh scripts.
 
 ### 3.1 Resolver [in progress]
-- Input: a petition file.  Output: for each code, the file it resolves to at
+- Input: a petition file.  Output: for each catalogue number, the file it resolves to at
   that version, or the code that failed.
 - 2026-10-11: `jig/aios check <flavor>` does this for every petition in a
   flavor, plus rule 9 (expiry) and the one-program rule.  Shell; replaced
   when the referee is a component.
 - Done-when: deleting any one entry file turns the resolver red naming
-  exactly that code.
+  exactly that catalogue number.
 
 ### 3.2 Relation checker [coming up]
 - Rules 1 to 10 from schema/petition.md.  Report format: rule number and
@@ -161,6 +161,14 @@ Why: tenet 7.  Deliberately dumb.  Rewritten first among the sh scripts.
   generated into an allowed_signers file.
 - Done-when: the current commits pass; a commit signed by a key not in the
   directory fails.
+
+### 3.7 The referee runs the tester [coming up]
+- Pressing play: referee on the petitions, builder, referee on the image
+  (3.4), then the referee runs the tester against that exact image and
+  reads the results from that run, never from a file it was handed.  The
+  cache (5.4) takes only an image with the referee's yes for it.
+- Done-when: a build whose image differs from the one tested is refused by
+  the cache; a results file edited by hand is ignored.
 
 ## 4. Tester [in progress]
 
@@ -200,11 +208,11 @@ Why: tenet 3; design "Nix is the builder".  Decides nothing.
 
 ### 5.1 Translator [in progress]
 - 2026-10-11: `jig/aios build <flavor>` walks primary -> loader -> serial
-  from the index entries and compiles from the pool.  Shell now; Nix later.
-- petition.toml to a Nix expression listing exactly the CMP entries at their
+  from the catalogue entries and compiles from the pool.  Shell now; Nix later.
+- petition.toml to a Nix expression listing exactly the component entries at their
   versions from pool/.  No channels, no Home Manager.
 - Done-when: the expression for 0000 builds; adding a component to the
-  petition that is not in the pool fails naming the CMP code.
+  petition that is not in the pool fails naming the component catalogue number.
 
 ### 5.2 Reproducibility [coming up]
 - Done-when: two hosts (jig and Pi, or jig and a VM) produce the same hash.
@@ -214,38 +222,54 @@ Why: tenet 3; design "Nix is the builder".  Decides nothing.
   back on a red sensor.
 - Done-when: a deliberately broken shadow is never promoted.
 
-## 6. Pool admission for 0000: segments, not a kernel [in progress]
+### 5.6 The builder's queue [coming up]
+- The builder takes the next flavor from a queue that is a file anyone can
+  read.  It builds everything it can, sends the full list of what is missing
+  (every undefined reference at link, mapped to catalogue numbers, 7.2) to
+  the quartermaster, and stops.  It never waits on the answer.  An admission
+  puts the flavor back in the queue; the run starts again from the referee.
+- Done-when: a flavor missing two parts produces one request naming both,
+  and after both are admitted it builds with no human starting it.
+
+### 5.7 Per-part object cache [coming up]
+- Each part's object files are kept, keyed by exactly what went into them
+  (source, flags, compiler).  A rerun compiles only what changed.  make and
+  ccache are the history.
+- Done-when: adding one part to a built flavor recompiles that part only,
+  and the image is byte-identical to a build from nothing.
+
+## 6. Pool admission for 0000: parts, not a kernel [in progress]
 
 Why: tenets 1 to 5; design "Linux is read, never booted"; findings 0001.
-Petition 0000 names no kernel.  Linux is the pool we read; each segment is
+Petition 0000 names no kernel.  Linux is the pool we read; each part is
 lifted into its own pool directory with the hands it held cut, and arrives
 with a SPEC and a TST written here because upstream has neither.  The order
 below is the expected failure order.
 
-### 6.1 CMP.hello@1 [in progress]
-- C, no libc, static, _start entry.  Calls the loader's two doors (6.5) and
+### 6.1 PART.hello@1 [in progress]
+- C, no libc, static, _start entry.  Makes the loader's two system calls (6.5) and
   nothing else; never touches hardware.  As-built spec derived from the
-  source.  Index entry with depends = [CMP.loader@1] and
+  source.  Catalogue entry with depends = [PART.loader@1] and
   requires = [CAP.tty.write, CAP.proc.exit].
-- Done-when: index entry validates (1.5); test 4.2 green against the loader.
+- Done-when: catalogue entry validates (1.5); test 4.2 green against the loader.
 
-### 6.2 CMP.toolchain.c@1 [coming up]
+### 6.2 TOOL.c@1 [coming up]
 - The jig's compiler is scaffolding; the pool's toolchain is a separate
   admission.  Decide the first pool compiler (tcc, or gcc at a pinned
   version, or the Guix bootstrap chain head).  Findings 0000 #11 applies.
-- Done-when: hello, the serial segment and the loader build with the pool
+- Done-when: hello, the serial part and the loader build with the pool
   compiler alone.
 
-### 6.3 CMP.serial.8250@1 [in progress]
+### 6.3 PART.serial.8250@1 [in progress]
 - Read drivers/tty/serial/8250/ and find the lines that put a byte on the
   wire: wait for the transmitter, write the data register.  Lift those and
   nothing holding their hand (no tty layer, no device model, no locking).
   Record in the as-built spec what was cut and where it came from.  Write
   the SPEC (bytes appear on the port, in order, complete) and the TST.
-- Done-when: the segment is a few dozen lines; its test goes red when one
+- Done-when: the part is a few dozen lines; its test goes red when one
   line is mutated; it exposes CAP.tty.write and requires CAP.dev.serial.
 
-### 6.4 CMP.loader@1 [in progress]
+### 6.4 PART.loader@1 [in progress]
 - Takes over from the machine (the microvm firmware hands off via the
   Linux boot protocol or a PVH entry; read arch/x86/platform/pvh/ and
   arch/x86/boot/ for what is worth lifting), sets up the processor far
@@ -256,23 +280,23 @@ below is the expected failure order.
 - Done-when: SPEC.hello.2 (silence) green; the loader's own spec and test
   written; its as-built spec lists every port and register it touches.
 
-### 6.5 The doors [in progress]
+### 6.5 The system calls [in progress]
 - How hello asks the loader to write bytes and to exit: a call table, a
   software interrupt, or a syscall instruction.  Decide once, as SPEC
-  clauses on the loader, so that a later petition adds a door
+  clauses on the loader, so that a later petition adds a system call
   without moving these two.
-- Done-when: a second toy program using only the doors runs under the same
+- Done-when: a second toy program using only the system calls runs under the same
   loader with no change to the loader.
 
 ### 6.6 Signed admission [coming up]
 - Root key signs admission commits until committee seat keys exist (8.3).
-- Done-when: each index entry carries a signed admission the referee
+- Done-when: each catalogue entry carries a signed admission the referee
   accepts (3.5).
 
 ### 6.7 First green build and bloat figure [in progress]
 - Record: lines in the image vs lines a petition justifies.  Expect near
   zero by construction; each unjustified line is a finding naming the
-  segment that carries it.  Where it is recorded is findings 0000 #11.
+  part that carries it.  Where it is recorded is findings 0000 #11.
 - 2026-10-10: first green boot under software emulation in a container,
   14 bytes exact, machine exits by itself.  The figure is findings/0002.md.
   Remaining for done: the same on the jig under KVM, with the runner (4)
@@ -280,32 +304,44 @@ below is the expected failure order.
 
 ## 7. Quartermaster [coming up]
 
-Why: design "The index is the menu"; agent 2.  Reads source, never changes
+Why: design "The catalogue is the menu"; agent 2.  Reads source, never changes
 it.
 
-### 7.1 Index derivation [coming up]
+### 7.0 Shared source reader [coming up]
+- One reader for the quartermaster and the historian (findings 0015).  Given
+  a Linux commit, a file and line ranges, it answers questions about them.
+  Not an agent: decides nothing.
+- Mechanical half: what calls what, what touches which port, which lines
+  moved.  No model; the referee may rely on it.  cscope by default (Linux's
+  `make cscope`); anything else needs a reason in findings.
+- AI half: what the code is for, whether a change matters, given the
+  mechanical answers first.
+- Done-when: the quartermaster and jig/upstream both answer through it, and
+  neither has a source-reading path of its own.
+
+### 7.1 Catalogue derivation [coming up]
 - From the forked Linux tree: components, dependencies, exposed CAPs,
   derived from code not docs.
 - Done-when: the derived entry for serial.8250 matches the hand-written one
   from 6.3, or the diff is a finding.
 
-### 7.2 Failure-to-code mapping [coming up]
-- Build failure text to index code.  "undefined reference to write" means a
-  missing CMP or CAP.
-- Done-when: every failure in the 0000 build loop has a code.
+### 7.2 Failure-to-catalogue-number mapping [coming up]
+- Build failure text to catalogue number.  "undefined reference to write" means a
+  missing component or CAP.
+- Done-when: every failure in the 0000 build loop has a catalogue number.
 
 ### 7.3 Petition drafting [coming up]
-- From a failure code, draft a pool-admission petition for review.
+- From a failure catalogue number, draft a pool-admission petition for review.
 
-### 7.4 Segment classification [coming up]
+### 7.4 Part classification [coming up]
 - liftable, tangled, or not needed, for the Linux directories petition
   the ladder will reach into (block, a filesystem, tty input).  Tangled means the
   hands to cut outnumber the lines wanted.
 
 ## 8. Committee [coming up]
 
-Why: tenet 9; design "The committee".  Five seats, five models, biases
-written down, quorum fixed in advance.
+Why: tenet 9; design "The committee".  Six seats, six models, biases
+written down, quorum and tie-break fixed in advance.
 
 ### 8.1 Seats [coming up]
 - security, performance, portability, stability, purpose-fit.  Different
@@ -326,13 +362,13 @@ written down, quorum fixed in advance.
 
 Why: design "Failure builds the distribution".  Each petition is a program
 every CS student wrote once, chosen because it needs exactly one thing from
-the machine that the last one did not.  Each rung adds one door and never
+the machine that the last one did not.  Each rung adds one system call and never
 moves an old one, so every earlier program keeps running under every later
 loader, and that is a test run every time (9.8).  Each rung is also a post.
 
 ### 9.1 Petition 0001: Towers of Hanoi [done]
 - Recursion and output.  Needs nothing new.  Proves additivity: a second
-  program under CMP.loader@1 with a zero-line diff to the loader.  Closes
+  program under PART.loader@1 with a zero-line diff to the loader.  Closes
   6.5's done-when.
 - Done-when: hello and hanoi both boot under the same loader binary; the
   move list is exact (2^n - 1 lines for n disks).
@@ -341,26 +377,26 @@ loader, and that is a test run every time (9.8).  Each rung is also a post.
   Diff to the loader: zero lines.
 
 ### 9.2 Petition 0002: Conway's Game of Life [done]
-- The memory chapter.  Two grids far bigger than the stack.  The program asks the door for memory.  Forces the
+- The memory chapter.  Two grids far bigger than the stack.  The program asks for memory with a system call.  Forces the
   loader to read the memory map the firmware hands over (hvm_start_info
   memmap) and to hand out pieces: a bump allocator first, free when a
-  program needs it.  CAP.mem.alloc; door entry 3.  One tenant, no
+  program needs it.  CAP.mem.alloc; system call 3.  One tenant, no
   protection yet.
 - Done-when: a program builds and walks a list larger than its own stack;
   a program asking for more than the machine has gets refused, not
   corrupted.
-- 2026-10-11: done under software emulation.  CMP.loader@2 adds the alloc
-  door (35 lines); Life runs 200 generations byte-exact against a reference;
+- 2026-10-11: done under software emulation.  PART.loader@2 adds the alloc
+  system call (35 lines); Life runs 200 generations byte-exact against a reference;
   128 MiB refused; hello and hanoi unchanged under @2.  Findings 0005.
 
 ### 9.3 Petition 0003: a reverse-Polish calculator [done]
 - The program reads.  Guess-the-number needs randomness, which needs a clock
-  (9.4), so the input chapter became the stack chapter instead.  CMP.serial.8250@2 gains receive (LSR data-ready,
-  RX); door entry 4, read.  Polling, no interrupts.
+  (9.4), so the input chapter became the stack chapter instead.  PART.serial.8250@2 gains receive (LSR data-ready,
+  RX); system call 4, read.  Polling, no interrupts.
 - Done-when: bytes typed on the serial port reach the program in order; a
   program that never reads leaves the port untouched.
-- 2026-10-11: done under software emulation.  CMP.serial.8250@2 (receive
-  side, lifted), CMP.loader@3 (read door, 13 lines), CMP.calc@1.  Transcript
+- 2026-10-11: done under software emulation.  PART.serial.8250@2 (receive
+  side, lifted), PART.loader@3 (read system call, 13 lines), PART.calc@1.  Transcript
   exact against an independent Python reference after the reference caught a
   32-bit overflow bug.  Hello, Hanoi and Life unchanged under @3.  Findings
   0006.
@@ -370,7 +406,7 @@ loader, and that is a test run every time (9.8).  Each rung is also a post.
   until the machine is switched off (as built: no key; the tests watch it for
   a fixed time instead).  Each
   tick is aimed at start + n seconds, never at "a second after the last one",
-  so a late redraw does not drift.  Waiting is polling the time door: no
+  so a late redraw does not drift.  Waiting is polling the ms system call: no
   interrupts yet, and with one program nothing else wants the processor.  The one new thing:
   time passing.  CAP.time.read, elapsed time only, never the time of day;
   the processor's own counter or the LAPIC timer, whichever the machine
@@ -393,45 +429,49 @@ loader, and that is a test run every time (9.8).  Each rung is also a post.
   virtio-blk, and the original Minix filesystem (v1, 0x137F), Linux's first,
   over FAT and ext2.
 - Done-when: a file written by one boot is read back by the next.
-- 2026-10-12: done under software emulation.  CMP.disk.ata-pio@1 (122 lines,
-  lifted from libata), CMP.fs.minix@1 (344 lines, lifted from fs/minix, about
-  120 of them glue), CMP.loader@5 (load and save doors), CMP.sort@1,
-  CMP.machine.serial-disk@1.  The second boot finds the first boot's file;
+- 2026-10-12: done under software emulation.  PART.disk.ata-pio@1 (122 lines,
+  lifted from libata), PART.fs.minix@1 (344 lines, lifted from fs/minix, about
+  120 of them glue), PART.loader@5 (load and save system calls), PART.sort@1,
+  MACHINE.serial-disk@1.  The second boot finds the first boot's file;
   fsck.minix finds the disk clean.  Lines from Linux: 638.  Findings 0010.
 
 ### 9.6 Petition 0006: two programs at once [done]
 - The first purpose that needs sharing.  The kernel appears: a scheduler
   and whatever separation the purpose demands, every line named and
-  justified by this petition.  The next CMP.loader growing into it, or a
-  separate CMP.kernel@1 the loader hands off to; decided then, in a finding.
+  justified by this petition.  The next PART.loader growing into it, or a
+  separate PART.kernel@1 the loader hands off to; decided then, in a finding.
 - Done-when: both programs produce their output; neither can corrupt the
   other's memory, and a test proves it by trying.
 - 2026-10-12: done under software emulation.  Preemptive, the Amiga way
-  (Chris's choice).  CMP.loader@6 grew into the kernel: a cpio archive of
+  (Chris's choice).  PART.loader@6 grew into the kernel: a cpio archive of
   programs, one page directory and 8 MiB each, the 8254 ticking at 100 Hz
   through the 8259, a fault stops one program with a Guru Meditation line.
   The stopwatch keeps time next to BYTE's sieve; a probe that writes past
   its own memory is stopped and the stopwatch carries on.  Programs still run
-  in ring 0: the door must become a gate first (findings 0011 #4).  Lines from
+  in ring 0: the system call table must become a gate first (findings 0011 #4).  Lines from
   Linux: 844.
 
 ### 9.7 Petition 0007: the editor [coming up]
 - Open a text file, type, save.  Needs 9.3 and 9.5.  C now; Rust later as
-  CMP.editor@2.  libc (musl) enters here if anything fails on it, not before.
+  PART.editor@2.  libc (musl) enters here if anything fails on it, not before.
 
 ### 9.8 The ladder holds [coming up]
 - Every program from 0000 up boots under the current loader with no change
-  to the program.  Run on every commit that touches the loader or a door.
+  to the program.  Run on every commit that touches the loader or a system call.
 
 ### 9.9 The loop [coming up]
-- try build, referee names a code, quartermaster drafts, committee reviews,
-  admit, retry.  Human in the loop at review until 8 exists.  Mechanic
+- The quartermaster drafts the application's petition; the referee checks
+  it; the builder builds and sends the full list of what is missing; the
+  quartermaster drafts a petition per part; the committee votes; each
+  admission puts the flavor back in the builder's queue (5.6).  A fix the
+  mechanic proposes goes to the quartermaster as new code, never straight
+  to the committee.  Every step writes to the decision ledger (3.6).  Human in the loop at review until 8 exists.  Mechanic
   proposes patches and untangling refactors; never installs; separate model
   and prompt from the tester.
 
 ### 9.10 The first Linux binary [coming up]
 - A statically linked Linux hello world, unmodified, runs on AiOs.  It makes
-  two system calls, write and exit_group, both already behind the door: the
+  two system calls, write and exit_group, both already AiOs system calls: the
   loader answers Linux's system-call entry for those two numbers and loads
   the program the way Linux lays it out.  Nothing else of Linux's interface
   exists.

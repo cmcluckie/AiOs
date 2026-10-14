@@ -5,6 +5,6 @@ retired_by = ""
 binds      = "SPEC.sieve.1@1"
 red_when   = "booted with the stopwatch and watched for 10 seconds, the sieve does not print, once, that it found 1899 primes 800 times over in a whole number of milliseconds greater than 0"
 timeout_ms = 15000
-isolates   = "CMP.sieve@1"
+isolates   = "PART.sieve@1"
 runner     = "jig/test timed share 10"
 mutations  = 3

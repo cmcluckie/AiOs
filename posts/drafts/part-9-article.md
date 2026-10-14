@@ -68,22 +68,22 @@ And the stopwatch never stops.  It's a stopwatch; you switch it off.  So its tes
 
 ## Read along
 
-1. [pool/CMP.stopwatch@1/stopwatch.c](https://github.com/cmcluckie/aios/blob/main/pool/CMP.stopwatch@1/stopwatch.c).  The whole stopwatch, about twenty lines.  Find the `while` that aims at `n * 1000`: that's rule two.
-2. [pool/CMP.loader@4/loader.c](https://github.com/cmcluckie/aios/blob/main/pool/CMP.loader@4/loader.c).  Look for `door_ms` and the five tries at boot.  One subtraction, one division.
-3. [lifted/CMP.timer.tsc-pit@1/tsccal.c](https://github.com/cmcluckie/aios/blob/main/lifted/CMP.timer.tsc-pit@1/tsccal.c).  Linux's measuring code.  Read the long comment above `pit_verify_msb`: that's Linux explaining why it refuses to guess.
-4. [pool/CMP.machine.serial-timer@1/machine.sh](https://github.com/cmcluckie/aios/blob/main/pool/CMP.machine.serial-timer@1/machine.sh).  The new machine.  Put it next to the old one; the only real difference is `pit=on`.
+1. [pool/PART.stopwatch@1/stopwatch.c](https://github.com/cmcluckie/aios/blob/main/pool/PART.stopwatch@1/stopwatch.c).  The whole stopwatch, about twenty lines.  Find the `while` that aims at `n * 1000`: that's rule two.
+2. [pool/PART.loader@4/loader.c](https://github.com/cmcluckie/aios/blob/main/pool/PART.loader@4/loader.c).  Look for `door_ms` and the five tries at boot.  One subtraction, one division.
+3. [lifted/PART.timer.tsc-pit@1/tsccal.c](https://github.com/cmcluckie/aios/blob/main/lifted/PART.timer.tsc-pit@1/tsccal.c).  Linux's measuring code.  Read the long comment above `pit_verify_msb`: that's Linux explaining why it refuses to guess.
+4. [pool/MACHINE.serial-timer@1/machine.sh](https://github.com/cmcluckie/aios/blob/main/pool/MACHINE.serial-timer@1/machine.sh).  The new machine.  Put it next to the old one; the only real difference is `pit=on`.
 5. [findings/0008.md](https://github.com/cmcluckie/aios/blob/main/findings/0008.md).  What we found, including the missing speaker port and the one-in-three failures.
 
 ## Try this
 
-Press F5 and pick AiOS: stopwatch, and watch it count.  Then build yourself a turbo button: open pool/CMP.stopwatch@1/stopwatch.c, change `n * 1000` to `n * 500`, and run it again.  It now counts two "seconds" for every real one, which is exactly the bug from 1985.  Run `sh jig/test stopwatch` and watch the test catch you.
+Press F5 and pick AiOS: stopwatch, and watch it count.  Then build yourself a turbo button: open pool/PART.stopwatch@1/stopwatch.c, change `n * 1000` to `n * 500`, and run it again.  It now counts two "seconds" for every real one, which is exactly the bug from 1985.  Run `sh jig/test stopwatch` and watch the test catch you.
 
 ## As built
 
-- [loader@4](https://github.com/cmcluckie/aios/blob/main/index/cmp/loader@4.as-built.md)
-- [timer.tsc-pit@1](https://github.com/cmcluckie/aios/blob/main/index/cmp/timer.tsc-pit@1.as-built.md)
-- [stopwatch@1](https://github.com/cmcluckie/aios/blob/main/index/cmp/stopwatch@1.as-built.md)
-- [machine.serial-timer@1](https://github.com/cmcluckie/aios/blob/main/index/cmp/machine.serial-timer@1.as-built.md)
+- [loader@4](https://github.com/cmcluckie/aios/blob/main/index/part/loader@4.as-built.md)
+- [timer.tsc-pit@1](https://github.com/cmcluckie/aios/blob/main/index/part/timer.tsc-pit@1.as-built.md)
+- [stopwatch@1](https://github.com/cmcluckie/aios/blob/main/index/part/stopwatch@1.as-built.md)
+- [machine.serial-timer@1](https://github.com/cmcluckie/aios/blob/main/index/machine/serial-timer@1.as-built.md)
 
 ## Addendum: the tests
 

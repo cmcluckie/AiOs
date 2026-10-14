@@ -3,5 +3,5 @@
 # nothing in either petition asks to share.  The share flavor is the one that
 # runs two at once.  Kept so the refusal is tested, not assumed.
 name      = "both"
-machine   = "CMP.machine.serial-only@1"
+machine   = "MACHINE.serial-only@1"
 petitions = ["0000", "0001"]

@@ -1,6 +1,6 @@
 /* Probe for findings 0012: why the clock measurement gives up under KVM.
  * Repeats the first 12 steps of Linux's quick_pit_calibrate (lifted in
- * CMP.timer.tsc-pit@1) and prints what it saw instead of deciding: for each
+ * PART.timer.tsc-pit@1) and prints what it saw instead of deciding: for each
  * fall of the 8254's high byte (256 counts, 214.6 us), how many times the
  * byte was read, what the last read cost in counter cycles, and how long the
  * step took.  Then the test Linux applies at step 1.  Runs on the stopwatch's

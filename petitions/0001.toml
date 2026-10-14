@@ -23,32 +23,32 @@ reason = "SPEC.machine.1@1"
 scope  = ""
 
 [[component]]
-code     = "CMP.hanoi@1"
+code     = "PART.hanoi@1"
 role     = "primary"
 admitted = false
 
 [[component]]
-code     = "CMP.toolchain.c@1"
+code     = "TOOL.c@1"
 role     = "toolchain"
 admitted = false
 
 [[component]]
-code     = "CMP.loader@1"
+code     = "PART.loader@1"
 role     = "boot"
 admitted = false
 
 [[component]]
-code     = "CMP.serial.8250@1"
+code     = "PART.serial.8250@1"
 role     = "dependency"
 admitted = false
 
 [[component]]
-code     = "CMP.machine.serial-only@1"
+code     = "MACHINE.serial-only@1"
 role     = "machine"
 admitted = false
 
 [[component]]
-code     = "CMP.hypervisor.qemu@1"
+code     = "TOOL.qemu@1"
 role     = "machine"
 admitted = false
 

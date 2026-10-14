@@ -59,29 +59,29 @@ AiOS, part 10 (Kernel code: 638 lines). "AI writes code now, lots of it, fast. T
 <p>And the piece this rung added to the process: a checker from outside.  Every test before this one, the AI wrote.  This one, Linux wrote.</p>
 <h2>Read along</h2>
 <ol>
-<li><a href="https://github.com/cmcluckie/aios/blob/main/pool/CMP.sort@1/sort.c">pool/CMP.sort@1/sort.c</a>.  The program.  Find <code>rand</code>, copied from K&amp;R, and the short insertion sort under it.</li>
-<li><a href="https://github.com/cmcluckie/aios/blob/main/lifted/CMP.fs.minix@1/minix.c">lifted/CMP.fs.minix@1/minix.c</a>.  Read the comment at the top for what came from where and what was cut.  Then <code>add_link</code>: that's Linux's code for adding a name to a directory, almost line for line.</li>
-<li><a href="https://github.com/cmcluckie/aios/blob/main/lifted/CMP.disk.ata-pio@1/ata.c">lifted/CMP.disk.ata-pio@1/ata.c</a>.  The disk driver.  Look at <code>command</code>: seven port writes and the disk knows what you want.</li>
-<li><a href="https://github.com/cmcluckie/aios/blob/main/pool/CMP.machine.serial-disk@1/machine.sh">pool/CMP.machine.serial-disk@1/machine.sh</a>.  The new machine: the old one, plus one IDE disk.  It formats its own disk the first time, like it came from the shop.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/pool/PART.sort@1/sort.c">pool/PART.sort@1/sort.c</a>.  The program.  Find <code>rand</code>, copied from K&amp;R, and the short insertion sort under it.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/lifted/PART.fs.minix@1/minix.c">lifted/PART.fs.minix@1/minix.c</a>.  Read the comment at the top for what came from where and what was cut.  Then <code>add_link</code>: that's Linux's code for adding a name to a directory, almost line for line.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/lifted/PART.disk.ata-pio@1/ata.c">lifted/PART.disk.ata-pio@1/ata.c</a>.  The disk driver.  Look at <code>command</code>: seven port writes and the disk knows what you want.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/pool/MACHINE.serial-disk@1/machine.sh">pool/MACHINE.serial-disk@1/machine.sh</a>.  The new machine: the old one, plus one IDE disk.  It formats its own disk the first time, like it came from the shop.</li>
 <li><a href="https://github.com/cmcluckie/aios/blob/main/tests/expected/fs.fsck-clean@1.check">tests/expected/fs.fsck-clean@1.check</a>.  The second opinion nobody here wrote, in a dozen lines.</li>
 <li><a href="https://github.com/cmcluckie/aios/blob/main/findings/0010.md">findings/0010.md</a>.  What we found, including the missing clock and the flush no test can see.</li>
 </ol>
 <h2>Try this</h2>
-<p>Press F5 and pick AiOS: sort, twice.  The first time it saves the file; the second time it finds it.  Now open pool/CMP.sort@1/sort.c, change the seed <code>next = 1</code> to the year you were born, and run it again.  It sorts twenty new numbers, finds last time's file still on the disk, and tells you it's different.  The disk remembered.  Delete out/disk.minix to start over.</p>
+<p>Press F5 and pick AiOS: sort, twice.  The first time it saves the file; the second time it finds it.  Now open pool/PART.sort@1/sort.c, change the seed <code>next = 1</code> to the year you were born, and run it again.  It sorts twenty new numbers, finds last time's file still on the disk, and tells you it's different.  The disk remembered.  Delete out/disk.minix to start over.</p>
 <h2>As built</h2>
 <ul>
-<li><a href="https://github.com/cmcluckie/aios/blob/main/index/cmp/loader@5.as-built.md">loader@5</a></li>
-<li><a href="https://github.com/cmcluckie/aios/blob/main/index/cmp/fs.minix@1.as-built.md">fs.minix@1</a></li>
-<li><a href="https://github.com/cmcluckie/aios/blob/main/index/cmp/disk.ata-pio@1.as-built.md">disk.ata-pio@1</a></li>
-<li><a href="https://github.com/cmcluckie/aios/blob/main/index/cmp/sort@1.as-built.md">sort@1</a></li>
-<li><a href="https://github.com/cmcluckie/aios/blob/main/index/cmp/machine.serial-disk@1.as-built.md">machine.serial-disk@1</a></li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/index/part/loader@5.as-built.md">loader@5</a></li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/index/part/fs.minix@1.as-built.md">fs.minix@1</a></li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/index/part/disk.ata-pio@1.as-built.md">disk.ata-pio@1</a></li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/index/part/sort@1.as-built.md">sort@1</a></li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/index/machine/serial-disk@1.as-built.md">machine.serial-disk@1</a></li>
 </ul>
 <h2>Addendum: the tests</h2>
 <p>Every test for the parts above, from tests/results.txt and tests/mutations-results.txt.  All of them ran under software emulation, not on the jig.</p>
 <p><strong>loader@5</strong></p>
 <ul>
-<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/loader.doors-wait@1.toml">loader.doors-wait@1</a>.  Checks: The load and save doors hand a file name and bytes to the filesystem and its answer back, unchanged; the disk is not touched until a program asks, so a program that never asks boots exactly as it did under loader@4.  Goes red when: hello, booted under CMP.loader@5 on the disk machine, makes the IDE drive see any command at all.  Status: Passed by the runner (software emulation): hello unchanged, the drive untouched.  Mutations caught: 1.</li>
-<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/loader.ladder-5@1.toml">loader.ladder-5@1</a>.  Checks: The loader binary that runs one program on the ladder runs every other program on the ladder, byte-identical, with no change.  Goes red when: hello, hanoi, life or calc, each built for its own loader, booted unchanged under CMP.loader@5 on the disk machine, differs by one byte from its own expected output.  Status: Passed by the runner (software emulation): 4 programs byte-identical under loader@5.  Mutations caught: 1.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/loader.doors-wait@1.toml">loader.doors-wait@1</a>.  Checks: The load and save doors hand a file name and bytes to the filesystem and its answer back, unchanged; the disk is not touched until a program asks, so a program that never asks boots exactly as it did under loader@4.  Goes red when: hello, booted under PART.loader@5 on the disk machine, makes the IDE drive see any command at all.  Status: Passed by the runner (software emulation): hello unchanged, the drive untouched.  Mutations caught: 1.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/loader.ladder-5@1.toml">loader.ladder-5@1</a>.  Checks: The loader binary that runs one program on the ladder runs every other program on the ladder, byte-identical, with no change.  Goes red when: hello, hanoi, life or calc, each built for its own loader, booted unchanged under PART.loader@5 on the disk machine, differs by one byte from its own expected output.  Status: Passed by the runner (software emulation): 4 programs byte-identical under loader@5.  Mutations caught: 1.</li>
 </ul>
 <p><strong>fs.minix@1</strong></p>
 <ul>

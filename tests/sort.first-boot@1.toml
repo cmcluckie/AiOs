@@ -5,6 +5,6 @@ retired_by = ""
 binds      = "SPEC.sort.1@1"
 red_when   = "booted once on a fresh empty disk, its output differs by one byte from tests/expected/sort.first-boot@1.out: the twenty numbers K&R's rand() gives from seed 1, each mod 1000, sorted, then the line saying it saved them"
 timeout_ms = 30000
-isolates   = "CMP.sort@1"
+isolates   = "PART.sort@1"
 runner     = "jig/test disk sort 1"
 mutations  = 2

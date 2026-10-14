@@ -5,6 +5,6 @@ retired_by = ""
 binds      = "SPEC.machine.3@1"
 red_when   = "strace of the sort machine from start to halt, disk made and written records any socket, connect, bind or listen call"
 timeout_ms = 120000   # 61 s on the jig: strace stops on every disk exit (findings 0012)
-isolates   = "CMP.machine.serial-disk@1"
+isolates   = "MACHINE.serial-disk@1"
 runner     = "jig/test strace sort"
 mutations  = 1

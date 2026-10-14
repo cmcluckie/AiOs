@@ -124,20 +124,20 @@ can.</p>
 <h2>Read along</h2>
 <p>If you want to see it for yourself, these are the files to read, in this order.</p>
 <ol>
-<li><a href="https://github.com/cmcluckie/aios/blob/main/pool/CMP.calc@1/calc.c">pool/CMP.calc@1/calc.c</a>.  Start with the function called number.  The comment in it is the bug the test caught, and the one-line fix.  Then _start at the bottom: the whole keyboard handling, echo and backspace included.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/pool/PART.calc@1/calc.c">pool/PART.calc@1/calc.c</a>.  Start with the function called number.  The comment in it is the bug the test caught, and the one-line fix.  Then _start at the bottom: the whole keyboard handling, echo and backspace included.</li>
 <li><a href="https://github.com/cmcluckie/aios/blob/main/tests/fixtures/calc_ref.py">tests/fixtures/calc_ref.py</a>.  The same calculator, written again in Python from the same rules.  This is what the real one gets compared against, byte for byte.</li>
 <li><a href="https://github.com/cmcluckie/aios/blob/main/tests/fixtures/calc.in">tests/fixtures/calc.in</a>.  The keystrokes the test types.  99999999999 is in there.</li>
-<li><a href="https://github.com/cmcluckie/aios/blob/main/lifted/CMP.serial.8250@2/serial8250.c">lifted/CMP.serial.8250@2/serial8250.c</a>.  Scroll to the bottom: serial8250_poll and serial8250_getc.  That's the whole receive side, taken from Linux.</li>
-<li><a href="https://github.com/cmcluckie/aios/blob/main/pool/CMP.loader@3/loader.c">pool/CMP.loader@3/loader.c</a>.  door_read.  Wait for one byte, then take whatever else is already there.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/lifted/PART.serial.8250@2/serial8250.c">lifted/PART.serial.8250@2/serial8250.c</a>.  Scroll to the bottom: serial8250_poll and serial8250_getc.  That's the whole receive side, taken from Linux.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/pool/PART.loader@3/loader.c">pool/PART.loader@3/loader.c</a>.  door_read.  Wait for one byte, then take whatever else is already there.</li>
 </ol>
 <h2>Try this</h2>
 <p>Press F5 → AiOS: calc and type <code>1 0 /</code> then Enter.  It says "error: divide by zero" instead of the machine vanishing.  Then try to break it some other way.  If you manage it, tell me how.</p>
 <h2>As built</h2>
 <p>What each part actually does, written down from its source: every port it touches, every byte it writes, how big it is.  These are hand-written for now; the tool that derives them from the code is plan section 7.1.</p>
 <ul>
-<li><a href="https://github.com/cmcluckie/aios/blob/main/index/cmp/calc@1.as-built.md">calc@1</a></li>
-<li><a href="https://github.com/cmcluckie/aios/blob/main/index/cmp/loader@3.as-built.md">loader@3</a></li>
-<li><a href="https://github.com/cmcluckie/aios/blob/main/index/cmp/serial.8250@2.as-built.md">serial.8250@2</a></li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/index/part/calc@1.as-built.md">calc@1</a></li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/index/part/loader@3.as-built.md">loader@3</a></li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/index/part/serial.8250@2.as-built.md">serial.8250@2</a></li>
 </ul>
 <h2>Addendum: the tests</h2>
 <p>Every test written for the parts above: what it checks, what turns it red, and whether it has actually been run.  "Checked by hand" means it was run and compared, but not yet by the automatic test runner (plan section 4), which doesn't exist yet.  Until it does, these are honest notes, not a scoreboard.</p>
@@ -147,7 +147,7 @@ can.</p>
 </ul>
 <p><strong>loader@3</strong></p>
 <ul>
-<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/loader.read@1.toml">loader.read@1</a>.  Checks: The read door waits for at least one byte, then returns the bytes already received, in order, up to the requested count, and never more; write, exit and alloc keep their offsets and their behaviour from CMP.loader@2.  Goes red when: with tests/fixtures/calc.in fed to the serial port, CMP.calc@1 under this loader does not produce the reference transcript, or hello, hanoi or life under this loader differ by one byte from their outputs under the loader they were built for.  Status: Checked by hand, 2026-10-11: the calculator transcript is exact under this loader, and hello, Hanoi and Life are byte-identical under it.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/loader.read@1.toml">loader.read@1</a>.  Checks: The read door waits for at least one byte, then returns the bytes already received, in order, up to the requested count, and never more; write, exit and alloc keep their offsets and their behaviour from PART.loader@2.  Goes red when: with tests/fixtures/calc.in fed to the serial port, PART.calc@1 under this loader does not produce the reference transcript, or hello, hanoi or life under this loader differ by one byte from their outputs under the loader they were built for.  Status: Checked by hand, 2026-10-11: the calculator transcript is exact under this loader, and hello, Hanoi and Life are byte-identical under it.</li>
 </ul>
 <p><strong>serial.8250@2</strong></p>
 <ul>

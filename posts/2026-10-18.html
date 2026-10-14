@@ -59,18 +59,18 @@ AiOS, part 8 (Kernel code: 69 lines). "I kept asking the AI where the kernel was
 <li><a href="https://github.com/cmcluckie/aios/blob/main/jig/test">jig/test</a>.  The runner.  The comment at the top explains every kind of test it knows.  Look for <code>trace</code>: that's the register log standing in for a fake chip.</li>
 <li><a href="https://github.com/cmcluckie/aios/blob/main/tests/results.txt">tests/results.txt</a>.  What the runner said, test by test, and what it ran on.</li>
 <li><a href="https://github.com/cmcluckie/aios/blob/main/tests/mutations.txt">tests/mutations.txt</a>.  Every sabotage, one per line, with what it breaks.  The "survives" lines are the holes.</li>
-<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/fixtures/life_ref.py">tests/fixtures/life_ref.py</a>.  The second opinion for Life, in about 20 lines of Python.  Put it next to pool/CMP.life@1/life.c and compare.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/fixtures/life_ref.py">tests/fixtures/life_ref.py</a>.  The second opinion for Life, in about 20 lines of Python.  Put it next to pool/PART.life@1/life.c and compare.</li>
 <li><a href="https://github.com/cmcluckie/aios/blob/main/findings/0007.md">findings/0007.md</a>.  What the runner and the sabotage found, including the three survivors.</li>
 </ol>
 <h2>Try this</h2>
-<p>Open pool/CMP.hello@1/hello.c and change "Hello" to "Jello".  In a terminal (the Codespaces one works), run <code>sh jig/test hello</code>.  You'll get FAIL, and it tells you the very first byte that's wrong.  Change it back and run it again.  Then try <code>sh jig/mutate hello</code> to watch the sabotage script do the same thing five ways.</p>
+<p>Open pool/PART.hello@1/hello.c and change "Hello" to "Jello".  In a terminal (the Codespaces one works), run <code>sh jig/test hello</code>.  You'll get FAIL, and it tells you the very first byte that's wrong.  Change it back and run it again.  Then try <code>sh jig/mutate hello</code> to watch the sabotage script do the same thing five ways.</p>
 <h2>As built</h2>
 <p>No component changed in this part; it adds the tests around them.  These are the descriptions the tests check against:</p>
 <ul>
-<li><a href="https://github.com/cmcluckie/aios/blob/main/index/cmp/loader@1.as-built.md">loader@1</a>, <a href="https://github.com/cmcluckie/aios/blob/main/index/cmp/loader@2.as-built.md">loader@2</a>, <a href="https://github.com/cmcluckie/aios/blob/main/index/cmp/loader@3.as-built.md">loader@3</a></li>
-<li><a href="https://github.com/cmcluckie/aios/blob/main/index/cmp/serial.8250@1.as-built.md">serial.8250@1</a>, <a href="https://github.com/cmcluckie/aios/blob/main/index/cmp/serial.8250@2.as-built.md">serial.8250@2</a></li>
-<li><a href="https://github.com/cmcluckie/aios/blob/main/index/cmp/machine.serial-only@1.as-built.md">machine.serial-only@1</a></li>
-<li><a href="https://github.com/cmcluckie/aios/blob/main/index/cmp/hello@1.as-built.md">hello@1</a>, <a href="https://github.com/cmcluckie/aios/blob/main/index/cmp/hanoi@1.as-built.md">hanoi@1</a>, <a href="https://github.com/cmcluckie/aios/blob/main/index/cmp/life@1.as-built.md">life@1</a>, <a href="https://github.com/cmcluckie/aios/blob/main/index/cmp/calc@1.as-built.md">calc@1</a></li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/index/part/loader@1.as-built.md">loader@1</a>, <a href="https://github.com/cmcluckie/aios/blob/main/index/part/loader@2.as-built.md">loader@2</a>, <a href="https://github.com/cmcluckie/aios/blob/main/index/part/loader@3.as-built.md">loader@3</a></li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/index/part/serial.8250@1.as-built.md">serial.8250@1</a>, <a href="https://github.com/cmcluckie/aios/blob/main/index/part/serial.8250@2.as-built.md">serial.8250@2</a></li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/index/machine/serial-only@1.as-built.md">machine.serial-only@1</a></li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/index/part/hello@1.as-built.md">hello@1</a>, <a href="https://github.com/cmcluckie/aios/blob/main/index/part/hanoi@1.as-built.md">hanoi@1</a>, <a href="https://github.com/cmcluckie/aios/blob/main/index/part/life@1.as-built.md">life@1</a>, <a href="https://github.com/cmcluckie/aios/blob/main/index/part/calc@1.as-built.md">calc@1</a></li>
 </ul>
 <h2>Addendum: the tests</h2>
 <p>Every test in the repo, from tests/results.txt and tests/mutations-results.txt.  All of them ran under software emulation, not on the jig.</p>
@@ -105,7 +105,7 @@ AiOS, part 8 (Kernel code: 69 lines). "I kept asking the AI where the kernel was
 </ul>
 <p><strong>loader@3</strong></p>
 <ul>
-<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/loader.read@1.toml">loader.read@1</a>.  Checks: The read door waits for at least one byte, then returns the bytes already received, in order, up to the requested count, and never more; write, exit and alloc keep their offsets and their behaviour from CMP.loader@2.  Goes red when: with tests/fixtures/calc.in fed to the serial port, CMP.calc@1 under this loader does not produce the reference transcript, or hello, hanoi or life under this loader differ by one byte from their outputs under the loader they were built for.  Status: Passed by the runner (software emulation): 4 programs byte-identical under loader@3.  Mutations caught: 1.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/loader.read@1.toml">loader.read@1</a>.  Checks: The read door waits for at least one byte, then returns the bytes already received, in order, up to the requested count, and never more; write, exit and alloc keep their offsets and their behaviour from PART.loader@2.  Goes red when: with tests/fixtures/calc.in fed to the serial port, PART.calc@1 under this loader does not produce the reference transcript, or hello, hanoi or life under this loader differ by one byte from their outputs under the loader they were built for.  Status: Passed by the runner (software emulation): 4 programs byte-identical under loader@3.  Mutations caught: 1.</li>
 </ul>
 <p><strong>machine.serial-only@1</strong></p>
 <ul>
@@ -115,7 +115,7 @@ AiOS, part 8 (Kernel code: 69 lines). "I kept asking the AI where the kernel was
 <p><strong>serial.8250@1</strong></p>
 <ul>
 <li><a href="https://github.com/cmcluckie/aios/blob/main/tests/serial.in-order@1.toml">serial.in-order@1</a>.  Checks: Every byte handed to the write door appears on the serial port, in order, complete, and untranslated.  Goes red when: the bytes captured on the serial port differ in value, order or count from the bytes handed to the write door, including any 0x0d that was not handed to it.  Status: Passed by the runner (software emulation): 512 bytes, exact.  Mutations caught: 1.</li>
-<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/serial.origin-matches@1.toml">serial.origin-matches@1</a>.  Checks: Every line range in the part's origin record names a file whose object id at the recorded upstream commit equals the recorded blob.  Goes red when: jig/upstream verify, run against a clone of upstream with the recorded commit, reports any range of this part as WRONG.  Status: Passed by the runner (software emulation): CMP.serial.8250@2: ok   include/linux/serial.h 26-29.  Mutations caught: 1.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/serial.origin-matches@1.toml">serial.origin-matches@1</a>.  Checks: Every line range in the part's origin record names a file whose object id at the recorded upstream commit equals the recorded blob.  Goes red when: jig/upstream verify, run against a clone of upstream with the recorded commit, reports any range of this part as WRONG.  Status: Passed by the runner (software emulation): PART.serial.8250@2: ok   include/linux/serial.h 26-29.  Mutations caught: 1.</li>
 </ul>
 <p><strong>serial.8250@2</strong></p>
 <ul>

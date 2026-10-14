@@ -1,8 +1,10 @@
-# AiOS
+# AiOs
 
-AiOS is a purpose-driven, self-building operating system.  This repository is
+AiOs is a purpose-driven, self-building operating system.  The name is
+AiOs, lower-case s, everywhere: posts, docs, code.  Parts 1 to 12 went out as
+"AiOS" and stay that way; nothing new uses it (findings 0014).  This repository is
 its constitution: the purposes, the invariants, the petitions that admit every
-component, the index of what exists, the specs that say what each thing should
+component, the catalogue of what exists, the specs that say what each thing should
 do, the tests that can prove it wrong, and the sensors that keep proving it in
 production.  Nothing runs anywhere unless a signed petition in this repo says
 why.  The full design is in design.md; read it before doing anything.
@@ -14,16 +16,16 @@ why.  The full design is in design.md; read it before doing anything.
   dependency on anyone upstream.
 - Tests are written to fail.  A sensor or test that cannot go red is
   decoration.
-- Petitions are structured data, not prose: codes that resolve to entries in
-  the index, the specs, the tests and the sensors, each defined exactly once.
-- Failures name codes, never raw tool output.  "missing CAP.TTY.RAW", not
+- Petitions are structured data, not prose: catalogue numbers that resolve to entries in
+  the catalogue, the specs, the tests and the sensors, each defined exactly once.
+- Failures name catalogue numbers, never raw tool output.  "missing CAP.TTY.RAW", not
   "undefined reference".
 - Admit the smallest reviewable unit a failure asked for, never the package
   upstream ships it in.
 - Nothing gets installed on the jig without a row in design.md's tool table,
   and the row is not complete until "how it gets reduced" is filled in.
 - You propose.  The referee decides.  You never install.
-- Linux is read, never booted.  A segment is lifted from it into its own
+- Linux is read, never booted.  A part is lifted from it into its own
   directory under lifted/ with the hands it held cut; the cut is recorded in
   the as-built spec.  Nothing enters as "the kernel".
 - The whole repository is GPL-2.0-only, Linux's licence: every image we build
@@ -40,10 +42,10 @@ why.  The full design is in design.md; read it before doing anything.
   commit that touched a lifted line since.  A change that matters is a new
   version of the part through the door; petitions on the old version keep
   building what they built.
-- Every lifted segment arrives naked.  Upstream wrote no spec and no test for
+- Every lifted part arrives naked.  Upstream wrote no spec and no test for
   it; we write both before it is admitted, and the size of that job is what
-  keeps segments small.
-- Petitions add, never swap.  Segments talk only through declared doors, so a
+  keeps parts small.
+- Petitions add, never swap.  Parts talk only through declared interfaces, so a
   later petition stacks on an earlier one without removing anything.  The
   loader is separate from the program from petition 0000 on: a tenant is a
   tenant even when it is the only one.
@@ -57,12 +59,12 @@ why.  The full design is in design.md; read it before doing anything.
     constitution/   tenets and purposes; the part no vote can amend
     schema/         the petition format and the relation rules
     petitions/      one TOML file per petition, numbered
-    index/          CMP.* entries: what exists, what it depends on, what it exposes
+    index/          part/, machine/, tool/ and cap/ entries: what exists, what it depends on, what it exposes
     specs/          SPEC.* clauses: as-intended behaviour, one testable sentence each
     tests/          TST.* entries: each bound to the spec clause it can turn red
     sensors/        SNS.* entries: question, threshold, consumer
-    pool/           admitted source we wrote, one directory per CMP code at a version; MIT
-    lifted/         admitted source from upstream, same layout, each with origin.toml; its own licence
+    pool/           admitted source we wrote, one directory per code at a version; GPL-2.0-only
+    lifted/         admitted source from upstream, same layout, each with origin.toml; GPL-2.0-only, Linux's
     flavors/        one TOML file per flavor: the petitions one machine runs
     findings/       what the schema or plan could not express, and what was decided
     plan/           the project plan, brief and full
@@ -84,21 +86,32 @@ exactly; when a new one is needed, add it here in the same commit.
 - **Petition.**  A bill of materials in TOML: the purpose, the capabilities it
   needs with a spec clause as the reason for each, the components, the tests
   and sensors.  No prose.  The one door.
-- **Flavor.**  The set of petitions one machine runs, as flavors/<name>.toml.
+- **Flavor.**  The collection of parts defined by each application's
+  petition.  flavors/<name>.toml names the petitions; the parts come from them.
   Every flavor is also an entry in .vscode/launch.json so it appears in the
   Run and Debug dropdown; adding a flavor means adding that entry.
   "Build flavor hello" is what pressing play means.  A flavor with more
   programs than the loader can run is refused until rung 9.6.
-- **Code.**  A name a petition can use: `TABLE.path@version`.  Seven tables:
-  PUR purpose, KEY signing key, CAP capability, CMP component, SPEC clause,
-  TST test, SNS sensor.  Each code is defined exactly once, in one file.
-- **Index.**  The catalogue of codes: what can be named.  index/cap/ and
-  index/cmp/.
+- **Catalogue number.**  The name a petition uses for anything:
+  `TABLE.path@version`.  Nine tables: PUR purpose, KEY signing key, CAP
+  capability, PART part, MACHINE machine, TOOL tool, SPEC clause, TST test, SNS
+  sensor.  Each catalogue number is defined exactly once, in one file.  Called
+  a "code" until 2026-10-23 (findings 0014); the TOML key is still `code`.  AGT, for agents, comes when the first one is admitted.
+  Until 2026-10-13 parts, machines and tools shared one table, CMP; Chris
+  split it because language matters (findings 0014).  Older findings say CMP.
+- **Catalogue.**  Everything that can be named, filed by catalogue number:
+  index/cap/, index/part/, index/machine/ and index/tool/.  The folder is
+  index/ (formerly the index); it kept the name so published links keep
+  working (findings 0014).  It holds descriptions, not code: like a card
+  catalogue, each entry says what a thing is, what it needs and where its
+  code lives (lifted/ or pool/).
 - **Capability (CAP).**  One thing a component may touch.  Small, finite
   vocabulary.
-- **Component (CMP).**  One thing that exists: a program, a driver, the loader,
-  a toolchain, a machine.  Its index entry says what it depends on, what it
-  exposes, what it requires, and where its source is.
+- **Component.**  Whatever a petition asks for, as one word for three
+  tables: a part (PART: a driver, the kernel, a program), a machine (MACHINE:
+  a VM definition) or a tool (TOOL: a scaffold the jig lends, like the
+  compiler).  Each catalogue entry says what it depends on, what it exposes, what
+  it requires, and where its source is.
 - **Spec (SPEC).**  One as-intended sentence precise enough to fail.  Written
   by a human.  The as-built spec is the other half: derived from the source,
   says what the code actually does.
@@ -112,25 +125,55 @@ exactly; when a new one is needed, add it here in the same commit.
   the pool, each part with an origin record.  Ours and theirs never mix.
 - **Origin.**  origin.toml beside a lifted part: repository, commit, date, file,
   blob id, line ranges, who and when, what was cut.  Enough to lift again.
-- **Historian.**  Watches upstream against every origin record and reports
-  what moved; never merges.  Today: `jig/upstream`.
-- **Segment.**  A piece lifted out of Linux into the pool on its own, with the
-  hands it held cut.  The serial segment is 57 lines.
-- **Lift, cut.**  Lifting is taking a segment from Linux with line-numbered
+- **Historian.**  Run on demand by the quartermaster, the referee or Chris.
+  Looks up the Linux commit a part was lifted from (its origin record),
+  checks whether any later commit touched those lines (mechanical: the only
+  half the referee calls), and if one did, reads the change and says whether
+  the part needs to change (AI).  Which branches AiOs follows (mainline,
+  stable, long-term support) will be a setting of AiOs, and the historian
+  will weigh a fix by the branch it is on.  Reads source through the shared
+  source reader it shares with the quartermaster, never its own (findings
+  0015, plan 7.0).  Reports, never merges.  Today: `jig/upstream`, the
+  mechanical half, run by hand.
+- **Part.**  What the nucleus is made of.  The source a component catalogue number
+  points to: a piece lifted out of Linux on its own with the hands it held cut
+  (a lifted part, in lifted/), or one we wrote (in pool/).  A catalogue number names it;
+  the part is the source.  The first serial part is 57 lines.  Called a
+  segment until 2026-10-12, when Chris renamed it: "segment" already means x86
+  memory segmentation, which the nucleus sets up at boot.  Older findings and
+  posts say segment.
+- **Lift, cut.**  Lifting is taking a part from Linux with line-numbered
   provenance.  Cutting is removing what it held onto (the tty layer, the
-  device model, the allocator).  Both are recorded in the segment's header.
-- **Loader.**  CMP.loader: takes over from the machine, runs one program
-  through the door, halts when it exits.  The whole landlord, for now.
+  device model, the allocator).  Both are recorded in the part's header.
+- **Nucleus.**  The OS at the centre: the kernel, the drivers lifted from
+  Linux, the system calls and the programs, everything that runs on the machine.
+  Everything else in AiOs (the jig, referee, builder, tester, historian,
+  quartermaster, committee) surrounds the nucleus and builds it.  The word is
+  Per Brinch Hansen's: "The Nucleus of a Multiprogramming System" (RC 4000,
+  1969), a small centre everything else was built around.  Chosen over "core",
+  which collides with processor cores and with CoreOS.  Named by Chris on
+  2026-10-12.
+  There is one nucleus.  A launch names the applications it runs; the first
+  launch of that combination builds it (parts loaded, compiled, booted, the
+  applications loaded), and later launches of the same combination reuse what
+  was built.  Testing several flavors is the same process run several times,
+  never "several nuclei".
+- **Loader.**  PART.loader: takes over from the machine, runs one program
+  through its system calls, halts when it exits.  The whole landlord, for now.
 - **Landlord, tenant.**  A kernel is a landlord: it shares a machine between
   tenants.  With one tenant there is nothing to share, so there is no kernel,
   only a loader.  A program is a tenant even when it is the only one.
-- **Door.**  The table of function pointers the loader hands a program.  The
-  only thing a program sees of the machine.  Later petitions append entries;
-  nothing ever moves.
+- **System call.**  How a program asks the nucleus for something: write,
+  exit, alloc, read, ms, load, save.  The system call table is the table of
+  function pointers the loader hands a program, the only thing a program
+  sees of the machine.  Later petitions append entries; nothing ever moves.
+  The term Unix has used since 1971.  Called "the door" until 2026-10-23
+  (findings 0014); the code still says door.h, as the kernel is still
+  called the loader.  "Door" now means only the one way in: a petition.
 - **Program.**  A flat binary linked with the loader's program.ld, entered at
-  byte 0 with the door.  Hello, Hanoi, the rungs.
-- **Machine.**  The VM definition, a CMP of kind hardware: one serial port,
-  as little else as the hypervisor allows.  CMP.machine.serial-only.
+  byte 0 with the system call table.  Hello, Hanoi, the rungs.
+- **Machine (MACHINE).**  The VM definition: one serial port,
+  as little else as the hypervisor allows.  MACHINE.serial-only.
 - **Hypervisor.**  QEMU with KVM.  Scaffold, through the door later.
 - **Jig.**  Gen zero: the NixOS host that builds and tests but is not the
   system.  Bloat on purpose; every tool on it has a row in design.md's tool
@@ -138,14 +181,63 @@ exactly; when a new one is needed, add it here in the same commit.
 - **Scaffold.**  A component the jig provides for now (the compiler, the
   hypervisor), marked `scaffold = true`, rebuilt when its pool version is
   admitted.
-- **Referee.**  Checks that every code resolves and every rule holds.  No
-  model, no judgment.  Fails loud, naming a rule and a code.  Today: `jig/aios
-  check`.
+- **Referee.**  Checks that every petition asks only for what is in the
+  catalogue, and that every capability it asks for has a test; then runs the
+  tester itself, on the exact code it is approving, and refuses anything that
+  does not pass.  It never takes a results file on trust, and it never decides
+  how a test works, only whether it went green.  Checks against the rule book
+  Chris wrote.  No model, no judgment.  Nothing is cached until it says yes.
+  Fails loud, naming a rule and a catalogue number.  Today: `jig/aios check`
+  (the catalogue and rule half); running the tester is planned.
 - **Builder.**  Turns a checked flavor into an image, deterministically.
-  Decides nothing.  Today: `jig/aios build`.
+  Decides nothing and validates nothing itself.  Pressing play runs, in this
+  order: the referee on the petitions (stop on any failure); the builder;
+  the referee on the image (rule 11), which then runs the tester against
+  that exact image; the cache, which takes only an image the referee said
+  yes to after the build, so a broken builder cannot skip it.  The builder
+  works from a queue, a file anyone can read: it takes the next flavor,
+  builds everything it can (each part compiled on its own, then linked),
+  sends the full list of what is missing to the quartermaster by catalogue
+  number, and stops.  It never waits on the answer and never carries on with
+  it.  When the committee admits what was missing, the flavor goes back in
+  the queue and the whole order runs again from the referee, recompiling
+  only what changed (plan 5.6, 5.7).  Nothing in AiOs runs without a defined
+  trigger.  Today: `jig/aios build`, started by hand, which runs the referee
+  first; the after half is plan 3.4 and 3.7.
+- **Decision ledger.**  Every choice an agent makes among options, written
+  down: the options, the default, what was chosen, the reason and who chose.
+  The referee checks it against what actually changed, so a change with no
+  matching decision is a silent decision and a fault.  A short list of
+  decision kinds (licence, purpose, capabilities, dependencies, tests, these
+  rules and the words in them) is human-only.  Not built yet; it comes before the committee.
+- **Agent.**  Anything in the ring around the nucleus that acts on it: the
+  referee, builder, tester, historian, quartermaster, mechanic, committee.
+  The older sense of the word, as in mail transfer agent: something that acts
+  on someone's behalf.  Some agents use models, some never will (the referee
+  and builder).  The nucleus is made of parts; the agents surround it.
+  Named by Chris on 2026-10-13.
 - **Quartermaster, tester, mechanic, committee, seat, historian, cartographer,
   watchman, gateway.**  The agents and the governing body, defined in
-  design.md.  None exist yet.
+  design.md.  The tester and historian exist today as jig scripts
+  (`jig/test`, `jig/mutate`, `jig/upstream`); the rest do not yet.  The
+  quartermaster reads source through the shared source reader, the same one
+  the historian uses (findings 0015).  It drafts every petition: an
+  application's, because no human could; a part's, when the builder sends
+  it something missing; and one for every fix the mechanic proposes, which
+  it reads as new code through the same source reader.  All code enters
+  through the quartermaster, whoever wrote it.  The mechanic and the
+  quartermaster never share a model or prompt, so no one reviews their own
+  work.  When a test fails, the mechanic proposes a fix to the code, never
+  to the test (tests are human-only).  It reads the test's red_when, the
+  spec it binds and the part's as-built spec; the gap between the spec and
+  the as-built is the bug.  If the test disagrees with its spec, the test is
+  wrong, and that goes to Chris.  The committee's six seats (security,
+  performance, portability, experience, stability, purpose-fit) come from
+  the BSD family (OpenBSD, FreeBSD, NetBSD, and Darwin under macOS), each a synthetic personality modelled on the
+  people who maintain one, as a tribute; each on its own model; it votes and
+  never drafts.  Chris is the committee until it exists (design.md).  Every petition it drafts goes to the
+  committee (Chris until the committee exists), including a change to an
+  existing one.
 - **Admission.**  Two signed commits that set an entry's status to admitted.
   Until then an entry is draft and a petition naming it is pending.
 - **Well-formed, buildable.**  The referee's two phases.  Well-formed: every
@@ -185,7 +277,7 @@ A component is done, and a post about it may be written, only when all of
 these are true.  `sh jig/donecheck` checks the ones a script can check and
 names the component and the rule that failed.
 
-1. It has an index entry, and the entry names its source directory.
+1. It has a catalogue entry, and the entry names its source directory.
 2. It has an as-built spec: what it does, every port, register and
    instruction it touches, every byte it writes, its size.  Hand-written until
    the generator exists (plan 7.1), and saying so.
@@ -195,7 +287,7 @@ names the component and the rule that failed.
    it red and a time limit.
 5. Every test has been run by `sh jig/test` and passes in tests/results.txt,
    and `sh jig/mutate` has shown it can go red (or findings say why it cannot
-   yet).  A test with no runner says so, in the index and in the post's
+   yet).  A test with no runner says so, in the catalogue and in the post's
    addendum.
 6. If any line came from upstream, it lives in lifted/ with an origin record
    that `jig/upstream verify` passes.
@@ -250,7 +342,7 @@ id="...">` with a label and a Copy button outside the copied part:
 2. `title`: the article's title, nothing else.
 3. `article`: the article body.
 
-**The post (section `post`).**  One line, nothing else: `AiOS, part N (Kernel
+**The post (section `post`).**  One line, nothing else: `AiOs, part N (Kernel
 code: K lines).` then a one-sentence pull quote from the article in double
 quotes, then `...`.  Single spaces after periods (LinkedIn collapses doubles).
 K is the lines of code taken from Linux (lifted/, the .c files, no blanks, no
@@ -258,7 +350,7 @@ comments, as the as-built specs record them) on the day the post goes out:
 57 from part 1, 69 from part 6.  LinkedIn attaches the article to it.
 
 **The article (section `article`), top to bottom.**
-1. `<p><em>The story behind AiOS, part N.</em></p>`
+1. `<p><em>The story behind AiOs, part N.</em></p>`
 2. Prose sections, each under an `<h2>`, in this order where they apply: the
    problem (the textbook exercise and why it was picked, including if the AI
    picked it); what we built (how it works, in words, a few lines of code at

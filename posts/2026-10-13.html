@@ -95,18 +95,18 @@ changes, and Hanoi is why it exists.</p>
 <h2>Read along</h2>
 <p>If you want to see it for yourself, these are the files to read, in this order.  The links go to the exact version from this post.</p>
 <ol>
-<li><a href="https://github.com/cmcluckie/aios/blob/25d3699/pool/CMP.hanoi@1/hanoi.c">pool/CMP.hanoi@1/hanoi.c</a>.  Look at the hanoi function.  Six lines, and it calls itself twice.  That's the whole solution.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/25d3699/pool/CMP.hanoi@1/hanoi.c">pool/PART.hanoi@1/hanoi.c</a>.  Look at the hanoi function.  Six lines, and it calls itself twice.  That's the whole solution.</li>
 <li><a href="https://github.com/cmcluckie/aios/blob/25d3699/petitions/0001.toml">petitions/0001.toml</a>.  Put it next to petitions/0000.toml.  Same permissions, same loader.  Nothing new was asked for.</li>
-<li><a href="https://github.com/cmcluckie/aios/blob/25d3699/pool/CMP.loader@1/program.ld">pool/CMP.loader@1/program.ld</a>.  The file that tells the compiler what a program looks like.  It moved here from hello world, because it belongs to the loader.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/25d3699/pool/CMP.loader@1/program.ld">pool/PART.loader@1/program.ld</a>.  The file that tells the compiler what a program looks like.  It moved here from hello world, because it belongs to the loader.</li>
 <li><a href="https://github.com/cmcluckie/aios/blob/25d3699/specs/loader.4@1.toml">specs/loader.4@1.toml</a>.  The rule this post is really about: the loader that runs one program runs all of them, byte for byte.</li>
 </ol>
 <h2>Try this</h2>
-<p>Open pool/CMP.hanoi@1/hanoi.c, change DISKS from 4 to 5, and press F5 → AiOS: hanoi.  You'll get 31 moves instead of 15.  Then look at specs/hanoi.1@1.toml, which still says 15: you've just made the test go red, on purpose, which is exactly what tests are for.</p>
+<p>Open pool/PART.hanoi@1/hanoi.c, change DISKS from 4 to 5, and press F5 → AiOS: hanoi.  You'll get 31 moves instead of 15.  Then look at specs/hanoi.1@1.toml, which still says 15: you've just made the test go red, on purpose, which is exactly what tests are for.</p>
 <h2>As built</h2>
 <p>What each part actually does, written down from its source: every port it touches, every byte it writes, how big it is.  These are hand-written for now; the tool that derives them from the code is plan section 7.1.</p>
 <ul>
-<li><a href="https://github.com/cmcluckie/aios/blob/main/index/cmp/hanoi@1.as-built.md">hanoi@1</a></li>
-<li><a href="https://github.com/cmcluckie/aios/blob/main/index/cmp/loader@1.as-built.md">loader@1</a></li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/index/part/hanoi@1.as-built.md">hanoi@1</a></li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/index/part/loader@1.as-built.md">loader@1</a></li>
 </ul>
 <h2>Addendum: the tests</h2>
 <p>Every test written for the parts above: what it checks, what turns it red, and whether it has actually been run.  "Checked by hand" means it was run and compared, but not yet by the automatic test runner (plan section 4), which doesn't exist yet.  Until it does, these are honest notes, not a scoreboard.</p>

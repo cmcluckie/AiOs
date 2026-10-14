@@ -111,19 +111,19 @@ and for the first time the machine listens.</p>
 <h2>Read along</h2>
 <p>If you want to see it for yourself, these are the files to read, in this order.</p>
 <ol>
-<li><a href="https://github.com/cmcluckie/aios/blob/main/pool/CMP.life@1/life.c">pool/CMP.life@1/life.c</a>.  Near the bottom: two calls to door-&gt;alloc for the grids.  Those are the pointers.  The last line asks for 128 MB and expects to be told no.</li>
-<li><a href="https://github.com/cmcluckie/aios/blob/main/pool/CMP.loader@2/loader.c">pool/CMP.loader@2/loader.c</a>.  heap_init reads the firmware's memory map; door_alloc hands out the next piece.  About thirty lines between them.</li>
-<li><a href="https://github.com/cmcluckie/aios/blob/main/pool/CMP.loader@2/door.h">pool/CMP.loader@2/door.h</a>.  The door, one entry longer.  write and exit didn't move.</li>
-<li><a href="https://github.com/cmcluckie/aios/blob/main/pool/CMP.loader@2/program.ld">pool/CMP.loader@2/program.ld</a>.  Read the comment at the top.  That's the one-line fix for the pointer bug, and why.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/pool/PART.life@1/life.c">pool/PART.life@1/life.c</a>.  Near the bottom: two calls to door-&gt;alloc for the grids.  Those are the pointers.  The last line asks for 128 MB and expects to be told no.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/pool/PART.loader@2/loader.c">pool/PART.loader@2/loader.c</a>.  heap_init reads the firmware's memory map; door_alloc hands out the next piece.  About thirty lines between them.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/pool/PART.loader@2/door.h">pool/PART.loader@2/door.h</a>.  The door, one entry longer.  write and exit didn't move.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/pool/PART.loader@2/program.ld">pool/PART.loader@2/program.ld</a>.  Read the comment at the top.  That's the one-line fix for the pointer bug, and why.</li>
 <li><a href="https://github.com/cmcluckie/aios/blob/main/findings/0005.md">findings/0005.md</a>.  The full story of the bug, plus the memory map from 1985.</li>
 </ol>
 <h2>Try this</h2>
-<p>Open pool/CMP.life@1/life.c, find the line that asks for 128 MiB, change both 128s to 16, and press F5 → AiOS: life.  It says "16 MiB: granted".  The operating system just said yes to you.</p>
+<p>Open pool/PART.life@1/life.c, find the line that asks for 128 MiB, change both 128s to 16, and press F5 → AiOS: life.  It says "16 MiB: granted".  The operating system just said yes to you.</p>
 <h2>As built</h2>
 <p>What each part actually does, written down from its source: every port it touches, every byte it writes, how big it is.  These are hand-written for now; the tool that derives them from the code is plan section 7.1.</p>
 <ul>
-<li><a href="https://github.com/cmcluckie/aios/blob/main/index/cmp/life@1.as-built.md">life@1</a></li>
-<li><a href="https://github.com/cmcluckie/aios/blob/main/index/cmp/loader@2.as-built.md">loader@2</a></li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/index/part/life@1.as-built.md">life@1</a></li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/index/part/loader@2.as-built.md">loader@2</a></li>
 </ul>
 <h2>Addendum: the tests</h2>
 <p>Every test written for the parts above: what it checks, what turns it red, and whether it has actually been run.  "Checked by hand" means it was run and compared, but not yet by the automatic test runner (plan section 4), which doesn't exist yet.  Until it does, these are honest notes, not a scoreboard.</p>

@@ -5,6 +5,6 @@ retired_by = ""
 binds      = "SPEC.disk.1@1"
 red_when   = "sort booted on the serial-only machine, with no disk, does not halt within 30 seconds or does not say it could not save"
 timeout_ms = 30000
-isolates   = "CMP.disk.ata-pio@1"
+isolates   = "PART.disk.ata-pio@1"
 runner     = "jig/test cmd sh tests/programs/nodisk.sh"
 mutations  = 1

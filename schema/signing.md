@@ -36,7 +36,7 @@ the next seat sees.
     commit     = "84eb0fd..."              # the commit whose petitions/0000.toml was reviewed
     seat       = "KEY.seat.security@1"
     verdict    = "approve"                 # approve | reject | counter
-    reason     = "SPEC.hello.2@1"          # a code, or a findings file path for counter
+    reason     = "SPEC.hello.2@1"          # a catalogue number, or a findings file path for counter
     signature  = "-----BEGIN SSH SIGNATURE----- ..."
 
 The signed bytes are exactly: the contents of `petitions/<id>.toml` at

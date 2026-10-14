@@ -5,6 +5,6 @@ retired_by = "TST.share.on-time@2"   # the sieve finished in 8 ms on the jig, be
 binds      = "SPEC.loader.11@1"
 red_when   = "the stopwatch and the sieve booted together and watched for 10 seconds by the host's clock: the stopwatch does not show every second once, in order, through 00:09 or 00:10, or the sieve does not report 1899 primes inside the 10 seconds, or no second ticked over while the sieve was working"
 timeout_ms = 15000
-isolates   = "CMP.loader@6"
+isolates   = "PART.loader@6"
 runner     = "jig/test timed share 10"
 mutations  = 2

@@ -68,25 +68,25 @@ And the piece of the process this rung added: a test that attacks from inside.  
 
 ## Read along
 
-1. [pool/CMP.loader@6/loader.c](https://github.com/cmcluckie/aios/blob/main/pool/CMP.loader@6/loader.c).  The kernel.  Read the comment at the top, then find `kernel_trap`: the tick, the switch and the Guru Meditation are all in there, about forty lines.
-2. [pool/CMP.loader@6/isr.S](https://github.com/cmcluckie/aios/blob/main/pool/CMP.loader@6/isr.S).  The moment of switching, in assembly: save every register, swap the stack and the memory map, restore every register.
-3. [pool/CMP.sieve@1/sieve.c](https://github.com/cmcluckie/aios/blob/main/pool/CMP.sieve@1/sieve.c).  BYTE's 1981 sieve, the rude program.  Notice there's no door call inside the loop.
-4. [lifted/CMP.irq.pic@1/pic.c](https://github.com/cmcluckie/aios/blob/main/lifted/CMP.irq.pic@1/pic.c).  The interrupt controller setup, from Linux, and the four lines of "virtual wire" at the bottom of `pic_init`.
+1. [pool/PART.loader@6/loader.c](https://github.com/cmcluckie/aios/blob/main/pool/PART.loader@6/loader.c).  The kernel.  Read the comment at the top, then find `kernel_trap`: the tick, the switch and the Guru Meditation are all in there, about forty lines.
+2. [pool/PART.loader@6/isr.S](https://github.com/cmcluckie/aios/blob/main/pool/PART.loader@6/isr.S).  The moment of switching, in assembly: save every register, swap the stack and the memory map, restore every register.
+3. [pool/PART.sieve@1/sieve.c](https://github.com/cmcluckie/aios/blob/main/pool/PART.sieve@1/sieve.c).  BYTE's 1981 sieve, the rude program.  Notice there's no door call inside the loop.
+4. [lifted/PART.irq.pic@1/pic.c](https://github.com/cmcluckie/aios/blob/main/lifted/PART.irq.pic@1/pic.c).  The interrupt controller setup, from Linux, and the four lines of "virtual wire" at the bottom of `pic_init`.
 5. [tests/programs/vandal.c](https://github.com/cmcluckie/aios/blob/main/tests/programs/vandal.c).  The vandal.  A dozen lines of bad intentions.
 6. [findings/0011.md](https://github.com/cmcluckie/aios/blob/main/findings/0011.md).  What we found, including the hole that's left.
 
 ## Try this
 
-Press F5 and pick AiOS: share.  Watch the stopwatch keep time while the sieve works, until the sieve reports its 1,899 primes.  Then build Windows 3.1: open pool/CMP.loader@6/loader.c, find the line `pic_unmask(PIT_IRQ);`, delete it, and run it again.  The stopwatch still counts, but the sieve never gets a turn.  Put the line back.
+Press F5 and pick AiOS: share.  Watch the stopwatch keep time while the sieve works, until the sieve reports its 1,899 primes.  Then build Windows 3.1: open pool/PART.loader@6/loader.c, find the line `pic_unmask(PIT_IRQ);`, delete it, and run it again.  The stopwatch still counts, but the sieve never gets a turn.  Put the line back.
 
 ## As built
 
-- [loader@6](https://github.com/cmcluckie/aios/blob/main/index/cmp/loader@6.as-built.md)
-- [irq.pic@1](https://github.com/cmcluckie/aios/blob/main/index/cmp/irq.pic@1.as-built.md)
-- [timer.pit-tick@1](https://github.com/cmcluckie/aios/blob/main/index/cmp/timer.pit-tick@1.as-built.md)
-- [archive.cpio@1](https://github.com/cmcluckie/aios/blob/main/index/cmp/archive.cpio@1.as-built.md)
-- [sieve@1](https://github.com/cmcluckie/aios/blob/main/index/cmp/sieve@1.as-built.md)
-- [machine.serial-irq@1](https://github.com/cmcluckie/aios/blob/main/index/cmp/machine.serial-irq@1.as-built.md)
+- [loader@6](https://github.com/cmcluckie/aios/blob/main/index/part/loader@6.as-built.md)
+- [irq.pic@1](https://github.com/cmcluckie/aios/blob/main/index/part/irq.pic@1.as-built.md)
+- [timer.pit-tick@1](https://github.com/cmcluckie/aios/blob/main/index/part/timer.pit-tick@1.as-built.md)
+- [archive.cpio@1](https://github.com/cmcluckie/aios/blob/main/index/part/archive.cpio@1.as-built.md)
+- [sieve@1](https://github.com/cmcluckie/aios/blob/main/index/part/sieve@1.as-built.md)
+- [machine.serial-irq@1](https://github.com/cmcluckie/aios/blob/main/index/machine/serial-irq@1.as-built.md)
 
 ## Addendum: the tests
 

@@ -58,20 +58,20 @@ AiOS, part 9 (Kernel code: 172 lines). "I could never play my favourite games on
 <p>And the stopwatch never stops.  It's a stopwatch; you switch it off.  So its tests can't wait for it to finish.  They watch it for exactly ten seconds instead.</p>
 <h2>Read along</h2>
 <ol>
-<li><a href="https://github.com/cmcluckie/aios/blob/main/pool/CMP.stopwatch@1/stopwatch.c">pool/CMP.stopwatch@1/stopwatch.c</a>.  The whole stopwatch, about twenty lines.  Find the <code>while</code> that aims at <code>n * 1000</code>: that's rule two.</li>
-<li><a href="https://github.com/cmcluckie/aios/blob/main/pool/CMP.loader@4/loader.c">pool/CMP.loader@4/loader.c</a>.  Look for <code>door_ms</code> and the five tries at boot.  One subtraction, one division.</li>
-<li><a href="https://github.com/cmcluckie/aios/blob/main/lifted/CMP.timer.tsc-pit@1/tsccal.c">lifted/CMP.timer.tsc-pit@1/tsccal.c</a>.  Linux's measuring code.  Read the long comment above <code>pit_verify_msb</code>: that's Linux explaining why it refuses to guess.</li>
-<li><a href="https://github.com/cmcluckie/aios/blob/main/pool/CMP.machine.serial-timer@1/machine.sh">pool/CMP.machine.serial-timer@1/machine.sh</a>.  The new machine.  Put it next to the old one; the only real difference is <code>pit=on</code>.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/pool/PART.stopwatch@1/stopwatch.c">pool/PART.stopwatch@1/stopwatch.c</a>.  The whole stopwatch, about twenty lines.  Find the <code>while</code> that aims at <code>n * 1000</code>: that's rule two.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/pool/PART.loader@4/loader.c">pool/PART.loader@4/loader.c</a>.  Look for <code>door_ms</code> and the five tries at boot.  One subtraction, one division.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/lifted/PART.timer.tsc-pit@1/tsccal.c">lifted/PART.timer.tsc-pit@1/tsccal.c</a>.  Linux's measuring code.  Read the long comment above <code>pit_verify_msb</code>: that's Linux explaining why it refuses to guess.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/pool/MACHINE.serial-timer@1/machine.sh">pool/MACHINE.serial-timer@1/machine.sh</a>.  The new machine.  Put it next to the old one; the only real difference is <code>pit=on</code>.</li>
 <li><a href="https://github.com/cmcluckie/aios/blob/main/findings/0008.md">findings/0008.md</a>.  What we found, including the missing speaker port and the one-in-three failures.</li>
 </ol>
 <h2>Try this</h2>
-<p>Press F5 and pick AiOS: stopwatch, and watch it count.  Then build yourself a turbo button: open pool/CMP.stopwatch@1/stopwatch.c, change <code>n * 1000</code> to <code>n * 500</code>, and run it again.  It now counts two "seconds" for every real one, which is exactly the bug from 1985.  Run <code>sh jig/test stopwatch</code> and watch the test catch you.</p>
+<p>Press F5 and pick AiOS: stopwatch, and watch it count.  Then build yourself a turbo button: open pool/PART.stopwatch@1/stopwatch.c, change <code>n * 1000</code> to <code>n * 500</code>, and run it again.  It now counts two "seconds" for every real one, which is exactly the bug from 1985.  Run <code>sh jig/test stopwatch</code> and watch the test catch you.</p>
 <h2>As built</h2>
 <ul>
-<li><a href="https://github.com/cmcluckie/aios/blob/main/index/cmp/loader@4.as-built.md">loader@4</a></li>
-<li><a href="https://github.com/cmcluckie/aios/blob/main/index/cmp/timer.tsc-pit@1.as-built.md">timer.tsc-pit@1</a></li>
-<li><a href="https://github.com/cmcluckie/aios/blob/main/index/cmp/stopwatch@1.as-built.md">stopwatch@1</a></li>
-<li><a href="https://github.com/cmcluckie/aios/blob/main/index/cmp/machine.serial-timer@1.as-built.md">machine.serial-timer@1</a></li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/index/part/loader@4.as-built.md">loader@4</a></li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/index/part/timer.tsc-pit@1.as-built.md">timer.tsc-pit@1</a></li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/index/part/stopwatch@1.as-built.md">stopwatch@1</a></li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/index/machine/serial-timer@1.as-built.md">machine.serial-timer@1</a></li>
 </ul>
 <h2>Addendum: the tests</h2>
 <p>Every test for the parts above, from tests/results.txt and tests/mutations-results.txt.  All of them ran under software emulation, not on the jig.</p>
@@ -81,7 +81,7 @@ AiOS, part 9 (Kernel code: 172 lines). "I could never play my favourite games on
 </ul>
 <p><strong>loader@4</strong></p>
 <ul>
-<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/loader.ladder-4@1.toml">loader.ladder-4@1</a>.  Checks: The loader binary that runs one program on the ladder runs every other program on the ladder, byte-identical, with no change.  Goes red when: hello, hanoi, life or calc, each built for its own loader, booted unchanged under CMP.loader@4 on the stopwatch machine, differs by one byte from its own expected output.  Status: Passed by the runner (software emulation): 4 programs byte-identical under loader@4.  Mutations caught: 1.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/loader.ladder-4@1.toml">loader.ladder-4@1</a>.  Checks: The loader binary that runs one program on the ladder runs every other program on the ladder, byte-identical, with no change.  Goes red when: hello, hanoi, life or calc, each built for its own loader, booted unchanged under PART.loader@4 on the stopwatch machine, differs by one byte from its own expected output.  Status: Passed by the runner (software emulation): 4 programs byte-identical under loader@4.  Mutations caught: 1.</li>
 <li><a href="https://github.com/cmcluckie/aios/blob/main/tests/loader.ms@1.toml">loader.ms@1</a>.  Checks: The ms door returns milliseconds since the loader started the clock, never going backwards, and keeps pace with the host's clock to within 1%; if the clock could not be measured it returns 0, always.  Goes red when: a program that prints the ms door as soon as it starts and then every half second by the door, watched for 10 seconds by the host's clock, shows more than 5 ms at its first reading, a value lower than the one before it, or its milliseconds and the host's differ by more than 1% between the first line and the last.  Status: Passed by the runner (software emulation): door 9499 ms, host 9495 ms: drift 4 ms per 10 s.  Mutations caught: 1.</li>
 </ul>
 <p><strong>timer.tsc-pit@1</strong></p>

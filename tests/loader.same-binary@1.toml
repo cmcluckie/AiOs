@@ -5,6 +5,6 @@ retired_by = ""
 binds      = "SPEC.loader.4@1"
 red_when   = "the loader built for any program on the ladder differs by one byte from the loader built for any other, or any program on the ladder fails under the loader built for another"
 timeout_ms = 30000
-isolates   = "CMP.loader@1"
+isolates   = "PART.loader@1"
 runner     = "jig/test same-loader hello hanoi"
 mutations  = 0

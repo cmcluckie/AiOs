@@ -22,17 +22,19 @@ check_html() {
 	section post "$h" | sed '1,/<div id="post-body"/d; /^<\/div>$/,$d' > "$p"
 	section article "$h" > "$a"
 
+	# The name is AiOs.  Parts 1 to 12 went out as AiOS and are the record (findings 0014).
+	N=AiOs; [ "$d" \> "2026-10-22" ] || N=AiOS
 	first=$(head -1 "$p")
 	case "$first" in
-		"AiOS, part $n (Kernel code: "[0-9]*" lines). \""*"\"...") ;;
-		*) bad "$h" "post's first line is not 'AiOS, part $n (Kernel code: K lines). \"<pull quote>\"...'" ;;
+		"$N, part $n (Kernel code: "[0-9]*" lines). \""*"\"...") ;;
+		*) bad "$h" "post's first line is not '$N, part $n (Kernel code: K lines). \"<pull quote>\"...'" ;;
 	esac
 	[ "$(grep -c . "$p")" -eq 1 ] || bad "$h" "post is more than its one line"
 	grep -q '\.  ' "$p" && bad "$h" "post has two spaces after a period; LinkedIn collapses them"
 
 	section title "$h" | grep -q '<h1>[^<][^<]*</h1>' || bad "$h" "title section has no <h1>title</h1>"
 
-	has "$a" "<em>The story behind AiOS, part $n.</em>" || bad "$h" "article does not open with 'The story behind AiOS, part $n.'"
+	has "$a" "<em>The story behind $N, part $n.</em>" || bad "$h" "article does not open with 'The story behind $N, part $n.'"
 	grep -q '<h1' "$a" && bad "$h" "article uses <h1>; LinkedIn has two heading sizes, use <h2> and <h3>"
 	l() { grep -n "<h2>$1</h2>" "$a" | head -1 | cut -d: -f1; }
 	ra=$(l "Read along"); tt=$(l "Try this"); ab=$(l "As built"); ad=$(l "Addendum: the tests")
@@ -61,13 +63,26 @@ check_html() {
 	for t in $(grep -o 'tests/[a-z0-9.@-]*\.toml' "$a" | sort -u); do
 		[ -f "../$t" ] || bad "$h" "addendum links $t, which does not exist"
 	done
-	for x in $(grep -o 'index/cmp/[a-z0-9.@-]*\.as-built\.md' "$a" | sort -u); do
+	for x in $(grep -o 'index/\(part\|machine\|tool\)/[a-z0-9.@-]*\.as-built\.md' "$a" | sort -u); do
 		[ -f "../$x" ] || bad "$h" "as-built link $x does not exist"
 	done
 
 	grep -q 'lnkd\.in' "$h" && bad "$h" "contains an lnkd.in link; use the GitHub URL"
 	grep -q '—' "$h" && bad "$h" "contains an em-dash"
 	grep -qiE '\b(thrilled to|excited to share|game.?changer|let that sink in|delve|fast-paced world)\b' "$h" && bad "$h" "corporate phrasing (voice.md, Not him)"
+	# Retired words (CLAUDE.md, Terms): readers learn the words once, so a post
+	# written after a rename may not use the old one.  Older posts are the record.
+	if [ "$d" \> "2026-10-21" ]; then
+		# a retired word in quotes is being talked about, not used
+		sed -E 's/(["“]|&quot;)[Ss]egments?(["”]|&quot;)//g; s/segment register//g' "$h" | grep -qiE '\bsegments?\b' && bad "$h" "retired word 'segment': it is a part now (findings 0014)"
+		[ "$N" = AiOs ] && sed -E 's/formerly the index//g; s/("|&quot;)the index("|&quot;)//g' "$h" | grep -qE '[Tt]he index\b|index (entr|code)' && bad "$h" "retired word 'index': it is the catalogue now; the folder is still index/ (findings 0014)"
+		[ "$N" = AiOs ] && grep -q 'AiOS' "$h" && bad "$h" "the name is AiOs, lower-case s (findings 0014)"
+		grep -qE 'CMP\.|index/cmp' "$h" && bad "$h" "retired table CMP: it is PART, MACHINE or TOOL now (findings 0014)"
+	fi
+	if [ "$d" \> "2026-10-22" ]; then
+		# "door" now means only the one way in, a petition; quoted, it is being talked about
+		sed -E 's/(["“]|&quot;)the door(["”]|&quot;)//g; s/door\.h//g' "$h" | grep -qiE "\b(write|exit|alloc|read|ms|load|save|time) doors?\b|\bdoors?\b (entry|entries|table|call)|loader('|&#x27;|&#39;|’)?s doors?\b|\bthe doors\b" && bad "$h" "retired word 'door' for a system call (findings 0014)"
+	fi
 	rm -f "$p" "$a"
 }
 

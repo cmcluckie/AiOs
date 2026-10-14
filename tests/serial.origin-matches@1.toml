@@ -5,6 +5,6 @@ retired_by = ""
 binds      = "SPEC.serial.3@1"
 red_when   = "jig/upstream verify, run against a clone of upstream with the recorded commit, reports any range of this part as WRONG"
 timeout_ms = 60000
-isolates   = "CMP.serial.8250@1"
+isolates   = "PART.serial.8250@1"
 runner     = "jig/test cmd sh jig/upstream verify"
 mutations  = 1

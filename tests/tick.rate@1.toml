@@ -5,6 +5,6 @@ retired_by = ""
 binds      = "SPEC.tick.1@1"
 red_when   = "with QEMU's 8259 trace on, the share flavor run for 5 seconds by the host's clock delivers IRQ 0 fewer than 400 or more than 510 times"
 timeout_ms = 15000
-isolates   = "CMP.timer.pit-tick@1"
+isolates   = "PART.timer.pit-tick@1"
 runner     = "jig/test cmd sh tests/programs/irqtrace.sh tick"
 mutations  = 1

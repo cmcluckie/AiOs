@@ -5,6 +5,6 @@ retired_by = ""
 binds      = "SPEC.loader.5@1"
 red_when   = "a program that allocates blocks until refused and prints each block's address and size shows any block outside the RAM region containing the program, below the program's end, or overlapping another"
 timeout_ms = 10000
-isolates   = "CMP.loader@2"
+isolates   = "PART.loader@2"
 runner     = "jig/test program tests/programs/allocwalk.c life"
 mutations  = 1

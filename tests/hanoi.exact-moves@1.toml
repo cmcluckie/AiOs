@@ -5,6 +5,6 @@ retired_by = ""
 binds      = "SPEC.hanoi.1@1"
 red_when   = "the component's output, captured in isolation, differs from the 360 bytes a reference solver produces for four disks"
 timeout_ms = 5000
-isolates   = "CMP.hanoi@1"
+isolates   = "PART.hanoi@1"
 runner     = "jig/test boot hanoi"
 mutations  = 1

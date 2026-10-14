@@ -4,8 +4,8 @@
 set -eu
 cd "$(dirname "$0")/../.."
 n=0
-for h in pool/CMP.loader@*/door.h; do
-	v=${h#pool/CMP.loader@}; v=${v%/door.h}
+for h in pool/PART.loader@*/door.h; do
+	v=${h#pool/PART.loader@}; v=${v%/door.h}
 	{
 		echo "#include \"$PWD/$h\""
 		echo "#define AT(f, o) _Static_assert(__builtin_offsetof(struct door, f) == o, \"$h: \" #f \" not at \" #o);"

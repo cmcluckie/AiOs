@@ -59,7 +59,7 @@ num()   { sed -n "s/^$2 *= *\([0-9][0-9]*\).*/\1/p" "$1" | head -1; }
 # the machine a flavor runs on: its machine component's machine.sh, unchanged
 machine_of() {
 	m=$(field "flavors/$1.toml" machine)
-	echo "$(field "index/cmp/${m#CMP.}.toml" source)machine.sh"
+	echo "$(field "index/machine/${m#MACHINE.}.toml" source)machine.sh"
 }
 [ -w /dev/kvm ] && accel=kvm || accel="software emulation (tcg)"
 
@@ -217,13 +217,13 @@ run_one() {	# t secs kind args... ; sets why
 }
 # probe SRC FLAVOR: build a probe program from tests/programs against the flavor's loader
 probe() {
-	ldir=$(field "index/cmp/loader@$(lv "$2").toml" source)
+	ldir=$(field "index/part/loader@$(lv "$2").toml" source)
 	CF="-m32 -std=c11 -ffreestanding -fno-pic -fno-pie -fno-stack-protector -fno-builtin -fno-asynchronous-unwind-tables -mno-sse -mno-mmx -mno-red-zone -mgeneral-regs-only -nostdlib -nostdinc -O2 -Wall -Wextra -Werror"
 	gcc $CF -I "$ldir" -c -o "$tmp/probe.o" "$1" 2> "$tmp/cc.err" &&
 	gcc $CF -static -no-pie -nostartfiles -Wl,--build-id=none -Wl,-z,noexecstack -T "$ldir/program.ld" -o "$tmp/probe.bin" "$tmp/probe.o" 2>> "$tmp/cc.err" \
 		|| { why="probe $1 does not build: $(head -1 "$tmp/cc.err")"; return 1; }
 }
-lv() { sed -n 's/^built flavor [a-z]*: CMP\.loader@\([0-9]*\).*/\1/p' "out/$1/build.txt"; }
+lv() { sed -n 's/^built flavor [a-z]*: PART\.loader@\([0-9]*\).*/\1/p' "out/$1/build.txt"; }
 
 # build a flavor once per run, keeping aios's summary line: it names the loader
 build() {

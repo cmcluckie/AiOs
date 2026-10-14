@@ -5,6 +5,6 @@ retired_by = ""
 binds      = "SPEC.serial.5@1"
 red_when   = "in QEMU's register trace of hello's boot, before the first byte is sent, the last value written to the line control register is not 0x03 (8 data bits, no parity, 1 stop bit, divisor latch off), or the divisor latch was not written as 1 (115200 baud from the 1.8432 MHz clock) while the latch bit was set"
 timeout_ms = 5000
-isolates   = "CMP.serial.8250@1"
+isolates   = "PART.serial.8250@1"
 runner     = "jig/test trace hello"
 mutations  = 1

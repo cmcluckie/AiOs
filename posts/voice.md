@@ -80,7 +80,9 @@ CLAUDE.md, under The series.
 The series is an invitation, not a highlight reel.  We're all learning,
 Chris included, and the posts say so.
 
-- "We" for the work, "I" for his feelings, his history, his decisions.
+- "I" in his posts, never a "we" that means him and Claude: readers hear
+  two people in one head.  When Claude did the work, say "Claude and I", or
+  "Claude" alone.  "We" only for him and the readers ("we're all learning").
 - Every post leaves the reader something to do or learn: open a commit,
   press F5, try to break it, tell him a better way.
 - Mistakes and bugs get as much room as wins, and more than the numbers.

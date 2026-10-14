@@ -103,21 +103,21 @@ honest.</p>
 <h2>Read along</h2>
 <p>If you want to see it for yourself, these are the files to read, in this order.  The links go to the exact version from this post.</p>
 <ol>
-<li><a href="https://github.com/cmcluckie/aios/blob/7c6a876/pool/CMP.hello@1/hello.c">pool/CMP.hello@1/hello.c</a>.  Seven lines.  Notice it never touches hardware.  It only calls the two things it's handed: write and exit.</li>
-<li><a href="https://github.com/cmcluckie/aios/blob/7c6a876/pool/CMP.loader@1/door.h">pool/CMP.loader@1/door.h</a>.  That's the door.  Two function pointers, write and exit.  Every program on the ladder gets this table, and later ones just get a longer one.</li>
-<li><a href="https://github.com/cmcluckie/aios/blob/7c6a876/pool/CMP.loader@1/loader.c">pool/CMP.loader@1/loader.c</a>.  Read it from the bottom up.  loader_main finds the program, copies it into place, and calls it with the door.  halt() is the reset trick.</li>
-<li><a href="https://github.com/cmcluckie/aios/blob/7c6a876/pool/CMP.serial.8250@1/serial8250.c">pool/CMP.serial.8250@1/serial8250.c</a>.  The 57 lines from Linux.  The comment at the top lists exactly which Linux lines each piece came from, and everything that was cut away.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/7c6a876/pool/CMP.hello@1/hello.c">pool/PART.hello@1/hello.c</a>.  Seven lines.  Notice it never touches hardware.  It only calls the two things it's handed: write and exit.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/7c6a876/pool/CMP.loader@1/door.h">pool/PART.loader@1/door.h</a>.  That's the door.  Two function pointers, write and exit.  Every program on the ladder gets this table, and later ones just get a longer one.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/7c6a876/pool/CMP.loader@1/loader.c">pool/PART.loader@1/loader.c</a>.  Read it from the bottom up.  loader_main finds the program, copies it into place, and calls it with the door.  halt() is the reset trick.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/7c6a876/pool/CMP.serial.8250@1/serial8250.c">pool/PART.serial.8250@1/serial8250.c</a>.  The 57 lines from Linux.  The comment at the top lists exactly which Linux lines each piece came from, and everything that was cut away.</li>
 <li><a href="https://github.com/cmcluckie/aios/blob/7c6a876/findings/0002.md">findings/0002.md</a>.  The list of everything nobody asked for, and why it's there anyway.  This is the honest part.</li>
 </ol>
 <h2>Try this</h2>
-<p>Open the repo in Codespaces (or VS Code), open pool/CMP.hello@1/hello.c, change "Hello, world." to anything you like, and press F5 → AiOS: hello.  The machine prints your line instead.  You've just changed a program on an operating system without touching the operating system.</p>
+<p>Open the repo in Codespaces (or VS Code), open pool/PART.hello@1/hello.c, change "Hello, world." to anything you like, and press F5 → AiOS: hello.  The machine prints your line instead.  You've just changed a program on an operating system without touching the operating system.</p>
 <h2>As built</h2>
 <p>What each part actually does, written down from its source: every port it touches, every byte it writes, how big it is.  These are hand-written for now; the tool that derives them from the code is plan section 7.1.</p>
 <ul>
-<li><a href="https://github.com/cmcluckie/aios/blob/main/index/cmp/hello@1.as-built.md">hello@1</a></li>
-<li><a href="https://github.com/cmcluckie/aios/blob/main/index/cmp/loader@1.as-built.md">loader@1</a></li>
-<li><a href="https://github.com/cmcluckie/aios/blob/main/index/cmp/serial.8250@1.as-built.md">serial.8250@1</a></li>
-<li><a href="https://github.com/cmcluckie/aios/blob/main/index/cmp/machine.serial-only@1.as-built.md">machine.serial-only@1</a></li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/index/part/hello@1.as-built.md">hello@1</a></li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/index/part/loader@1.as-built.md">loader@1</a></li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/index/part/serial.8250@1.as-built.md">serial.8250@1</a></li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/index/machine/serial-only@1.as-built.md">machine.serial-only@1</a></li>
 </ul>
 <h2>Addendum: the tests</h2>
 <p>Every test written for the parts above: what it checks, what turns it red, and whether it has actually been run.  "Checked by hand" means it was run and compared, but not yet by the automatic test runner (plan section 4), which doesn't exist yet.  Until it does, these are honest notes, not a scoreboard.</p>

@@ -5,6 +5,6 @@ retired_by = ""
 binds      = "SPEC.hello.1@1"
 red_when   = "the component's stdout, captured in isolation, is anything other than the 14 bytes 'Hello, world.\\n'"
 timeout_ms = 5000
-isolates   = "CMP.hello@1"
+isolates   = "PART.hello@1"
 runner     = "jig/test boot hello"
 mutations  = 5

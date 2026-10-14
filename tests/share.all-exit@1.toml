@@ -5,6 +5,6 @@ retired_by = ""
 binds      = "SPEC.cpio.1@1"
 red_when   = "hello and Hanoi packed into one archive and run together under loader@6: hello's line or Hanoi's 15 moves are not all there, whole and in order, or anything else is printed, or the machine has not halted 20 seconds later"
 timeout_ms = 30000
-isolates   = "CMP.archive.cpio@1"
+isolates   = "PART.archive.cpio@1"
 runner     = "jig/test cmd sh tests/programs/allexit.sh"
 mutations  = 1
