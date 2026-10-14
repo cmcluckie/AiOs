@@ -55,8 +55,9 @@ Status: requested (hash unknown), confirmed (hash seen), pushed.
 | 2026-10-22 (part 12, the jig) | jig's first run: CMP.timer.tsc-pit@2 (150 ms window), loaders 4-6 re-pointed, disk strace limit 120 s, pitprobe, findings 0012 | e160203 | pushed |
 | 2026-10-22 (part 12, the jig) | clock: ask KVM first (CMP.timer.kvmclock@1), the 8254 as backup; nopit/nokvm runners; share.on-time@2 with a hog that never yields; findings 0012 #9-13 | 0296132 | pushed |
 | 2026-10-22 (part 12, the jig) | findings 0012 #14-16: the strace slowness was the 8254, not the disk; loader.ms survivor recorded | 9c9304d | pushed |
-| 2026-10-22 (part 12, the jig) | Part 12: the post, the image, the draft, results and mutations from the jig, loader@5 as-built | | requested |
+| 2026-10-22 (part 12, the jig) | Part 12: the post, the image, the draft, results and mutations from the jig, loader@5 as-built | 823f7c3 | confirmed |
 | none | Language matters: the nucleus, part, agent, system call (was the door), catalogue and catalogue number (were the index and code), the decision ledger; CMP split into PART, MACHINE, TOOL with directories moved; README series index and new picture; plan 3.6, 7.5, two parked; findings 0013, 0014, 0015 (shared source reader); retired-words check; upcoming stories | 3d01b84 | pushed |
 | 2026-10-23 (part 13, language matters) | Part 13: the post, the image, Chris's notes and the draft | 040f92c | pushed |
 | none | Language matters, follow-up: the components picture in the new words (system calls, catalogue, mechanic and committee apart); ledger rows closed | ced313d | pushed |
 | 2026-10-23 (part 13, language matters) | Part 13: real commit links; the image in the new words | 27a9a27, e4a4843 | pushed |
+| 2026-10-24 (part 14, the editor) | Petition 0007: the editor, Notepad-plain; PART.fs.minix@2 saves over a file (Linux's truncate); PART.loader@7; seven tests, fourteen mutations; the disk runner types a different input on each boot; the agent-part rhythm recorded | | requested |

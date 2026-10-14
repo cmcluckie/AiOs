@@ -74,7 +74,7 @@ The detailed plan is plan/full.md; this file is the one to read.
    9.4. Petition 0004, a stopwatch: ticks once a second, counting up on one line until switched off; the program needs time passing, the microvm clock debt becomes a petitioned capability and the first real sensor. [done]
    9.5. Petition 0005, save the sorted output: an IDE disk driver and the original Minix filesystem lifted from Linux, the first expensive lift. [done]
    9.6. Petition 0006, two programs at once: the first thing that must be shared; the kernel appears, and every line of it is named. [done]
-   9.7. Petition 0007, the console text editor: open, type, save; needs 0003 and 0005; C now, Rust later as PART.editor@2. [coming up]
+   9.7. Petition 0007, the console text editor, Notepad-plain: one file, no modes, every command on the bottom line (Ctrl+S, Ctrl+Z, Ctrl+Q); its one new thing is saving over a file (PART.fs.minix@2, Linux's truncate); no libc needed; C now, Rust later as PART.editor@2. [in progress]
    9.8. Every earlier program runs under every later loader; no system call ever moves. [in progress]
    9.9. The loop end to end: the quartermaster drafts the application's petition, the builder sends what is missing, the quartermaster drafts the parts, the committee votes, the flavor goes back in the builder's queue; the mechanic proposes and never installs. [coming up]
    9.10. The first Linux binary: a static Linux hello world runs unmodified on two system calls; every further Linux system call is petitioned by the first program that needs it. [coming up]

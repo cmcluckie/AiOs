@@ -1,0 +1,10 @@
+code       = "TST.editor.typing@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+binds      = "SPEC.editor.1@1"
+red_when   = "on a fresh disk, the keys in tests/fixtures/editor-typing.in (typing, the four arrows, Home, End, Backspace, Delete, Enter) then Ctrl+S and Ctrl+Q, and on the next boot the screen does not show exactly the two lines Jello world!? and second, 20 bytes"
+timeout_ms = 60000
+isolates   = "PART.editor@1"
+runner     = "jig/test disk editor 2 tests/fixtures/editor-typing.in tests/fixtures/editor-quit.in"
+mutations  = 4

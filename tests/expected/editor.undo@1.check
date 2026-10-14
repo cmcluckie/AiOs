@@ -1,0 +1,8 @@
+# TST.editor.undo@1, run by jig/test as: sh this CAPTURE DISK
+# Green when the file is "one two", 7 bytes: the first boot's Ctrl+Z took back
+# "zero " and nothing else, and the second boot's two Ctrl+Z put " two" back.
+. "$(dirname "$0")/editor_frame.sh"
+got=$(text "$1")
+[ "$got" = "one two" ] || { echo "the screen shows: $(echo "$got" | head -3 | tr '\n' '|')"; exit 1; }
+bottom "$1" | grep -q 'notes.txt   7 of 7168' || { echo "the bottom line says: $(bottom "$1")"; exit 1; }
+echo "undo took back one run, the second undo put it back: one two"

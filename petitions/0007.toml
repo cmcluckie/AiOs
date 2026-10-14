@@ -1,0 +1,129 @@
+[petition]
+id         = "0007"
+purpose    = "PUR.0007@1"
+submitted  = 2026-10-13
+submitter  = "KEY.chris@1"
+expires    = 2027-04-13
+supersedes = ""
+status     = "pending"
+
+[[capability]]
+code   = "CAP.tty.write@1"
+reason = "SPEC.editor.5@1"
+scope  = "console0"
+
+[[capability]]
+code   = "CAP.tty.read@1"
+reason = "SPEC.editor.1@1"
+scope  = "console0"
+
+[[capability]]
+code   = "CAP.fs.read@1"
+reason = "SPEC.editor.2@1"
+scope  = "notes.txt"
+
+[[capability]]
+code   = "CAP.fs.write@1"
+reason = "SPEC.editor.2@1"
+scope  = "notes.txt"
+
+[[capability]]
+code   = "CAP.proc.exit@1"
+reason = "SPEC.editor.4@1"
+scope  = ""
+
+[[capability]]
+code   = "CAP.dev.serial@1"
+reason = "SPEC.machine.3@1"
+scope  = ""
+
+[[capability]]
+code   = "CAP.dev.disk@1"
+reason = "SPEC.disk.1@1"
+scope  = ""
+
+[[component]]
+code     = "PART.editor@1"
+role     = "primary"
+admitted = false
+
+[[component]]
+code     = "TOOL.c@1"
+role     = "toolchain"
+admitted = false
+
+[[component]]
+code     = "PART.loader@7"
+role     = "boot"
+admitted = false
+
+[[component]]
+code     = "PART.serial.8250@2"
+role     = "dependency"
+admitted = false
+
+[[component]]
+code     = "PART.timer.kvmclock@1"
+role     = "dependency"
+admitted = false
+
+[[component]]
+code     = "PART.timer.tsc-pit@2"
+role     = "dependency"
+admitted = false
+
+[[component]]
+code     = "PART.fs.minix@2"
+role     = "dependency"
+admitted = false
+
+[[component]]
+code     = "PART.disk.ata-pio@1"
+role     = "dependency"
+admitted = false
+
+[[component]]
+code     = "PART.irq.pic@1"
+role     = "dependency"
+admitted = false
+
+[[component]]
+code     = "PART.timer.pit-tick@1"
+role     = "dependency"
+admitted = false
+
+[[component]]
+code     = "PART.archive.cpio@1"
+role     = "dependency"
+admitted = false
+
+[[component]]
+code     = "MACHINE.serial-disk@1"
+role     = "machine"
+admitted = false
+
+[[component]]
+code     = "TOOL.qemu@1"
+role     = "machine"
+admitted = false
+
+[[test]]
+code = "TST.editor.typing@1"
+
+[[test]]
+code = "TST.editor.save-over@1"
+
+[[test]]
+code = "TST.editor.undo@1"
+
+[[test]]
+code = "TST.editor.quit-asks@1"
+
+[[test]]
+code = "TST.editor.status-line@1"
+
+[[test]]
+code = "TST.fs.overwrite-clean@1"
+
+[[test]]
+code = "TST.loader.ladder-7@1"

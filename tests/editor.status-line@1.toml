@@ -1,0 +1,10 @@
+code       = "TST.editor.status-line@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+binds      = "SPEC.editor.5@1"
+red_when   = "any screen the editor draws, after any key, has a bottom line without all three of Ctrl+S Save, Ctrl+Z Undo and Ctrl+Q Quit"
+timeout_ms = 60000
+isolates   = "PART.editor@1"
+runner     = "jig/test disk editor 2 tests/fixtures/editor-typing.in tests/fixtures/editor-quit-asks.in"
+mutations  = 1

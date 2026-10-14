@@ -1,0 +1,8 @@
+# TST.editor.save-over@1, run by jig/test as: sh this CAPTURE DISK
+# Green when the third boot shows exactly "second version", 14 bytes: the second
+# save replaced the first, and nothing of it is left.
+. "$(dirname "$0")/editor_frame.sh"
+got=$(text "$1")
+[ "$got" = "second version" ] || { echo "the screen shows: $(echo "$got" | head -3 | tr '\n' '|')"; exit 1; }
+bottom "$1" | grep -q 'notes.txt   14 of 7168' || { echo "the bottom line says: $(bottom "$1")"; exit 1; }
+echo "saved twice: second version, 14 bytes, the first one gone"

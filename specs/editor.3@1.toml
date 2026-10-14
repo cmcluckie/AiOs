@@ -1,0 +1,7 @@
+code       = "SPEC.editor.3@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+component  = "PART.editor@1"
+clause     = "Ctrl+Z undoes the last run of typing or deleting, and a second Ctrl+Z puts it back.  There is one level only."
+author     = "KEY.chris"

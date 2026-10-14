@@ -1,0 +1,8 @@
+# TST.editor.typing@1, run by jig/test as: sh this CAPTURE DISK
+# Green when, after the typing boot saved and quit, the next boot opens the file
+# and shows exactly the two lines the keys should have made, and says 20 bytes.
+. "$(dirname "$0")/editor_frame.sh"
+got=$(text "$1"); want=$(printf 'Jello world!?\nsecond')
+[ "$got" = "$want" ] || { echo "the screen shows: $(echo "$got" | head -3 | tr '\n' '|')"; exit 1; }
+bottom "$1" | grep -q 'notes.txt   20 of 7168' || { echo "the bottom line says: $(bottom "$1")"; exit 1; }
+echo "two lines, 20 bytes, exactly what the keys made"

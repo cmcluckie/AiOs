@@ -1,0 +1,10 @@
+code       = "TST.fs.overwrite-clean@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+binds      = "SPEC.fs.2@1"
+red_when   = "a probe saves one file five times at 2500, 10, 7168, 0 and 1500 bytes; any save fails, the last load differs by one byte from the last save, or fsck.minix finds any error or any file but notes.txt"
+timeout_ms = 60000
+isolates   = "PART.fs.minix@2"
+runner     = "jig/test cmd sh tests/programs/overwrite.sh"
+mutations  = 2

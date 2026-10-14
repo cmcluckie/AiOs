@@ -1,0 +1,7 @@
+code       = "SPEC.editor.1@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+component  = "PART.editor@1"
+clause     = "Typing types: printable keys insert at the cursor, and the arrows, Home, End, Backspace, Delete and Enter do what they say.  No modes."
+author     = "KEY.chris"

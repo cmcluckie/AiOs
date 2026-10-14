@@ -1,0 +1,11 @@
+# TST.editor.quit-asks@1, run by jig/test as: sh this CAPTURE DISK
+# Green when the first boot asked before quitting with unsaved changes, quit on
+# the second Ctrl+Q (the boot ended), and nothing was saved: the next boot opens
+# an empty file.
+. "$(dirname "$0")/editor_frame.sh"
+n=$(frames "$1" | tr '\f' '\n' | grep -c 'Unsaved\.  Ctrl+Q again to quit\.')
+[ "$n" -eq 1 ] || { echo "it asked $n times"; exit 1; }
+got=$(text "$1")
+[ -z "$got" ] || { echo "something was saved: $(echo "$got" | head -1)"; exit 1; }
+bottom "$1" | grep -q 'notes.txt   0 of 7168' || { echo "the bottom line says: $(bottom "$1")"; exit 1; }
+echo "asked once, quit on the second Ctrl+Q, saved nothing"

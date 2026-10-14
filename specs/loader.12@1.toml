@@ -1,0 +1,7 @@
+code       = "SPEC.loader.12@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+component  = "PART.loader@7"
+clause     = "Loader@7 is loader@6 built with PART.fs.minix@2: every earlier program runs under it unchanged, and the only difference a program can see is that save writes over a file that is already there."
+author     = "KEY.chris"

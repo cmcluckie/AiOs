@@ -1,0 +1,10 @@
+code       = "TST.editor.save-over@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+binds      = "SPEC.editor.2@1"
+red_when   = "saved as first version, then edited to second version and saved again, the third boot does not show exactly second version, 14 bytes"
+timeout_ms = 90000
+isolates   = "PART.editor@1"
+runner     = "jig/test disk editor 3 tests/fixtures/editor-first.in tests/fixtures/editor-second.in tests/fixtures/editor-quit.in"
+mutations  = 2

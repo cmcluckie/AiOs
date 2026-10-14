@@ -27,10 +27,11 @@
 #                                seconds by the host's clock, each line stamped with
 #                                the host's milliseconds as it arrives; the .check
 #                                gets the stamped capture and SECS
-#   disk FLAVOR BOOTS            a fresh empty disk, made the way the machine makes
+#   disk FLAVOR BOOTS [INPUT...] a fresh empty disk, made the way the machine makes
 #                                one, then the flavor booted BOOTS times in a row on
-#                                it; the captures are joined, and a .check also gets
-#                                the disk image
+#                                it, boot n with the nth INPUT typed in (none if there
+#                                are fewer); the captures are joined, and a .check
+#                                also gets the disk image
 #   cmd COMMAND...               any command; exit 0 is green, exit 2 means it
 #                                cannot run on this host (SKIP), anything else red
 #   nokvm KIND ARGS...           the run KIND ARGS describes, with KVM's CPUID leaves
@@ -191,7 +192,8 @@ run_one() {	# t secs kind args... ; sets why
 		rm -f "$tmp/disk"; : > "$cap"; i=0
 		export AIOS_DISK="$tmp/disk"
 		while [ $i -lt "$2" ]; do
-			boot "$(loader_of "$1")" "$(program_of "$1")" "" "$tmp/one" "$secs"; rc=$?
+			inp=""; [ $# -gt $((i + 2)) ] && eval "inp=\${$((i + 3))}"
+			boot "$(loader_of "$1")" "$(program_of "$1")" "$inp" "$tmp/one" "$secs"; rc=$?
 			[ $rc -eq 124 ] && { unset AIOS_DISK; why="boot $((i + 1)): still running after ${secs}s"; return 1; }
 			cat "$tmp/one" >> "$cap"; i=$((i + 1))
 		done

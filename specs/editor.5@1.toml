@@ -1,0 +1,7 @@
+code       = "SPEC.editor.5@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+component  = "PART.editor@1"
+clause     = "The bottom line always shows every command there is."
+author     = "KEY.chris"

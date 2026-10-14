@@ -1,0 +1,7 @@
+code       = "SPEC.fs.2@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+component  = "PART.fs.minix@2"
+clause     = "Saving over a file leaves the disk clean by fsck.minix, with the old blocks freed and nothing lost."
+author     = "KEY.chris"

@@ -1,0 +1,10 @@
+# TST.editor.status-line@1, run by jig/test as: sh this CAPTURE DISK
+# Green when every frame the editor drew, across both boots, ends in a bottom
+# line naming all three commands.
+. "$(dirname "$0")/editor_frame.sh"
+all=0; good=0
+frames "$1" | awk 'BEGIN { RS = "\f" } NF { n = split($0, r, "\n"); print r[n] }' > "$2.bottoms"
+all=$(wc -l < "$2.bottoms")
+good=$(grep -c 'Ctrl+S Save.*Ctrl+Z Undo.*Ctrl+Q Quit' "$2.bottoms")
+[ "$all" -gt 0 ] && [ "$all" -eq "$good" ] || { echo "$good of $all frames show every command; one shows: $(grep -v 'Ctrl+S Save.*Ctrl+Z Undo.*Ctrl+Q Quit' "$2.bottoms" | head -1)"; exit 1; }
+echo "$all frames, every one with Ctrl+S Save, Ctrl+Z Undo and Ctrl+Q Quit"

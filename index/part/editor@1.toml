@@ -1,0 +1,14 @@
+code          = "PART.editor@1"
+status        = "draft"
+admitted      = ""
+retired_by    = ""
+kind          = "program"
+source        = "pool/PART.editor@1/"
+licence       = "GPL-2.0-only"
+depends       = ["PART.loader@7"]
+build_depends = ["TOOL.c@1"]
+exposes       = []
+requires      = ["CAP.tty.write@1", "CAP.tty.read@1", "CAP.fs.read@1", "CAP.fs.write@1", "CAP.proc.exit@1"]
+scaffold      = false
+as_built      = "index/part/editor@1.as-built.md"
+reproducible  = ""

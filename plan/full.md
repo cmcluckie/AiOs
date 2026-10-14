@@ -451,9 +451,16 @@ loader, and that is a test run every time (9.8).  Each rung is also a post.
   in ring 0: the system call table must become a gate first (findings 0011 #4).  Lines from
   Linux: 844.
 
-### 9.7 Petition 0007: the editor [coming up]
+### 9.7 Petition 0007: the editor [in progress]
 - Open a text file, type, save.  Needs 9.3 and 9.5.  C now; Rust later as
-  PART.editor@2.  libc (musl) enters here if anything fails on it, not before.
+  PART.editor@2.  libc (musl) enters here if anything fails on it, not before:
+  nothing did.
+- Built 2026-10-13 to Chris's six specs (SPEC.editor.1-5, SPEC.fs.2): Notepad
+  plain, CUA keys, a VT100's 80 by 24, one file (notes.txt), one level of
+  undo, every command on the bottom line.  The one new thing it asked of the
+  nucleus: saving over a file, PART.fs.minix@2 with Linux's free_data and the
+  direct branch of truncate; PART.loader@7 is @6 linked with it.
+- Done-when: the seven tests in petition 0007 pass on the jig under KVM.
 
 ### 9.8 The ladder holds [coming up]
 - Every program from 0000 up boots under the current loader with no change

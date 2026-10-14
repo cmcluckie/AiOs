@@ -3,6 +3,13 @@
 Kept so the stories and the reasons for the order are written down before they
 are built.  Recorded 2026-10-13.
 
+## The rhythm (Chris, 2026-10-13)
+
+After the editor (part 14), the series alternates for a while: an agent, then
+a part, then an agent, then a part.  A build win, then an idea, so a heavy post
+is never followed by another heavy post.  Part 13 (definitions) was followed by
+the editor for exactly that reason.  Part 15 is an agent.
+
 ## Decided, in this order
 
 1. Decision ledger first (plan 3.6), small: a decision table in each petition,

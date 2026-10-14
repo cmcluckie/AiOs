@@ -1,0 +1,7 @@
+code       = "SPEC.editor.4@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+component  = "PART.editor@1"
+clause     = "Ctrl+Q quits.  If there are unsaved changes, it asks once: \"Unsaved.  Ctrl+Q again to quit.\""
+author     = "KEY.chris"

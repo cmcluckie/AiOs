@@ -1,0 +1,10 @@
+code       = "TST.editor.undo@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+binds      = "SPEC.editor.3@1"
+red_when   = "one Ctrl+Z after a run of typing does not take back exactly that run, or a second Ctrl+Z does not put it back: the file ends up anything but one two, 7 bytes"
+timeout_ms = 90000
+isolates   = "PART.editor@1"
+runner     = "jig/test disk editor 3 tests/fixtures/editor-undo1.in tests/fixtures/editor-undo2.in tests/fixtures/editor-quit.in"
+mutations  = 2

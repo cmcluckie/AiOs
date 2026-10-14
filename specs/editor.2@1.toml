@@ -1,0 +1,7 @@
+code       = "SPEC.editor.2@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+component  = "PART.editor@1"
+clause     = "Ctrl+S writes exactly the text on screen to the file, replacing what was there."
+author     = "KEY.chris"
