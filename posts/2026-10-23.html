@@ -1,0 +1,122 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Language matters</title>
+<style>
+body{max-width:760px;margin:32px auto;padding:0 16px;font-family:Georgia,serif;font-size:18px;line-height:1.6;color:#222;background:#fff}
+section{border:1px solid #ddd;border-radius:10px;padding:0 20px 12px;margin:0 0 28px}
+.bar{display:flex;justify-content:space-between;align-items:center;margin:0 -20px 12px;padding:8px 20px;background:#f4f3ef;border-bottom:1px solid #ddd;border-radius:10px 10px 0 0;font:600 14px system-ui,sans-serif;color:#555;user-select:none}
+button{font:600 14px system-ui,sans-serif;padding:6px 16px;border-radius:16px;border:1px solid #0a66c2;background:#0a66c2;color:#fff;cursor:pointer}
+button.done{background:#fff;color:#0a66c2}
+.text{white-space:pre-wrap;font-family:system-ui,sans-serif;font-size:15px}
+.img{font:14px system-ui,sans-serif;color:#555}
+</style></head><body>
+<section id="post">
+<div class="bar"><span>1. Post</span><button onclick="copyText('post-body',this)">Copy</button></div>
+<div id="post-body" class="text">
+AiOs, part 13 (Kernel code: 997 lines). "People told me I wasn't detail-oriented enough to be a programmer. So I learned to be meticulous about the one thing I could control: the words."...
+</div>
+</section>
+<section id="title">
+<div class="bar"><span>2. Title</span><button onclick="copyText('title-body',this)">Copy</button></div>
+<div id="title-body"><h1>Language matters</h1></div>
+</section>
+<section id="article">
+<div class="bar"><span>3. Article</span><button onclick="copyRich('article-body',this)">Copy</button></div>
+<div id="article-body">
+<p><em>The story behind AiOs, part 13.</em></p>
+<h2>The welder who couldn't turn on the computer</h2>
+<p>I was going to be a welder.  I was disinterested in education, and welding seemed like a good honest plan.  Then I found a computer science course that I figured would be easy marks.</p>
+<p>It was not easy marks.  I couldn't turn the computer on.  Some of the smartest kids in the school were in that room, and they laughed at me, because I was the guy who couldn't find the power button.</p>
+<p>Two weeks in, I was one of the best programmers in the class.  I've loved programming ever since.  I was sixteen.</p>
+<h2>Why the hell are you a programmer?</h2>
+<p>I became a software developer, and I never quite fit the picture.  I started out as a bass player, and these days I front a band.  I sing.  I like standing in front of a crowd.  I'm not saying no programmer does that, I'm saying I was the odd one out, and people told me so.  More than once I got "You're not detail-oriented.  Why the hell are you a programmer?"  And the follow-up: "How are you even decent at it?"</p>
+<p>They had a point.  I'm not a detail person.  I forget definitions.  I mix up terms.  In a job where one wrong character breaks everything, that's a strange trait to bring along.</p>
+<p>But I was good at it.  What I didn't have in detail, I made up for in patterns.  I could see how a system fit together, spot the same problem showing up in three places, and tell what the code was really trying to do.  I made it work, and I did well.</p>
+<p>I didn't leave because I was failing at it.  I left because I wanted to do other things.  Consultant, then product manager.  I prefer being a communicator, which is why I'm doing this silly blog.  But if I'm being honest, I'm probably a better developer, haha (did someone just say "existential crisis"?).  The job taught me one thing I didn't expect, and it's what this post is about.</p>
+<h2>Language matters</h2>
+<p>When you're not a detail person, you can't rely on remembering what everyone meant.  You have to get the words right, out loud, up front, and then hold everyone to them, starting with yourself.  A product manager who lets a word mean two things in a room ends up with two products.</p>
+<p>Yesterday Claude wrote the post.  Today I went back over everything Claude and I have said since the start of this project, word by word.  One thing I've learned as an agentic developer: things move really fast.  The words had drifted while Claude and I built, a little at a time, and you'd remember every one of them.  As Ferris Bueller once said, "Life moves pretty fast.  If you don't stop and look around once in a while, you could miss it."</p>
+<p>So this is a good place to recap every term I'm using in this project.  Where a word changed, I've said what I used to call it.</p>
+<h2>The problem</h2>
+<p>First, the problem, because every word below exists to serve it.  AiOs isn't a general-purpose operating system.  It's purpose-driven: every machine starts from what it's for, and gets exactly the software that purpose needs and nothing else.  Nothing gets in without a written reason.  And the work is done by AI agents, so the hard part isn't writing the code, it's making sure nothing an agent does goes unseen or unchecked.</p>
+<h3>The nucleus: the operating system itself</h3>
+<ul>
+<li><strong>Nucleus.</strong>  The operating system: everything that runs on the machine.  Linux's own code, only the lines it needs, plus the kernel written around them.  I don't know who the hell this guy is, but Claude tells me the word is Per Brinch Hansen's, from his RC 4000 system in 1969, for the small centre everything else is built around.  <em>Was "the OS".  Not "core": CoreOS is taken, and every processor has cores.</em></li>
+<li><strong>Part.</strong>  What the nucleus is made of: a driver, the kernel, a program.  Either lifted out of Linux with a record of exactly where it came from, or written from scratch.  <em>Was "segment", which already means x86 memory segmentation.  I wanted "quark".  Claude said no.</em></li>
+<li><strong>Lifted.</strong>  Taken out of Linux: only the lines a part needs, cut away from the rest of Linux, with a record of exactly which commit, file and lines they came from.  Lifted code lives in its own folder, apart from anything written from scratch.</li>
+<li><strong>Kernel.</strong>  The part that shares the machine between programs and stops one that misbehaves.  <em>Was "the loader", and still is in the code.  I still prefer KERNAL, with the AL, like the Commodore 64.</em></li>
+<li><strong>System call.</strong>  How a program asks the nucleus for anything: write, exit, memory, read, time, load, save.  The list of them is the system call table.  New ones get added; old ones never move.  <em>Was "the door", which also meant a petition.</em></li>
+<li><strong>Program.</strong>  An application the nucleus runs: hello world, Hanoi, the calculator, the stopwatch, the sieve.</li>
+</ul>
+<h3>Asking for things</h3>
+<ul>
+<li><strong>Purpose.</strong>  One sentence saying what a machine is for.  Everything traces back to it.  <em>I'm still not sure what this does beyond telling a human what the machine is for.  It's helpful, but I haven't decided yet how a machine will read it.</em></li>
+<li><strong>Petition.</strong>  The written request for anything that goes in: the purpose, what the software does, what it needs, and how it's tested.  Structured, never prose.  No petition, no part.</li>
+<li><strong>Flavor.</strong>  The collection of parts defined by each application's petition.  It's the manifest a build starts from.</li>
+<li><strong>Catalogue.</strong>  Everything a petition can ask for, filed in one place.  Like a library's card catalogue, it holds a card for each part, saying what it is, what it needs and which shelf its code is on, not the code itself.  <em>Was "the index", and the folder still is (formerly the index, so old links keep working).</em></li>
+<li><strong>Catalogue number.</strong>  The name of one thing in the catalogue.  A petition asks for things by catalogue number.  <em>Was "code", which already means the programs themselves.</em></li>
+<li><strong>Capability.</strong>  One thing a part is allowed to touch, like the serial port or the disk.  A part asks for capabilities, and gets nothing else.</li>
+</ul>
+<h3>The agents</h3>
+<ul>
+<li><strong>Agent.</strong>  Anything around the nucleus that acts on it, on someone's behalf.  Some will use AI and some never will.  <em>Was "roles" or "components".  Even I got confused.</em></li>
+<li><strong>Referee.</strong>  Runs before every build and again after it.  Before, it checks that every petition asks only for what's in the catalogue, and that every capability it asks for has a test.  After, it runs those tests itself and refuses anything that doesn't pass, against the rule book I wrote.  No AI, no judgment, and nothing gets cached until it says yes.</li>
+<li><strong>Builder.</strong>  Turns the petitions into the nucleus, with the referee checking before and after.  It works from a queue: it builds everything it can, sends the full list of anything missing to the quartermaster, and stops.  When the missing parts are added, the flavor goes back in its queue and the whole thing runs again.  Today I press play.  Proving it makes the same bytes every time is still on the list.</li>
+<li><strong>Tester.</strong>  Boots it, proves what it does, then breaks the code on purpose to prove the tests notice.  The referee will run it after every build.  Today I run it by hand.</li>
+<li><strong>Historian.</strong>  Run on demand by the quartermaster, the referee or me.  Looks up the Linux commit a part was lifted from, checks whether anything has touched those lines since, and if so, reads the change and says whether the part needs to change.  Which branches AiOs pulls from, like the long-term support ones, will be part of how AiOs is configured, and the historian will weigh a fix by the branch it's on.  Reports, never merges.</li>
+<li><strong>Quartermaster.</strong>  When the builder sends it something missing, it will read the Linux source, find the smallest piece that provides it, and draft the petition to add that part.  It reads the mechanic's fixes the same way, as new code.  <em>Editor's note: an open question.  When a fix touches code that came from Linux, should the quartermaster decide whether to send it back upstream?  A patch to Linux goes out under a person's name, so a fully agentic system has to answer that somehow.</em>  It will also draft each application's petition, because no human could.  Not built yet.  Claude and I do it by hand.</li>
+<li><strong>Mechanic.</strong>  When a test fails, it will propose a fix to the code, never to the test.  It reads what the test checks, the spec behind it and what the code actually does; the gap between them is the bug.  It never installs a fix.  A fix is new code, so it goes to the quartermaster like anything else, and then to the committee.  Not built yet.</li>
+<li><strong>Committee.</strong>  AI seats that will vote on every petition the quartermaster drafts, including the mechanic's fixes.  Each seat is one priority, borrowed from the BSD family, where each flavour built a whole operating system around one: security (OpenBSD), performance (FreeBSD), portability (NetBSD) and experience (Darwin, under every Mac), plus stability and fit with the purpose.  Each is a synthetic personality, a tribute to the people behind those systems (the Mac seat blends Apple's two founders), on its own AI model.  It never writes a petition.  Until it exists, the committee is me.</li>
+<li><strong>Decision ledger.</strong>  Not an agent, a record: every choice an agent makes, with its options and who picked it, checked by the referee against what actually changed, before anything is committed.  Not built yet.  It comes first.</li>
+</ul>
+<h3>Proving it</h3>
+<ul>
+<li><strong>Spec.</strong>  One sentence, written by a human, saying what something must do, precise enough to fail.  This is where the plain-English explanation lives.  A petition never explains itself; it points to specs.</li>
+<li><strong>Test.</strong>  Bound to one spec, and it says in plain words exactly what makes it fail, so an AI can understand what went wrong.  A test that can't fail is decoration.  Only a human changes a test.</li>
+<li><strong>Findings.</strong>  The project's corrections log: what went wrong, what was decided, and why.  Dated and public.</li>
+<li><strong>The jig.</strong>  The temporary workbench everything is built and tested on: a small Linux machine on my PC.  It gets thrown away once AiOs can rebuild itself and get the same bytes.</li>
+</ul>
+<h2>What going back found</h2>
+<p>Here's the part that proves the point.  While renaming everything, Claude found a line in the rulebook that still said my own code was under the MIT licence.  That's the licence a commenter caught me on back in part 1, the one I fixed in an hour.  I fixed the licence.  I missed one line saying the old one.</p>
+<p>Nobody had read that line in days.  The rename read every line, because it had to.</p>
+<h2>What it cost</h2>
+<p>Renaming means moving folders, and some of the earlier articles link to those folders.  Parts 5, 6, 9, 10 and 11 have links on LinkedIn that will now go nowhere.  I don't edit posts once they're up, so those links stay broken there.  The copies on GitHub are fixed.</p>
+<p>I chose that.  A handful of dead links now, against confusing words forever.  Easy call.</p>
+<h2>Locking it</h2>
+<p>Fixing the words once is only worth it if they stay fixed.  So two things changed.</p>
+<p>Changing the vocabulary is now a decision only a human can make.  An agent can propose a new word.  It can't quietly start using one.</p>
+<p>And the check I run over every post before it's committed now fails if a new post uses a word I've retired.  I tested it by sneaking "segment" into the last article, and it went red.  The machine reads the words the way it reads the code.</p>
+<h2>What I'm taking away</h2>
+<p>An agent can only check what's been defined.  "Does this part touch only what it asked for?" is a question a machine can answer, but only if "part" and "asked for" mean one thing, written down.  Fuzzy words don't just confuse people, they make things impossible to check.  So before you let a machine hold anyone to anything, the words come first.</p>
+<p>For a guy who was told he wasn't detail-oriented enough to be a programmer, that's a nice place to end up.  Language matters.  Come along!</p>
+<h2>Read along</h2>
+<ol>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/CLAUDE.md">CLAUDE.md</a>.  Scroll to "Terms".  Every word in this project, what it means, and for the ones that changed, what they used to be.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/findings/0014.md">findings/0014.md</a>.  The rename, written up: the table, the reasons, and what broke.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/schema/petition.md">schema/petition.md</a>.  The tables a petition can name.  Nine now.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/jig/postcheck">jig/postcheck</a>.  Find "Retired words": the few lines that keep the old words from coming back.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/docs/aios-components.png">docs/aios-components.png</a>.  The whole thing in one picture, in the new words.</li>
+</ol>
+<h2>Try this</h2>
+<p>Open the repo in Codespaces and run <code>sh jig/postcheck</code>.  It passes.  Now open this article's file, posts/2026-10-23.html, change any word to "segment", and run it again.  It names the file and the retired word.  Change it back.</p>
+<h2>As built</h2>
+<p>Nothing new was built in this part.  Every part, machine and tool was renamed and moved, and their as-built specs moved with them, under index/part/, index/machine/ and index/tool/.</p>
+<h2>Addendum: the tests</h2>
+<p>No new tests.  After the rename, every existing test was run again under software emulation: 45 passed, 0 failed, 2 skipped (the KVM clock test, which needs the jig, and the retired sieve test).  The new retired-words check in jig/postcheck was proven able to fail before it was trusted.</p>
+<h2>Code on GitHub</h2>
+<p>Every line that changed, on one page (hash when committed).</p>
+<p>The commits behind this post, in order:</p>
+<ol>
+<li>Language matters (hash when committed)</li>
+</ol>
+<p><a href="https://github.com/cmcluckie/aios">The whole repo</a>.</p>
+</div>
+</section>
+<p class="img">Image: 2026-10-23.png, in this folder.</p>
+<script>
+function flash(b){b.textContent='Copied';b.classList.add('done');setTimeout(function(){b.textContent='Copy';b.classList.remove('done')},1500)}
+function select(id){var r=document.createRange();r.selectNodeContents(document.getElementById(id));var s=getSelection();s.removeAllRanges();s.addRange(r);return s}
+function copyRich(id,b){var s=select(id);document.execCommand('copy');s.removeAllRanges();flash(b)}
+function copyText(id,b){var t=document.getElementById(id).innerText.trim();
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(function(){flash(b)},function(){copyRich(id,b)})}else{copyRich(id,b)}}
+</script>
+</body></html>
