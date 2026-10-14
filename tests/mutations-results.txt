@@ -1,5 +1,5 @@
 # tests/mutations-results.txt, written by jig/mutate.  Do not edit by hand.
-# run 2026-10-12T20:08Z at commit 9b980aa
+# run 2026-10-14T02:04Z at commit 040f92c
 KILLED    hello.exact-bytes@1  one wrong letter in hello's message
 KILLED    hello.exact-bytes@1  the newline goes missing
 KILLED    hello.exact-bytes@1  one extra write before exit
@@ -29,7 +29,10 @@ KILLED    stopwatch.ticks@1  the stopwatch skips a second
 KILLED    timer.rate@1  the 8254 assumed to tick at 1 MHz instead of 1.193182
 KILLED    timer.rate@1  the turbo button: the counter assumed to tick at 1 GHz instead of measured
 KILLED    timer.rate@1  the machine without its timer: nothing to measure against
-KILLED    loader.ms@1  the door counts from the host's power-on instead of the loader's start
+KILLED    timer.slow-reads@1  Linux's 50 ms window put back: on the jig the measurement always gives up (findings 0012; under emulation it survives, reads are cheap there)
+KILLED    timer.kvm@1  KVM not recognised: on a machine with no 8254, nothing left to say the rate
+KILLED    timer.kvm@1  KVM's multiplier misread: the rate comes out double
+SURVIVED  loader.ms@1  the door counts from the host's power-on instead of the loader's start: killed under emulation, where the boot took 13-48 ms; on the jig with kvmclock the boot is under the test's 5 ms (findings 0012 #15)  (known, written down)
 KILLED    machine.timer-only@1  the stopwatch machine grows a device nobody asked for
 KILLED    machine.timer-no-sockets@1  the stopwatch machine opens a network socket
 KILLED    loader.ladder-4@1  loader@4 breaks the read door the calculator, built for loader@3, relies on
@@ -48,8 +51,8 @@ KILLED    loader.ladder-5@1  loader@5 breaks the read door the calculator relies
 KILLED    loader.door-layout@1  an entry inserted before load: load and save move
 KILLED    machine.disk-only@1  the sort machine grows a device nobody asked for
 KILLED    machine.disk-no-sockets@1  the sort machine opens a network socket
-KILLED    share.on-time@1  the tick never reaches the processor: a cooperative machine, Windows 3.1 style, where the stopwatch never lets the sieve in
-KILLED    share.on-time@1  the sieve strikes out the wrong multiples
+KILLED    share.on-time@2  the tick never reaches the processor: a cooperative machine, Windows 3.1 style, where the hog never lets the stopwatch in
+KILLED    sieve.primes@1  the sieve strikes out the wrong multiples (moved from share.on-time@1, retired)
 KILLED    share.separate@1  every program can reach the first program's upper 4 MiB, just past its own
 KILLED    share.separate@1  one program's fault stops the whole machine
 KILLED    tick.rate@1  the tick at 50 a second instead of 100
@@ -61,4 +64,4 @@ KILLED    machine.irq-only@1  the share machine grows a device nobody asked for
 KILLED    machine.irq-no-sockets@1  the share machine opens a network socket
 KILLED    sieve.primes@1  the last flag is never struck out
 KILLED    sieve.primes@1  one run short of what it says
-# 60 killed, 0 survived unexpectedly, 1 known survivors, 0 no-ops, 0 no-builds
+# 62 killed, 0 survived unexpectedly, 2 known survivors, 0 no-ops, 0 no-builds
