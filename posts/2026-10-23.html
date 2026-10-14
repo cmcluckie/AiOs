@@ -12,7 +12,7 @@ button.done{background:#fff;color:#0a66c2}
 <section id="post">
 <div class="bar"><span>1. Post</span><button onclick="copyText('post-body',this)">Copy</button></div>
 <div id="post-body" class="text">
-AiOs, part 13 (Kernel code: 997 lines). "People told me I wasn't detail-oriented enough to be a programmer. So I learned to be meticulous about the one thing I could control: the words."...
+AiOs, part 13 (Kernel code: 997 lines). "Life moves pretty fast. If you don't stop and look around once in a while, you could miss it."...
 </div>
 </section>
 <section id="title">
@@ -65,7 +65,7 @@ AiOs, part 13 (Kernel code: 997 lines). "People told me I wasn't detail-oriented
 <li><strong>Historian.</strong>  Run on demand by the quartermaster, the referee or me.  Looks up the Linux commit a part was lifted from, checks whether anything has touched those lines since, and if so, reads the change and says whether the part needs to change.  Which branches AiOs pulls from, like the long-term support ones, will be part of how AiOs is configured, and the historian will weigh a fix by the branch it's on.  Reports, never merges.</li>
 <li><strong>Quartermaster.</strong>  When the builder sends it something missing, it will read the Linux source, find the smallest piece that provides it, and draft the petition to add that part.  It reads the mechanic's fixes the same way, as new code.  <em>Editor's note: an open question.  When a fix touches code that came from Linux, should the quartermaster decide whether to send it back upstream?  A patch to Linux goes out under a person's name, so a fully agentic system has to answer that somehow.</em>  It will also draft each application's petition, because no human could.  Not built yet.  Claude and I do it by hand.</li>
 <li><strong>Mechanic.</strong>  When a test fails, it will propose a fix to the code, never to the test.  It reads what the test checks, the spec behind it and what the code actually does; the gap between them is the bug.  It never installs a fix.  A fix is new code, so it goes to the quartermaster like anything else, and then to the committee.  Not built yet.</li>
-<li><strong>Committee.</strong>  AI seats that will vote on every petition the quartermaster drafts, including the mechanic's fixes.  Each seat is one priority, borrowed from the BSD family, where each flavour built a whole operating system around one: security (OpenBSD), performance (FreeBSD), portability (NetBSD) and experience (Darwin, under every Mac), plus stability and fit with the purpose.  Each is a synthetic personality, a tribute to the people behind those systems (the Mac seat blends Apple's two founders), on its own AI model.  It never writes a petition.  Until it exists, the committee is me.</li>
+<li><strong>Committee.</strong>  AI seats that will vote on every petition the quartermaster drafts, including the mechanic's fixes.  Each seat is one priority, borrowed from the BSD family, where each flavour built a whole operating system around one: security (OpenBSD), performance (FreeBSD), portability (NetBSD) and experience (Apple's Darwin), plus stability and fit with the purpose.  Each is a synthetic personality, a tribute to the people behind those systems, on its own AI model.  It never writes a petition.  Until it exists, the committee is me.</li>
 <li><strong>Decision ledger.</strong>  Not an agent, a record: every choice an agent makes, with its options and who picked it, checked by the referee against what actually changed, before anything is committed.  Not built yet.  It comes first.</li>
 </ul>
 <h3>Proving it</h3>
@@ -103,10 +103,10 @@ AiOs, part 13 (Kernel code: 997 lines). "People told me I wasn't detail-oriented
 <h2>Addendum: the tests</h2>
 <p>No new tests.  After the rename, every existing test was run again under software emulation: 45 passed, 0 failed, 2 skipped (the KVM clock test, which needs the jig, and the retired sieve test).  The new retired-words check in jig/postcheck was proven able to fail before it was trusted.</p>
 <h2>Code on GitHub</h2>
-<p>Every line that changed, on one page (hash when committed).</p>
+<p><a href="https://github.com/cmcluckie/aios/compare/9c9304d...3d01b84">Every line that changed, on one page</a>.</p>
 <p>The commits behind this post, in order:</p>
 <ol>
-<li>Language matters (hash when committed)</li>
+<li><a href="https://github.com/cmcluckie/aios/commit/3d01b84">Language matters: the words, the rename and the rules</a></li>
 </ol>
 <p><a href="https://github.com/cmcluckie/aios">The whole repo</a>.</p>
 </div>
