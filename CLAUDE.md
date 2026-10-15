@@ -288,7 +288,13 @@ names the component and the rule that failed.
 5. Every test has been run by `sh jig/test` and passes in tests/results.txt,
    and `sh jig/mutate` has shown it can go red (or findings say why it cannot
    yet).  A test with no runner says so, in the catalogue and in the post's
-   addendum.
+   addendum.  On the jig, after a push, from Chris's shell (the jig's address comes
+   from `(Get-VMNetworkAdapter -VMName jig).IPAddresses`; it changes when the
+   host restarts, and the jig does not start on its own):
+   `ssh chris@ADDRESS "cd aios && git checkout -- tests/results.txt
+   tests/mutations-results.txt && git pull -q && sh jig/test && sh jig/mutate"`,
+   then `scp` both files back.  The checkout throws away the last run's copies,
+   which only ever come from a run.
 6. If any line came from upstream, it lives in lifted/ with an origin record
    that `jig/upstream verify` passes.
 7. Every earlier program on the ladder still runs under it, unchanged.

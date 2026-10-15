@@ -1,5 +1,5 @@
 # tests/mutations-results.txt, written by jig/mutate.  Do not edit by hand.
-# run 2026-10-14T02:04Z at commit 040f92c
+# run 2026-10-14T18:37Z at commit 414bd19
 KILLED    hello.exact-bytes@1  one wrong letter in hello's message
 KILLED    hello.exact-bytes@1  the newline goes missing
 KILLED    hello.exact-bytes@1  one extra write before exit
@@ -64,4 +64,18 @@ KILLED    machine.irq-only@1  the share machine grows a device nobody asked for
 KILLED    machine.irq-no-sockets@1  the share machine opens a network socket
 KILLED    sieve.primes@1  the last flag is never struck out
 KILLED    sieve.primes@1  one run short of what it says
-# 62 killed, 0 survived unexpectedly, 2 known survivors, 0 no-ops, 0 no-builds
+KILLED    editor.typing@1  the left arrow does nothing
+KILLED    editor.typing@1  Delete takes the letter after the one under the cursor
+KILLED    editor.typing@1  the up arrow stays on the same line
+KILLED    editor.typing@1  the down arrow from past the end of a shorter line lands at its start, not its end
+KILLED    editor.save-over@1  Ctrl+S saves all but the last letter
+KILLED    editor.save-over@1  loader@7 linked with the old filesystem, which never writes over a file
+KILLED    editor.undo@1  every key is its own run, so undo takes back one letter
+KILLED    editor.undo@1  the second Ctrl+Z no longer puts it back
+KILLED    editor.quit-asks@1  Ctrl+Q quits with unsaved changes, no question asked
+KILLED    editor.quit-asks@1  it asks every time, so the second Ctrl+Q never quits
+KILLED    editor.status-line@1  a message pushes the commands off the bottom line
+KILLED    fs.overwrite-clean@1  a freed zone stays marked busy: the disk leaks a block every save
+KILLED    fs.overwrite-clean@1  saving over a file no longer truncates it first
+KILLED    loader.ladder-7@1  loader@7 breaks the read system call the calculator relies on
+# 76 killed, 0 survived unexpectedly, 2 known survivors, 0 no-ops, 0 no-builds

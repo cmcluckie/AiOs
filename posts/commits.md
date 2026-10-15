@@ -60,4 +60,5 @@ Status: requested (hash unknown), confirmed (hash seen), pushed.
 | 2026-10-23 (part 13, language matters) | Part 13: the post, the image, Chris's notes and the draft | 040f92c | pushed |
 | none | Language matters, follow-up: the components picture in the new words (system calls, catalogue, mechanic and committee apart); ledger rows closed | ced313d | pushed |
 | 2026-10-23 (part 13, language matters) | Part 13: real commit links; the image in the new words | 27a9a27, e4a4843 | pushed |
-| 2026-10-24 (part 14, the editor) | Petition 0007: the editor, Notepad-plain; PART.fs.minix@2 saves over a file (Linux's truncate); PART.loader@7; seven tests, fourteen mutations; the disk runner types a different input on each boot; the agent-part rhythm recorded | | requested |
+| 2026-10-24 (part 14, the editor) | Petition 0007: the editor, Notepad-plain; PART.fs.minix@2 saves over a file (Linux's truncate); PART.loader@7; seven tests, fourteen mutations; the disk runner types a different input on each boot; the agent-part rhythm recorded | 414bd19 | pushed |
+| 2026-10-24 (part 14, the editor) | Part 14: the jig's results (52 passed, 76 of 78 mutations caught) and the commit links | | requested |

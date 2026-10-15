@@ -78,16 +78,16 @@ Open the repo in Codespaces and run `sh jig/aios run editor`.  Type something, p
 
 ## Addendum: the tests
 
-Every test for the parts above, from tests/results.txt and tests/mutations-results.txt.
+Every test for the parts above, from tests/results.txt and tests/mutations-results.txt, run on the jig under KVM.  The whole suite: 52 passed, 0 failed, 2 skipped.  Of 78 deliberate breakages, 76 were caught; the 2 that survive are the known ones from parts 10 and 12, and all 14 of the editor's were caught.
 
 ADDENDUM
 
 ## Code on GitHub
 
-Every line that changed, on one page (hash when committed).
+[Every line that changed, on one page](https://github.com/cmcluckie/aios/compare/823f7c3...414bd19).
 
 The commits behind this post, in order:
 
-1. Petition 0007: the editor (hash when committed)
+1. [Petition 0007: the editor, Notepad-plain; PART.fs.minix@2 saves over a file](https://github.com/cmcluckie/aios/commit/414bd19)
 
 [The whole repo](https://github.com/cmcluckie/aios).
