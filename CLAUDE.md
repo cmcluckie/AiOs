@@ -209,7 +209,17 @@ exactly; when a new one is needed, add it here in the same commit.
   The referee checks it against what actually changed, so a change with no
   matching decision is a silent decision and a fault.  A short list of
   decision kinds (licence, purpose, capabilities, dependencies, tests, these
-  rules and the words in them) is human-only.  Not built yet; it comes before the committee.
+  rules and the words in them) is human-only.  Built small (part 15): the
+  list is constitution/human-only.toml, by path; a decision is one TOML file in
+  decisions/ (what was asked, the options, what was chosen, who decided, which
+  paths it covers, and who drafted it); `jig/aios ledger` refuses any change to
+  a human-only path that no decision in the same change names, decided by a
+  key in constitution/keys/.  It runs before every commit, from the
+  pre-commit hook in .githooks/ (once per clone: `git config core.hooksPath
+  .githooks`).  An agent may draft a decision; until commits are verified
+  against keys (plan 3.5), the proof that a human decided it is Chris's
+  signature on the commit that carries it.  Findings 0016 says what it cannot
+  see yet.
 - **Agent.**  Anything in the ring around the nucleus that acts on it: the
   referee, builder, tester, historian, quartermaster, mechanic, committee.
   The older sense of the word, as in mail transfer agent: something that acts
@@ -298,9 +308,11 @@ names the component and the rule that failed.
 6. If any line came from upstream, it lives in lifted/ with an origin record
    that `jig/upstream verify` passes.
 7. Every earlier program on the ladder still runs under it, unchanged.
-8. The post's HTML file and its image exist and `jig/postcheck` passes,
+8. `sh jig/aios ledger` passes: every human-only change in the work is named
+   by a decision in decisions/, drafted for Chris to decide.
+9. The post's HTML file and its image exist and `jig/postcheck` passes,
    including "As built" and "Addendum: the tests".
-9. Every commit for it is in the ledger with its post.
+10. Every commit for it is in the ledger with its post.
 
 ## The series
 

@@ -1,0 +1,4 @@
+#!/bin/sh
+# The referee's ledger check, on what is about to be committed (plan 3.6).
+# Turned on once per clone: git config core.hooksPath .githooks
+exec sh jig/aios ledger --cached

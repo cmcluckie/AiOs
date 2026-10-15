@@ -1,0 +1,11 @@
+id      = "0001"
+date    = 2026-10-14
+kind    = "rules and words"
+touches = ["CLAUDE.md", "schema/petition.md", "jig/aios", "constitution/human-only.toml", ".githooks/pre-commit"]
+asked   = "Build the decision ledger small, before the committee, and add rule 12: a program touches no hardware?"
+options = ["build both now", "the ledger only", "wait for the committee"]
+default = "build both now"
+chose   = "build both now"
+why     = "findings/0016.md"
+by      = "KEY.chris@1"
+drafted = "Claude"

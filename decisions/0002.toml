@@ -1,0 +1,11 @@
+id      = "0002"
+date    = 2026-10-14
+kind    = "specs and tests"
+touches = ["specs/ledger.1@1.toml", "specs/referee.12@1.toml", "tests/ledger.human-only@1.toml", "tests/referee.no-hardware@1.toml", "tests/programs/ledger.sh", "tests/programs/cheat.c", "tests/programs/cheat.sh", "tests/mutations.txt"]
+asked   = "Two specs, two tests that prove them, and three mutations that prove the tests can fail?"
+options = ["as drafted", "change the wording"]
+default = "as drafted"
+chose   = "as drafted"
+why     = "findings/0016.md"
+by      = "KEY.chris@1"
+drafted = "Claude"

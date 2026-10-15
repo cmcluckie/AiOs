@@ -1,0 +1,10 @@
+code       = "TST.referee.no-hardware@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+binds      = "SPEC.referee.12@1"
+red_when   = "hello, rewritten to write its own bytes to the serial port, builds; or, built around the referee, its output is not exactly hello's, so the demonstration proves nothing"
+timeout_ms = 60000
+isolates   = "AGT.referee@1"
+runner     = "jig/test cmd sh tests/programs/cheat.sh"
+mutations  = 1

@@ -10,6 +10,12 @@
 #   aios run <flavor>         check, build, boot on the flavor's machine
 #   aios pack <archive> <name> <file>...   programs into one cpio archive, in
 #                             order, the way build does for a flavor of several
+#   aios ledger [--cached]    referee: every change to something only a human
+#                             decides (constitution/human-only.toml) is named by
+#                             a decision in decisions/ in the same change, by a
+#                             key in constitution/keys/.  --cached checks what is
+#                             staged (the pre-commit hook); without it, everything
+#                             changed since the last commit, untracked included.
 #
 # Failures name codes, never tool output.
 set -eu
@@ -136,6 +142,10 @@ cmd_build() {
 		pldir=$(field "$(code_file "$pl")" source)
 		pname=$(basename "${prog#PART.}"); pname=${pname%@*}
 		$CC $CFLAGS -c -o "$out/$pname.o" "$pdir$pname.c"
+		# the referee, after: rule 12, a program touches no hardware.  Its own
+		# assembly, from the same compiler: no port I/O, no privileged instruction.
+		hw=$($CC $CFLAGS -S -o - "$pdir$pname.c" | grep -E '^[[:space:]]*(in|out|ins|outs)[bwl]?[[:space:]]|^[[:space:]]*(cli|sti|hlt|lgdt|lidt|ltr|wrmsr|rdmsr|invlpg)([[:space:]]|$)|mov[l]?[[:space:]].*%cr[0-9]' | head -1 | sed 's/^[[:space:]]*//' || true)
+		[ -z "$hw" ] || die "rule 12: $prog touches the hardware itself ($hw); a program asks the system, through its system calls"
 		$CC $CFLAGS $LDFLAGS -T "$pldir/program.ld" -o "$out/$pname.bin" "$out/$pname.o"
 		members="$members $pname $out/$pname.bin"; summary="$summary + $prog ($(wc -c < "$out/$pname.bin") bytes)"
 	done
@@ -154,8 +164,46 @@ cmd_run() {
 	exec sh "$mdir/machine.sh" "out/$1/loader.elf" "out/$1/$pname.bin"
 }
 
+# The decision ledger (plan 3.6).  Deterministic: paths and file names, no judgment.
+cmd_ledger() {
+	if [ "${1:-}" = "--cached" ]; then
+		changed=$(git diff --cached --name-only --diff-filter=ACMRD HEAD)
+	else
+		changed=$( { git diff --name-only HEAD; git ls-files --others --exclude-standard; } | sort -u)
+	fi
+	decisions=$(echo "$changed" | grep '^decisions/[0-9]*\.toml$' || true)
+	for d in $decisions; do
+		[ -f "$d" ] || continue
+		by=$(field "$d" by)
+		[ -f "constitution/keys/${by#KEY.}.toml" ] || die "ledger: $d is decided by \"$by\", which is not a key in constitution/keys/"
+	done
+	n=0
+	for p in $changed; do
+		kind=""
+		while IFS= read -r line; do
+			k=$(echo "$line" | sed -n 's/^\([a-z][a-z ]*[a-z]\) *= *\[.*/\1/p')
+			[ -n "$k" ] || continue
+			for g in $(echo "$line" | sed 's/^[^=]*= *\[\(.*\)\].*/\1/' | tr ',' '\n' | sed 's/[" ]//g' | grep .); do
+				case "$p" in $g) kind=$k ;; esac
+			done
+		done < constitution/human-only.toml
+		[ -n "$kind" ] || continue
+		named=""
+		for d in $decisions; do
+			[ -f "$d" ] || continue
+			for g in $(list_field "$d" touches); do
+				case "$p" in $g) named=$d ;; esac
+			done
+		done
+		[ -n "$named" ] || die "ledger: $p changed; $kind are human-only, and no decision in this change names it"
+		n=$((n + 1))
+	done
+	printf 'ledger: %s human-only change(s), each named by a decision, decided by a key in constitution/keys/\n' "$n"
+}
+
 case "${1:-}" in
 	list)  cmd_list ;;
+	ledger) cmd_ledger "${2:-}" ;;
 	check) cmd_check "${2:?flavor}" ;;
 	build) cmd_build "${2:?flavor}" ;;
 	run)   cmd_run "${2:?flavor}" ;;

@@ -113,6 +113,10 @@ rule number and the offending catalogue number, nothing else.
 11. The built image contains no component not listed, exposes no CAP not granted,
     and the VM definition has no device no CAP requires.  Checked against the
     artifact, not the petition.
+12. A program touches no hardware: no port I/O and no privileged instruction in
+    its own compiled code.  Everything it does to the machine goes through a
+    system call, so its capabilities are the whole of what it can do.  Checked
+    by the referee after the build, on the program's own assembly.
 
 ## What is deliberately not here
 

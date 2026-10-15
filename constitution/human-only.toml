@@ -1,0 +1,13 @@
+# What only a human decides (CLAUDE.md, "Decision ledger").  A change to any path
+# below is refused by `jig/aios ledger` unless a decision in decisions/, in the
+# same change, names the path in its touches and is decided by a key in
+# constitution/keys/.  An agent may draft that decision; only a human's key makes
+# it one.  Globs are the shell's.  This file is on its own list.
+[human-only]
+tests        = ["tests/*.toml", "tests/expected/*", "tests/fixtures/*", "tests/programs/*", "tests/mutations.txt"]
+specs        = ["specs/*"]
+purposes     = ["constitution/purposes/*"]
+capabilities = ["index/cap/*"]
+dependencies = ["index/tool/*"]
+licence      = ["LICENSE"]
+rules and words = ["CLAUDE.md", "constitution/*", "schema/*", "posts/voice.md", "jig/aios", "jig/test", "jig/mutate", "jig/postcheck", "jig/donecheck", ".githooks/*"]

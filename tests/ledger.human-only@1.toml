@@ -1,0 +1,10 @@
+code       = "TST.ledger.human-only@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+binds      = "SPEC.ledger.1@1"
+red_when   = "in a copy of the repo, a test made easier with no decision is accepted, or one with a decision by a key not in constitution/keys is accepted, or one with KEY.chris@1's decision is refused, or a code-only change is refused"
+timeout_ms = 60000
+isolates   = "AGT.referee@1"
+runner     = "jig/test cmd sh tests/programs/ledger.sh"
+mutations  = 2

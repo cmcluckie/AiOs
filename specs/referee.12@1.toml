@@ -1,0 +1,7 @@
+code       = "SPEC.referee.12@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+component  = "AGT.referee@1"
+clause     = "A program that touches the hardware itself, instead of asking through a system call, is refused at build, even when its output is exactly right."
+author     = "KEY.chris"

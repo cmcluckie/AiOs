@@ -1,0 +1,7 @@
+code       = "SPEC.ledger.1@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+component  = "AGT.referee@1"
+clause     = "A change to anything on the human-only list is refused unless a decision in the same change names it and is decided by a human's key; a change to code alone needs no decision."
+author     = "KEY.chris"

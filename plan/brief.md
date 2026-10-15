@@ -25,7 +25,7 @@ The detailed plan is plan/full.md; this file is the one to read.
    3.3. Expiry, status and quorum enforcement. [coming up]
    3.4. Artifact check for rule 11: the built image and VM against the petition. [coming up]
    3.5. Commit and review signature verification against constitution/keys. [coming up]
-   3.6. Decision ledger: every agent decision declared with its options and who chose, checked against the diff so an undeclared one fails, with a human-only list; built before the committee. [coming up]
+   3.6. Decision ledger: every agent decision declared with its options and who chose, checked against the diff so an undeclared one fails, with a human-only list; built before the committee.  Small version built for part 15: constitution/human-only.toml, decisions/, `jig/aios ledger`, the pre-commit hook; rule 12 (a program touches no hardware) checked after every build. [in progress]
    3.7. The referee runs the tester itself after every build, against that exact image, and says yes or no; the cache (5.4) takes only an image with that yes. [coming up]
 
 4. Tester: manufacture failures before the world does. [in progress]
