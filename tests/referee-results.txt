@@ -1,0 +1,59 @@
+# tests/referee-results.txt, written by jig/aios rules.  Do not edit by hand.
+# run 2026-10-15T06:38Z at commit a2a8490: rules 2 to 8 of schema/petition.md, every petition
+PASS  rule 2  petition 0000
+PASS  rule 3  petition 0000
+PASS  rule 4  petition 0000
+PASS  rule 5  petition 0000
+PASS  rule 6  petition 0000
+PASS  rule 7  petition 0000
+FAIL  rule 8  petition 0000  SNS.hello.boot-to-output@1 names no SPEC clause
+PASS  rule 2  petition 0001
+PASS  rule 3  petition 0001
+PASS  rule 4  petition 0001
+PASS  rule 5  petition 0001
+PASS  rule 6  petition 0001
+PASS  rule 7  petition 0001
+PASS  rule 8  petition 0001
+PASS  rule 2  petition 0002
+PASS  rule 3  petition 0002
+PASS  rule 4  petition 0002
+PASS  rule 5  petition 0002
+PASS  rule 6  petition 0002
+PASS  rule 7  petition 0002
+PASS  rule 8  petition 0002
+PASS  rule 2  petition 0003
+PASS  rule 3  petition 0003
+PASS  rule 4  petition 0003
+PASS  rule 5  petition 0003
+PASS  rule 6  petition 0003
+PASS  rule 7  petition 0003
+PASS  rule 8  petition 0003
+PASS  rule 2  petition 0004
+PASS  rule 3  petition 0004
+FAIL  rule 4  petition 0004  PART.timer.kvmclock@1 requires CAP.hv.kvmclock@1, not asked for
+PASS  rule 5  petition 0004
+FAIL  rule 6  petition 0004  PART.timer.kvmclock@1 is depended on but not listed
+PASS  rule 7  petition 0004
+FAIL  rule 8  petition 0004  SNS.stopwatch.drift@1 names no SPEC clause
+PASS  rule 2  petition 0005
+PASS  rule 3  petition 0005
+FAIL  rule 4  petition 0005  PART.timer.tsc-pit@1 requires CAP.dev.pit@1, not asked for
+PASS  rule 5  petition 0005
+FAIL  rule 6  petition 0005  PART.timer.kvmclock@1 is depended on but not listed
+PASS  rule 7  petition 0005
+PASS  rule 8  petition 0005
+PASS  rule 2  petition 0006
+PASS  rule 3  petition 0006
+FAIL  rule 4  petition 0006  PART.timer.kvmclock@1 requires CAP.hv.kvmclock@1, not asked for
+PASS  rule 5  petition 0006
+FAIL  rule 6  petition 0006  PART.timer.kvmclock@1 is depended on but not listed
+PASS  rule 7  petition 0006
+PASS  rule 8  petition 0006
+PASS  rule 2  petition 0007
+PASS  rule 3  petition 0007
+FAIL  rule 4  petition 0007  PART.timer.kvmclock@1 requires CAP.hv.kvmclock@1, not asked for
+PASS  rule 5  petition 0007
+PASS  rule 6  petition 0007
+PASS  rule 7  petition 0007
+PASS  rule 8  petition 0007
+# 9 failure(s)

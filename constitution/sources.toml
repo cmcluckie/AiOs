@@ -1,0 +1,13 @@
+# Upstream sources, and how much each is trusted.  A lift from a source needs
+# what its level says.  Changing a level is a signed human commit: this file
+# is in constitution/, which is human-only.  Decided by Chris, 2026-10-15.
+#
+#   human      every lift needs a signed petition (the default, and today's reality)
+#   committee  the committee may approve a lift on its own when the upstream
+#              commit is signed by a key listed here; nothing until plan 3.5
+#              verifies signatures, so until then every source is human
+#   open       the committee's say-so alone; listed so the choice is visible,
+#              used nowhere
+
+[sources]
+linux = { repository = "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git", level = "human", signers = [] }

@@ -1,0 +1,11 @@
+id      = "0003"
+date    = 2026-10-14
+kind    = "specs and tests"
+touches = ["specs/referee.2-8@1.toml", "specs/referee.13@1.toml", "tests/referee.2-8@1.toml", "tests/referee.verb-noun@1.toml", "tests/programs/rules.sh", "tests/programs/lines.sh", "tests/mutations.txt", "jig/aios", "jig/test", "CLAUDE.md"]
+asked   = "Check rules 2 to 8 and rule 13 on every petition, in a referee command that writes its own results file, with one spec, one test and seven mutations; jig/test runs the ledger on every commit since the last run before any test, as the second lock; report the four petitions that fail rules 4 and 6 rather than edit the catalogue so they pass?"
+options = ["report, decide the catalogue question separately", "edit the catalogue so the rules pass", "gate the build on rules 2 to 8 now"]
+default = "report, decide the catalogue question separately"
+chose   = "report, decide the catalogue question separately"
+why     = "findings/0017.md"
+by      = "KEY.chris@1"
+drafted = "Claude"

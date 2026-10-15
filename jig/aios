@@ -10,12 +10,22 @@
 #   aios run <flavor>         check, build, boot on the flavor's machine
 #   aios pack <archive> <name> <file>...   programs into one cpio archive, in
 #                             order, the way build does for a flavor of several
-#   aios ledger [--cached]    referee: every change to something only a human
+#   aios rules                referee: rules 2 to 8 of schema/petition.md, on
+#                             every petition, written to tests/referee-results.txt;
+#                             any FAIL exits 1
+#   aios lines <file>         referee: a committee's or mechanic's output is a
+#                             numbered list, one verb-noun line each; the verb
+#                             is in constitution/verbs.toml, the noun is a
+#                             catalogue number; anything else is refused
+#   aios ledger [--cached | --commit REV]
+#                             referee: every change to something only a human
 #                             decides (constitution/human-only.toml) is named by
 #                             a decision in decisions/ in the same change, by a
 #                             key in constitution/keys/.  --cached checks what is
-#                             staged (the pre-commit hook); without it, everything
-#                             changed since the last commit, untracked included.
+#                             staged (the pre-commit hook); --commit checks one
+#                             commit as made (jig/test, on every commit since the
+#                             last run); without either, everything changed since
+#                             the last commit, untracked included.
 #
 # Failures name codes, never tool output.
 set -eu
@@ -40,13 +50,14 @@ code_file() {
 		SPEC) echo "specs/$rest.toml" ;;
 		TST)  echo "tests/$rest.toml" ;;
 		SNS)  echo "sensors/$rest.toml" ;;
+		FND)  echo "findings/${rest%@*}.md" ;;
 		*)    echo "" ;;
 	esac
 }
 
 # every code mentioned anywhere in a petition file
 petition_codes() {
-	sed -n 's/.*"\(\(PUR\|KEY\|CAP\|PART\|MACHINE\|TOOL\|SPEC\|TST\|SNS\)\.[a-z0-9.-]*\(@[0-9]*\)\?\)".*/\1/p' "$1" | sort -u
+	sed -n 's/.*"\(\(PUR\|KEY\|CAP\|PART\|MACHINE\|TOOL\|SPEC\|TST\|SNS\|FND\)\.[a-z0-9.-]*\(@[0-9]*\)\?\)".*/\1/p' "$1" | sort -u
 }
 
 petition_primary() {
@@ -168,6 +179,13 @@ cmd_run() {
 cmd_ledger() {
 	if [ "${1:-}" = "--cached" ]; then
 		changed=$(git diff --cached --name-only --diff-filter=ACMRD HEAD)
+	elif [ "${1:-}" = "--commit" ]; then
+		# one commit, as it was made: what it changed, against its parent.  The
+		# second lock, run where nobody types (jig/test), so --no-verify on a
+		# PC only delays the refusal.
+		rev=${2:-HEAD}
+		git cat-file -e "$rev:constitution/human-only.toml" 2>/dev/null || { printf 'ledger: %s predates the ledger (no constitution/human-only.toml in it); nothing to hold it to\n' "$(git rev-parse --short "$rev")"; return 0; }
+		changed=$(git diff-tree --no-commit-id --name-only -r --diff-filter=ACMRD "$rev")
 	else
 		changed=$( { git diff --name-only HEAD; git ls-files --others --exclude-standard; } | sort -u)
 	fi
@@ -201,9 +219,142 @@ cmd_ledger() {
 	printf 'ledger: %s human-only change(s), each named by a decision, decided by a key in constitution/keys/\n' "$n"
 }
 
+# referee: rules 2 to 8 of schema/petition.md, every petition, one line per
+# rule per petition.  Reports, never trusts: the file it writes is what a post
+# may quote.  Each rule is one block so one mutation can switch one rule off.
+pet_rows() {	# petition file -> "kind<TAB>code<TAB>a<TAB>b": capability code reason; component code admitted role; sensor code binds consumer
+	awk '
+	/^\[\[/ { flush(); k=$0; gsub(/[\[\] ]/,"",k); c=a=b=r="" ; next }
+	/^code/     { v=$0; sub(/^[^"]*"/,"",v); sub(/".*/,"",v); c=v }
+	/^reason/   { v=$0; sub(/^[^"]*"/,"",v); sub(/".*/,"",v); a=v }
+	/^admitted/ { v=$3; gsub(/[" ]/,"",v); a=v }
+	/^role/     { v=$0; sub(/^[^"]*"/,"",v); sub(/".*/,"",v); b=v }
+	/^binds/    { v=$0; sub(/^[^"]*"/,"",v); sub(/".*/,"",v); a=v }
+	/^consumer/ { v=$0; sub(/^[^"]*"/,"",v); sub(/".*/,"",v); b=v }
+	END { flush() }
+	function flush() { if (k=="capability"||k=="component"||k=="sensor") print k "\t" c "\t" a "\t" b; k="" }' "$1"
+}
+cmd_rules() {
+	log="tests/referee-results.txt"
+	commit=$(git rev-parse --short HEAD 2>/dev/null || echo "not a git checkout")
+	{ echo "# tests/referee-results.txt, written by jig/aios rules.  Do not edit by hand."
+	  echo "# run $(date -u +%Y-%m-%dT%H:%MZ) at commit $commit: rules 2 to 8 of schema/petition.md, every petition"; } > "$log"
+	fails=0
+	for pet in petitions/*.toml; do
+		id=$(field "$pet" id)
+		rows=$(pet_rows "$pet")
+		caps=$(echo "$rows" | awk -F'\t' '$1=="capability"{print $2}')
+		comps=$(echo "$rows" | awk -F'\t' '$1=="component"{print $2}')
+		primary=$(echo "$rows" | awk -F'\t' '$1=="component" && $4=="primary"{print $2}')
+		# the components and everything they depend on, walked once
+		all=$comps; todo=$comps
+		while [ -n "$todo" ]; do
+			next=""
+			for c in $todo; do
+				cf=$(code_file "$c"); [ -f "$cf" ] || continue
+				for d in $(list_field "$cf" depends); do
+					echo "$all" | grep -qx "$d" || { all="$all
+$d"; next="$next $d"; }
+				done
+			done
+			todo=$next
+		done
+		r() { if [ -z "$2" ]; then echo "PASS  rule $1  petition $id"; else echo "FAIL  rule $1  petition $id  $2"; fails=$((fails + 1)); fi >> "$log"; }
+		# rule 2: every capability's reason is a SPEC clause of a component in the petition
+		bad=""
+		for line in $(echo "$rows" | awk -F'\t' '$1=="capability"{print $2 "=" $3}'); do
+			cap=${line%%=*}; reason=${line#*=}
+			sf=$(code_file "$reason")
+			case "$reason" in SPEC.*) ;; *) bad="$cap reason \"$reason\" is not a SPEC"; break ;; esac
+			[ -f "$sf" ] || { bad="$cap reason $reason does not exist"; break; }
+			echo "$comps" | grep -qx "$(field "$sf" component)" || { bad="$cap reason $reason belongs to $(field "$sf" component), not in the petition"; break; }
+		done
+		r 2 "$bad"
+		# rule 3: every SPEC clause of the primary component is bound by a TST
+		bad=""
+		for sf in specs/*.toml; do
+			[ "$(field "$sf" component)" = "$primary" ] || continue
+			sc=$(field "$sf" code)
+			grep -lq "^binds *= *\"$sc\"" tests/*.toml || { bad="$sc has no test"; break; }
+		done
+		r 3 "$bad"
+		# rule 4: every CAP a component requires is asked for
+		bad=""
+		for c in $all; do
+			cf=$(code_file "$c"); [ -f "$cf" ] || continue
+			for q in $(list_field "$cf" requires); do
+				echo "$caps" | grep -qx "$q" || { bad="$c requires $q, not asked for"; break 2; }
+			done
+		done
+		r 4 "$bad"
+		# rule 5: every CAP asked for is exposed by a component in the petition
+		bad=""
+		exposed=$(for c in $all; do cf=$(code_file "$c"); [ -f "$cf" ] && list_field "$cf" exposes; done)
+		for q in $caps; do echo "$exposed" | grep -qx "$q" || { bad="$q is granted but nothing in the petition exposes it"; break; }; done
+		r 5 "$bad"
+		# rule 6: every component's run-time depends are in the petition, transitively
+		bad=""
+		for c in $all; do echo "$comps" | grep -qx "$c" || { bad="$c is depended on but not listed"; break; }; done
+		r 6 "$bad"
+		# rule 7: a component marked admitted has an admission in its catalogue entry
+		bad=""
+		for c in $(echo "$rows" | awk -F'\t' '$1=="component" && $3=="true"{print $2}'); do
+			cf=$(code_file "$c")
+			[ -n "$(field "$cf" admitted)" ] || { bad="$c is marked admitted and has no admission"; break; }
+		done
+		r 7 "$bad"
+		# rule 8: every sensor names a SPEC clause and a consumer key
+		bad=""
+		for line in $(echo "$rows" | awk -F'\t' '$1=="sensor"{print $2 "=" $3 "=" $4}'); do
+			sn=${line%%=*}; rest=${line#*=}; binds=${rest%%=*}; consumer=${rest#*=}
+			case "$binds" in SPEC.*) [ -f "$(code_file "$binds")" ] || { bad="$sn binds $binds, which does not exist"; break; } ;; *) bad="$sn names no SPEC clause"; break ;; esac
+			[ -n "$consumer" ] && [ -f "$(code_file "$consumer")" ] || { bad="$sn has no consumer"; break; }
+		done
+		r 8 "$bad"
+	done
+	echo "# $fails failure(s)" >> "$log"
+	cat "$log"
+	[ "$fails" -eq 0 ]
+}
+
+# referee: rule 13.  Output from a committee seat or the mechanic is a numbered
+# list, one line each, "N. verb NOUN".  The verb is one of constitution/verbs.toml.
+# The noun is a catalogue number that resolves.  record and ask may name a verb
+# that does not exist yet, as VERB.name, and no line in the same list may use it.
+# Prose, an unknown verb, an unknown noun: refused, naming the line.
+cmd_lines() {
+	f=${1:?file}; [ -f "$f" ] || die "rule 13: no file $f"
+	verbs=$(sed -n 's/^\([a-z]*\) *= *".*/\1/p' constitution/verbs.toml)
+	n=0; asked=""
+	while IFS= read -r line || [ -n "$line" ]; do
+		line=$(printf '%s' "$line" | tr -d '\r')
+		[ -n "$line" ] || continue
+		n=$((n + 1))
+		num=${line%%.*}; rest=${line#*. }
+		[ "$num" = "$n" ] && [ "$rest" != "$line" ] || die "rule 13: line $n is not numbered $n: \"$line\""
+		verb=${rest%% *}; noun=${rest#* }
+		[ "$noun" != "$rest" ] && [ -n "$noun" ] || die "rule 13: line $n has no noun: \"$line\""
+		case "$noun" in *" "*) die "rule 13: line $n is more than a verb and a noun: \"$line\"" ;; esac
+		echo "$verbs" | grep -qx "$verb" || die "rule 13: line $n uses a verb not in constitution/verbs.toml: \"$verb\""
+		case "$noun" in
+			VERB.*) case "$verb" in record|ask) asked="$asked ${noun#VERB.}" ;; *) die "rule 13: line $n: only record and ask may name a verb that does not exist: \"$line\"" ;; esac ;;
+			*) cf=$(code_file "$noun"); [ -n "$cf" ] && [ -f "$cf" ] || die "rule 13: line $n names a noun that is not in the catalogue: \"$noun\"" ;;
+		esac
+	done < "$f"
+	[ "$n" -gt 0 ] || die "rule 13: $f is empty"
+	# a verb asked for cannot also be used: a used verb must be in the
+	# constitution (checked above), and one that is cannot be asked for
+	for a in $asked; do
+		echo "$verbs" | grep -qx "$a" && die "rule 13: the verb \"$a\" is asked for and already exists"
+	done
+	printf 'rule 13: %s line(s), every verb in the constitution, every noun in the catalogue%s\n' "$n" "${asked:+; asked for:$asked}"
+}
+
 case "${1:-}" in
 	list)  cmd_list ;;
-	ledger) cmd_ledger "${2:-}" ;;
+	ledger) cmd_ledger "${2:-}" "${3:-}" ;;
+	rules) cmd_rules ;;
+	lines) cmd_lines "${2:?file}" ;;
 	check) cmd_check "${2:?flavor}" ;;
 	build) cmd_build "${2:?flavor}" ;;
 	run)   cmd_run "${2:?flavor}" ;;

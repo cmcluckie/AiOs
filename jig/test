@@ -64,6 +64,19 @@ machine_of() {
 }
 [ -w /dev/kvm ] && accel=kvm || accel="software emulation (tcg)"
 
+# the referee first, on every commit since the last recorded run (the commit
+# in tests/results.txt's header), as the second lock: a check skipped on a PC
+# with --no-verify is refused here, where nobody types, and no test runs on
+# that commit.  A filtered run (one test) skips this; jig/mutate runs those.
+if [ -z "${1:-}" ] && git rev-parse HEAD >/dev/null 2>&1; then
+	last=$(sed -n '2s/.*at commit \([0-9a-f]*\).*/\1/p' tests/results.txt 2>/dev/null)
+	if [ -n "$last" ] && git rev-parse -q --verify "$last^{commit}" >/dev/null 2>&1; then revs=$(git rev-list --reverse "$last..HEAD"); else revs=$(git rev-parse HEAD); fi
+	for rev in $revs; do
+		sh jig/aios ledger --commit "$rev" >/dev/null 2>"$tmp/ledger" || { echo "referee: commit $(git rev-parse --short "$rev") refused, no test runs on it: $(cat "$tmp/ledger")"; exit 1; }
+	done
+	[ -n "$revs" ] && echo "referee: $(echo $revs | wc -w) commit(s) since $( [ -n "$last" ] && echo "$last" || echo "the start"), every human-only change named by a decision"
+fi
+
 # the stand-in: real QEMU plus whatever AIOS_QEMU_EXTRA says
 real=$(command -v qemu-system-x86_64) || { echo "no qemu-system-x86_64"; exit 2; }
 mkdir -p "$tmp/bin"

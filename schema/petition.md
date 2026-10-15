@@ -15,9 +15,10 @@ Format is TOML.
 
     <TABLE>.<path>@<version>
 
-- TABLE is one of PUR, CAP, PART, MACHINE, TOOL, SPEC, TST, SNS.  PART,
+- TABLE is one of PUR, CAP, PART, MACHINE, TOOL, SPEC, TST, SNS, FND.  PART,
   MACHINE and TOOL together are the component tables (until 2026-10-13, one
-  table, @@component@@; findings 0014).
+  table, @@component@@; findings 0014).  FND is a finding, findings/NNNN.md,
+  numbered so a verb-noun line can name one (2026-10-15).
 - path is lowercase dotted segments: letters, digits, hyphen.  `tty.write`,
   `kernel.serial.8250`, `editor`.
 - version is an integer, required on PART, MACHINE, TOOL and SPEC, optional elsewhere (absent
@@ -117,6 +118,25 @@ rule number and the offending catalogue number, nothing else.
     its own compiled code.  Everything it does to the machine goes through a
     system call, so its capabilities are the whole of what it can do.  Checked
     by the referee after the build, on the program's own assembly.
+13. A committee seat's or the mechanic's output is a numbered list, one line
+    each, a verb then a noun and nothing else.  The verb is one of
+    constitution/verbs.toml; the noun is a catalogue number that resolves.
+    `record` and `ask` may name a verb that does not exist yet, as VERB.name,
+    and that verb is never one that already exists.  Prose, an unknown verb or
+    an unknown noun is refused, naming the line.  Checked by `jig/aios lines`.
+14. A verb acts only on a noun that already exists.  A thing that does not
+    exist yet is asked for (`ask`), and a signed petition creates it.  How much
+    a petition to lift from a source needs is the source's level in
+    constitution/sources.toml: human (a signed petition, the default),
+    committee (the committee alone, when the upstream commit is signed by a
+    listed key; nothing until rule 10's signatures are verified), or open.
+15. `remove` and `retire` make a new version of what they change and never
+    edit the old one: petitions add, never swap.
+16. An agent's key may decide exactly one kind of decision, a deviation (a
+    rule in the constitution it looked at and did not follow, with what it
+    built instead).  Every other kind is a human's.  An agent's key is made on
+    the jig and never leaves it; one key per agent; constitution/keys marks it
+    `role = "agent"`.
 
 ## What is deliberately not here
 

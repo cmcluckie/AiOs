@@ -1,0 +1,7 @@
+code       = "SPEC.referee.13@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+component  = "AGT.referee@1"
+clause     = "A committee's or mechanic's output is accepted only as a numbered list, one line each, a verb from constitution/verbs.toml then a catalogue number; a verb or noun the referee does not know is refused, and a verb asked for by record or ask is never used in the same list."
+author     = "KEY.chris"

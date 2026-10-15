@@ -188,7 +188,15 @@ exactly; when a new one is needed, add it here in the same commit.
   how a test works, only whether it went green.  Checks against the rule book
   Chris wrote.  No model, no judgment.  Nothing is cached until it says yes.
   Fails loud, naming a rule and a catalogue number.  Today: `jig/aios check`
-  (the catalogue and rule half); running the tester is planned.
+  (rules 1, 9 and 12, the build gate) and `jig/aios rules` (rules 2 to 8 on
+  every petition, written to tests/referee-results.txt, findings 0017) and
+  `jig/aios lines` (rule 13, the verb-noun shape); running the tester is
+  planned.  The referee is permanent, the one agent never stripped: it
+  decides what is stripped.  It runs where nobody types: today the jig, which
+  runs the ledger on every commit since the last run before any test
+  (`jig/aios ledger --commit`), so a check skipped on a PC is refused there;
+  when the jig goes, the referee runs inside AiOs, at admission.  The rule
+  names the condition, never the machine.  Decided by Chris, 2026-10-15.
 - **Builder.**  Turns a checked flavor into an image, deterministically.
   Decides nothing and validates nothing itself.  Pressing play runs, in this
   order: the referee on the petitions (stop on any failure); the builder;
@@ -220,6 +228,17 @@ exactly; when a new one is needed, add it here in the same commit.
   against keys (plan 3.5), the proof that a human decided it is Chris's
   signature on the commit that carries it.  Findings 0016 says what it cannot
   see yet.
+- **Verb, noun.**  A verb is a doing word; a noun is the name of a thing.
+  In AiOs the verbs are the few things an agent may do to the repository
+  (lift, add, remove, pin, retire, rerun, record, ask), listed in
+  constitution/verbs.toml, changed only by a signed human commit.  The nouns
+  are the catalogue numbers, and a noun enters only when a signed petition
+  creates the thing it names.  A committee seat or the mechanic speaks to the
+  referee only in a numbered list of verb-noun lines (rule 13, `jig/aios
+  lines`); a verb or noun the referee does not know is a failure and a
+  finding, never a green light.  The verbs and the catalogue are kept apart
+  so the door that admits a part never admits a power.  Decided by Chris on
+  2026-10-14.
 - **Agent.**  Anything in the ring around the nucleus that acts on it: the
   referee, builder, tester, historian, quartermaster, mechanic, committee.
   The older sense of the word, as in mail transfer agent: something that acts

@@ -1,0 +1,18 @@
+# The verbs: everything an agent may do to this repository, and nothing else.
+# A committee's or a mechanic's output is a numbered list of lines, each one
+# verb then noun (rule 13, schema/petition.md).  The nouns are catalogue
+# numbers; they enter through petitions.  The verbs are these, and they enter
+# only by a signed human commit to this file.  constitution/ is human-only.
+# A verb acts only on a noun that already exists; a thing that does not exist
+# yet is asked for, and a signed petition creates it (decided 2026-10-15).
+# Decided 2026-10-14 (part 15); the referee's check is `jig/aios lines`.
+
+[verbs]
+lift   = "take the lifted part named into lifted/ from its origin record; the part must already exist in the catalogue, by petition"
+add    = "put a part, capability, spec, test or sensor into a petition"
+remove = "take one out of a petition, as a new version of the petition; the old one is never edited"
+pin    = "hold a part at the version named"
+retire = "mark a part, spec or test expired, as a new version; the old one is never edited"
+rerun  = "run the test named, on the jig"
+record = "write the finding named (FND.NNNN@1); the noun may instead name a verb that does not exist yet"
+ask    = "put a question to a human; the noun may name a verb that does not exist yet"
