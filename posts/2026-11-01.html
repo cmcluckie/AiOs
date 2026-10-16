@@ -1,0 +1,119 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Give me Notepad or die</title>
+<style>
+body{max-width:760px;margin:32px auto;padding:0 16px;font-family:Georgia,serif;font-size:18px;line-height:1.6;color:#222;background:#fff}
+section{border:1px solid #ddd;border-radius:10px;padding:0 20px 12px;margin:0 0 28px}
+.bar{display:flex;justify-content:space-between;align-items:center;margin:0 -20px 12px;padding:8px 20px;background:#f4f3ef;border-bottom:1px solid #ddd;border-radius:10px 10px 0 0;font:600 14px system-ui,sans-serif;color:#555;user-select:none}
+button{font:600 14px system-ui,sans-serif;padding:6px 16px;border-radius:16px;border:1px solid #0a66c2;background:#0a66c2;color:#fff;cursor:pointer}
+button.done{background:#fff;color:#0a66c2}
+.text{white-space:pre-wrap;font-family:system-ui,sans-serif;font-size:15px}
+.img{font:14px system-ui,sans-serif;color:#555}
+</style></head><body>
+<section id="post">
+<div class="bar"><span>1. Post</span><button onclick="copyText('post-body',this)">Copy</button></div>
+<div id="post-body" class="text">
+AiOs, part 14 (Kernel code: 1044 lines). "Whoever decided to add tabs to Notepad, there is a special place in hell for that person."...
+
+I despise Unix text editors.  Give me Notepad, because it has one purpose and does exactly that one thing.  So AiOs got a text editor, and the rule was that there's nothing to learn.
+
+In 1997 I ran my first migration of users from a green-screen application to a Windows one.  They hated it, and it took me a while to see why.  They'd memorized every keystroke for every task, and I was asking them to throw all of it away.  The fix has a name: IBM's Common User Access, from 1987.  Ctrl+S saves, the arrows move, and the commands are on the screen, not in your head.
+
+I wrote six rules myself.  One file, no modes, and the bottom line always shows Ctrl+S Save, Ctrl+Z Undo, Ctrl+Q Quit.  Then Claude found the catch.  AiOs couldn't save over a file.  When it lifted Minix out of Linux in part 10, it cut the code that frees a file's old blocks, because sort only ever wrote once.  So 47 more lines of Linux came back.
+The people who loved the green screen weren't loving the screen.  They were protecting what they'd invested.
+
+#AiOs
+</div>
+</section>
+<section id="title">
+<div class="bar"><span>2. Title</span><button onclick="copyText('title-body',this)">Copy</button></div>
+<div id="title-body"><h1>Give me Notepad or die</h1></div>
+</section>
+<section id="article">
+<div class="bar"><span>3. Article</span><button onclick="copyRich('article-body',this)">Copy</button></div>
+<div id="article-body">
+<p><em>The story behind AiOs, part 14.</em></p>
+<h2>Give me Notepad or die</h2>
+<p>I despise Unix text editors.  vi, Emacs, all of them.  Give me Notepad or give me death.</p>
+<p>I love Notepad.  I think it's one of the best things ever written, because it has one purpose and it does exactly that one thing: it writes text.  Whoever decided to add tabs to Notepad, there is a special place in hell for that person.  And whoever decided it should remember your documents after you close them, damn you, damn you all to hell.</p>
+<p>I'm a big fan of simplicity, and in a text editor, Notepad is the very definition of it.  So after the last post, which was heavy on definitions, AiOs gets a text editor today, and I'm keeping it simple, pure and innocent.</p>
+<h2>The green screen</h2>
+<p>There's a reason this matters to me beyond taste.</p>
+<p>In 1997 I ran my first migration of users from a green-screen application to a Windows one.  They hated it.  Absolutely hated it.  And it took me a while to understand why.  It wasn't that the new one was worse.  It was how much they'd invested in the old one.  They had memorized every keystroke it took to do every single thing.  Which F key did what.  Which combination got you to which screen.  It was way beyond hitting Tab and having the cursor land in the right field.  All of that knowledge lived in their heads, and I was asking them to throw it away.</p>
+<p>The early text editors were the same, and so were the early versions of Word.  vi still is.  You invest in learning it, and it pays you back in speed.  Plenty of people love that deal, and if you're one of them, no judgment.  Well, a little judgment.</p>
+<h2>Keystrokes are a language too</h2>
+<p>The last post was about words.  It turns out keystrokes are words too: a language you have to learn before you can say anything.</p>
+<p>The thing that ended my 1997 fight has a name.  In 1987, IBM published Common User Access, a rulebook for how programs should behave: Ctrl+S saves, the arrows move, F1 is help, and the commands should be on the screen, not in your head.  Windows followed it, and Notepad is its purest form.  You don't learn Notepad.  You just use it.</p>
+<p>So that's the rule for this editor: there is nothing to learn.</p>
+<h2>What I asked for</h2>
+<p>Six rules, and I wrote them myself:</p>
+<ol>
+<li>Typing types: printable keys insert at the cursor, and the arrows, Home, End, Backspace, Delete and Enter do what they say.  No modes.</li>
+<li>Ctrl+S writes exactly the text on screen to the file, replacing what was there.</li>
+<li>Ctrl+Z undoes the last run of typing or deleting, and a second Ctrl+Z puts it back.  There's one level only.</li>
+<li>Ctrl+Q quits.  If there are unsaved changes, it asks once: "Unsaved.  Ctrl+Q again to quit."</li>
+<li>The bottom line always shows every command there is.</li>
+<li>Saving over a file leaves the disk clean, with the old blocks freed and nothing lost.</li>
+</ol>
+<p>One file, called notes.txt.  No tabs.  No remembering your last session.  The whole bottom line of the screen says <code> Ctrl+S Save   Ctrl+Z Undo   Ctrl+Q Quit</code>, all the time, so you never have to remember anything.  The screen is 80 columns by 24 rows, the size of DEC's VT100 terminal from 1978, because that's the language the serial line speaks.</p>
+<p>Fun fact I learned along the way: Ctrl+S and Ctrl+Q used to mean "stop sending" and "start again" on old terminals.  That's why some Unix editors still avoid them today.  Notepad's keys win here (and whoever thought Ctrl+C should stop a command, you can go hang out with the Notepad tab people).</p>
+<h2>The one thing AiOs couldn't do</h2>
+<p>Every rung on this ladder asks the system for exactly one new thing.  I assumed the editor would ask for nothing: typing came in part 6, the disk in part 10.</p>
+<p>Claude found the catch.  AiOs couldn't save over a file.  When Claude lifted Minix's filesystem out of Linux for part 10, it cut the code that frees a file's old blocks, because sort only ever wrote its file once.  An editor saves the same file over and over.</p>
+<p>So this rung brings back a small, exact piece of Linux: the code that runs when a program opens a file to overwrite it.  It frees every block the old file held, then writes the new one.  That's 47 lines, nearly all of them Linux's own, each traced to the exact line it came from.  The kernel itself didn't change at all, apart from being built with the new filesystem.</p>
+<h2>How the tests type</h2>
+<p>You can't test an editor by reading its output.  You have to type at it.</p>
+<p>So the tests do.  Each one feeds in the exact bytes a terminal sends when you press keys, saves, quits, boots the machine again on the same disk, and reads what the editor shows when it opens the file.  "Helo world", back seven, insert an "l", and so on, until the second boot has to show exactly two lines, 20 bytes.  Then Claude broke the editor on purpose 14 different ways (the up arrow that stays put, the Ctrl+Q that doesn't ask, a freed block that never gets freed) to make sure every test notices.</p>
+<h2>What I'm taking away</h2>
+<p>Every product I've ever managed has had someone in it who loved the old green screen.  I get it now in a way I didn't in 1997.  They weren't loving the screen.  They were protecting what they'd invested.</p>
+<p>The best thing an interface can do is ask for no investment at all.  Put every command on the screen, and let typing be typing.  It took 305 lines.  Come along!</p>
+<h2>Read along</h2>
+<ol>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/pool/PART.editor@1/editor.c">pool/PART.editor@1/editor.c</a>.  The whole editor.  Find <code>case 0x13</code>: that's Ctrl+S.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/specs/editor.1@1.toml">specs/editor.1@1.toml</a>.  The first of my six rules, as the system reads it.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/lifted/PART.fs.minix@2/minix.c">lifted/PART.fs.minix@2/minix.c</a>.  Find <code>free_data</code>: the piece of Linux that came back.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/fixtures/editor_keys.sh">tests/fixtures/editor_keys.sh</a>.  Every key the tests press, readable.</li>
+</ol>
+<h2>Try this</h2>
+<p>Open the repo in Codespaces and run <code>sh jig/aios run editor</code>.  Type something, press Ctrl+S, then Ctrl+Q.  Run it again: your text is still there.  Now type something and press Ctrl+Q without saving, and watch it ask.</p>
+<h2>As built</h2>
+<ul>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/index/part/editor@1.as-built.md">editor@1</a></li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/index/part/fs.minix@2.as-built.md">fs.minix@2</a></li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/index/part/loader@7.as-built.md">loader@7</a></li>
+</ul>
+<h2>Addendum: the tests</h2>
+<p>Every test for the parts above, from tests/results.txt and tests/mutations-results.txt, run on the jig under KVM.  The whole suite: 52 passed, 0 failed, 2 skipped.  Of 78 deliberate breakages, 76 were caught; the 2 that survive are the known ones from parts 10 and 12, and all 14 of the editor's were caught.</p>
+<p><strong>editor@1</strong></p>
+<ul>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/editor.quit-asks@1.toml">editor.quit-asks@1</a>.  Checks: Ctrl+Q quits.  If there are unsaved changes, it asks once: \"Unsaved.  Ctrl+Q again to quit.\"  Goes red when: after typing, the first Ctrl+Q quits without showing Unsaved.  Ctrl+Q again to quit., or the second does not quit, or anything was saved.  Status: Passed by the runner (on the jig, under KVM): asked once, quit on the second Ctrl+Q, saved nothing.  Mutations caught: 2.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/editor.save-over@1.toml">editor.save-over@1</a>.  Checks: Ctrl+S writes exactly the text on screen to the file, replacing what was there.  Goes red when: saved as first version, then edited to second version and saved again, the third boot does not show exactly second version, 14 bytes.  Status: Passed by the runner (on the jig, under KVM): saved twice: second version, 14 bytes, the first one gone.  Mutations caught: 2.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/editor.status-line@1.toml">editor.status-line@1</a>.  Checks: The bottom line always shows every command there is.  Goes red when: any screen the editor draws, after any key, has a bottom line without all three of Ctrl+S Save, Ctrl+Z Undo and Ctrl+Q Quit.  Status: Passed by the runner (on the jig, under KVM): 45 frames, every one with Ctrl+S Save, Ctrl+Z Undo and Ctrl+Q Quit.  Mutations caught: 1.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/editor.typing@1.toml">editor.typing@1</a>.  Checks: Typing types: printable keys insert at the cursor, and the arrows, Home, End, Backspace, Delete and Enter do what they say.  No modes.  Goes red when: on a fresh disk, the keys in tests/fixtures/editor-typing.in (typing, the four arrows, Home, End, Backspace, Delete, Enter) then Ctrl+S and Ctrl+Q, and on the next boot the screen does not show exactly the two lines Jello world!? and second, 20 bytes.  Status: Passed by the runner (on the jig, under KVM): two lines, 20 bytes, exactly what the keys made.  Mutations caught: 4.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/editor.undo@1.toml">editor.undo@1</a>.  Checks: Ctrl+Z undoes the last run of typing or deleting, and a second Ctrl+Z puts it back.  There is one level only.  Goes red when: one Ctrl+Z after a run of typing does not take back exactly that run, or a second Ctrl+Z does not put it back: the file ends up anything but one two, 7 bytes.  Status: Passed by the runner (on the jig, under KVM): undo took back one run, the second undo put it back: one two.  Mutations caught: 2.</li>
+</ul>
+<p><strong>fs.minix@2</strong></p>
+<ul>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/fs.overwrite-clean@1.toml">fs.overwrite-clean@1</a>.  Checks: Saving over a file leaves the disk clean by fsck.minix, with the old blocks freed and nothing lost.  Goes red when: a probe saves one file five times at 2500, 10, 7168, 0 and 1500 bytes; any save fails, the last load differs by one byte from the last save, or fsck.minix finds any error or any file but notes.txt.  Status: Passed by the runner (on the jig, under KVM): five saves over one file, the last loads back the same, fsck.minix clean.  Mutations caught: 2.</li>
+</ul>
+<p><strong>loader@7</strong></p>
+<ul>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/loader.ladder-7@1.toml">loader.ladder-7@1</a>.  Checks: Loader@7 is loader@6 built with PART.fs.minix@2: every earlier program runs under it unchanged, and the only difference a program can see is that save writes over a file that is already there.  Goes red when: hello, hanoi, life or calc, each built for its own loader, booted unchanged under PART.loader@7 on the editor machine, differs by one byte from its own expected output.  Status: Passed by the runner (on the jig, under KVM): 4 programs byte-identical under loader@7.  Mutations caught: 1.</li>
+</ul>
+<h2>Code on GitHub</h2>
+<p><a href="https://github.com/cmcluckie/aios/compare/823f7c3...414bd19">Every line that changed, on one page</a>.</p>
+<p>The commits behind this post, in order:</p>
+<ol>
+<li><a href="https://github.com/cmcluckie/aios/commit/414bd19">Petition 0007: the editor, Notepad-plain; PART.fs.minix@2 saves over a file</a></li>
+</ol>
+<p><a href="https://github.com/cmcluckie/aios">The whole repo</a>.</p>
+</div>
+</section>
+<p class="img">Image: 2026-11-01.png, in this folder.</p>
+<script>
+function flash(b){b.textContent='Copied';b.classList.add('done');setTimeout(function(){b.textContent='Copy';b.classList.remove('done')},1500)}
+function select(id){var r=document.createRange();r.selectNodeContents(document.getElementById(id));var s=getSelection();s.removeAllRanges();s.addRange(r);return s}
+function copyRich(id,b){var s=select(id);document.execCommand('copy');s.removeAllRanges();flash(b)}
+function copyText(id,b){var t=document.getElementById(id).innerText.trim();
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(function(){flash(b)},function(){copyRich(id,b)})}else{copyRich(id,b)}}
+</script>
+</body></html>

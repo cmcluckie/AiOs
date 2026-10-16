@@ -13,6 +13,18 @@ button.done{background:#fff;color:#0a66c2}
 <div class="bar"><span>1. Post</span><button onclick="copyText('post-body',this)">Copy</button></div>
 <div id="post-body" class="text">
 AiOs, part 15 (Kernel code: 1044 lines). "Just because a test passes doesn't mean the AI did what you think it did."...
+
+Claude played the bad agent on purpose.  It rewrote hello world from part 1 to skip the system and talk to the serial port itself.  Same 14 bytes out, and the test passed it.
+
+The referee didn't.  "Rule 12: PART.hello@1 touches the hardware itself."  After every build it reads the machine instructions each program became and looks for the handful that reach the hardware directly.  I've been scared there'd be no way to check the AI, and here it was, catching one.
+
+Then the cheat everyone worries about.  A test fails, and the AI loosens the test instead of fixing the code.  So tests, specs and the rules themselves are now on a list only I decide, and changing any of them takes a written decision signed with my key.  Claude tried it without one, then with a name that isn't on the list.  Refused both times.
+
+The first night the referee read all the paperwork, it found four petitions that had never asked for a permission their code was using.  The tests had been green for four posts, and nothing could say so.
+
+Writing code is the AI's job.  Deciding what counts as correct is mine.
+
+#AiOs
 </div>
 </section>
 <section id="title">
@@ -153,12 +165,12 @@ code = "TST.editor.typing@1"
   ... six more tests ...</code></pre>
 <p>The sentences on the right aren't in the file.  I put them there so you can read it.  What's in the file is the names, and that's the point: a petition is a list of names, and every name is a file the referee can open.  Nothing in it is a sentence the referee has to understand.</p>
 <p>Now the lookup.  For every petition, this is what the referee does, and the picture is the real petition with the real files it opens.</p>
-<p class="img"><img src="2026-10-25-lookup-1.png" alt="" style="max-width:100%"></p>
-<p class="img"><img src="2026-10-25-lookup-2.png" alt="" style="max-width:100%"></p>
+<p class="img"><img src="2026-11-03-lookup-1.png" alt="" style="max-width:100%"></p>
+<p class="img"><img src="2026-11-03-lookup-2.png" alt="" style="max-width:100%"></p>
 <p>Read the first page as a chain and it says: the editor may write to the console, because the bottom line must always show every command, and a test proves that it does.  Thirty-six capabilities across eight petitions, every one with a chain like that.  The referee follows the chain.  It never reads the English.</p>
 <p>And the flow.  This is the order things happen in today, from a change Claude makes to the post you're reading, and where the referee sits in it.</p>
-<p class="img"><img src="2026-10-25-flow-1.png" alt="" style="max-width:100%"></p>
-<p class="img"><img src="2026-10-25-flow-2.png" alt="" style="max-width:100%"></p>
+<p class="img"><img src="2026-11-03-flow-1.png" alt="" style="max-width:100%"></p>
+<p class="img"><img src="2026-11-03-flow-2.png" alt="" style="max-width:100%"></p>
 <p>Count the purple boxes: five.  The ledger before the commit, the petition before the build, the assembly after the build, the paperwork after the tests, and anything a committee will ever say.  Each one says yes or no, names a rule and a catalogue number, and has no opinion.  The three files at step 9 are the only things a post is allowed to quote.</p>
 <h2>The code</h2>
 <p>The referee is one C file, 556 lines, pool/AGT.referee@1/referee.c.  I'm not going to walk every line.  I'm going to show you the five pieces that matter, so that when you read the file yourself it looks like what I described and not like magic.</p>
@@ -268,7 +280,7 @@ CC="$CC" CFLAGS="$CFLAGS" sh pool/AGT.referee@1/referee hardware "$prog" "$pdir$
 <p><a href="https://github.com/cmcluckie/aios">The whole repo</a>.</p>
 </div>
 </section>
-<p class="img">Image: 2026-10-25.png, in this folder.</p>
+<p class="img">Image: 2026-11-03.png, in this folder.</p>
 <script>
 function flash(b){b.textContent='Copied';b.classList.add('done');setTimeout(function(){b.textContent='Copy';b.classList.remove('done')},1500)}
 function select(id){var r=document.createRange();r.selectNodeContents(document.getElementById(id));var s=getSelection();s.removeAllRanges();s.addRange(r);return s}

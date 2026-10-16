@@ -1,0 +1,11 @@
+id      = "0010"
+date    = 2026-10-16
+kind    = "rules and words"
+touches = ["CLAUDE.md", "posts/voice.md", "jig/postcheck"]
+asked   = "Part 1 reached thousands of people and the one-line teasers after it reached a few hundred.  The post becomes the story told short: the first line as before, three or four short paragraphs with the real specifics, one closing line, the hashtag; 150 to 220 words, two spaces after periods, no bullets, no links (a link goes in a First comment section), never opening with 'In this part' or 'Today I'.  Parts 1 to 6 are live; everything after moves to one post every second day at 7:30 AM Pacific, part 7 on 2026-10-18, the files renamed to their new dates.  postcheck keys its rules to the part number, since the dates moved and the order didn't."
+options = ["as written", "the new format for future parts only", "keep one post a day"]
+default = "as written"
+chose   = "as written"
+why     = "posts/drafts/linkedin-posts.md"
+by      = "KEY.chris@1"
+drafted = "Claude"

@@ -13,6 +13,16 @@ button.done{background:#fff;color:#0a66c2}
 <div class="bar"><span>1. Post</span><button onclick="copyText('post-body',this)">Copy</button></div>
 <div id="post-body" class="text">
 AiOs, part 13 (Kernel code: 997 lines). "Life moves pretty fast. If you don't stop and look around once in a while, you could miss it."...
+
+At sixteen I was going to be a welder.  I took a computer science course because I figured it was easy marks, and I couldn't find the power button.  Some of the smartest kids in school laughed at me.  Two weeks in, I was one of the best programmers in the class.
+
+Later, more than once, I heard "You're not detail-oriented.  Why the hell are you a programmer?"  Fair.  I forget definitions and mix up terms.  What I had instead was patterns, and a habit: get the words right up front and hold everyone to them, starting with yourself.
+
+Working with an AI, things move fast, and our words had drifted.  So I went back over everything Claude and I had said since the start.  "Segment" became part, because that word already means something on x86.  I wanted "quark."  Claude said no.  "The door" became the system call.  "The OS" became the nucleus, Per Brinch Hansen's word from 1969.  I still prefer KERNAL, with an A.
+
+A product manager who lets one word mean two things ends up with two products.
+
+#AiOs
 </div>
 </section>
 <section id="title">
@@ -34,7 +44,7 @@ AiOs, part 13 (Kernel code: 997 lines). "Life moves pretty fast. If you don't st
 <p>I didn't leave because I was failing at it.  I left because I wanted to do other things.  Consultant, then product manager.  I prefer being a communicator, which is why I'm doing this silly blog.  But if I'm being honest, I'm probably a better developer, haha (did someone just say "existential crisis"?).  The job taught me one thing I didn't expect, and it's what this post is about.</p>
 <h2>Language matters</h2>
 <p>When you're not a detail person, you can't rely on remembering what everyone meant.  You have to get the words right, out loud, up front, and then hold everyone to them, starting with yourself.  A product manager who lets a word mean two things in a room ends up with two products.</p>
-<p>Yesterday Claude wrote the post.  Today I went back over everything Claude and I have said since the start of this project, word by word.  One thing I've learned as an agentic developer: things move really fast.  The words had drifted while Claude and I built, a little at a time, and you'd remember every one of them.  As Ferris Bueller once said, "Life moves pretty fast.  If you don't stop and look around once in a while, you could miss it."</p>
+<p>Last time, Claude wrote the post.  Today I went back over everything Claude and I have said since the start of this project, word by word.  One thing I've learned as an agentic developer: things move really fast.  The words had drifted while Claude and I built, a little at a time, and you'd remember every one of them.  As Ferris Bueller once said, "Life moves pretty fast.  If you don't stop and look around once in a while, you could miss it."</p>
 <p>So this is a good place to recap every term I'm using in this project.  Where a word changed, I've said what I used to call it.</p>
 <h2>The problem</h2>
 <p>First, the problem, because every word below exists to serve it.  AiOs isn't a general-purpose operating system.  It's purpose-driven: every machine starts from what it's for, and gets exactly the software that purpose needs and nothing else.  Nothing gets in without a written reason.  And the work is done by AI agents, so the hard part isn't writing the code, it's making sure nothing an agent does goes unseen or unchecked.</p>
@@ -97,7 +107,7 @@ AiOs, part 13 (Kernel code: 997 lines). "Life moves pretty fast. If you don't st
 <li><a href="https://github.com/cmcluckie/aios/blob/main/docs/aios-components.png">docs/aios-components.png</a>.  The whole thing in one picture, in the new words.</li>
 </ol>
 <h2>Try this</h2>
-<p>Open the repo in Codespaces and run <code>sh jig/postcheck</code>.  It passes.  Now open this article's file, posts/2026-10-23.html, change any word to "segment", and run it again.  It names the file and the retired word.  Change it back.</p>
+<p>Open the repo in Codespaces and run <code>sh jig/postcheck</code>.  It passes.  Now open this article's file, posts/2026-10-30.html, change any word to "segment", and run it again.  It names the file and the retired word.  Change it back.</p>
 <h2>As built</h2>
 <p>Nothing new was built in this part.  Every part, machine and tool was renamed and moved, and their as-built specs moved with them, under index/part/, index/machine/ and index/tool/.</p>
 <h2>Addendum: the tests</h2>
@@ -111,7 +121,7 @@ AiOs, part 13 (Kernel code: 997 lines). "Life moves pretty fast. If you don't st
 <p><a href="https://github.com/cmcluckie/aios">The whole repo</a>.</p>
 </div>
 </section>
-<p class="img">Image: 2026-10-23.png, in this folder.</p>
+<p class="img">Image: 2026-10-30.png, in this folder.</p>
 <script>
 function flash(b){b.textContent='Copied';b.classList.add('done');setTimeout(function(){b.textContent='Copy';b.classList.remove('done')},1500)}
 function select(id){var r=document.createRange();r.selectNodeContents(document.getElementById(id));var s=getSelection();s.removeAllRanges();s.addRange(r);return s}

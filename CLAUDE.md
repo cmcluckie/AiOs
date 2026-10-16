@@ -374,9 +374,11 @@ with no steering.  Until then, each post adds one word to the vocabulary.
 
 **When.**  Every time an item or sub-item in plan/brief.md moves to [done],
 Claude drafts a post for it.  The post is also the body of the commit that
-moves the item to done.  One post per day: the date is the day it is meant to
-go out, the next free day after the last post.  Chris posts one a day at most,
-so the folder runs ahead of LinkedIn on purpose.
+moves the item to done.  One post every second day, weekends included, at
+7:30 AM Pacific: the date is the day it is meant to go out, two days after the
+post before it.  Part 7 is 2026-10-18 and the rhythm runs on from there.  The
+folder runs ahead of LinkedIn on purpose.  When the schedule moves, the files
+are renamed to their new dates and README.md's table follows (decision 0010).
 
 **Files.**  Two per post, same date, same name, in posts/:
 - `YYYY-MM-DD.html`: everything Chris pastes into LinkedIn, in one file, in
@@ -403,10 +405,22 @@ id="...">` with a label and a Copy button outside the copied part:
 2. `title`: the article's title, nothing else.
 3. `article`: the article body.
 
-**The post (section `post`).**  One line, nothing else: `AiOs, part N (Kernel
-code: K lines).` then a one-sentence pull quote from the article in double
-quotes, then `...`.  Single spaces after periods (LinkedIn collapses doubles).
-K is the lines of code taken from Linux (lifted/, the .c files, no blanks, no
+**The post (section `post`).**  The story told short, 150 to 220 words, in
+Chris's voice, two spaces after periods (decision 0010; part 1 reached
+thousands of people and the one-line teasers after it reached a few hundred).
+1. The first line: `AiOs, part N (Kernel code: K lines).` then a one-sentence
+   pull quote from the article in double quotes, then `...`.
+2. Three or four short paragraphs telling the actual story from the article:
+   what the rung was, what got built, what broke or surprised him, what the
+   fix or decision was.  Real specifics: line counts, the bug, the test that
+   went red, the history.  Pick the one or two moments that make it a story;
+   don't summarize the article.  Someone who never clicks still gets it.
+3. One closing sentence connecting it to how he thinks about building
+   software or running product.  No preaching.
+4. `#AiOs` on its own line (`#AiOS` for parts 1 to 12, matching their name).
+No bullet points, no links, and never open with "In this part" or "Today I".
+A link the post needs goes in a `comment` section after `post`, labelled
+"First comment".  jig/postcheck checks all of it from part 7.  K is the lines of code taken from Linux (lifted/, the .c files, no blanks, no
 comments, as the as-built specs record them) on the day the post goes out:
 57 from part 1, 69 from part 6.  LinkedIn attaches the article to it.
 
@@ -452,4 +466,6 @@ exaggerate; facts can't.
 **Already posted.**  A post that is live on LinkedIn keeps its body exactly as
 posted unless Chris changes it there too.  Its ending (the follow-along line
 and the links) is kept to the current format in the repo, and Chris decides
-whether to edit the live one to match.  Part 1 is live.
+whether to edit the live one to match.  Parts 1 to 6 are live.  Their posts in
+the story format are in posts/drafts/linkedin-posts.md; when Chris edits a live
+post to match, its file takes the new body in the same change.

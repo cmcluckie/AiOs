@@ -4,7 +4,7 @@ Pronounced AY-ohss.  Linux, re-admitted one justified line at a time.
 
 ## The series
 
-The story of building it, told one part a day on LinkedIn.  The date is the day
+The story of building it, told one part every second day on LinkedIn.  The date is the day
 each part goes up; the files are here before then, so read ahead if you like.
 Each file holds the short post, the title and the full article.
 
@@ -16,13 +16,15 @@ Each file holds the short post, the title and the full article.
 | 4 | 2026-10-14 | [Ours and theirs](posts/2026-10-14.html) |
 | 5 | 2026-10-15 | [The landlord learns what it owns](posts/2026-10-15.html) |
 | 6 | 2026-10-16 | [The machine listens](posts/2026-10-16.html) |
-| 7 | 2026-10-17 | [Definition of done](posts/2026-10-17.html) |
-| 8 | 2026-10-18 | [Where's the kernel?](posts/2026-10-18.html) |
-| 9 | 2026-10-19 | [The turbo button](posts/2026-10-19.html) |
-| 10 | 2026-10-20 | [Saved like it's 1991](posts/2026-10-20.html) |
-| 11 | 2026-10-21 | [From KERNAL to kernel](posts/2026-10-21.html) |
-| 12 | 2026-10-22 | [Hi, I'm the other one](posts/2026-10-22.html) |
-| 13 | 2026-10-23 | [Language matters](posts/2026-10-23.html) |
+| 7 | 2026-10-18 | [Definition of done](posts/2026-10-18.html) |
+| 8 | 2026-10-20 | [Where's the kernel?](posts/2026-10-20.html) |
+| 9 | 2026-10-22 | [The turbo button](posts/2026-10-22.html) |
+| 10 | 2026-10-24 | [Saved like it's 1991](posts/2026-10-24.html) |
+| 11 | 2026-10-26 | [From KERNAL to kernel](posts/2026-10-26.html) |
+| 12 | 2026-10-28 | [Hi, I'm the other one](posts/2026-10-28.html) |
+| 13 | 2026-10-30 | [Language matters](posts/2026-10-30.html) |
+| 14 | 2026-11-01 | [Give me Notepad or die](posts/2026-11-01.html) |
+| 15 | 2026-11-03 | [Unplug from the matrix](posts/2026-11-03.html) |
 
 ![AiOs: the nucleus at the centre, the agents that build and guard it around it, and the jig underneath](docs/aios-components.png)
 

@@ -1,5 +1,5 @@
 <!doctype html>
-<html><head><meta charset="utf-8"><title>Give me Notepad or die</title>
+<html><head><meta charset="utf-8"><title>Saved like it's 1991</title>
 <style>
 body{max-width:760px;margin:32px auto;padding:0 16px;font-family:Georgia,serif;font-size:18px;line-height:1.6;color:#222;background:#fff}
 section{border:1px solid #ddd;border-radius:10px;padding:0 20px 12px;margin:0 0 28px}
@@ -12,89 +12,110 @@ button.done{background:#fff;color:#0a66c2}
 <section id="post">
 <div class="bar"><span>1. Post</span><button onclick="copyText('post-body',this)">Copy</button></div>
 <div id="post-body" class="text">
-AiOs, part 14 (Kernel code: 1044 lines). "Whoever decided to add tabs to Notepad, there is a special place in hell for that person."...
+AiOS, part 10 (Kernel code: 638 lines). "AI writes code now, lots of it, fast. The question I care about is how you let it without having to trust it."...
+
+Part 1 reached far more people than I planned for, so here's the honest reason this exists.  I'm not building a new Linux.  I'm working out how to let AI write code safely, and the software that says yes or no to everything else is the hardest place to prove it.
+
+This rung saves a file.  It sorts twenty numbers from the rand() printed in Kernighan and Ritchie, writes them to disk, and checks them on the next boot.  Both choices had a modern answer and an old one, and both times the old one was smaller.  An IDE disk, from the IBM PC/AT in 1984.  The Minix filesystem, the one Linus Torvalds had on his own disk in 1991.  The file we took it from still says "Copyright (C) 1991, 1992 Linus Torvalds."
+
+My favourite part is the second opinion.  After AiOS saves, the test hands the disk to fsck.minix, a Linux tool nobody here wrote.  We broke the filesystem three ways and it caught all three.  Our own program would have missed two.
+
+When the options would all do the job, I take the one with history.
+
+#AiOS
 </div>
 </section>
 <section id="title">
 <div class="bar"><span>2. Title</span><button onclick="copyText('title-body',this)">Copy</button></div>
-<div id="title-body"><h1>Give me Notepad or die</h1></div>
+<div id="title-body"><h1>Saved like it's 1991</h1></div>
 </section>
 <section id="article">
 <div class="bar"><span>3. Article</span><button onclick="copyRich('article-body',this)">Copy</button></div>
 <div id="article-body">
-<p><em>The story behind AiOs, part 14.</em></p>
-<h2>Give me Notepad or die</h2>
-<p>I despise Unix text editors.  vi, Emacs, all of them.  Give me Notepad or give me death.</p>
-<p>I love Notepad.  I think it's one of the best things ever written, because it has one purpose and it does exactly that one thing: it writes text.  Whoever decided to add tabs to Notepad, there is a special place in hell for that person.  And whoever decided it should remember your documents after you close them, damn you, damn you all to hell.</p>
-<p>I'm a big fan of simplicity, and in a text editor, Notepad is the very definition of it.  So after yesterday's post, which was heavy on definitions, AiOs gets a text editor today, and I'm keeping it simple, pure and innocent.</p>
-<h2>The green screen</h2>
-<p>There's a reason this matters to me beyond taste.</p>
-<p>In 1997 I ran my first migration of users from a green-screen application to a Windows one.  They hated it.  Absolutely hated it.  And it took me a while to understand why.  It wasn't that the new one was worse.  It was how much they'd invested in the old one.  They had memorized every keystroke it took to do every single thing.  Which F key did what.  Which combination got you to which screen.  It was way beyond hitting Tab and having the cursor land in the right field.  All of that knowledge lived in their heads, and I was asking them to throw it away.</p>
-<p>The early text editors were the same, and so were the early versions of Word.  vi still is.  You invest in learning it, and it pays you back in speed.  Plenty of people love that deal, and if you're one of them, no judgment.  Well, a little judgment.</p>
-<h2>Keystrokes are a language too</h2>
-<p>Yesterday was about words.  It turns out keystrokes are words too: a language you have to learn before you can say anything.</p>
-<p>The thing that ended my 1997 fight has a name.  In 1987, IBM published Common User Access, a rulebook for how programs should behave: Ctrl+S saves, the arrows move, F1 is help, and the commands should be on the screen, not in your head.  Windows followed it, and Notepad is its purest form.  You don't learn Notepad.  You just use it.</p>
-<p>So that's the rule for this editor: there is nothing to learn.</p>
-<h2>What I asked for</h2>
-<p>Six rules, and I wrote them myself:</p>
-<ol>
-<li>Typing types: printable keys insert at the cursor, and the arrows, Home, End, Backspace, Delete and Enter do what they say.  No modes.</li>
-<li>Ctrl+S writes exactly the text on screen to the file, replacing what was there.</li>
-<li>Ctrl+Z undoes the last run of typing or deleting, and a second Ctrl+Z puts it back.  There's one level only.</li>
-<li>Ctrl+Q quits.  If there are unsaved changes, it asks once: "Unsaved.  Ctrl+Q again to quit."</li>
-<li>The bottom line always shows every command there is.</li>
-<li>Saving over a file leaves the disk clean, with the old blocks freed and nothing lost.</li>
-</ol>
-<p>One file, called notes.txt.  No tabs.  No remembering your last session.  The whole bottom line of the screen says <code> Ctrl+S Save   Ctrl+Z Undo   Ctrl+Q Quit</code>, all the time, so you never have to remember anything.  The screen is 80 columns by 24 rows, the size of DEC's VT100 terminal from 1978, because that's the language the serial line speaks.</p>
-<p>Fun fact I learned along the way: Ctrl+S and Ctrl+Q used to mean "stop sending" and "start again" on old terminals.  That's why some Unix editors still avoid them today.  Notepad's keys win here (and whoever thought Ctrl+C should stop a command, you can go hang out with the Notepad tab people).</p>
-<h2>The one thing AiOs couldn't do</h2>
-<p>Every rung on this ladder asks the system for exactly one new thing.  I assumed the editor would ask for nothing: typing came in part 6, the disk in part 10.</p>
-<p>Claude found the catch.  AiOs couldn't save over a file.  When Claude lifted Minix's filesystem out of Linux for part 10, it cut the code that frees a file's old blocks, because sort only ever wrote its file once.  An editor saves the same file over and over.</p>
-<p>So this rung brings back a small, exact piece of Linux: the code that runs when a program opens a file to overwrite it.  It frees every block the old file held, then writes the new one.  That's 47 lines, nearly all of them Linux's own, each traced to the exact line it came from.  The kernel itself didn't change at all, apart from being built with the new filesystem.</p>
-<h2>How the tests type</h2>
-<p>You can't test an editor by reading its output.  You have to type at it.</p>
-<p>So the tests do.  Each one feeds in the exact bytes a terminal sends when you press keys, saves, quits, boots the machine again on the same disk, and reads what the editor shows when it opens the file.  "Helo world", back seven, insert an "l", and so on, until the second boot has to show exactly two lines, 20 bytes.  Then Claude broke the editor on purpose 14 different ways (the up arrow that stays put, the Ctrl+Q that doesn't ask, a freed block that never gets freed) to make sure every test notices.</p>
-<h2>What I'm taking away</h2>
-<p>Every product I've ever managed has had someone in it who loved the old green screen.  I get it now in a way I didn't in 1997.  They weren't loving the screen.  They were protecting what they'd invested.</p>
-<p>The best thing an interface can do is ask for no investment at all.  Put every command on the screen, and let typing be typing.  It took 305 lines.  Come along!</p>
+<p><em>The story behind AiOS, part 10.</em></p>
+<h2>Well, that got out of hand</h2>
+<p>Part 1 reached about 8,000 people.  I was expecting about 50.  Honestly, I hope it calms down a bit, and if it doesn't, that'd be fun too.  Either way, a lot more people are reading this than I planned for, so I owe you the honest version of why it exists.</p>
+<h2>It's not a new Linux</h2>
+<p>I'm not building a new Linux.  I'm not an OS engineer, I'm not out to replace anything, and I wouldn't want to.  One commenter caught me getting the licence wrong, and it's fixed.  Expect more of that.</p>
+<p>What I'm actually working on is how to do agentic development safely.  AI writes code now, lots of it, fast.  The question I care about is how you let it without having to trust it.  And what better place to test that than the one piece of software that says yes or no to everything else?  If the process holds up at the bottom, where every byte matters and nothing hides, it'll hold up anywhere.</p>
+<h2>Defense and offense</h2>
+<p>Here's the picture in my head.  Most of a development team's week goes on the mundane stuff: checking, rechecking, chasing what changed, proving the old things still work.  That's what holds good teams back from building great software.</p>
+<p>In AiOS the machine does the mundane part, and it's split into defense and offense.  Defense is the referee and the tests: dumb, stubborn checkers that say no and give you a rule number.  Offense is the sabotage script from part 8, which attacks our own code on purpose to prove the defense would notice.  The AI proposes, and neither side takes its word for anything.</p>
+<p>That frees up the people.  Developers, QA and support get to spend their time on the product and the business: what should this do, for whom, and is it right?  Their roles get clearer, and they sit closer to the customer.</p>
+<p>I wrote this series as a slow walk on purpose.  Partly because it's hard to explain a whole vision at once.  Mostly because I don't fully understand it yet either.  This stuff is new enough that I need to be slow-walked to it as well, and every post teaches me one more piece.</p>
+<p>Which brings me to the biggest piece of operating system so far.</p>
+<h2>Saving a file</h2>
+<p>Everything on AiOS until now has forgotten everything the moment you switched it off.  This rung is a program that remembers.  It sorts twenty numbers, saves the sorted line to a file on a disk, and the next time the machine boots, it finds that file and checks it's still right.</p>
+<p>The twenty numbers come from the rand() function printed in Kernighan and Ritchie, the C book from part 1, starting from its own seed of 1.  The AI picked that, and I love it: the same twenty numbers on every machine, forever.  The sort is insertion sort, the one every first course teaches.  The program is the easy part.  The disk is not.</p>
+<h2>A new rule: pick the one with history</h2>
+<p>There were two choices to make, and both had a modern answer and an old one.</p>
+<p>The disk.  Every cloud virtual machine today uses a disk called virtio.  Linux's code for it is about 7,000 lines, most of it general machinery shared by every virtio device.  The old answer is IDE, whose registers go back to the hard disk controller in the IBM PC/AT in 1984.  You talk to it the way we already talk to the serial chip: write a few numbers to a few ports, then read 512 bytes.</p>
+<p>The filesystem.  The old answer here is Minix.  It's the filesystem from the teaching operating system in Andrew Tanenbaum's textbook, and it's what Linus Torvalds had on his own disk when he started writing Linux in 1991.  It was Linux's very first filesystem, and it's still in Linux today.</p>
+<p>Both times the old one was also the smaller one.  So I made it a rule: when there's a choice between things that would each do the job, the default is the one with the history.  Minix on an IDE disk is roughly the machine Linux was born on.</p>
+<h2>What we took, and what we cut</h2>
+<p>Linux's Minix code is about 2,400 lines, and it's tangled into Linux's shared file machinery more than 200 times: its general idea of a file, its cache, its locks.  So we took the parts that are Minix's own: where the maps of free space and the list of files live on the disk, how to find a free spot, how to add a name to a directory, which block holds which part of a file.  Then we rewrote the edges: every block gets read, changed and written straight back.</p>
+<p>The top of the file we took from still says "Copyright (C) 1991, 1992 Linus Torvalds".  I find that genuinely moving.</p>
+<p>The disk driver came from Linux too, from the code that still handles those old IDE disks.  All up, the lines we've taken from Linux went from 172 to 638.  About 150 of those are our own glue, holding Linux's pieces together.  Every range is recorded down to the commit and the line, the same as before, and the script that checks them against Linux says all 97 recorded ranges match.</p>
+<h2>No clock, so no counting</h2>
+<p>Here's the bit that tied back to part 9.  Every time Linux waits on a disk, it times the wait: check the disk, wait 10 microseconds, check again, give up after 10 milliseconds.  This machine has no timer.  Adding one would break the "one new thing per rung" rule, and faking the wait by counting loops would be the exact turbo-button bug we spent the last post killing.</p>
+<p>So our driver waits as long as it takes, watching the disk's own "busy" light.  If nobody's there at all, it notices and says so.  On a real dead disk it would hang, and that's written down for the day this runs on real hardware with a real clock.</p>
+<p>Same reason, smaller detail: the file it saves is dated 1 January 1970.  The machine doesn't know what day it is.  That's its own rung, later.</p>
+<h2>A second opinion nobody here wrote</h2>
+<p>This is my favourite part.  Linux comes with a tool called fsck.minix that checks a Minix disk for damage.  Nobody on this project wrote it, and nobody here can talk it into anything.  So after AiOS saves its file, the test hands the disk to fsck.minix.  It says the disk is clean and there's one file on it, called sorted.</p>
+<p>That's defense from outside the building.  Then came the offense.  We broke the filesystem three ways: used a block without marking it as taken, forgot to grow the directory, made a file nothing points to.  fsck.minix caught every one, and two of the three our own program would never have noticed: it reads the file back just fine.</p>
+<p>All up: eight new tests, fifteen new sabotages, fourteen caught.  The one that got away is honest and a bit scary.  When the program saves, the last thing it does is tell the disk "write everything you're holding, now".  Take that line out and every test still passes, because the emulator writes straight to the file anyway.  On a real disk with a cache, pull the plug at the wrong moment and the file is gone.  It's written down as a known survivor, the same as the three in part 8.</p>
+<h2>The fine print</h2>
+<p>All of this ran under software emulation in a container, not on the jig.  Files can be up to 7 KiB, in one directory, and once saved they can't be overwritten or deleted, because nothing has asked for that yet.  Hello world, Hanoi, Life and the calculator all still run byte for byte the same on the new loader.</p>
+<p>And the piece this rung added to the process: a checker from outside.  Every test before this one, the AI wrote.  This one, Linux wrote.</p>
 <h2>Read along</h2>
 <ol>
-<li><a href="https://github.com/cmcluckie/aios/blob/main/pool/PART.editor@1/editor.c">pool/PART.editor@1/editor.c</a>.  The whole editor.  Find <code>case 0x13</code>: that's Ctrl+S.</li>
-<li><a href="https://github.com/cmcluckie/aios/blob/main/specs/editor.1@1.toml">specs/editor.1@1.toml</a>.  The first of my six rules, as the system reads it.</li>
-<li><a href="https://github.com/cmcluckie/aios/blob/main/lifted/PART.fs.minix@2/minix.c">lifted/PART.fs.minix@2/minix.c</a>.  Find <code>free_data</code>: the piece of Linux that came back.</li>
-<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/fixtures/editor_keys.sh">tests/fixtures/editor_keys.sh</a>.  Every key the tests press, readable.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/pool/PART.sort@1/sort.c">pool/PART.sort@1/sort.c</a>.  The program.  Find <code>rand</code>, copied from K&amp;R, and the short insertion sort under it.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/lifted/PART.fs.minix@1/minix.c">lifted/PART.fs.minix@1/minix.c</a>.  Read the comment at the top for what came from where and what was cut.  Then <code>add_link</code>: that's Linux's code for adding a name to a directory, almost line for line.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/lifted/PART.disk.ata-pio@1/ata.c">lifted/PART.disk.ata-pio@1/ata.c</a>.  The disk driver.  Look at <code>command</code>: seven port writes and the disk knows what you want.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/pool/MACHINE.serial-disk@1/machine.sh">pool/MACHINE.serial-disk@1/machine.sh</a>.  The new machine: the old one, plus one IDE disk.  It formats its own disk the first time, like it came from the shop.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/expected/fs.fsck-clean@1.check">tests/expected/fs.fsck-clean@1.check</a>.  The second opinion nobody here wrote, in a dozen lines.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/findings/0010.md">findings/0010.md</a>.  What we found, including the missing clock and the flush no test can see.</li>
 </ol>
 <h2>Try this</h2>
-<p>Open the repo in Codespaces and run <code>sh jig/aios run editor</code>.  Type something, press Ctrl+S, then Ctrl+Q.  Run it again: your text is still there.  Now type something and press Ctrl+Q without saving, and watch it ask.</p>
+<p>Press F5 and pick AiOS: sort, twice.  The first time it saves the file; the second time it finds it.  Now open pool/PART.sort@1/sort.c, change the seed <code>next = 1</code> to the year you were born, and run it again.  It sorts twenty new numbers, finds last time's file still on the disk, and tells you it's different.  The disk remembered.  Delete out/disk.minix to start over.</p>
 <h2>As built</h2>
 <ul>
-<li><a href="https://github.com/cmcluckie/aios/blob/main/index/part/editor@1.as-built.md">editor@1</a></li>
-<li><a href="https://github.com/cmcluckie/aios/blob/main/index/part/fs.minix@2.as-built.md">fs.minix@2</a></li>
-<li><a href="https://github.com/cmcluckie/aios/blob/main/index/part/loader@7.as-built.md">loader@7</a></li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/index/part/loader@5.as-built.md">loader@5</a></li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/index/part/fs.minix@1.as-built.md">fs.minix@1</a></li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/index/part/disk.ata-pio@1.as-built.md">disk.ata-pio@1</a></li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/index/part/sort@1.as-built.md">sort@1</a></li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/index/machine/serial-disk@1.as-built.md">machine.serial-disk@1</a></li>
 </ul>
 <h2>Addendum: the tests</h2>
-<p>Every test for the parts above, from tests/results.txt and tests/mutations-results.txt, run on the jig under KVM.  The whole suite: 52 passed, 0 failed, 2 skipped.  Of 78 deliberate breakages, 76 were caught; the 2 that survive are the known ones from parts 10 and 12, and all 14 of the editor's were caught.</p>
-<p><strong>editor@1</strong></p>
+<p>Every test for the parts above, from tests/results.txt and tests/mutations-results.txt.  All of them ran under software emulation, not on the jig.</p>
+<p><strong>loader@5</strong></p>
 <ul>
-<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/editor.quit-asks@1.toml">editor.quit-asks@1</a>.  Checks: Ctrl+Q quits.  If there are unsaved changes, it asks once: \"Unsaved.  Ctrl+Q again to quit.\"  Goes red when: after typing, the first Ctrl+Q quits without showing Unsaved.  Ctrl+Q again to quit., or the second does not quit, or anything was saved.  Status: Passed by the runner (on the jig, under KVM): asked once, quit on the second Ctrl+Q, saved nothing.  Mutations caught: 2.</li>
-<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/editor.save-over@1.toml">editor.save-over@1</a>.  Checks: Ctrl+S writes exactly the text on screen to the file, replacing what was there.  Goes red when: saved as first version, then edited to second version and saved again, the third boot does not show exactly second version, 14 bytes.  Status: Passed by the runner (on the jig, under KVM): saved twice: second version, 14 bytes, the first one gone.  Mutations caught: 2.</li>
-<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/editor.status-line@1.toml">editor.status-line@1</a>.  Checks: The bottom line always shows every command there is.  Goes red when: any screen the editor draws, after any key, has a bottom line without all three of Ctrl+S Save, Ctrl+Z Undo and Ctrl+Q Quit.  Status: Passed by the runner (on the jig, under KVM): 45 frames, every one with Ctrl+S Save, Ctrl+Z Undo and Ctrl+Q Quit.  Mutations caught: 1.</li>
-<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/editor.typing@1.toml">editor.typing@1</a>.  Checks: Typing types: printable keys insert at the cursor, and the arrows, Home, End, Backspace, Delete and Enter do what they say.  No modes.  Goes red when: on a fresh disk, the keys in tests/fixtures/editor-typing.in (typing, the four arrows, Home, End, Backspace, Delete, Enter) then Ctrl+S and Ctrl+Q, and on the next boot the screen does not show exactly the two lines Jello world!? and second, 20 bytes.  Status: Passed by the runner (on the jig, under KVM): two lines, 20 bytes, exactly what the keys made.  Mutations caught: 4.</li>
-<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/editor.undo@1.toml">editor.undo@1</a>.  Checks: Ctrl+Z undoes the last run of typing or deleting, and a second Ctrl+Z puts it back.  There is one level only.  Goes red when: one Ctrl+Z after a run of typing does not take back exactly that run, or a second Ctrl+Z does not put it back: the file ends up anything but one two, 7 bytes.  Status: Passed by the runner (on the jig, under KVM): undo took back one run, the second undo put it back: one two.  Mutations caught: 2.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/loader.doors-wait@1.toml">loader.doors-wait@1</a>.  Checks: The load and save doors hand a file name and bytes to the filesystem and its answer back, unchanged; the disk is not touched until a program asks, so a program that never asks boots exactly as it did under loader@4.  Goes red when: hello, booted under PART.loader@5 on the disk machine, makes the IDE drive see any command at all.  Status: Passed by the runner (software emulation): hello unchanged, the drive untouched.  Mutations caught: 1.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/loader.ladder-5@1.toml">loader.ladder-5@1</a>.  Checks: The loader binary that runs one program on the ladder runs every other program on the ladder, byte-identical, with no change.  Goes red when: hello, hanoi, life or calc, each built for its own loader, booted unchanged under PART.loader@5 on the disk machine, differs by one byte from its own expected output.  Status: Passed by the runner (software emulation): 4 programs byte-identical under loader@5.  Mutations caught: 1.</li>
 </ul>
-<p><strong>fs.minix@2</strong></p>
+<p><strong>fs.minix@1</strong></p>
 <ul>
-<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/fs.overwrite-clean@1.toml">fs.overwrite-clean@1</a>.  Checks: Saving over a file leaves the disk clean by fsck.minix, with the old blocks freed and nothing lost.  Goes red when: a probe saves one file five times at 2500, 10, 7168, 0 and 1500 bytes; any save fails, the last load differs by one byte from the last save, or fsck.minix finds any error or any file but notes.txt.  Status: Passed by the runner (on the jig, under KVM): five saves over one file, the last loads back the same, fsck.minix clean.  Mutations caught: 2.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/fs.fsck-clean@1.toml">fs.fsck-clean@1</a>.  Checks: A file saved to a Minix version 1 disk is found again by name with the same bytes, and the disk afterwards passes fsck.minix with no errors; it never writes over a file that is already there.  Goes red when: after one boot of sort on a fresh disk, fsck.minix -f reports any error, does not list exactly one regular file, /sorted, or the sorted line is not on the raw disk.  Status: Passed by the runner (software emulation): fsck.minix: clean, one file, /sorted; the line is on the disk.  Mutations caught: 3.</li>
 </ul>
-<p><strong>loader@7</strong></p>
+<p><strong>disk.ata-pio@1</strong></p>
 <ul>
-<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/loader.ladder-7@1.toml">loader.ladder-7@1</a>.  Checks: Loader@7 is loader@6 built with PART.fs.minix@2: every earlier program runs under it unchanged, and the only difference a program can see is that save writes over a file that is already there.  Goes red when: hello, hanoi, life or calc, each built for its own loader, booted unchanged under PART.loader@7 on the editor machine, differs by one byte from its own expected output.  Status: Passed by the runner (on the jig, under KVM): 4 programs byte-identical under loader@7.  Mutations caught: 1.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/disk.no-disk@1.toml">disk.no-disk@1</a>.  Checks: It reads and writes 512-byte sectors on the first IDE disk by number, and a machine with no disk gets a refusal, not a hang.  Goes red when: sort booted on the serial-only machine, with no disk, does not halt within 30 seconds or does not say it could not save.  Status: Passed by the runner (software emulation): no disk: halted, and said it could not save.  Mutations caught: 1.</li>
+</ul>
+<p><strong>sort@1</strong></p>
+<ul>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/sort.first-boot@1.toml">sort.first-boot@1</a>.  Checks: It prints the same twenty numbers every time, from K&amp;R's rand() with seed 1, each under 1000, in order from smallest to largest, on one line.  Goes red when: booted once on a fresh empty disk, its output differs by one byte from tests/expected/sort.first-boot@1.out: the twenty numbers K&amp;R's rand() gives from seed 1, each mod 1000, sorted, then the line saying it saved them.  Status: Passed by the runner (software emulation): 137 bytes, exact.  Mutations caught: 3.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/sort.second-boot@1.toml">sort.second-boot@1</a>.  Checks: On a disk with no file called sorted it saves that line as sorted and says so; on a disk that has one it says so and whether it is byte for byte the line it just printed, and never writes.  Goes red when: booted twice on the same fresh disk, the second boot does not say it found sorted from last time and that it is the same, or the output of both differs by one byte from tests/expected/sort.second-boot@1.out.  Status: Passed by the runner (software emulation): 280 bytes, exact.  Mutations caught: 2.</li>
+</ul>
+<p><strong>machine.serial-disk@1</strong></p>
+<ul>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/machine.disk-no-sockets@1.toml">machine.disk-no-sockets@1</a>.  Checks: The machine presents the guest one 16550 serial port and one IDE disk that can interrupt nothing, and no network, timer, display or input device; whatever else the hypervisor forces present is named in the as-built spec and touched by no component; a reset request ends the machine.  Goes red when: strace of the sort machine from start to halt, disk made and written records any socket, connect, bind or listen call.  Status: Passed by the runner (software emulation): 1481 syscalls traced, none on the network.  Mutations caught: 1.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/machine.disk-only@1.toml">machine.disk-only@1</a>.  Checks: The machine presents the guest one 16550 serial port and one IDE disk that can interrupt nothing, and no network, timer, display or input device; whatever else the hypervisor forces present is named in the as-built spec and touched by no component; a reset request ends the machine.  Goes red when: the device tree of the paused sort machine contains any device other than: isa-serial, isa-ide and its ide-hd, isabus-bridge, ioapic, fw_cfg_io, kvmclock or kvmvapic, and the eight empty virtio-mmio transports microvm cannot omit, or not exactly one serial port and one disk.  Status: Passed by the runner (software emulation): 15 devices, one of them the disk, all on the list.  Mutations caught: 1.</li>
 </ul>
 <h2>Code on GitHub</h2>
-<p><a href="https://github.com/cmcluckie/aios/compare/823f7c3...414bd19">Every line that changed, on one page</a>.</p>
+<p><a href="https://github.com/cmcluckie/aios/compare/1d14857...8247a91">Every line that changed, on one page</a>.</p>
 <p>The commits behind this post, in order:</p>
 <ol>
-<li><a href="https://github.com/cmcluckie/aios/commit/414bd19">Petition 0007: the editor, Notepad-plain; PART.fs.minix@2 saves over a file</a></li>
+<li><a href="https://github.com/cmcluckie/aios/commit/8247a91">Petition 0005: save the sorted output, on an IDE disk, in Minix</a></li>
 </ol>
 <p><a href="https://github.com/cmcluckie/aios">The whole repo</a>.</p>
 </div>

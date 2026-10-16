@@ -105,9 +105,12 @@ Chris included, and the posts say so.
 
 ## Mechanics
 
-- The post is one line: "AiOS, part N (Kernel code: K lines)." then the pull
-  quote and an ellipsis (CLAUDE.md).  Single spaces after periods; LinkedIn
-  eats doubles anyway.
+- The post tells the story short: the first line ("AiOs, part N (Kernel code:
+  K lines)." then the pull quote and an ellipsis), three or four short
+  paragraphs with the real specifics, one closing line about building software
+  or running product, then the hashtag (CLAUDE.md, decision 0010).  Two spaces
+  after periods, there too.  150 to 220 words.  Pick the moment, don't
+  summarize.  No bullets, no links, no "In this part", no "Today I".
 - The article ends with "Code on GitHub" and its labelled links (CLAUDE.md).
 - Every factual claim in a post is true of the repo at that commit.  The jokes
   can exaggerate; the numbers can't.

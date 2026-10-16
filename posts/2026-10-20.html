@@ -1,5 +1,5 @@
 <!doctype html>
-<html><head><meta charset="utf-8"><title>Saved like it's 1991</title>
+<html><head><meta charset="utf-8"><title>Where's the kernel?</title>
 <style>
 body{max-width:760px;margin:32px auto;padding:0 16px;font-family:Georgia,serif;font-size:18px;line-height:1.6;color:#222;background:#fff}
 section{border:1px solid #ddd;border-radius:10px;padding:0 20px 12px;margin:0 0 28px}
@@ -12,100 +12,130 @@ button.done{background:#fff;color:#0a66c2}
 <section id="post">
 <div class="bar"><span>1. Post</span><button onclick="copyText('post-body',this)">Copy</button></div>
 <div id="post-body" class="text">
-AiOS, part 10 (Kernel code: 638 lines). "AI writes code now, lots of it, fast. The question I care about is how you let it without having to trust it."...
+AiOS, part 8 (Kernel code: 69 lines). "I kept asking the AI where the kernel was. The honest answer is there isn't one yet."...
+
+It took me a few goes to accept the answer.  What we have is a loader.  It sets up the processor, copies one program in, gives it a short list of things it may ask for, and runs it.  The program has exactly the same keys to the building as the loader does.  The old word for that is a monitor.  The kernel shows up when a second program has to share.
+
+This part was really about testing.  Until now the AI ran the programs and told me they passed.  Now a runner boots every program and checks every byte, and a second script breaks the code on purpose to prove the tests notice.
+
+24 sabotages, 21 caught, and the three misses were the best part.  Take out the line where the serial driver waits for the chip to say "ready," and every test still passes, because the virtual chip is always ready.  On a real chip you'd lose bytes.  Nobody ever wrote down that the driver must wait, so nothing checked it.
+
+The test suite worth having is the one that tells you where its holes are.
+
+#AiOS
 </div>
 </section>
 <section id="title">
 <div class="bar"><span>2. Title</span><button onclick="copyText('title-body',this)">Copy</button></div>
-<div id="title-body"><h1>Saved like it's 1991</h1></div>
+<div id="title-body"><h1>Where's the kernel?</h1></div>
 </section>
 <section id="article">
 <div class="bar"><span>3. Article</span><button onclick="copyRich('article-body',this)">Copy</button></div>
 <div id="article-body">
-<p><em>The story behind AiOS, part 10.</em></p>
-<h2>Well, that got out of hand</h2>
-<p>Part 1 reached about 8,000 people.  I was expecting about 50.  Honestly, I hope it calms down a bit, and if it doesn't, that'd be fun too.  Either way, a lot more people are reading this than I planned for, so I owe you the honest version of why it exists.</p>
-<h2>It's not a new Linux</h2>
-<p>I'm not building a new Linux.  I'm not an OS engineer, I'm not out to replace anything, and I wouldn't want to.  One commenter caught me getting the licence wrong, and it's fixed.  Expect more of that.</p>
-<p>What I'm actually working on is how to do agentic development safely.  AI writes code now, lots of it, fast.  The question I care about is how you let it without having to trust it.  And what better place to test that than the one piece of software that says yes or no to everything else?  If the process holds up at the bottom, where every byte matters and nothing hides, it'll hold up anywhere.</p>
-<h2>Defense and offense</h2>
-<p>Here's the picture in my head.  Most of a development team's week goes on the mundane stuff: checking, rechecking, chasing what changed, proving the old things still work.  That's what holds good teams back from building great software.</p>
-<p>In AiOS the machine does the mundane part, and it's split into defense and offense.  Defense is the referee and the tests: dumb, stubborn checkers that say no and give you a rule number.  Offense is the sabotage script from part 8, which attacks our own code on purpose to prove the defense would notice.  The AI proposes, and neither side takes its word for anything.</p>
-<p>That frees up the people.  Developers, QA and support get to spend their time on the product and the business: what should this do, for whom, and is it right?  Their roles get clearer, and they sit closer to the customer.</p>
-<p>I wrote this series as a slow walk on purpose.  Partly because it's hard to explain a whole vision at once.  Mostly because I don't fully understand it yet either.  This stuff is new enough that I need to be slow-walked to it as well, and every post teaches me one more piece.</p>
-<p>Which brings me to the biggest piece of operating system so far.</p>
-<h2>Saving a file</h2>
-<p>Everything on AiOS until now has forgotten everything the moment you switched it off.  This rung is a program that remembers.  It sorts twenty numbers, saves the sorted line to a file on a disk, and the next time the machine boots, it finds that file and checks it's still right.</p>
-<p>The twenty numbers come from the rand() function printed in Kernighan and Ritchie, the C book from part 1, starting from its own seed of 1.  The AI picked that, and I love it: the same twenty numbers on every machine, forever.  The sort is insertion sort, the one every first course teaches.  The program is the easy part.  The disk is not.</p>
-<h2>A new rule: pick the one with history</h2>
-<p>There were two choices to make, and both had a modern answer and an old one.</p>
-<p>The disk.  Every cloud virtual machine today uses a disk called virtio.  Linux's code for it is about 7,000 lines, most of it general machinery shared by every virtio device.  The old answer is IDE, whose registers go back to the hard disk controller in the IBM PC/AT in 1984.  You talk to it the way we already talk to the serial chip: write a few numbers to a few ports, then read 512 bytes.</p>
-<p>The filesystem.  The old answer here is Minix.  It's the filesystem from the teaching operating system in Andrew Tanenbaum's textbook, and it's what Linus Torvalds had on his own disk when he started writing Linux in 1991.  It was Linux's very first filesystem, and it's still in Linux today.</p>
-<p>Both times the old one was also the smaller one.  So I made it a rule: when there's a choice between things that would each do the job, the default is the one with the history.  Minix on an IDE disk is roughly the machine Linux was born on.</p>
-<h2>What we took, and what we cut</h2>
-<p>Linux's Minix code is about 2,400 lines, and it's tangled into Linux's shared file machinery more than 200 times: its general idea of a file, its cache, its locks.  So we took the parts that are Minix's own: where the maps of free space and the list of files live on the disk, how to find a free spot, how to add a name to a directory, which block holds which part of a file.  Then we rewrote the edges: every block gets read, changed and written straight back.</p>
-<p>The top of the file we took from still says "Copyright (C) 1991, 1992 Linus Torvalds".  I find that genuinely moving.</p>
-<p>The disk driver came from Linux too, from the code that still handles those old IDE disks.  All up, the lines we've taken from Linux went from 172 to 638.  About 150 of those are our own glue, holding Linux's pieces together.  Every range is recorded down to the commit and the line, the same as before, and the script that checks them against Linux says all 97 recorded ranges match.</p>
-<h2>No clock, so no counting</h2>
-<p>Here's the bit that tied back to part 9.  Every time Linux waits on a disk, it times the wait: check the disk, wait 10 microseconds, check again, give up after 10 milliseconds.  This machine has no timer.  Adding one would break the "one new thing per rung" rule, and faking the wait by counting loops would be the exact turbo-button bug we spent the last post killing.</p>
-<p>So our driver waits as long as it takes, watching the disk's own "busy" light.  If nobody's there at all, it notices and says so.  On a real dead disk it would hang, and that's written down for the day this runs on real hardware with a real clock.</p>
-<p>Same reason, smaller detail: the file it saves is dated 1 January 1970.  The machine doesn't know what day it is.  That's its own rung, later.</p>
-<h2>A second opinion nobody here wrote</h2>
-<p>This is my favourite part.  Linux comes with a tool called fsck.minix that checks a Minix disk for damage.  Nobody on this project wrote it, and nobody here can talk it into anything.  So after AiOS saves its file, the test hands the disk to fsck.minix.  It says the disk is clean and there's one file on it, called sorted.</p>
-<p>That's defense from outside the building.  Then came the offense.  We broke the filesystem three ways: used a block without marking it as taken, forgot to grow the directory, made a file nothing points to.  fsck.minix caught every one, and two of the three our own program would never have noticed: it reads the file back just fine.</p>
-<p>All up: eight new tests, fifteen new sabotages, fourteen caught.  The one that got away is honest and a bit scary.  When the program saves, the last thing it does is tell the disk "write everything you're holding, now".  Take that line out and every test still passes, because the emulator writes straight to the file anyway.  On a real disk with a cache, pull the plug at the wrong moment and the file is gone.  It's written down as a known survivor, the same as the three in part 8.</p>
-<h2>The fine print</h2>
-<p>All of this ran under software emulation in a container, not on the jig.  Files can be up to 7 KiB, in one directory, and once saved they can't be overwritten or deleted, because nothing has asked for that yet.  Hello world, Hanoi, Life and the calculator all still run byte for byte the same on the new loader.</p>
-<p>And the piece this rung added to the process: a checker from outside.  Every test before this one, the AI wrote.  This one, Linux wrote.</p>
+<p><em>The story behind AiOS, part 8.</em></p>
+<h2>Who's been checking the homework</h2>
+<p>Up until now, the testing on this project has been done by the AI.  It runs the program, looks at what comes out, compares it with what it should be, and tells me it passed.  That's fine for getting started.  It is not where we want to be.  The whole point of writing tests down is that something other than the author runs them, every time, and doesn't get tired or optimistic.</p>
+<p>So this part is the testers.  A runner that boots every program and checks every byte, and a script that breaks the code on purpose to prove the tests would notice.  But to decide what to test, I first had to understand what the parts actually are.  And that's where the light bulb went on for me about what actually makes an operating system.</p>
+<h2>Where's the kernel?</h2>
+<p>I kept asking the AI where the kernel was.  The honest answer is there isn't one yet.</p>
+<p>It took me a few goes to get there, because I kept asking the question as if there had to be one.  What we have is a loader.  The firmware wakes the virtual machine up and hands control to the loader, and from then on the loader is the only thing in charge.  It sets the processor up, copies the program into memory, gives it a little table of things it's allowed to ask for (write, exit, memory, read), and runs it.  When the program says it's done, the loader shuts the machine off.</p>
+<p>If you know a bit about how processors work (I know just enough to be dangerous), the processor is already in protected mode, the 32-bit mode PCs have had since the 386 (modern ones go one step further, to 64-bit).  The loader turns that on in its first few instructions.  What it doesn't do is the part that makes a kernel a kernel: run the program with less power than itself.  Right now the program and the loader have exactly the same keys to the building.  There's no scheduler, no interrupts, no protection.  With one program on the machine, none of that has a job yet.</p>
+<p>It's a lot closer to the first operating systems on micro PCs than to Linux: a resident program directing traffic.  The old word for it is a monitor.  When a second program has to share the machine, that's when the kernel shows up (plan 9.6), and you'll be able to point at the exact commit.</p>
+<p>And why does the loader do any of this?  Because we told it to.  Every program on AiOS has a petition, and every flavor of the system is built from the petitions for the programs it runs.  No program, no petition.  No petition, nothing gets built.</p>
+<h2>How a byte gets out</h2>
+<p>Here's the bit I find really interesting.  The actual write, the code that puts a byte on the wire, lives in the serial driver, the lines we took from Linux.  The program never touches it.  Hello world hands its 14 bytes to the loader through the door.  The loader hands them to the driver.  The driver pokes them into the serial chip one at a time.</p>
+<p>So the loader is the handoff point.  Today every write goes to one place, the serial port.  As this grows, that routing is where it gets interesting: a write could go to a screen, a file, a network, and the program wouldn't know or care.  That's what the door is for.  The day the loader starts deciding where a write goes, it's starting to become a kernel.</p>
+<h2>Two kinds of tests</h2>
+<p>So what do you test?  Two things, really.</p>
+<p>The driver on its own: does it put every byte on the wire, in order, untranslated, and does it take every byte off the wire it's handed?  That's the unit test.</p>
+<p>Then everything together: boot the machine with the real loader, the real driver and the real program, type into it if it needs typing, capture every byte that comes out, and compare.  That's the integration test, and most of our tests are that shape.</p>
+<p>One honest wrinkle.  The normal way to unit test a driver is to swap the real hardware for a fake one that records everything.  We can't do that without editing the Linux lines, and the lifted code doesn't get edited.  So instead, the runner asks the virtual machine to log every single read and write to the serial chip's registers while the real thing runs.  Same evidence, nobody touches the driver.</p>
+<h2>The second opinion</h2>
+<p>For hello world you know the right answer by looking.  For Conway's Game of Life after 200 generations, you can't: it's 1,992 bytes of grid.  When I asked why the testing needed Python, this was the answer.  We need a second opinion.</p>
+<p>Think of two people adding up the same restaurant bill, separately.  If they both get the same total, you trust it.  If they don't, somebody made a mistake and you go find it.  So for Life, Hanoi and the calculator there's a second version of each program, written in Python from the same rules, run on a normal computer.  Its answer is saved as a file.  The runner boots the real program and compares every byte against that file.  That's exactly how the calculator bug in part 6 got caught: the second opinion said "too big", ours said 1215752191.</p>
+<p>The catch is that both people were the AI.  If it misread a rule, both versions carry the same mistake and happily agree.  That's evidence, not proof.  The saved answers are in the repo, along with the programs that made them, so anyone can check them against someone else's.</p>
+<p>And the jig, the machine that builds AiOS, still doesn't need Python.  It only compares bytes.</p>
+<h2>Breaking it on purpose</h2>
+<p>A test that has never failed proves nothing.  So the other half of this part is a script that breaks the code on purpose, one small change at a time, and checks the right test goes red.  Change "Hello" to "Jello".  Lose the newline.  Make hello never exit.  Delete the overflow check from the calculator again.  Copy the program 16 bytes off from where it should run.  Give the machine a device nobody asked for.  Make it open a network socket.</p>
+<p>24 sabotages.  21 caught.  The three that weren't are the best part.</p>
+<p>The serial driver normally waits for the chip to say "ready" before each byte.  Take that wait out and every single test still passes, because the virtual chip is always ready.  On a real chip, you'd lose bytes.  Nobody ever wrote down that the driver must wait, so nothing checks it.  Same story for the setup code that tells the chip to use 8-bit bytes.  The third one is a test that's honest but blind: the calculator only ever asks for one keystroke at a time, so a bug that only shows up when you ask for more than one byte sails past its test.  It's caught by a different test instead.</p>
+<p>None of those are fixed in this part.  They're written down (findings 0007), and the first two need someone, me, to write the rule they break.  That's how it's supposed to work: the system tells you exactly where your safety net has holes.</p>
+<h2>Where that leaves us</h2>
+<p>Every test we've written now runs with one command, and every one passes.  Most of them have been shown failing on purpose.  The "checked by hand" notes in the earlier parts' addenda were true when they were written; from here on, the addendum says what the runner says.</p>
+<p>The fine print: all of this ran under software emulation in a container, not on the jig and not on real virtualisation.  The jig is still a thing I need to sit down and install.</p>
+<p>If this is where things start to come together for you too, that makes two of us.</p>
 <h2>Read along</h2>
 <ol>
-<li><a href="https://github.com/cmcluckie/aios/blob/main/pool/PART.sort@1/sort.c">pool/PART.sort@1/sort.c</a>.  The program.  Find <code>rand</code>, copied from K&amp;R, and the short insertion sort under it.</li>
-<li><a href="https://github.com/cmcluckie/aios/blob/main/lifted/PART.fs.minix@1/minix.c">lifted/PART.fs.minix@1/minix.c</a>.  Read the comment at the top for what came from where and what was cut.  Then <code>add_link</code>: that's Linux's code for adding a name to a directory, almost line for line.</li>
-<li><a href="https://github.com/cmcluckie/aios/blob/main/lifted/PART.disk.ata-pio@1/ata.c">lifted/PART.disk.ata-pio@1/ata.c</a>.  The disk driver.  Look at <code>command</code>: seven port writes and the disk knows what you want.</li>
-<li><a href="https://github.com/cmcluckie/aios/blob/main/pool/MACHINE.serial-disk@1/machine.sh">pool/MACHINE.serial-disk@1/machine.sh</a>.  The new machine: the old one, plus one IDE disk.  It formats its own disk the first time, like it came from the shop.</li>
-<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/expected/fs.fsck-clean@1.check">tests/expected/fs.fsck-clean@1.check</a>.  The second opinion nobody here wrote, in a dozen lines.</li>
-<li><a href="https://github.com/cmcluckie/aios/blob/main/findings/0010.md">findings/0010.md</a>.  What we found, including the missing clock and the flush no test can see.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/jig/test">jig/test</a>.  The runner.  The comment at the top explains every kind of test it knows.  Look for <code>trace</code>: that's the register log standing in for a fake chip.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/results.txt">tests/results.txt</a>.  What the runner said, test by test, and what it ran on.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/mutations.txt">tests/mutations.txt</a>.  Every sabotage, one per line, with what it breaks.  The "survives" lines are the holes.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/fixtures/life_ref.py">tests/fixtures/life_ref.py</a>.  The second opinion for Life, in about 20 lines of Python.  Put it next to pool/PART.life@1/life.c and compare.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/findings/0007.md">findings/0007.md</a>.  What the runner and the sabotage found, including the three survivors.</li>
 </ol>
 <h2>Try this</h2>
-<p>Press F5 and pick AiOS: sort, twice.  The first time it saves the file; the second time it finds it.  Now open pool/PART.sort@1/sort.c, change the seed <code>next = 1</code> to the year you were born, and run it again.  It sorts twenty new numbers, finds last time's file still on the disk, and tells you it's different.  The disk remembered.  Delete out/disk.minix to start over.</p>
+<p>Open pool/PART.hello@1/hello.c and change "Hello" to "Jello".  In a terminal (the Codespaces one works), run <code>sh jig/test hello</code>.  You'll get FAIL, and it tells you the very first byte that's wrong.  Change it back and run it again.  Then try <code>sh jig/mutate hello</code> to watch the sabotage script do the same thing five ways.</p>
 <h2>As built</h2>
+<p>No component changed in this part; it adds the tests around them.  These are the descriptions the tests check against:</p>
 <ul>
-<li><a href="https://github.com/cmcluckie/aios/blob/main/index/part/loader@5.as-built.md">loader@5</a></li>
-<li><a href="https://github.com/cmcluckie/aios/blob/main/index/part/fs.minix@1.as-built.md">fs.minix@1</a></li>
-<li><a href="https://github.com/cmcluckie/aios/blob/main/index/part/disk.ata-pio@1.as-built.md">disk.ata-pio@1</a></li>
-<li><a href="https://github.com/cmcluckie/aios/blob/main/index/part/sort@1.as-built.md">sort@1</a></li>
-<li><a href="https://github.com/cmcluckie/aios/blob/main/index/machine/serial-disk@1.as-built.md">machine.serial-disk@1</a></li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/index/part/loader@1.as-built.md">loader@1</a>, <a href="https://github.com/cmcluckie/aios/blob/main/index/part/loader@2.as-built.md">loader@2</a>, <a href="https://github.com/cmcluckie/aios/blob/main/index/part/loader@3.as-built.md">loader@3</a></li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/index/part/serial.8250@1.as-built.md">serial.8250@1</a>, <a href="https://github.com/cmcluckie/aios/blob/main/index/part/serial.8250@2.as-built.md">serial.8250@2</a></li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/index/machine/serial-only@1.as-built.md">machine.serial-only@1</a></li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/index/part/hello@1.as-built.md">hello@1</a>, <a href="https://github.com/cmcluckie/aios/blob/main/index/part/hanoi@1.as-built.md">hanoi@1</a>, <a href="https://github.com/cmcluckie/aios/blob/main/index/part/life@1.as-built.md">life@1</a>, <a href="https://github.com/cmcluckie/aios/blob/main/index/part/calc@1.as-built.md">calc@1</a></li>
 </ul>
 <h2>Addendum: the tests</h2>
-<p>Every test for the parts above, from tests/results.txt and tests/mutations-results.txt.  All of them ran under software emulation, not on the jig.</p>
-<p><strong>loader@5</strong></p>
+<p>Every test in the repo, from tests/results.txt and tests/mutations-results.txt.  All of them ran under software emulation, not on the jig.</p>
+<p><strong>calc@1</strong></p>
 <ul>
-<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/loader.doors-wait@1.toml">loader.doors-wait@1</a>.  Checks: The load and save doors hand a file name and bytes to the filesystem and its answer back, unchanged; the disk is not touched until a program asks, so a program that never asks boots exactly as it did under loader@4.  Goes red when: hello, booted under PART.loader@5 on the disk machine, makes the IDE drive see any command at all.  Status: Passed by the runner (software emulation): hello unchanged, the drive untouched.  Mutations caught: 1.</li>
-<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/loader.ladder-5@1.toml">loader.ladder-5@1</a>.  Checks: The loader binary that runs one program on the ladder runs every other program on the ladder, byte-identical, with no change.  Goes red when: hello, hanoi, life or calc, each built for its own loader, booted unchanged under PART.loader@5 on the disk machine, differs by one byte from its own expected output.  Status: Passed by the runner (software emulation): 4 programs byte-identical under loader@5.  Mutations caught: 1.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/calc.transcript@1.toml">calc.transcript@1</a>.  Checks: Given a sequence of typed bytes, the component writes exactly what an independent reference implementation of the same reverse-Polish rules writes for that sequence, including echo, errors and the final bye, and exits only on q, quit, Ctrl-C or Ctrl-D.  Goes red when: with tests/fixtures/calc.in fed to the serial port, the bytes written differ from what tests/fixtures/calc_ref.py writes for the same input, or the machine is still running at the timeout.  Status: Passed by the runner (software emulation): 424 bytes, exact.  Mutations caught: 1.</li>
 </ul>
-<p><strong>fs.minix@1</strong></p>
+<p><strong>hanoi@1</strong></p>
 <ul>
-<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/fs.fsck-clean@1.toml">fs.fsck-clean@1</a>.  Checks: A file saved to a Minix version 1 disk is found again by name with the same bytes, and the disk afterwards passes fsck.minix with no errors; it never writes over a file that is already there.  Goes red when: after one boot of sort on a fresh disk, fsck.minix -f reports any error, does not list exactly one regular file, /sorted, or the sorted line is not on the raw disk.  Status: Passed by the runner (software emulation): fsck.minix: clean, one file, /sorted; the line is on the disk.  Mutations caught: 3.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/hanoi.exact-moves@1.toml">hanoi.exact-moves@1</a>.  Checks: On start, the component writes exactly the 15 moves of the standard four-disk solution, one per line as 'Move disk N from X to Y', 360 bytes, nothing else, then exits.  Goes red when: the component's output, captured in isolation, differs from the 360 bytes a reference solver produces for four disks.  Status: Passed by the runner (software emulation): 360 bytes, exact.  Mutations caught: 1.</li>
 </ul>
-<p><strong>disk.ata-pio@1</strong></p>
+<p><strong>hello@1</strong></p>
 <ul>
-<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/disk.no-disk@1.toml">disk.no-disk@1</a>.  Checks: It reads and writes 512-byte sectors on the first IDE disk by number, and a machine with no disk gets a refusal, not a hang.  Goes red when: sort booted on the serial-only machine, with no disk, does not halt within 30 seconds or does not say it could not save.  Status: Passed by the runner (software emulation): no disk: halted, and said it could not save.  Mutations caught: 1.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/hello.exact-bytes@1.toml">hello.exact-bytes@1</a>.  Checks: On start, the component writes the exact 14 bytes 'Hello, world.\n' to the console and nothing else, then exits.  Goes red when: the component's stdout, captured in isolation, is anything other than the 14 bytes 'Hello, world.\n'.  Status: Passed by the runner (software emulation): 14 bytes, exact.  Mutations caught: 5.</li>
 </ul>
-<p><strong>sort@1</strong></p>
+<p><strong>life@1</strong></p>
 <ul>
-<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/sort.first-boot@1.toml">sort.first-boot@1</a>.  Checks: It prints the same twenty numbers every time, from K&amp;R's rand() with seed 1, each under 1000, in order from smallest to largest, on one line.  Goes red when: booted once on a fresh empty disk, its output differs by one byte from tests/expected/sort.first-boot@1.out: the twenty numbers K&amp;R's rand() gives from seed 1, each mod 1000, sorted, then the line saying it saved them.  Status: Passed by the runner (software emulation): 137 bytes, exact.  Mutations caught: 3.</li>
-<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/sort.second-boot@1.toml">sort.second-boot@1</a>.  Checks: On a disk with no file called sorted it saves that line as sorted and says so; on a disk that has one it says so and whether it is byte for byte the line it just printed, and never writes.  Goes red when: booted twice on the same fresh disk, the second boot does not say it found sorted from last time and that it is the same, or the output of both differs by one byte from tests/expected/sort.second-boot@1.out.  Status: Passed by the runner (software emulation): 280 bytes, exact.  Mutations caught: 2.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/life.exact-output@1.toml">life.exact-output@1</a>.  Checks: On start, the component writes the population after 200 generations of the centred R-pentomino in a 256 by 96 universe with dead edges, the middle 80 by 24 cells as '#' and '.', and the result of asking for 128 MiB, exactly as a reference implementation produces them, then exits.  Goes red when: the component's output, captured in isolation, differs from the 1992 bytes an independent reference implementation produces for the same rules, seed, universe and generation count.  Status: Passed by the runner (software emulation): 1992 bytes, exact.  Mutations caught: 1.</li>
 </ul>
-<p><strong>machine.serial-disk@1</strong></p>
+<p><strong>loader@1</strong></p>
 <ul>
-<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/machine.disk-no-sockets@1.toml">machine.disk-no-sockets@1</a>.  Checks: The machine presents the guest one 16550 serial port and one IDE disk that can interrupt nothing, and no network, timer, display or input device; whatever else the hypervisor forces present is named in the as-built spec and touched by no component; a reset request ends the machine.  Goes red when: strace of the sort machine from start to halt, disk made and written records any socket, connect, bind or listen call.  Status: Passed by the runner (software emulation): 1481 syscalls traced, none on the network.  Mutations caught: 1.</li>
-<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/machine.disk-only@1.toml">machine.disk-only@1</a>.  Checks: The machine presents the guest one 16550 serial port and one IDE disk that can interrupt nothing, and no network, timer, display or input device; whatever else the hypervisor forces present is named in the as-built spec and touched by no component; a reset request ends the machine.  Goes red when: the device tree of the paused sort machine contains any device other than: isa-serial, isa-ide and its ide-hd, isabus-bridge, ioapic, fw_cfg_io, kvmclock or kvmvapic, and the eight empty virtio-mmio transports microvm cannot omit, or not exactly one serial port and one disk.  Status: Passed by the runner (software emulation): 15 devices, one of them the disk, all on the list.  Mutations caught: 1.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/hello.silent-boot@1.toml">hello.silent-boot@1</a>.  Checks: From power-on to halt, no byte reaches the serial port that the program did not write.  Goes red when: the bytes on the VM's serial port from power-on to halt, minus the component's own output, are not empty.  Status: Passed by the runner (software emulation): 14 bytes, exact.  Mutations caught: 1.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/loader.door-layout@1.toml">loader.door-layout@1</a>.  Checks: The door is a table of 32-bit function pointers, write at offset 0 and exit at offset 4; a later version of the door appends entries and never moves one.  Goes red when: compiled against door.h, offsetof(struct door, write) is not 0, offsetof(struct door, exit) is not 4, or a program built against door.h@1 fails under the current loader.  Status: Passed by the runner (software emulation): door layout holds in 3 versions.  Mutations caught: 1.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/loader.halts@1.toml">loader.halts@1</a>.  Checks: When the program calls the exit door or returns, every byte handed to the write door has left the serial port before the machine resets.  Goes red when: the machine process is still alive when the timeout expires, or the last byte the program wrote is missing from the serial capture.  Status: Passed by the runner (software emulation): flushed after the last byte.  Mutations caught: 1.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/loader.runs-program@1.toml">loader.runs-program@1</a>.  Checks: On entry the loader copies the machine's first module to 0x400000 and calls it with a pointer to the door, touching no device but the serial port.  Goes red when: a program that writes one marker byte through the door and exits, given as the machine's first module, produces no marker on the serial port.  Status: Passed by the runner (software emulation): 14 bytes, exact.  Mutations caught: 1.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/loader.same-binary@1.toml">loader.same-binary@1</a>.  Checks: The loader binary that runs one program on the ladder runs every other program on the ladder, byte-identical, with no change.  Goes red when: the loader built for any program on the ladder differs by one byte from the loader built for any other, or any program on the ladder fails under the loader built for another.  Status: Passed by the runner (software emulation): one loader, 5b4601bf374c5f45.  Mutations caught: none yet (findings 0007).</li>
+</ul>
+<p><strong>loader@2</strong></p>
+<ul>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/loader.alloc-in-ram@1.toml">loader.alloc-in-ram@1</a>.  Checks: Every block the alloc door returns lies inside a region the firmware's memory map marks RAM, above the end of the program, and overlaps no earlier block, the loader, or its stack.  Goes red when: a program that allocates blocks until refused and prints each block's address and size shows any block outside the RAM region containing the program, below the program's end, or overlapping another.  Status: Passed by the runner (software emulation): 59 blocks, all inside RAM, none overlapping.  Mutations caught: 1.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/loader.alloc-refuses@1.toml">loader.alloc-refuses@1</a>.  Checks: When the alloc door cannot satisfy a request it returns 0 and changes nothing; it never halts, never returns memory outside the region, and a later smaller request can still succeed.  Goes red when: a program that asks for more than the machine has gets a non-zero pointer, or the machine does not continue to a later smaller request that succeeds, or the machine halts before the program calls exit.  Status: Passed by the runner (software emulation): 128 MiB refused, 16 bytes still granted after the refusal.  Mutations caught: 1.</li>
+</ul>
+<p><strong>loader@3</strong></p>
+<ul>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/loader.read@1.toml">loader.read@1</a>.  Checks: The read door waits for at least one byte, then returns the bytes already received, in order, up to the requested count, and never more; write, exit and alloc keep their offsets and their behaviour from PART.loader@2.  Goes red when: with tests/fixtures/calc.in fed to the serial port, PART.calc@1 under this loader does not produce the reference transcript, or hello, hanoi or life under this loader differ by one byte from their outputs under the loader they were built for.  Status: Passed by the runner (software emulation): 4 programs byte-identical under loader@3.  Mutations caught: 1.</li>
+</ul>
+<p><strong>machine.serial-only@1</strong></p>
+<ul>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/machine.no-peripherals@1.toml">machine.no-peripherals@1</a>.  Checks: The machine presents the guest one 16550 serial port and no network, storage, display or input device; whatever else the hypervisor forces present is named in the as-built spec and touched by no component; a reset request ends the machine.  Goes red when: the device tree of a machine started with -S and queried once over a stdio monitor contains any device other than: isa-serial, isabus-bridge, ioapic, fw_cfg_io, kvmclock or kvmvapic, and the eight empty virtio-mmio transports microvm cannot omit.  Status: Passed by the runner (software emulation): 13 devices, all on the list.  Mutations caught: 1.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/machine.no-sockets@1.toml">machine.no-sockets@1</a>.  Checks: The machine presents the guest one 16550 serial port and no network, storage, display or input device; whatever else the hypervisor forces present is named in the as-built spec and touched by no component; a reset request ends the machine.  Goes red when: strace of the machine process from start to exit records any socket, connect, bind or listen call.  Status: Passed by the runner (software emulation): 1060 syscalls traced, none on the network.  Mutations caught: 1.</li>
+</ul>
+<p><strong>serial.8250@1</strong></p>
+<ul>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/serial.in-order@1.toml">serial.in-order@1</a>.  Checks: Every byte handed to the write door appears on the serial port, in order, complete, and untranslated.  Goes red when: the bytes captured on the serial port differ in value, order or count from the bytes handed to the write door, including any 0x0d that was not handed to it.  Status: Passed by the runner (software emulation): 512 bytes, exact.  Mutations caught: 1.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/serial.origin-matches@1.toml">serial.origin-matches@1</a>.  Checks: Every line range in the part's origin record names a file whose object id at the recorded upstream commit equals the recorded blob.  Goes red when: jig/upstream verify, run against a clone of upstream with the recorded commit, reports any range of this part as WRONG.  Status: Passed by the runner (software emulation): PART.serial.8250@2: ok   include/linux/serial.h 26-29.  Mutations caught: 1.</li>
+</ul>
+<p><strong>serial.8250@2</strong></p>
+<ul>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/serial.receive-order@1.toml">serial.receive-order@1</a>.  Checks: Every byte that arrives on the serial port is handed to the read door once, in order, with none lost and none invented.  Goes red when: a program that echoes every byte it reads, fed 4096 bytes of every value but 3 and 4 in a fixed order, writes back anything other than those 4096 bytes in that order.  Status: Passed by the runner (software emulation): 4096 bytes, exact.  Mutations caught: 2.</li>
 </ul>
 <h2>Code on GitHub</h2>
-<p><a href="https://github.com/cmcluckie/aios/compare/1d14857...8247a91">Every line that changed, on one page</a>.</p>
+<p><a href="https://github.com/cmcluckie/aios/compare/7c0e7a9...bd08552">Every line that changed, on one page</a>.</p>
 <p>The commits behind this post, in order:</p>
 <ol>
-<li><a href="https://github.com/cmcluckie/aios/commit/8247a91">Petition 0005: save the sorted output, on an IDE disk, in Minix</a></li>
+<li><a href="https://github.com/cmcluckie/aios/commit/bd08552">Tests run themselves: jig/test, jig/mutate, expected outputs and probes</a></li>
 </ol>
 <p><a href="https://github.com/cmcluckie/aios">The whole repo</a>.</p>
 </div>

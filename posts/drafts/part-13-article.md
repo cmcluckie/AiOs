@@ -22,7 +22,7 @@ I didn't leave because I was failing at it.  I left because I wanted to do other
 
 When you're not a detail person, you can't rely on remembering what everyone meant.  You have to get the words right, out loud, up front, and then hold everyone to them, starting with yourself.  A product manager who lets a word mean two things in a room ends up with two products.
 
-Yesterday Claude wrote the post.  Today I went back over everything Claude and I have said since the start of this project, word by word.  One thing I've learned as an agentic developer: things move really fast.  The words had drifted while Claude and I built, a little at a time, and you'd remember every one of them.  As Ferris Bueller once said, "Life moves pretty fast.  If you don't stop and look around once in a while, you could miss it."
+Last time, Claude wrote the post.  Today I went back over everything Claude and I have said since the start of this project, word by word.  One thing I've learned as an agentic developer: things move really fast.  The words had drifted while Claude and I built, a little at a time, and you'd remember every one of them.  As Ferris Bueller once said, "Life moves pretty fast.  If you don't stop and look around once in a while, you could miss it."
 
 So this is a good place to recap every term I'm using in this project.  Where a word changed, I've said what I used to call it.
 
@@ -103,7 +103,7 @@ For a guy who was told he wasn't detail-oriented enough to be a programmer, that
 
 ## Try this
 
-Open the repo in Codespaces and run `sh jig/postcheck`.  It passes.  Now open this article's file, posts/2026-10-23.html, change any word to "segment", and run it again.  It names the file and the retired word.  Change it back.
+Open the repo in Codespaces and run `sh jig/postcheck`.  It passes.  Now open this article's file, posts/2026-10-30.html, change any word to "segment", and run it again.  It names the file and the retired word.  Change it back.
 
 ## As built
 

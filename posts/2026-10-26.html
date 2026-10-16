@@ -13,6 +13,18 @@ button.done{background:#fff;color:#0a66c2}
 <div class="bar"><span>1. Post</span><button onclick="copyText('post-body',this)">Copy</button></div>
 <div id="post-body" class="text">
 AiOS, part 11 (Kernel code: 844 lines). "I remember drooling over an Amiga at Radio Shack. This week AiOS learned the trick that made the Amiga special."...
+
+The Commodore 64's operating system was called the KERNAL, with an A.  It started as a typo in an engineer's notebook in 1980 and stuck.  Until this week AiOS had one too: a table of services that never move, and one program.
+
+This week it got a kernel, with an E, because a kernel shares the machine.  The polite way is cooperative, like Windows 3.1, where each program hands the processor back when it feels like it.  The other way, a timer takes it back whether the program likes it or not.  The Amiga shipped that in 1985.  I picked the Amiga.
+
+To prove it we needed a rude program: the sieve of Eratosthenes as BYTE printed it in 1981, run 800 times without once giving the processor back.  It hogged the processor for about five seconds, and the stopwatch next to it never missed a second.
+
+Then the AI wrote a vandal that writes one byte past its own memory.  The kernel stops it, the stopwatch keeps ticking, and the screen says Guru Meditation.
+
+Sharing only works if something is allowed to say no.
+
+#AiOS
 </div>
 </section>
 <section id="title">
@@ -115,7 +127,7 @@ AiOS, part 11 (Kernel code: 844 lines). "I remember drooling over an Amiga at Ra
 <p><a href="https://github.com/cmcluckie/aios">The whole repo</a>.</p>
 </div>
 </section>
-<p class="img">Image: 2026-10-21.png, in this folder.</p>
+<p class="img">Image: 2026-10-26.png, in this folder.</p>
 <script>
 function flash(b){b.textContent='Copied';b.classList.add('done');setTimeout(function(){b.textContent='Copy';b.classList.remove('done')},1500)}
 function select(id){var r=document.createRange();r.selectNodeContents(document.getElementById(id));var s=getSelection();s.removeAllRanges();s.addRange(r);return s}

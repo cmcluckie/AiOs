@@ -6,7 +6,7 @@ I despise Unix text editors.  vi, Emacs, all of them.  Give me Notepad or give m
 
 I love Notepad.  I think it's one of the best things ever written, because it has one purpose and it does exactly that one thing: it writes text.  Whoever decided to add tabs to Notepad, there is a special place in hell for that person.  And whoever decided it should remember your documents after you close them, damn you, damn you all to hell.
 
-I'm a big fan of simplicity, and in a text editor, Notepad is the very definition of it.  So after yesterday's post, which was heavy on definitions, AiOs gets a text editor today, and I'm keeping it simple, pure and innocent.
+I'm a big fan of simplicity, and in a text editor, Notepad is the very definition of it.  So after the last post, which was heavy on definitions, AiOs gets a text editor today, and I'm keeping it simple, pure and innocent.
 
 ## The green screen
 
@@ -18,7 +18,7 @@ The early text editors were the same, and so were the early versions of Word.  v
 
 ## Keystrokes are a language too
 
-Yesterday was about words.  It turns out keystrokes are words too: a language you have to learn before you can say anything.
+The last post was about words.  It turns out keystrokes are words too: a language you have to learn before you can say anything.
 
 The thing that ended my 1997 fight has a name.  In 1987, IBM published Common User Access, a rulebook for how programs should behave: Ctrl+S saves, the arrows move, F1 is help, and the commands should be on the screen, not in your head.  Windows followed it, and Notepad is its purest form.  You don't learn Notepad.  You just use it.
 
