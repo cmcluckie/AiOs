@@ -1,5 +1,5 @@
 # tests/mutations-results.txt, written by jig/mutate.  Do not edit by hand.
-# run 2026-10-16T00:24Z at commit 795d6ba
+# run 2026-10-16T21:24Z at commit 99fa5e6
 KILLED    hello.exact-bytes@1  one wrong letter in hello's message
 KILLED    hello.exact-bytes@1  the newline goes missing
 KILLED    hello.exact-bytes@1  one extra write before exit
@@ -90,7 +90,8 @@ KILLED    referee.2-8@1  rule 5 switched off: a capability may be granted that n
 KILLED    referee.2-8@1  rule 6 switched off: a part may be pulled in without being listed
 KILLED    referee.2-8@1  rule 7 switched off: a part may call itself admitted with no admission
 KILLED    referee.2-8@1  rule 8 switched off: a sensor may name no spec and no consumer
+KILLED    referee.2-8@1  rule 21 switched off: a catalogue entry with no sentence goes through
 KILLED    referee.verb-noun@1  any verb will do: the constitution's list is not consulted
 KILLED    referee.verb-noun@1  any noun will do: the catalogue is not consulted
 KILLED    referee.verb-noun@1  a seat may ask for a verb that already exists, and so use it in the same breath
-# 91 killed, 0 survived unexpectedly, 2 known survivors, 0 no-ops, 0 no-builds
+# 92 killed, 0 survived unexpectedly, 2 known survivors, 0 no-ops, 0 no-builds

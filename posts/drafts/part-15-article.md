@@ -10,7 +10,7 @@ Agentic development breaks that.  The AI can't read your mind.  And we're so use
 
 But there's a balance.  Document everything so tightly that there's nothing left to figure out, and you've thrown away the reason you used AI in the first place.  Finding that balance is one of the hardest things I've run into.
 
-This post is long.  About twice the length of any other one, because the referee is really complicated, and because this is where the series stops being just a story and starts being the documentation too.  So it's written for two audiences.  The first half is for everyone: the story, what the referee is, and what I'm taking away, in plain English with no code.  There's a clearly marked spot where you can stop.  The second half is for the technical readers: how it actually works, with pictures, and then the code itself.  If you're technical and only read one section, read the last one.
+*Editor's note: this post is long.  About twice the length of any other one, because the referee is really complicated, and because this is where the series stops being just a story and starts being the documentation too.  So it's written for two audiences.  The first half is for everyone: the story, what the referee is, and what I'm taking away, in plain English with no code.  There's a clearly marked spot where you can stop.  The second half is for the technical readers: how it actually works, with pictures, and then the code itself.  If you're technical and only read one section, read the last one.*
 
 ## The test passed
 
@@ -20,11 +20,17 @@ A real example.  My teams use a framework of ready-made controls for building sc
 
 How do you write a test for that?  You can't.  The requirement was met.  The only thing that catches it is a chain of decisions: a record of what the AI decided, that something can check.
 
-## Director, builder, and a judge with no AI
+## Director, builder, and a referee with no AI
 
 The way I think about it: a director and a builder.  The director takes the specifications a human wrote and breaks them into decisions small enough to be written down and checked.  The builder builds.  And then something that isn't AI, something deterministic, checks that what got built is what was decided.
 
-AiOs already has the shape, with one wrinkle in the names.  AiOs already has a builder, and it's the one with no AI: it compiles, nothing more.  The AI builders are the agents that write code.  So far only one is defined, the mechanic, which proposes a fix when a test fails.  The ones that write a new part when new requirements come in haven't been defined yet.  Until they are, they're Bob the Builders, and they're a whole other blog series.  Today, Bob is Claude.  I write the specs.  The quartermaster will be the director.  The referee is the judge.  This week the referee got teeth.
+If you aren't doing this, I want you to think hard about doing it.  Here's how it works in practice, and I'll be honest that today I do it by hand.  The director takes a large spec and breaks it into pieces, and hands each piece to one or more builders.  When a builder finishes, I physically copy its output and paste it into the director.  The director gives me feedback.  And many times, because it's looking at the bigger picture and the builder is only looking at its piece, it spots things the builder never would: a piece that doesn't fit the one before it, a requirement that got dropped, a shortcut that breaks something three steps later.  Then it fixes the plan and the next piece goes out.  That copy and paste is the part I want to automate, and it's what AiOs is for.
+
+Why that matters.  In a large organization, everybody using the best model is out of the question.  Sometimes you use a lesser one, and that's fine.  That's being cost efficient, and it's a good thing.  But the lesser models make more mistakes, and the director-builder model is how you catch them: the director sees every piece of work come back, and it's holding the whole spec, so it notices what the builder dropped.  I've been using this model for over six months, and you wouldn't believe the number of things the builder got wrong that the director found.
+
+It's peer review, and that's the point.  As software developers we have the ceremonies we have, the reviews, the stand-ups, the sign-offs, for one reason: so that somebody else is always looking at our work.  There's always somebody else watching.  AI doesn't get a pass on that.  It gets the same rule, and the director is the somebody.  You'll see a lot more about this in the articles to come, because I'm working it into everything here.
+
+AiOs already has the shape, with one wrinkle in the names.  AiOs already has a builder, and it's the one with no AI.  It never writes a line of code.  It reads the petition, gathers every part the petition names, ours from the pool and Linux's from the lifted folder, compiles each one, links them into the kernel, then compiles each program against that kernel.  Gather, compile, link.  Nothing more.  The AI builders are the agents that write code.  So far only one is defined, the mechanic, which proposes a fix when a test fails.  The ones that write a new part when new requirements come in haven't been defined yet.  Until they are, they're Bob the Builders, and they're a whole other blog series.  Today, Bob is Claude.  I write the specs.  The quartermaster will be the director.  The referee is the referee: the thing with no AI that checks.  This week it got teeth.
 
 ## And what do you know, Claude cheated on my first post!
 
@@ -343,16 +349,16 @@ Nothing in AiOs itself changed this time.  The referee did: the ledger (`jig/led
 
 ## Addendum: the tests
 
-Every test for this post, from tests/results.txt and tests/mutations-results.txt, run on the jig under KVM at commit 795d6ba.  The whole suite: 56 passed, 0 failed, 2 skipped.  Of 93 deliberate breakages, 91 were caught; the 2 that survive are the known ones from parts 10 and 12, and all 15 of this post's were caught.  The referee's own file, tests/referee-results.txt: 56 lines, 52 pass, 4 fail.
+Every test for this post, from tests/results.txt and tests/mutations-results.txt, run on the jig under KVM at commit 99fa5e6, with the referee in C.  The whole suite: 56 passed, 0 failed, 2 skipped.  Of 94 deliberate breakages, 92 were caught; the 2 that survive are the known ones from parts 10 and 12, and all 16 of this post's were caught.  The referee's own file, tests/referee-results.txt, has 4 FAIL lines, all waiting on part 16.
 
 - [ledger.human-only@1](https://github.com/cmcluckie/aios/blob/main/tests/ledger.human-only@1.toml).  Checks: a change to anything on the human-only list is refused unless a decision in the same change names it, decided by a human's key.  Passed: a test made easier was refused, a forged decision was refused, a human's decision let it through, code alone needed none, a deleted test was refused, a gap in history closed by a later decision that amends it.  Mutations caught: 4.
 - [referee.no-hardware@1](https://github.com/cmcluckie/aios/blob/main/tests/referee.no-hardware@1.toml).  Checks: a program that touches the hardware itself is refused at build, even when its output is exactly right.  Passed: the cheat printed hello's 14 bytes exactly, so hello's test would pass it; the referee refused it under rule 12.  Mutations caught: 1.
-- [referee.2-8@1](https://github.com/cmcluckie/aios/blob/main/tests/referee.2-8@1.toml).  Checks: rules 2 to 8 on every petition, written to the referee's own file.  Passed: petition 0001 broken seven ways, one rule at a time; the referee named every rule.  Mutations caught: 7.
+- [referee.2-8@1](https://github.com/cmcluckie/aios/blob/main/tests/referee.2-8@1.toml).  Checks: rules 2 to 8 and 21 on every petition, written to the referee's own file.  Passed: petition 0001 broken eight ways, one rule at a time; the referee named every rule.  Mutations caught: 8.
 - [referee.verb-noun@1](https://github.com/cmcluckie/aios/blob/main/tests/referee.verb-noun@1.toml).  Checks: a committee's or mechanic's output is a numbered list of verb-noun lines, verbs from the constitution, nouns from the catalogue.  Passed: one legal list accepted; prose, an unknown verb, an unknown noun, extra words, a skipped number and an asked-and-used verb each refused under rule 13.  Mutations caught: 3.
 
 ## Code on GitHub
 
-[Every line that changed, on one page](https://github.com/cmcluckie/aios/compare/0b9acfb...HASH5).
+[Every line that changed, on one page](https://github.com/cmcluckie/aios/compare/0b9acfb...99fa5e6).
 
 The commits behind this post, in order:
 
@@ -360,6 +366,6 @@ The commits behind this post, in order:
 2. [The referee checked against its own rule book: rules 2 to 8 and rule 13, verbs and nouns; findings 0017](https://github.com/cmcluckie/aios/commit/ee2f53c)
 3. [Votes are decisions; the machines grant the hypervisor's clock; two rule books, two readers; rules 17 to 19; the ledger's globbing hole fixed](https://github.com/cmcluckie/aios/commit/40d7e3d)
 4. [The fixed ledger refused ee2f53c on the jig; rule 20, a later decision may amend an earlier commit; decision 0007](https://github.com/cmcluckie/aios/commit/795d6ba)
-5. Part 15 closed: the referee leaves the jig and is rewritten in C; petition 0008; the last twelve questions decided (hash when committed)
+5. [The referee leaves the jig and is rewritten in C; petition 0008; rule 21, every catalogue entry has a sentence; docs/the-referee.md](https://github.com/cmcluckie/aios/commit/99fa5e6)
 
 [The whole repo](https://github.com/cmcluckie/aios).
