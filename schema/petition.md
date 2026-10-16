@@ -145,6 +145,10 @@ rule number and the offending catalogue number, nothing else.
 19. Two or more programs on one machine need a loader that exposes
     CAP.cpu.share.  A loader that runs one program cannot run two.
     (17 to 19 were the referee's three unnumbered refusals until 2026-10-15.)
+20. A gap in history closes with a decision that names the commit it amends
+    (`amends = "<hash>"`).  The commit cannot change; the close sits beside it
+    in the log, and `jig/aios ledger --commit` counts it.  The gap stays on the
+    record.
 
 ## What is deliberately not here
 

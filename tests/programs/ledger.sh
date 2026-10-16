@@ -29,4 +29,12 @@ g add -A && g commit -q -m step2
 rm tests/editor.undo@1.toml
 out=$(sh jig/aios ledger 2>&1) && { echo "a deleted test with no decision was accepted"; exit 1; }
 case "$out" in *"tests/editor.undo@1.toml changed; tests are human-only"*) ;; *) echo "refused, but not for the deleted test: $out"; exit 1 ;; esac
-echo "a test made easier was refused, a forged decision was refused, a human's decision let it through, code alone needed none, a deleted test was refused"
+# a gap in history: a human-only change committed with no decision, then a later decision that amends that commit
+g add -A && g commit -q -m step3
+echo "# a line an agent added" >> specs/editor.1@1.toml
+g add -A && g commit -q -m gap
+gap=$(g rev-parse HEAD)
+sh jig/aios ledger --commit "$gap" > /dev/null 2>&1 && { echo "a commit with a human-only change and no decision passed --commit"; exit 1; }
+printf 'id      = "9002"\ndate    = 2026-10-14\nkind    = "specs"\ntouches = ["specs/editor.1@1.toml"]\namends  = "%s"\nasked   = "cover the gap?"\noptions = ["yes", "no"]\nchose   = "yes"\nby      = "KEY.chris@1"\n' "$gap" > decisions/9002.toml
+sh jig/aios ledger --commit "$gap" > /dev/null 2>&1 || { echo "a decision amending the commit did not close the gap"; exit 1; }
+echo "a test made easier was refused, a forged decision was refused, a human's decision let it through, code alone needed none, a deleted test was refused, a gap in history closed by a later decision that amends it"

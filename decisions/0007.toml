@@ -1,0 +1,12 @@
+id      = "0007"
+date    = 2026-10-15
+kind    = "rules and words"
+touches = ["constitution/keys/README.md", "jig/aios", "schema/petition.md", "tests/ledger.human-only@1.toml", "tests/programs/ledger.sh", "tests/mutations.txt"]
+amends  = "ee2f53c"
+asked   = "Commit ee2f53c changed constitution/keys/README.md under decision 0004, which did not name it; the ledger's globbing hole let it through, and the fixed ledger refused the commit on the jig.  Cover it now, and let a later decision close a gap in history by naming the commit it amends?"
+options = ["cover it with this decision, and add amends", "rewrite history", "leave the jig refusing"]
+default = "cover it with this decision, and add amends"
+chose   = "cover it with this decision, and add amends"
+why     = "findings/0017.md"
+by      = "KEY.chris@1"
+drafted = "Claude"

@@ -1,5 +1,5 @@
 # tests/mutations-results.txt, written by jig/mutate.  Do not edit by hand.
-# run 2026-10-15T02:56Z at commit a2a8490
+# run 2026-10-15T21:58Z at commit ee2f53c
 KILLED    hello.exact-bytes@1  one wrong letter in hello's message
 KILLED    hello.exact-bytes@1  the newline goes missing
 KILLED    hello.exact-bytes@1  one extra write before exit
@@ -81,4 +81,14 @@ KILLED    loader.ladder-7@1  loader@7 breaks the read system call the calculator
 KILLED    ledger.human-only@1  the ledger lets a human-only change through with no decision
 KILLED    ledger.human-only@1  any name will do as the decider: a decision by a key nobody holds counts
 KILLED    referee.no-hardware@1  rule 12 switched off: a program that drives the hardware itself is built
-# 79 killed, 0 survived unexpectedly, 2 known survivors, 0 no-ops, 0 no-builds
+KILLED    referee.2-8@1  rule 2 switched off: a capability may give any part's spec as its reason
+KILLED    referee.2-8@1  rule 3 switched off: a spec clause with no test goes through
+KILLED    referee.2-8@1  rule 4 switched off: a part may require a capability the petition never asked for
+KILLED    referee.2-8@1  rule 5 switched off: a capability may be granted that nothing provides
+KILLED    referee.2-8@1  rule 6 switched off: a part may be pulled in without being listed
+KILLED    referee.2-8@1  rule 7 switched off: a part may call itself admitted with no admission
+KILLED    referee.2-8@1  rule 8 switched off: a sensor may name no spec and no consumer
+KILLED    referee.verb-noun@1  any verb will do: the constitution's list is not consulted
+KILLED    referee.verb-noun@1  any noun will do: the catalogue is not consulted
+KILLED    referee.verb-noun@1  a seat may ask for a verb that already exists, and so use it in the same breath
+# 89 killed, 0 survived unexpectedly, 2 known survivors, 0 no-ops, 0 no-builds

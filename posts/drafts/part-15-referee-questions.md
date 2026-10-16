@@ -80,6 +80,8 @@ Two rule books, two readers.  CLAUDE.md is the rule book for the two architects,
 - Landlord and tenant retired (CLAUDE.md, design.md).  Say nucleus and program.  Story words beside defined ones send readers down rabbit holes.
 - Plan 9.14 added: HashLife, the first program that asks for more memory while running.  Suggested by a reader on part 5.  Not soon.
 
+- The fixed ledger's first run on the jig refused ee2f53c, yesterday's commit: the keys README changed with no decision naming it.  Rule 20: a later decision may amend an earlier commit; decision 0007 does.  The gap and the close both in the log.
+
 ## Open, in order
 
 1. For each rule we have, which reader does it belong to, the architects or the system?  Replaces "one rule book or three."  Done 2026-10-15 (decision 0006): tenets out of constitution/, into design.md only; the three refusals are rules 17 to 19; CLAUDE.md defines the two rule books.  Still to sort: the definition of done is ours; plan 3.9's rules.toml is the system's.

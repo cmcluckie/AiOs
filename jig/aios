@@ -177,6 +177,7 @@ cmd_run() {
 
 # The decision ledger (plan 3.6).  Deterministic: paths and file names, no judgment.
 cmd_ledger() {
+	amends=""
 	if [ "${1:-}" = "--cached" ]; then
 		changed=$(git diff --cached --name-only --diff-filter=ACMRD HEAD)
 	elif [ "${1:-}" = "--commit" ]; then
@@ -186,10 +187,14 @@ cmd_ledger() {
 		rev=${2:-HEAD}
 		git cat-file -e "$rev:constitution/human-only.toml" 2>/dev/null || { printf 'ledger: %s predates the ledger (no constitution/human-only.toml in it); nothing to hold it to\n' "$(git rev-parse --short "$rev")"; return 0; }
 		changed=$(git diff-tree --no-commit-id --name-only -r --diff-filter=ACMRD "$rev")
+		# a gap in history closes with a later decision that names the commit
+		# it amends: the commit cannot change, so the close sits beside it
+		full=$(git rev-parse "$rev")
+		amends=$(grep -l "^amends *= *\"" decisions/*.toml 2>/dev/null | while read -r d; do a=$(field "$d" amends); case "$full" in "$a"*) echo "$d" ;; esac; done)
 	else
 		changed=$( { git diff --name-only HEAD; git ls-files --others --exclude-standard; } | sort -u)
 	fi
-	decisions=$(echo "$changed" | grep '^decisions/[0-9]*\.toml$' || true)
+	decisions=$( { echo "$changed" | grep '^decisions/[0-9]*\.toml$'; echo "${amends:-}"; } | grep . || true)
 	for d in $decisions; do
 		[ -f "$d" ] || continue
 		by=$(field "$d" by)

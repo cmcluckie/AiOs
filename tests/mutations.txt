@@ -88,6 +88,7 @@ loader.ladder-7@1       | red      | pool/PART.loader@7/loader.c           | s/p
 ledger.human-only@1     | red      | jig/aios                              | s/\[ -n "\$named" \] || die "ledger:/[ -n "$named" ] || true "ledger:/   | the ledger lets a human-only change through with no decision
 ledger.human-only@1     | red      | jig/aios                              | s/\[ -f "constitution\/keys\/\${by#KEY.}.toml" \] || die/true || die/   | any name will do as the decider: a decision by a key nobody holds counts
 ledger.human-only@1     | red      | jig/aios                              | s/^\tset -f\t/\ttrue\t/   | globbing back on: the human-only globs become the files that exist, and a deleted test matches nothing
+ledger.human-only@1     | red      | jig/aios                              | s/^\t\tamends=\$(grep/\t\tamends=$(false \&\& grep/   | amends ignored: a gap in history can never be closed, so the jig refuses that commit forever
 referee.no-hardware@1   | red      | jig/aios                              | s/\[ -z "\$hw" \] || die "rule 12:/[ -z "$hw" ] || true "rule 12:/        | rule 12 switched off: a program that drives the hardware itself is built
 referee.2-8@1           | red      | jig/aios                              | s/r 2 "\$bad"/r 2 ""/   | rule 2 switched off: a capability may give any part's spec as its reason
 referee.2-8@1           | red      | jig/aios                              | s/r 3 "\$bad"/r 3 ""/   | rule 3 switched off: a spec clause with no test goes through

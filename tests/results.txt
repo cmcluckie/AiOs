@@ -1,13 +1,13 @@
 # tests/results.txt, written by jig/test.  Do not edit by hand.
-# run 2026-10-15T02:54Z at commit a2a8490, kvm
+# run 2026-10-15T21:56Z at commit ee2f53c, kvm
 PASS  TST.calc.transcript@1  1s  424 bytes, exact
 PASS  TST.disk.no-disk@1  1s  no disk: halted, and said it could not save
 PASS  TST.editor.quit-asks@1  1s  asked once, quit on the second Ctrl+Q, saved nothing
 PASS  TST.editor.save-over@1  0s  saved twice: second version, 14 bytes, the first one gone
 PASS  TST.editor.status-line@1  1s  45 frames, every one with Ctrl+S Save, Ctrl+Z Undo and Ctrl+Q Quit
 PASS  TST.editor.typing@1  0s  two lines, 20 bytes, exactly what the keys made
-PASS  TST.editor.undo@1  1s  undo took back one run, the second undo put it back: one two
-PASS  TST.fs.fsck-clean@1  0s  fsck.minix: clean, one file, /sorted; the line is on the disk
+PASS  TST.editor.undo@1  0s  undo took back one run, the second undo put it back: one two
+PASS  TST.fs.fsck-clean@1  1s  fsck.minix: clean, one file, /sorted; the line is on the disk
 PASS  TST.fs.overwrite-clean@1  2s  five saves over one file, the last loads back the same, fsck.minix clean
 PASS  TST.hanoi.exact-moves@1  0s  360 bytes, exact
 PASS  TST.hello.exact-bytes@1  0s  14 bytes, exact
@@ -23,37 +23,39 @@ PASS  TST.loader.ladder-4@1  1s  4 programs byte-identical under loader@4
 PASS  TST.loader.ladder-5@1  0s  4 programs byte-identical under loader@5
 PASS  TST.loader.ladder-6@1  2s  4 programs byte-identical under loader@6
 PASS  TST.loader.ladder-7@1  0s  4 programs byte-identical under loader@7
-PASS  TST.loader.ms@1  10s  door 9500 ms, host 9500 ms: drift 0 ms per 10 s
+PASS  TST.loader.ms@1  10s  door 9500 ms, host 9501 ms: drift 1 ms per 10 s
 PASS  TST.loader.plain-6@1  1s  hello unchanged, the 8259 untouched
 PASS  TST.loader.read@1  1s  4 programs byte-identical under loader@3
 PASS  TST.loader.read-many@1  0s  4096 bytes, exact
-PASS  TST.loader.runs-program@1  0s  14 bytes, exact
-PASS  TST.loader.same-binary@1  1s  one loader, bded6fdba5c733f8
-PASS  TST.machine.disk-no-sockets@1  0s  5971 syscalls traced, none on the network
-PASS  TST.machine.disk-only@1  1s  16 devices, one of them the disk, all on the list
-PASS  TST.machine.irq-no-sockets@1  3s  10154 syscalls traced, none on the network
+PASS  TST.loader.runs-program@1  1s  14 bytes, exact
+PASS  TST.loader.same-binary@1  0s  one loader, bded6fdba5c733f8
+PASS  TST.machine.disk-no-sockets@1  1s  6023 syscalls traced, none on the network
+PASS  TST.machine.disk-only@1  0s  16 devices, one of them the disk, all on the list
+PASS  TST.machine.irq-no-sockets@1  3s  10439 syscalls traced, none on the network
 PASS  TST.machine.irq-only@1  0s  17 devices: the serial port, the 8254, the two 8259s, and what microvm forces
 PASS  TST.machine.no-peripherals@1  0s  14 devices, all on the list
-PASS  TST.machine.no-sockets@1  1s  5130 syscalls traced, none on the network
-PASS  TST.machine.timer-no-sockets@1  3s  5331 syscalls traced, none on the network
+PASS  TST.machine.no-sockets@1  1s  5132 syscalls traced, none on the network
+PASS  TST.machine.timer-no-sockets@1  3s  5335 syscalls traced, none on the network
 PASS  TST.machine.timer-only@1  0s  15 devices, one of them the timer, all on the list
 PASS  TST.pic.setup@1  4s  Linux's setup, only IRQ 0 unmasked, 294 EOIs for 294 ticks
+PASS  TST.referee.2-8@1  18s  petition 0001 broken seven ways, one rule at a time; the referee named every rule
 PASS  TST.referee.no-hardware@1  1s  the cheat printed hello's 14 bytes exactly, so hello's test would pass it; the referee refused it under rule 12
+PASS  TST.referee.verb-noun@1  0s  one legal list accepted; prose, an unknown verb, an unknown noun, extra words, a skipped number and an asked-and-used verb each refused under rule 13
 PASS  TST.serial.init-8n1@1  0s  115200 8N1 before the first byte, by the registers and by QEMU
 PASS  TST.serial.in-order@1  0s  512 bytes, exact
 SKIP  TST.serial.origin-matches@1  no upstream clone at /home/chris/aios/../linux (set LINUX=)
 PASS  TST.serial.receive-order@1  1s  4096 bytes, exact
 PASS  TST.serial.waits-ready@1  0s  14 bytes, each after THRE was seen
-PASS  TST.share.all-exit@1  1s  both programs whole, 16 lines, and the machine halted
+PASS  TST.share.all-exit@1  2s  both programs whole, 16 lines, and the machine halted
 SKIP  TST.share.on-time@1  retired by TST.share.on-time@2
-PASS  TST.share.on-time@2  12s  next to a program that never yields: 00:00 to 00:09, every second once, in order, in 10 s by the host
+PASS  TST.share.on-time@2  11s  next to a program that never yields: 00:00 to 00:09, every second once, in order, in 10 s by the host
 PASS  TST.share.separate@1  7s  vandal stopped at 00C00000 (page fault); the stopwatch reached 00:05
 PASS  TST.sieve.primes@1  10s  BYTE sieve: 1899 primes, 800 times over, in 9 ms
-PASS  TST.sort.first-boot@1  0s  137 bytes, exact
-PASS  TST.sort.second-boot@1  1s  280 bytes, exact
+PASS  TST.sort.first-boot@1  1s  137 bytes, exact
+PASS  TST.sort.second-boot@1  0s  280 bytes, exact
 PASS  TST.stopwatch.ticks@1  10s  00:00 to 00:09, every second once, in order, in 10 s by the host
 PASS  TST.tick.rate@1  6s  494 ticks in 5 s: 98 a second
-PASS  TST.timer.kvm@1  10s  door 9500 ms, host 9501 ms: drift 1 ms per 10 s
+PASS  TST.timer.kvm@1  10s  door 9500 ms, host 9500 ms: drift 0 ms per 10 s
 PASS  TST.timer.rate@1  10s  door 9500 ms, host 9501 ms: drift 1 ms per 10 s
 PASS  TST.timer.slow-reads@1  3s  the door reached 2500 ms in 3 s: measured
-# 54 passed, 0 failed, 2 skipped
+# 56 passed, 0 failed, 2 skipped
