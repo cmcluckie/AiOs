@@ -47,16 +47,16 @@ why.  The full design is in design.md; read it before doing anything.
   keeps parts small.
 - Petitions add, never swap.  Parts talk only through declared interfaces, so a
   later petition stacks on an earlier one without removing anything.  The
-  loader is separate from the program from petition 0000 on: a tenant is a
-  tenant even when it is the only one.
-- A kernel appears only when a petition asks for two things that must share.
-  Until then the loader is the whole landlord.
+  loader is separate from the program from petition 0000 on: a program is a
+  program even when it is the only one.
+- A nucleus appears only when a petition asks for two things that must share.
+  Until then the loader is the whole nucleus.
 - Every commit is signed.  An unsigned commit is not part of the constitution.
 - Two spaces after a period.
 
 ## Layout
 
-    constitution/   tenets and purposes; the part no vote can amend
+    constitution/   the rule book for AiOs: purposes, keys, verbs, sources, human-only
     schema/         the petition format and the relation rules
     petitions/      one TOML file per petition, numbered
     index/          part/, machine/, tool/ and cap/ entries: what exists, what it depends on, what it exposes
@@ -79,8 +79,21 @@ exactly; when a new one is needed, add it here in the same commit.
 
 - **Constitution.**  This repository.  The only authority on what a machine
   contains and why.  Every commit is signed.
-- **Tenet.**  One of the ten rules in constitution/tenets.md that no vote can
-  amend.
+- **Tenet.**  One of the ten beliefs in design.md that no vote can amend.
+  The architects' (this file's side), never the referee's: a tenet is a
+  belief, a rule is a check.  Moved out of constitution/ on 2026-10-15.
+- **Two rule books, two readers.**  This file is the rule book for the two
+  architects, Chris and Claude: how AiOs gets designed, enforced by Chris
+  telling Claude to redo it.  The constitution is the rule book for AiOs:
+  what enters the system, enforced by the referee (the deterministic rules)
+  or the committee (the judgment ones, which it must turn into
+  deterministic rules or `ask`).  "The constitution is CLAUDE.md, but for
+  AiOs."  The referee reads only the constitution, never this file,
+  design.md or the definition of done.  A practice of ours may be copied
+  into the constitution, as a separate rule with its own number.  Test for
+  anything unsure: who refuses if it's broken?  Chris: here.  Referee or
+  committee: constitution.  Nobody: a note, not a rule.  Decided by Chris
+  by voice, 2026-10-15.
 - **Purpose (PUR).**  One sentence saying what a machine is for.  The first
   thing a petition names.
 - **Petition.**  A bill of materials in TOML: the purpose, the capabilities it
@@ -159,10 +172,11 @@ exactly; when a new one is needed, add it here in the same commit.
   was built.  Testing several flavors is the same process run several times,
   never "several nuclei".
 - **Loader.**  PART.loader: takes over from the machine, runs one program
-  through its system calls, halts when it exits.  The whole landlord, for now.
-- **Landlord, tenant.**  A kernel is a landlord: it shares a machine between
-  tenants.  With one tenant there is nothing to share, so there is no kernel,
-  only a loader.  A program is a tenant even when it is the only one.
+  through its system calls, halts when it exits.  The whole nucleus, for now.
+- **Landlord, tenant.**  Retired 2026-10-15.  Was a metaphor for the nucleus
+  and its programs; Chris retired it because a story word beside a defined one
+  sends readers down rabbit holes.  Say nucleus and program.  Older findings
+  and posts say landlord.
 - **System call.**  How a program asks the nucleus for something: write,
   exit, alloc, read, ms, load, save.  The system call table is the table of
   function pointers the loader hands a program, the only thing a program

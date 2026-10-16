@@ -1,5 +1,5 @@
 # tests/mutations-results.txt, written by jig/mutate.  Do not edit by hand.
-# run 2026-10-14T18:37Z at commit 414bd19
+# run 2026-10-15T02:56Z at commit a2a8490
 KILLED    hello.exact-bytes@1  one wrong letter in hello's message
 KILLED    hello.exact-bytes@1  the newline goes missing
 KILLED    hello.exact-bytes@1  one extra write before exit
@@ -78,4 +78,7 @@ KILLED    editor.status-line@1  a message pushes the commands off the bottom lin
 KILLED    fs.overwrite-clean@1  a freed zone stays marked busy: the disk leaks a block every save
 KILLED    fs.overwrite-clean@1  saving over a file no longer truncates it first
 KILLED    loader.ladder-7@1  loader@7 breaks the read system call the calculator relies on
-# 76 killed, 0 survived unexpectedly, 2 known survivors, 0 no-ops, 0 no-builds
+KILLED    ledger.human-only@1  the ledger lets a human-only change through with no decision
+KILLED    ledger.human-only@1  any name will do as the decider: a decision by a key nobody holds counts
+KILLED    referee.no-hardware@1  rule 12 switched off: a program that drives the hardware itself is built
+# 79 killed, 0 survived unexpectedly, 2 known survivors, 0 no-ops, 0 no-builds

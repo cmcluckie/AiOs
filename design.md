@@ -16,7 +16,7 @@ The moat only matters if humans have to do the grunt work.  If agents can read s
 
 ## Tenets
 
-These are the rules the referee enforces and no agent, app or committee vote can override.
+These are the architects' tenets: what AiOs is for, and what no agent, app or committee vote can override.  The referee never reads them.  It reads the constitution's rules, each of which traces to one of these.  (Until 2026-10-15 this line said the referee enforces them; it never could.  A tenet is a belief; a rule is a check.)
 
 1. **No purpose, no operating system.**  Nothing exists in the system unless it traces to a stated purpose.  A machine can have several purposes; each is written down.
 2. **One door.**  The only way anything enters the system is an approved petition: apps, libraries, drivers, services, agents, tests, telemetry, the core itself.
@@ -35,7 +35,7 @@ We build on Linux source and Nix, and we write neither.
 
 **Linux source is the parts pool.**  Roughly two-thirds of its 30 million lines are drivers and another large share is architecture support; the core is a few million lines.  A given purpose needs a sliver.  The problem is not the volume, it is that selection is woven through the source as `#ifdef` directives, so the file you review is a superposition of every possible build and nobody can honestly say they have audited "the kernel."  The answer is a refactor, not a rewrite: pull the conditionals out of the files and into the structure.  One component, one directory, one petition, no `#ifdef` inside.  Compose, don't configure.  The catalogue tells us which handful of components actually need that surgery; drivers, filesystems and protocols already come apart cleanly.
 
-**Linux is read, never booted.**  A kernel is a landlord: it shares one machine between tenants that do not trust each other.  A purpose with one program has no tenants to separate, so it gets no kernel; it gets a loader that takes over from the machine, runs the one program and halts, plus whatever drivers the purpose names, each lifted from Linux as its own part with the hands it held cut and recorded.  Linux wrote no spec and no test for most of what we lift, so every part arrives naked and we write both at the door.  Parts talk only through declared interfaces so a later petition stacks on an earlier one without removing anything; a kernel proper appears only when a petition asks for two things that must share.  Findings 0001 records why the first build plan got this backwards.
+**Linux is read, never booted.**  A nucleus shares one machine between programs that do not trust each other.  A purpose with one program has nothing to separate, so it gets no nucleus; it gets a loader that takes over from the machine, runs the one program and halts, plus whatever drivers the purpose names, each lifted from Linux as its own part with the hands it held cut and recorded.  Linux wrote no spec and no test for most of what we lift, so every part arrives naked and we write both at the door.  Parts talk only through declared interfaces so a later petition stacks on an earlier one without removing anything; a nucleus appears only when a petition asks for two things that must share.  Findings 0001 records why the first build plan got this backwards.
 
 **Nix is the builder.**  It already turns a declaration into exactly that set of components, reproducibly, with rollback for free.  We write the translator from approved petitions to a Nix configuration.
 

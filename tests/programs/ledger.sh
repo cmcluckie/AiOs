@@ -5,6 +5,7 @@
 #   the same, with a decision decided by a key that is not in constitution/keys: refused
 #   the same, with a decision decided by KEY.chris@1: accepted
 #   a change to a program's code only, no decision: accepted (code is the agents' to write)
+#   a test deleted, no decision: refused (globbing once hid this; findings 0017 #7)
 set -u
 cd "$(dirname "$0")/../.."
 command -v git > /dev/null || { echo "no git"; exit 2; }
@@ -24,4 +25,8 @@ out=$(sh jig/aios ledger 2>&1) || { echo "a decision by KEY.chris@1 was refused:
 g add -A && g commit -q -m step
 echo "/* a comment an agent added */" >> pool/PART.editor@1/editor.c
 out=$(sh jig/aios ledger 2>&1) || { echo "a code change with no decision was refused: $out"; exit 1; }
-echo "a test made easier was refused, a forged decision was refused, a human's decision let it through, code alone needed none"
+g add -A && g commit -q -m step2
+rm tests/editor.undo@1.toml
+out=$(sh jig/aios ledger 2>&1) && { echo "a deleted test with no decision was accepted"; exit 1; }
+case "$out" in *"tests/editor.undo@1.toml changed; tests are human-only"*) ;; *) echo "refused, but not for the deleted test: $out"; exit 1 ;; esac
+echo "a test made easier was refused, a forged decision was refused, a human's decision let it through, code alone needed none, a deleted test was refused"

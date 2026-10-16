@@ -1,6 +1,6 @@
 # Signing
 
-Three things get signed: commits, admissions, and reviews.  All three use the
+Three things get signed: commits, admissions, and votes.  All three use the
 same key format (SSH ed25519, `KEY.*` entries) and the same rule: a signature
 never lives inside the bytes it signs.  Closes finding 4.
 
@@ -24,37 +24,39 @@ The referee checks that commit 1 exists, is signed by a key allowed to admit,
 and that the entry's bytes at commit 1 equal the entry's bytes now, minus the
 `admitted` field.  No separate signature file.
 
-## Reviews
+## Votes (were reviews, until 2026-10-15)
 
-A review is a signature over a petition at a commit.  It lives in its own
-file so each seat signs the same bytes and nobody's signature changes what
-the next seat sees.
+A seat's vote is a decision, like every other choice in AiOs: one log,
+decisions/, read by the referee.  There is no separate review file.  Chris:
+"Decisions are a log.  Every decision the committee makes goes into the log
+for the referee to review."
 
-    reviews/<petition id>/<seat>.toml
+    decisions/<NNNN>.toml
 
-    petition   = "0000"
-    commit     = "84eb0fd..."              # the commit whose petitions/0000.toml was reviewed
-    seat       = "KEY.seat.security@1"
-    verdict    = "approve"                 # approve | reject | counter
-    reason     = "SPEC.hello.2@1"          # a catalogue number, or a findings file path for counter
-    signature  = "-----BEGIN SSH SIGNATURE----- ..."
+    id      = "0042"
+    date    = 2026-11-01
+    kind    = "vote"
+    touches = ["petitions/0000.toml"]
+    asked   = "Approve petition 0000 at commit 84eb0fd?"
+    options = ["approve", "reject", "counter"]
+    default = "reject"
+    chose   = "approve"
+    why     = "SPEC.hello.2@1"                 # a catalogue number, or FND.NNNN@1 for counter
+    by      = "KEY.seat.security@1"
+    drafted = "KEY.seat.security@1"
+    commit  = "84eb0fd..."                     # the commit whose petitions/0000.toml was voted on
 
-The signed bytes are exactly: the contents of `petitions/<id>.toml` at
-`commit`, followed by one newline, followed by the ASCII verdict.  Nothing
-else, so the same review file can be regenerated and verified by anyone with
-the repo.  Signing and verifying use `ssh-keygen -Y sign` and `-Y verify`
-with namespace `aios-review`.
-
-The `[[review]]` blocks and `[quorum]` leave the petition file.  Quorum moves
-to the schema: the referee counts review files for the petition's current
-commit against the seats present in `constitution/keys/`.  Rule 10 becomes:
+The vote is signed the way every decision is: by the commit that adds it, which
+the referee verifies against the seat's key in constitution/keys/ (plan 3.5).
+One vote per commit, so each seat signs only its own.  Rule 10 reads:
 
     status = "approved" requires, for the commit the petition was last
-    changed in, a valid review file from every KEY entry with role = seat,
-    none with verdict reject, and none with verdict counter.
+    changed in, a decision of kind "vote" naming that petition and that
+    commit from every KEY entry with role = seat, each added in a commit
+    signed by that seat, none choosing reject, none choosing counter.
 
-A petition changed after a review is reviewed again; the old review files
-point at an older commit and stop counting.  That is the point.
+A petition changed after a vote is voted on again; the old votes name an
+older commit and stop counting.  That is the point.
 
 ## Until seats exist
 

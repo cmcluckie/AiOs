@@ -42,6 +42,11 @@ code   = "CAP.dev.disk@1"
 reason = "SPEC.disk.1@1"
 scope  = ""
 
+[[capability]]
+code   = "CAP.hv.kvmclock@1"
+reason = "SPEC.timer.3@1"
+scope  = ""
+
 [[component]]
 code     = "PART.editor@1"
 role     = "primary"

@@ -59,12 +59,33 @@ The author will always be able to out-think the reviewer.  Nobody will ever solv
 
 - The referee is permanent and runs where nobody types.  Today: jig/test runs the ledger on every commit since the last run, before any test, and refuses a commit that fails.  Built 2026-10-15.  After the jig: the same check at admission inside AiOs.
 
+- A seat's vote is a decision in the one log, signed by the commit that adds it.  No review files.  Chris, 2026-10-15: "why are we even asking this question?"  Rule 10 and schema/signing.md rewritten.
+
+- What the emulator presents is hardware: the machines expose the hypervisor's clock, the four petitions ask for it (decision 0005).  Six FAIL lines remain, and they are right: the loader is a bundle.
+- The kernel is built from exactly the parts the petition names; the petition is the partition.  Runtime choice among parts only when the petition asks for the chooser and lists the menu.  The mechanic trims Linux's chooser to what exists.  Part 16 (plan 5.8).  Chris, 2026-10-15.
+- The two unfinished sensors (parts 1 and 8) come out of their petitions until sensors are built.
+
+## Decided by voice, 2026-10-15 afternoon
+
+Two rule books, two readers.  CLAUDE.md is the rule book for the two architects, Chris and Claude: how AiOs gets designed.  The constitution is the rule book for AiOs: what enters the system.  "The constitution is CLAUDE.md, but for AiOs."  Same shape, different reader, never merged.
+
+- Ours, in CLAUDE.md: the tenets, the definition of done, ways of working.  Enforced by Chris telling Claude to redo it.
+- The system's, in the constitution: the twelve petition rules, the three unnumbered refusals, the verb list, keys and roles.  Enforced by the referee or the committee.
+- The referee reads only the constitution.  Never CLAUDE.md, design.md or the definition of done.
+- A practice of ours may be copied into the constitution, but as a separate rule with its own number, tracked separately.
+- Test for anything unsure: who refuses if it's broken?  Chris: CLAUDE.md.  Referee or committee: constitution.  Nobody: a note, not a rule.
+- The constitution holds both kinds of rule.  The referee enforces the deterministic ones.  The committee owns the judgment ones and must turn each into a deterministic rule the referee can hold; when it can't, it uses "ask" and stops.
+- Signatures, not marks.  Every decision-maker has its own key: each human, each committee member.  Every committee decision logs every member's vote, signed with that member's key.  A rule enters the constitution only with the signatures that made it; provenance is the signatures, no separate flag.
+- Blur to watch: the agents are parts of AiOs, so their rules are the system's.  Until plan 8 splits them out, one chat plays architect and every agent.  Habit until then: when acting as an agent, say so and cite the constitution; as architect, cite CLAUDE.md.
+- Landlord and tenant retired (CLAUDE.md, design.md).  Say nucleus and program.  Story words beside defined ones send readers down rabbit holes.
+- Plan 9.14 added: HashLife, the first program that asks for more memory while running.  Suggested by a reader on part 5.  Not soon.
+
 ## Open, in order
 
-1. One rule book or three (tenets, petition rules, definition of done)?  Proposed: one, numbers 1 to 12 unchanged, the rest added after.
-2. Must every tenet name the rules that enforce it?  Proposed: yes.
+1. For each rule we have, which reader does it belong to, the architects or the system?  Replaces "one rule book or three."  Done 2026-10-15 (decision 0006): tenets out of constitution/, into design.md only; the three refusals are rules 17 to 19; CLAUDE.md defines the two rule books.  Still to sort: the definition of done is ours; plan 3.9's rules.toml is the system's.
+2. Withdrawn.  Tenets are ours; no tenet names a system rule.
 3. Does rule 12's instruction list move into the constitution?  Proposed: yes.
 4. The referee's queue and the jig's signing key: where the key lives, whether the queue is a file like the builder's, whether a post may quote only a referee-written verdict.  (The second lock is built; this is the rest.)
-5. Who exposes CAP.hv.kvmclock@1 (TOOL.qemu@1, the machines, or a new MACHINE entry), and does a machine whose spec says "no timer" expose CAP.dev.pit@1 because microvm forces the 8254?  Then the four petitions' lists, and rules 2 to 8 into the build gate.
+5. Rules 2 to 8 into the build gate, once part 16 makes the four petitions pass.
 6. Chris's questions 8 to 22 from the list, not yet discussed.
 7. The article: add how Claude would break the model today, and the five tightenings.

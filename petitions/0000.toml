@@ -76,5 +76,3 @@ code = "TST.loader.door-layout@1"
 [[test]]
 code = "TST.serial.in-order@1"
 
-[[sensor]]
-code = "SNS.hello.boot-to-output@1"

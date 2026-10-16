@@ -1,0 +1,11 @@
+id      = "0005"
+date    = 2026-10-15
+kind    = "catalogue"
+touches = ["index/machine/*.toml", "petitions/0004.toml", "petitions/0005.toml", "petitions/0006.toml", "petitions/0007.toml"]
+asked   = "Two sensors from parts 1 and 8 are a code and nothing else: take them out of their petitions until sensors are built (plan 4.4)?  And the hypervisor's clock (kvmclock) has been read since part 8 and no petition ever asked for it, and nothing in the catalogue said it provides it.  Who provides it?"
+options = ["the machine: what the emulator presents is hardware, favour or not", "the tool (QEMU), as a favour the hypervisor does the guest", "leave the four petitions refused"]
+default = "the machine: what the emulator presents is hardware, favour or not"
+chose   = "the machine: what the emulator presents is hardware, favour or not"
+why     = "findings/0017.md"
+by      = "KEY.chris@1"
+drafted = "Claude"

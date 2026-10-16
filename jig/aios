@@ -96,7 +96,7 @@ cmd_check() {
 		# more than one program: the newest loader any of them asks for must share the processor
 		loader=$(loader_for $primaries)
 		list_field "$(code_file "$loader")" exposes | grep -q '^CAP\.cpu\.share@' ||
-			die "flavor $1 needs $n programs on one machine; $loader runs one (CAP.cpu.share, plan 9.6)"
+			die "rule 19: flavor $1 needs $n programs on one machine; $loader runs one (CAP.cpu.share, plan 9.6)"
 	fi
 	printf 'flavor %s: buildable on %s, program %s\n' "$1" "$machine" "$primaries"
 }
@@ -127,14 +127,14 @@ cmd_build() {
 	f=$(flavor_file "$1")
 	progs=$(for id in $(list_field "$f" petitions); do petition_primary "petitions/$id.toml"; done)
 	# walk run-time depends from the programs down; the loader is the newest any of them depends on
-	for prog in $progs; do [ -n "$(list_field "$(code_file "$prog")" depends)" ] || die "$prog depends on nothing; a program needs a loader"; done
+	for prog in $progs; do [ -n "$(list_field "$(code_file "$prog")" depends)" ] || die "rule 17: $prog depends on nothing; a program needs a loader"; done
 	loader=$(loader_for $progs)
 	ldir=$(field "$(code_file "$loader")" source)
 	ddirs=""	# everything the loader depends on (lifted parts), built into it
 	for dep in $(list_field "$(code_file "$loader")" depends); do
 		ddirs="$ddirs $(field "$(code_file "$dep")" source)"
 	done
-	for d in "$ldir" $ddirs; do [ -d "$d" ] || die "source $d is not in the pool"; done
+	for d in "$ldir" $ddirs; do [ -d "$d" ] || die "rule 18: source $d is not in the pool"; done
 	out="out/$1"; mkdir -p "$out"
 	CC=${CC:-gcc}
 	CFLAGS="-m32 -std=c11 -ffreestanding -fno-pic -fno-pie -fno-stack-protector -fno-builtin -fno-asynchronous-unwind-tables -mno-sse -mno-mmx -mno-red-zone -mgeneral-regs-only -nostdlib -nostdinc -O2 -Wall -Wextra -Werror"
@@ -148,7 +148,7 @@ cmd_build() {
 	members=""; summary=""
 	for prog in $progs; do
 		pdir=$(field "$(code_file "$prog")" source)
-		[ -d "$pdir" ] || die "source $pdir is not in the pool"
+		[ -d "$pdir" ] || die "rule 18: source $pdir is not in the pool"
 		pl=$(list_field "$(code_file "$prog")" depends | head -1)
 		pldir=$(field "$(code_file "$pl")" source)
 		pname=$(basename "${prog#PART.}"); pname=${pname%@*}
@@ -196,6 +196,9 @@ cmd_ledger() {
 		[ -f "constitution/keys/${by#KEY.}.toml" ] || die "ledger: $d is decided by \"$by\", which is not a key in constitution/keys/"
 	done
 	n=0
+	set -f	# the globs in human-only.toml are patterns, not file names: with
+		# globbing on, "tests/*.toml" became the files that exist, and a
+		# deleted test matched nothing (findings 0017 #7)
 	for p in $changed; do
 		kind=""
 		while IFS= read -r line; do
@@ -216,6 +219,7 @@ cmd_ledger() {
 		[ -n "$named" ] || die "ledger: $p changed; $kind are human-only, and no decision in this change names it"
 		n=$((n + 1))
 	done
+	set +f
 	printf 'ledger: %s human-only change(s), each named by a decision, decided by a key in constitution/keys/\n' "$n"
 }
 

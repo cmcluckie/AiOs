@@ -1,0 +1,11 @@
+id      = "0006"
+date    = 2026-10-15
+kind    = "rules and words"
+touches = ["CLAUDE.md", "constitution/tenets.md", "schema/petition.md", "jig/aios", "design.md", "tests/ledger.human-only@1.toml", "tests/programs/ledger.sh", "tests/mutations.txt"]
+asked   = "Two rule books, two readers: CLAUDE.md for the architects, the constitution for AiOs; tenets are the architects' and leave constitution/ (design.md keeps them); the referee's three unnumbered refusals become rules 17 to 19?  And the ledger hole this change exposed (globs expanded to existing files, so a deleted test matched nothing): fixed, with a probe case and a third mutation?"
+options = ["as decided by voice", "one merged rule book", "leave the tenets in constitution/"]
+default = "as decided by voice"
+chose   = "as decided by voice"
+why     = "posts/drafts/part-15-referee-questions.md"
+by      = "KEY.chris@1"
+drafted = "Claude"

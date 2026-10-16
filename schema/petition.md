@@ -84,7 +84,7 @@ against the artifact.
 
 `status` therefore gains a value: `draft | pending | review | approved |
 rejected | expired | retired`.  The referee sets `pending`; a human sets
-`review`; reviews set `approved` or `rejected`; time sets `expired`.
+`review`; the seats' votes set `approved` or `rejected`; time sets `expired`.
 
 ## Relation rules the referee enforces
 
@@ -108,9 +108,10 @@ rule number and the offending catalogue number, nothing else.
    that names that catalogue number: that is the quartermaster's queue.
 8. Every SNS names a SPEC clause and a consumer seat.  No consumer, no sensor.
 9. `expires` is in the future at build time.
-10. `status = "approved"` requires a valid detached review from every seat key, none
-    rejecting, none countering, all for the petition's current commit.  See
-    schema/signing.md.
+10. `status = "approved"` requires a decision of kind "vote" in decisions/ from
+    every seat key, none rejecting, none countering, all for the petition's
+    current commit, each in a commit signed by that seat.  One log for every
+    choice, human or seat.  See schema/signing.md.
 11. The built image contains no component not listed, exposes no CAP not granted,
     and the VM definition has no device no CAP requires.  Checked against the
     artifact, not the petition.
@@ -137,6 +138,13 @@ rule number and the offending catalogue number, nothing else.
     built instead).  Every other kind is a human's.  An agent's key is made on
     the jig and never leaves it; one key per agent; constitution/keys marks it
     `role = "agent"`.
+17. A program depends on a loader.  A program that depends on nothing cannot
+    run; the loader is the nucleus it asks.
+18. Every component in a build has its source in pool/ or lifted/.  A
+    catalogue entry whose source directory is missing is refused.
+19. Two or more programs on one machine need a loader that exposes
+    CAP.cpu.share.  A loader that runs one program cannot run two.
+    (17 to 19 were the referee's three unnumbered refusals until 2026-10-15.)
 
 ## What is deliberately not here
 

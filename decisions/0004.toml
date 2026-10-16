@@ -1,7 +1,7 @@
 id      = "0004"
 date    = 2026-10-14
 kind    = "rules and words"
-touches = ["constitution/verbs.toml", "constitution/sources.toml", "schema/petition.md", "CLAUDE.md", "jig/aios"]
+touches = ["constitution/verbs.toml", "constitution/sources.toml", "schema/petition.md", "schema/signing.md", "CLAUDE.md", "jig/aios"]
 asked   = "Rule 13: a committee's or mechanic's output is a numbered list of verb-noun lines, verbs from constitution/verbs.toml (lift, add, remove, pin, retire, rerun, record, ask), nouns from the catalogue, anything unknown refused; built now as jig/aios lines?  And rules 14 to 16 (2026-10-15): a verb acts only on what exists, trust by source in constitution/sources.toml with human as the default, findings as nouns (FND), agent keys that decide only deviations, remove and retire as new versions?"
 options = ["build it now, eight verbs", "decide it, build it with the committee", "verbs in the catalogue instead of the constitution"]
 default = "build it now, eight verbs"

@@ -37,6 +37,21 @@ code   = "CAP.dev.pic@1"
 reason = "SPEC.pic.1@1"
 scope  = ""
 
+[[capability]]
+code   = "CAP.hv.kvmclock@1"
+reason = "SPEC.timer.3@1"
+scope  = ""
+
+[[component]]
+code     = "PART.timer.kvmclock@1"
+role     = "dependency"
+admitted = false
+
+[[component]]
+code     = "PART.timer.tsc-pit@2"
+role     = "dependency"
+admitted = false
+
 [[component]]
 code     = "PART.sieve@1"
 role     = "primary"
