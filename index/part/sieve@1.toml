@@ -1,4 +1,5 @@
 code          = "PART.sieve@1"
+sentence      = "The BYTE magazine sieve of 1981, run 800 times: a program that never yields, to prove the timer can take the processor away from it."
 status        = "draft"
 admitted      = ""
 retired_by    = ""

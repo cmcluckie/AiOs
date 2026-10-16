@@ -1,4 +1,5 @@
 code          = "PART.loader@6"
+sentence      = "The kernel, plus sharing: two programs on one processor, each in its own memory, switched by the timer."
 status        = "draft"
 admitted      = ""
 retired_by    = ""

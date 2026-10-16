@@ -1,4 +1,5 @@
 code          = "MACHINE.serial-irq@1"
+sentence      = "A virtual PC with one serial port, the 8254 timer and the two 8259 interrupt controllers, so two programs can share the processor."
 status        = "draft"
 admitted      = ""
 retired_by    = ""

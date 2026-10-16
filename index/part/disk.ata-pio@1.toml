@@ -1,4 +1,5 @@
 code          = "PART.disk.ata-pio@1"
+sentence      = "The IDE disk driver, lifted from Linux: reads and writes 512-byte sectors by number, polling, no interrupts."
 status        = "draft"
 admitted      = ""
 retired_by    = ""

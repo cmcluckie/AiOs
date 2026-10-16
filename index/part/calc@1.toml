@@ -1,4 +1,5 @@
 code          = "PART.calc@1"
+sentence      = "A reverse-Polish calculator: reads a line, computes, prints the answer; the first program that reads input."
 status        = "draft"
 admitted      = ""
 retired_by    = ""

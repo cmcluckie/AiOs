@@ -1,4 +1,5 @@
 code          = "PART.timer.pit-tick@1"
+sentence      = "Makes the 8254 timer chip raise an interrupt 100 times a second: the tick the kernel shares the processor on."
 status        = "draft"
 admitted      = ""
 retired_by    = ""

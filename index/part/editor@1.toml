@@ -1,4 +1,5 @@
 code          = "PART.editor@1"
+sentence      = "Notepad: one file, notes.txt, no modes, every command on the bottom line; Ctrl+S saves, Ctrl+Z undoes, Ctrl+Q quits."
 status        = "draft"
 admitted      = ""
 retired_by    = ""
@@ -8,7 +9,7 @@ licence       = "GPL-2.0-only"
 depends       = ["PART.loader@7"]
 build_depends = ["TOOL.c@1"]
 exposes       = []
-requires      = ["CAP.tty.write@1", "CAP.tty.read@1", "CAP.fs.read@1", "CAP.fs.write@1", "CAP.proc.exit@1"]
+requires      = ["CAP.tty.write@1", "CAP.tty.read@1", "CAP.fs.read@1", "CAP.fs.write@2", "CAP.proc.exit@1"]
 scaffold      = false
 as_built      = "index/part/editor@1.as-built.md"
 reproducible  = ""

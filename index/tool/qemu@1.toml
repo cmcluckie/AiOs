@@ -1,4 +1,5 @@
 code          = "TOOL.qemu@1"
+sentence      = "The virtual machine on the jig (QEMU with KVM); scaffolding, with a plan to leave."
 status        = "draft"
 admitted      = ""
 retired_by    = ""

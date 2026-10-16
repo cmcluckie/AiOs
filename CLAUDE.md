@@ -63,12 +63,12 @@ why.  The full design is in design.md; read it before doing anything.
     specs/          SPEC.* clauses: as-intended behaviour, one testable sentence each
     tests/          TST.* entries: each bound to the spec clause it can turn red
     sensors/        SNS.* entries: question, threshold, consumer
-    pool/           admitted source we wrote, one directory per code at a version; GPL-2.0-only
+    pool/           admitted source we wrote, one directory per code at a version; GPL-2.0-only; AGT.referee@1 is the first agent here
     lifted/         admitted source from upstream, same layout, each with origin.toml; GPL-2.0-only, Linux's
     flavors/        one TOML file per flavor: the petitions one machine runs
     findings/       what the schema or plan could not express, and what was decided
     plan/           the project plan, brief and full
-    jig/            the gen-zero build host, declared before it existed; aios, the referee and builder placeholder
+    jig/            the gen-zero build host, declared before it existed; aios, the builder placeholder; test, mutate, upstream
     pi/             the bare repository that refuses unsigned pushes
     posts/          the LinkedIn series: per day, one HTML file to paste from and its image
 
@@ -112,6 +112,9 @@ exactly; when a new one is needed, add it here in the same commit.
   a "code" until 2026-10-23 (findings 0014); the TOML key is still `code`.  AGT, for agents, comes when the first one is admitted.
   Until 2026-10-13 parts, machines and tools shared one table, CMP; Chris
   split it because language matters (findings 0014).  Older findings say CMP.
+- **Sentence.**  One plain line on every catalogue entry saying what the
+  thing is, for people; rule 21 refuses an entry without one.  A
+  capability's is `touches`.  Decided by Chris 2026-10-16.
 - **Catalogue.**  Everything that can be named, filed by catalogue number:
   index/cap/, index/part/, index/machine/ and index/tool/.  The folder is
   index/ (formerly the index); it kept the name so published links keep
@@ -201,14 +204,20 @@ exactly; when a new one is needed, add it here in the same commit.
   does not pass.  It never takes a results file on trust, and it never decides
   how a test works, only whether it went green.  Checks against the rule book
   Chris wrote.  No model, no judgment.  Nothing is cached until it says yes.
-  Fails loud, naming a rule and a catalogue number.  Today: `jig/aios check`
-  (rules 1, 9 and 12, the build gate) and `jig/aios rules` (rules 2 to 8 on
-  every petition, written to tests/referee-results.txt, findings 0017) and
-  `jig/aios lines` (rule 13, the verb-noun shape); running the tester is
-  planned.  The referee is permanent, the one agent never stripped: it
+  Fails loud, naming a rule and a catalogue number.  Built: AGT.referee@1,
+  pool/AGT.referee@1/referee.c, in C, the first agent in the pool (moved out
+  of jig/aios on 2026-10-15, a built thing lives in the pool, not the jig;
+  rewritten from shell to C the same night, because the referee is permanent
+  code): `check` (rules 1, 9, 19, the build gate), `hardware` (rule 12,
+  against constitution/instructions.toml), `rules` (2 to 8 on every petition,
+  written to tests/referee-results.txt, findings 0017), `lines` (rule 13).
+  `pool/AGT.referee@1/referee` builds it and hands over.  The decision ledger
+  is `jig/ledger`, a script, because it reads git history; inside AiOs that
+  job is admission.  The builder calls the referee before and after every
+  build.  Running the tester is planned.  The referee is permanent, the one agent never stripped: it
   decides what is stripped.  It runs where nobody types: today the jig, which
   runs the ledger on every commit since the last run before any test
-  (`jig/aios ledger --commit`), so a check skipped on a PC is refused there;
+  (`jig/ledger --commit`), so a check skipped on a PC is refused there;
   when the jig goes, the referee runs inside AiOs, at admission.  The rule
   names the condition, never the machine.  Decided by Chris, 2026-10-15.
 - **Builder.**  Turns a checked flavor into an image, deterministically.
@@ -224,7 +233,7 @@ exactly; when a new one is needed, add it here in the same commit.
   it.  When the committee admits what was missing, the flavor goes back in
   the queue and the whole order runs again from the referee, recompiling
   only what changed (plan 5.6, 5.7).  Nothing in AiOs runs without a defined
-  trigger.  Today: `jig/aios build`, started by hand, which runs the referee
+  trigger.  Today: `jig/aios build`, started by hand, which calls the referee
   first; the after half is plan 3.4 and 3.7.
 - **Decision ledger.**  Every choice an agent makes among options, written
   down: the options, the default, what was chosen, the reason and who chose.
@@ -234,7 +243,7 @@ exactly; when a new one is needed, add it here in the same commit.
   rules and the words in them) is human-only.  Built small (part 15): the
   list is constitution/human-only.toml, by path; a decision is one TOML file in
   decisions/ (what was asked, the options, what was chosen, who decided, which
-  paths it covers, and who drafted it); `jig/aios ledger` refuses any change to
+  paths it covers, and who drafted it); `jig/ledger` refuses any change to
   a human-only path that no decision in the same change names, decided by a
   key in constitution/keys/.  It runs before every commit, from the
   pre-commit hook in .githooks/ (once per clone: `git config core.hooksPath
@@ -248,7 +257,7 @@ exactly; when a new one is needed, add it here in the same commit.
   constitution/verbs.toml, changed only by a signed human commit.  The nouns
   are the catalogue numbers, and a noun enters only when a signed petition
   creates the thing it names.  A committee seat or the mechanic speaks to the
-  referee only in a numbered list of verb-noun lines (rule 13, `jig/aios
+  referee only in a numbered list of verb-noun lines (rule 13, `referee
   lines`); a verb or noun the referee does not know is a failure and a
   finding, never a green light.  The verbs and the catalogue are kept apart
   so the door that admits a part never admits a power.  Decided by Chris on
@@ -335,13 +344,14 @@ names the component and the rule that failed.
    from `(Get-VMNetworkAdapter -VMName jig).IPAddresses`; it changes when the
    host restarts, and the jig does not start on its own):
    `ssh chris@ADDRESS "cd aios && git checkout -- tests/results.txt
-   tests/mutations-results.txt && git pull -q && sh jig/test && sh jig/mutate"`,
-   then `scp` both files back.  The checkout throws away the last run's copies,
+   tests/mutations-results.txt tests/referee-results.txt && git pull -q && sh
+   jig/test && sh jig/mutate; sh pool/AGT.referee@1/referee rules > /dev/null"`, then `scp` the
+   three files back.  The checkout throws away the last run's copies,
    which only ever come from a run.
 6. If any line came from upstream, it lives in lifted/ with an origin record
    that `jig/upstream verify` passes.
 7. Every earlier program on the ladder still runs under it, unchanged.
-8. `sh jig/aios ledger` passes: every human-only change in the work is named
+8. `sh jig/ledger` passes: every human-only change in the work is named
    by a decision in decisions/, drafted for Chris to decide.
 9. The post's HTML file and its image exist and `jig/postcheck` passes,
    including "As built" and "Addendum: the tests".

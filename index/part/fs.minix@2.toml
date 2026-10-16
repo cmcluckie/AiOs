@@ -1,4 +1,5 @@
 code          = "PART.fs.minix@2"
+sentence      = "The Minix filesystem, now able to save over a file that is already there: frees its old blocks first."
 status        = "draft"
 admitted      = ""
 retired_by    = ""

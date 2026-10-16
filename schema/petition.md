@@ -15,10 +15,11 @@ Format is TOML.
 
     <TABLE>.<path>@<version>
 
-- TABLE is one of PUR, CAP, PART, MACHINE, TOOL, SPEC, TST, SNS, FND.  PART,
+- TABLE is one of PUR, CAP, PART, MACHINE, TOOL, AGT, SPEC, TST, SNS, FND.  PART,
   MACHINE and TOOL together are the component tables (until 2026-10-13, one
   table, @@component@@; findings 0014).  FND is a finding, findings/NNNN.md,
-  numbered so a verb-noun line can name one (2026-10-15).
+  numbered so a verb-noun line can name one (2026-10-15).  AGT is an agent,
+  index/agent/, a component like a part: the referee is AGT.referee@1.
 - path is lowercase dotted segments: letters, digits, hyphen.  `tty.write`,
   `kernel.serial.8250`, `editor`.
 - version is an integer, required on PART, MACHINE, TOOL and SPEC, optional elsewhere (absent
@@ -124,7 +125,7 @@ rule number and the offending catalogue number, nothing else.
     constitution/verbs.toml; the noun is a catalogue number that resolves.
     `record` and `ask` may name a verb that does not exist yet, as VERB.name,
     and that verb is never one that already exists.  Prose, an unknown verb or
-    an unknown noun is refused, naming the line.  Checked by `jig/aios lines`.
+    an unknown noun is refused, naming the line.  Checked by `pool/AGT.referee@1/referee lines`.
 14. A verb acts only on a noun that already exists.  A thing that does not
     exist yet is asked for (`ask`), and a signed petition creates it.  How much
     a petition to lift from a source needs is the source's level in
@@ -147,8 +148,12 @@ rule number and the offending catalogue number, nothing else.
     (17 to 19 were the referee's three unnumbered refusals until 2026-10-15.)
 20. A gap in history closes with a decision that names the commit it amends
     (`amends = "<hash>"`).  The commit cannot change; the close sits beside it
-    in the log, and `jig/aios ledger --commit` counts it.  The gap stays on the
+    in the log, and `jig/ledger --commit` counts it.  The gap stays on the
     record.
+21. Every catalogue entry carries one plain sentence saying what it is
+    (`sentence`; a capability's is `touches`).  An entry without one is
+    refused: a learning system's catalogue is read by people before it is read
+    by the referee.  Decided 2026-10-16.
 
 ## What is deliberately not here
 

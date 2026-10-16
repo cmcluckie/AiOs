@@ -1,4 +1,5 @@
 code          = "TOOL.c@1"
+sentence      = "The C compiler on the jig (gcc); scaffolding, with a plan to leave."
 status        = "draft"
 admitted      = ""
 retired_by    = ""

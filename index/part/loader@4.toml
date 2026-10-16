@@ -1,4 +1,5 @@
 code          = "PART.loader@4"
+sentence      = "The kernel, plus time: a program can ask how many milliseconds have passed."
 status        = "draft"
 admitted      = ""
 retired_by    = ""

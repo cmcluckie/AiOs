@@ -1,4 +1,5 @@
 code          = "PART.loader@7"
+sentence      = "The kernel as of part 14: everything @6 does, built with the filesystem that can save over a file."
 status        = "draft"
 admitted      = ""
 retired_by    = ""
@@ -7,7 +8,7 @@ source        = "pool/PART.loader@7/"
 licence       = "GPL-2.0-only"
 depends       = ["PART.serial.8250@2", "PART.timer.kvmclock@1", "PART.timer.tsc-pit@2", "PART.fs.minix@2", "PART.disk.ata-pio@1", "PART.irq.pic@1", "PART.timer.pit-tick@1", "PART.archive.cpio@1"]
 build_depends = ["TOOL.c@1"]
-exposes       = ["CAP.proc.exit@1", "CAP.mem.alloc@1", "CAP.time.read@1", "CAP.fs.read@1", "CAP.fs.write@1", "CAP.cpu.share@1"]
+exposes       = ["CAP.proc.exit@1", "CAP.mem.alloc@1", "CAP.time.read@1", "CAP.fs.read@1", "CAP.fs.write@2", "CAP.cpu.share@1"]
 requires      = []
 scaffold      = false
 as_built      = "index/part/loader@7.as-built.md"

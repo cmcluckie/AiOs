@@ -1,7 +1,7 @@
 code       = "CAP.fs.write@1"
 status     = "draft"
 admitted   = ""
-retired_by = ""
+retired_by = "CAP.fs.write@2"
 touches    = "new files in the root directory of the machine's one disk, by name; never an existing file"
 mechanism  = "the loader's save system call, through PART.fs.minix and PART.disk.ata-pio"
 scope      = "a file name, up to 14 characters"

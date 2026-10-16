@@ -5,7 +5,7 @@
 # only by a signed human commit to this file.  constitution/ is human-only.
 # A verb acts only on a noun that already exists; a thing that does not exist
 # yet is asked for, and a signed petition creates it (decided 2026-10-15).
-# Decided 2026-10-14 (part 15); the referee's check is `jig/aios lines`.
+# Decided 2026-10-14 (part 15); the referee's check is `pool/AGT.referee@1/referee lines`.
 
 [verbs]
 lift   = "take the lifted part named into lifted/ from its origin record; the part must already exist in the catalogue, by petition"

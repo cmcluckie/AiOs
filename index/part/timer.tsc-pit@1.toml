@@ -1,4 +1,5 @@
 code          = "PART.timer.tsc-pit@1"
+sentence      = "Measures how fast the processor's counter ticks against the 8254 timer chip at boot, the way Linux does."
 status        = "draft"
 admitted      = ""
 retired_by    = ""

@@ -1,4 +1,5 @@
 code          = "PART.hello@1"
+sentence      = "Hello, world: writes fourteen bytes to the serial port and exits."
 status        = "draft"
 admitted      = ""
 retired_by    = ""

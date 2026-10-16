@@ -23,7 +23,7 @@ reason = "SPEC.editor.2@1"
 scope  = "notes.txt"
 
 [[capability]]
-code   = "CAP.fs.write@1"
+code   = "CAP.fs.write@2"
 reason = "SPEC.editor.2@1"
 scope  = "notes.txt"
 

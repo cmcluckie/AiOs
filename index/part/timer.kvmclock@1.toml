@@ -1,4 +1,5 @@
 code          = "PART.timer.kvmclock@1"
+sentence      = "Asks the hypervisor how fast the processor's counter ticks, the way Linux does under KVM, instead of measuring it."
 status        = "draft"
 admitted      = ""
 retired_by    = ""

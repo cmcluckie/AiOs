@@ -1,4 +1,5 @@
 code          = "PART.sort@1"
+sentence      = "Insertion sort of twenty random numbers, saved to the disk and loaded back on the second boot: the first program that keeps something."
 status        = "draft"
 admitted      = ""
 retired_by    = ""

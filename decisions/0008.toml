@@ -1,0 +1,11 @@
+id      = "0008"
+date    = 2026-10-15
+kind    = "rules and words"
+touches = ["pool/AGT.referee@1/*", "jig/aios", "jig/ledger", "jig/test", ".githooks/pre-commit", "constitution/instructions.toml", "constitution/human-only.toml", "constitution/verbs.toml", "constitution/purposes/0008@1.toml", "schema/petition.md", "CLAUDE.md", "index/tool/sh@1.toml", "tests/mutations.txt", "tests/programs/ledger.sh", "tests/programs/rules.sh", "tests/programs/lines.sh", "tests/referee.2-8@1.toml", "tests/referee.verb-noun@1.toml"]
+asked   = "The referee is built, so it leaves the jig: pool/AGT.referee@1/referee.c, in C (the shell version was the spec by example; the ledger stays a jig script because it needs git), with a catalogue entry (AGT, a new table), a purpose and petition 0008; the builder calls it before and after every build; rule 12's forbidden instructions move into constitution/instructions.toml; the jig's shell is TOOL.sh@1?"
+options = ["the referee into the pool, as AGT.referee@1", "its own file under jig/", "leave it inside jig/aios"]
+default = "the referee into the pool, as AGT.referee@1"
+chose   = "the referee into the pool, as AGT.referee@1"
+why     = "findings/0017.md"
+by      = "KEY.chris@1"
+drafted = "Claude"

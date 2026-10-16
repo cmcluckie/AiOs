@@ -1,4 +1,5 @@
 code          = "PART.loader@2"
+sentence      = "The kernel, plus alloc: a program can ask for memory."
 status        = "draft"
 admitted      = ""
 retired_by    = ""

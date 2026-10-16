@@ -1,4 +1,5 @@
 code          = "PART.irq.pic@1"
+sentence      = "Sets up the two 8259 interrupt controllers the way Linux does, with every line masked but the timer's."
 status        = "draft"
 admitted      = ""
 retired_by    = ""

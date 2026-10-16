@@ -1,0 +1,22 @@
+# The instructions a program may never use: the ones that reach the hardware
+# directly.  The kernel's parts may use them; a program asks the kernel
+# instead (rule 12).  The referee searches each program's own assembly for
+# these after every build.  One instruction per line, with why.  Changing the
+# list is a signed human commit: constitution/ is human-only.  Moved here from
+# the referee's code on 2026-10-15.
+
+[forbidden]
+in     = "reads a byte, word or long from a hardware port"
+out    = "writes one to a hardware port"
+ins    = "reads a string from a port"
+outs   = "writes a string to a port"
+cli    = "turns interrupts off"
+sti    = "turns interrupts on"
+hlt    = "halts the processor"
+lgdt   = "loads the table that says what memory is"
+lidt   = "loads the table that says who handles interrupts"
+ltr    = "loads the task register"
+wrmsr  = "writes a processor control register"
+rdmsr  = "reads one"
+invlpg = "flushes the memory map"
+cr     = "a move to or from a control register (cr0, cr3 and the rest)"

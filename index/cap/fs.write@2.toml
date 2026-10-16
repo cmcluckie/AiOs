@@ -1,0 +1,8 @@
+code       = "CAP.fs.write@2"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+touches    = "files in the root directory of the machine's one disk, by name: a new one, or over one that is already there"
+mechanism  = "the kernel's save system call, through PART.fs.minix@2 and PART.disk.ata-pio; @1 said never an existing file, which stopped being true in part 14"
+scope      = "a file name, up to 14 characters"
+scope_rule = "^[^/]{1,14}$"

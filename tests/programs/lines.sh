@@ -1,12 +1,12 @@
 #!/bin/sh
-# Probe for TST.referee.verb-noun@1: seven lists through `jig/aios lines`.
+# Probe for TST.referee.verb-noun@1: seven lists through `pool/AGT.referee@1/referee lines`.
 # One is a legal list and must pass.  Six are each wrong in one way and must
 # each be refused under rule 13.
 set -u
 cd "$(dirname "$0")/../.."
 t=$(mktemp -d); trap 'rm -rf "$t"' EXIT
-ok() { sh jig/aios lines "$1" > /dev/null 2>&1 || { echo "a legal list was refused: $(sh jig/aios lines "$1" 2>&1)"; exit 1; }; }
-no() { out=$(sh jig/aios lines "$1" 2>&1) && { echo "accepted, and it should not have been: $2"; exit 1; }; case "$out" in *"rule 13"*) ;; *) echo "refused, but not under rule 13: $out"; exit 1 ;; esac; }
+ok() { sh pool/AGT.referee@1/referee lines "$1" > /dev/null 2>&1 || { echo "a legal list was refused: $(sh pool/AGT.referee@1/referee lines "$1" 2>&1)"; exit 1; }; }
+no() { out=$(sh pool/AGT.referee@1/referee lines "$1" 2>&1) && { echo "accepted, and it should not have been: $2"; exit 1; }; case "$out" in *"rule 13"*) ;; *) echo "refused, but not under rule 13: $out"; exit 1 ;; esac; }
 printf '1. lift PART.fs.minix@2\n2. rerun TST.editor.undo@1\n3. ask VERB.measure\n' > "$t/a"; ok "$t/a"
 printf 'We should probably lift the Minix filesystem.\n' > "$t/b"; no "$t/b" "prose"
 printf '1. install PART.fs.minix@2\n' > "$t/c"; no "$t/c" "a verb not in the constitution"

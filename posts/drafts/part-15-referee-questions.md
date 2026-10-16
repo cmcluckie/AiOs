@@ -82,12 +82,31 @@ Two rule books, two readers.  CLAUDE.md is the rule book for the two architects,
 
 - The fixed ledger's first run on the jig refused ee2f53c, yesterday's commit: the keys README changed with no decision naming it.  Rule 20: a later decision may amend an earlier commit; decision 0007 does.  The gap and the close both in the log.
 
+## Decided 2026-10-15, evening: the last twelve
+
+1. Rule 12's forbidden instructions move into the constitution, one per line with a plain reason; the referee reads the list from there.  (A forbidden instruction: one of the dozen machine instructions that reach the hardware directly; the kernel's parts may use them, a program never may, the way Linux's kernel may and a Linux program cannot.)
+2. The referee and the builder stay in one script until they are real components.
+3. The referee runs on a schedule for expiry: nightly on the jig, by the watchman after it.  An expired petition's flavor is refused to build, never torn down.
+4. The lifecycle jobs (swap, strip, keep the seed) stay in design.md until the lifecycle is built; the rulebook says the referee's full job list is there.
+5. After the seal the watchman triggers a molt, the molt wakes the referee, the referee swaps back.  The watchman is an alarm, never a hand.
+6. Use it or lose it: a sensor per granted capability counts uses; the period is a setting in the purpose, default one molt; revoked at the next molt, never live.
+7. Nothing bounds an agent today: a known limit, written down, until plan 8.
+8. A new rule applies to everything already admitted, always.  What it refuses is a finding, fixed through the quartermaster.
+9. Strictness applies to the constitution's rules only.
+10. Part catalogue entries are not human-only, but a change to a part's exposes or requires needs a decision until 3.10 measures them.
+11. The referee writes a signed verdict file per run (what, which commit, yes or no, the jig's key); the cache and the queue read it; a post quotes it.
+12. donecheck is ours, not the referee's.
+
+- The referee left the jig: pool/AGT.referee@1/referee, AGT.referee@1 in the catalogue, PUR.0008 and petition 0008; constitution/instructions.toml holds rule 12's list (decision 0008).  Chris, 2026-10-15 evening.
+
+- The referee is permanent code, so it was rewritten in C the same night (plan 3.14, done): referee.c, 546 lines, same four probes, fifteen mutations rewritten.  Shell was the lazy choice.  jig/ledger stays shell (git).  Rust: day one said later, by petition, one part at a time; stands.
+
 ## Open, in order
 
 1. For each rule we have, which reader does it belong to, the architects or the system?  Replaces "one rule book or three."  Done 2026-10-15 (decision 0006): tenets out of constitution/, into design.md only; the three refusals are rules 17 to 19; CLAUDE.md defines the two rule books.  Still to sort: the definition of done is ours; plan 3.9's rules.toml is the system's.
 2. Withdrawn.  Tenets are ours; no tenet names a system rule.
-3. Does rule 12's instruction list move into the constitution?  Proposed: yes.
+3. Decided: yes (evening list, 1).
 4. The referee's queue and the jig's signing key: where the key lives, whether the queue is a file like the builder's, whether a post may quote only a referee-written verdict.  (The second lock is built; this is the rest.)
 5. Rules 2 to 8 into the build gate, once part 16 makes the four petitions pass.
-6. Chris's questions 8 to 22 from the list, not yet discussed.
-7. The article: add how Claude would break the model today, and the five tightenings.
+6. Chris's questions 8 to 22: all decided (evening list); to build, in the plan.
+7. The article: done.

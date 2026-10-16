@@ -1,4 +1,5 @@
 code          = "PART.loader@1"
+sentence      = "The kernel at its smallest: starts the machine, loads one program, gives it write and exit."
 status        = "draft"
 admitted      = ""
 retired_by    = ""

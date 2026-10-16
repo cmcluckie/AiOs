@@ -111,3 +111,12 @@ Chris included, and the posts say so.
 - The article ends with "Code on GitHub" and its labelled links (CLAUDE.md).
 - Every factual claim in a post is true of the repo at that commit.  The jokes
   can exaggerate; the numbers can't.
+
+## After the draft
+
+- Once an article is drafted, Claude asks Chris one question before anything
+  else: "Should an editor look at it?"  Yes means a separate pass, with no
+  context from the writing, that answers: where does it drag, what lands
+  twice, which beat is buried, do the headings promise anything, and what
+  would be cut.  Chris decides what to take.  Decided 2026-10-16, after part
+  15's first half read like minutes of a meeting.

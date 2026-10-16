@@ -1,0 +1,17 @@
+code          = "TOOL.sh@1"
+sentence      = "The POSIX shell on the jig; scaffolding, every script a placeholder for a part."
+status        = "draft"
+admitted      = ""
+retired_by    = ""
+kind          = "toolchain"
+source        = ""
+licence       = "GPL-3.0-or-later"
+depends       = []
+build_depends = []
+exposes       = []
+requires      = []
+scaffold      = true
+as_built      = ""
+reproducible  = ""
+# the jig's POSIX shell (dash on NixOS), design.md's tool table: each script
+# is a placeholder for a pool component; the referee is the first to move

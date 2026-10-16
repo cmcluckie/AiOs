@@ -1,4 +1,5 @@
 code          = "PART.life@1"
+sentence      = "Conway's Game of Life: asks the kernel for memory for two grids and runs 200 generations from an R-pentomino."
 status        = "draft"
 admitted      = ""
 retired_by    = ""

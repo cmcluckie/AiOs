@@ -1,4 +1,5 @@
 code          = "MACHINE.serial-disk@1"
+sentence      = "A virtual PC with one serial port and one IDE disk, and no network, timer, display or input device."
 status        = "draft"
 admitted      = ""
 retired_by    = ""

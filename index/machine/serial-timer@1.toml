@@ -1,4 +1,5 @@
 code          = "MACHINE.serial-timer@1"
+sentence      = "A virtual PC with one serial port and the 8254 timer chip, which can interrupt nothing."
 status        = "draft"
 admitted      = ""
 retired_by    = ""

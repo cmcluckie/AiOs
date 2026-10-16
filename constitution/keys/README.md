@@ -1,3 +1,5 @@
 Public signing keys, one file per key id, in SSH public-key format.  The root key belongs to the human who owns the constitution.  Committee seats get their own keys once they exist.  A commit or review signed by a key not in this directory is not part of the constitution.
 
 Agent keys (decided 2026-10-15): one key per agent, generated on the jig, and the private half never leaves it.  Only the script that runs that agent can sign with it, so a signature says which agent was running, never which chat or model was behind it.  An agent's key may decide one kind of decision, a deviation (rule 16); its entry here says `role = "agent"`.  No agent key exists yet, because no agent runs on its own yet.
+
+The jig's key (decided 2026-10-16): the referee's verdict file is signed by a key made on the jig that never leaves it, public half here as KEY.jig@1 with `role = "jig"`.  Made by Chris on the jig: `ssh-keygen -t ed25519 -N '' -f ~/.ssh/jig -C jig`, then the public half pasted into jig@1.toml.  Not made yet; the verdict file is plan 3.13.

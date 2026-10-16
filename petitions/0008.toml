@@ -1,0 +1,34 @@
+[petition]
+id         = "0008"
+purpose    = "PUR.0008@1"
+submitted  = 2026-10-15
+submitter  = "KEY.chris@1"
+expires    = 2027-04-15
+supersedes = ""
+status     = "pending"
+
+# The referee asks for no capability: it reads the repository and writes one
+# file in it.  The first agent to enter by petition; the only one never
+# stripped.
+
+[[component]]
+code     = "AGT.referee@1"
+role     = "primary"
+admitted = false
+
+[[component]]
+code     = "TOOL.sh@1"
+role     = "toolchain"
+admitted = false
+
+[[test]]
+code = "TST.ledger.human-only@1"
+
+[[test]]
+code = "TST.referee.no-hardware@1"
+
+[[test]]
+code = "TST.referee.2-8@1"
+
+[[test]]
+code = "TST.referee.verb-noun@1"

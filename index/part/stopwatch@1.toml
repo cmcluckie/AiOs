@@ -1,4 +1,5 @@
 code          = "PART.stopwatch@1"
+sentence      = "A stopwatch: prints the seconds as they pass, 00:00 to 00:09; the first program that needs time."
 status        = "draft"
 admitted      = ""
 retired_by    = ""

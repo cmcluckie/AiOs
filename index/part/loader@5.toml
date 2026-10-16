@@ -1,4 +1,5 @@
 code          = "PART.loader@5"
+sentence      = "The kernel, plus files: a program can load a file from the disk and save one."
 status        = "draft"
 admitted      = ""
 retired_by    = ""

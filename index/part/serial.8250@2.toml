@@ -1,4 +1,5 @@
 code          = "PART.serial.8250@2"
+sentence      = "The serial port driver, now receiving too: reads a byte when the chip says one is waiting."
 status        = "draft"
 admitted      = ""
 retired_by    = ""

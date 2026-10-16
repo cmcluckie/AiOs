@@ -1,4 +1,5 @@
 code          = "PART.archive.cpio@1"
+sentence      = "Reads a cpio archive in memory and finds a file in it by name: Linux's own code, lifted, so the kernel can load several programs from one image."
 status        = "draft"
 admitted      = ""
 retired_by    = ""

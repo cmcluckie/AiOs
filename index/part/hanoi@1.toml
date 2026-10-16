@@ -1,4 +1,5 @@
 code          = "PART.hanoi@1"
+sentence      = "Towers of Hanoi for four disks: prints the fifteen moves; the second program, proving a second one changes nothing."
 status        = "draft"
 admitted      = ""
 retired_by    = ""

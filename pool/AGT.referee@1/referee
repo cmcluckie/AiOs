@@ -1,0 +1,13 @@
+#!/bin/sh
+# AGT.referee@1: the referee.  The checks are referee.c, built here on first
+# use and whenever the source is newer than the binary; this file only builds
+# and hands over.  `ledger` is jig/ledger, which needs git.
+set -eu
+repo=$(cd "$(dirname "$0")/../.." && pwd); cd "$repo"
+case "${1:-}" in ledger) shift; exec sh jig/ledger "$@" ;; esac
+src=pool/AGT.referee@1/referee.c; bin=out/referee/referee
+if [ ! -x "$bin" ] || [ "$src" -nt "$bin" ]; then
+	mkdir -p out/referee
+	${CC:-gcc} -std=c11 -O2 -Wall -Wextra -Werror -Wno-format-truncation -D_POSIX_C_SOURCE=200809L -D_DEFAULT_SOURCE -o "$bin" "$src" || { echo "refused: the referee does not build" >&2; exit 1; }
+fi
+exec "$bin" "$@"

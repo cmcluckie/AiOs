@@ -1,0 +1,72 @@
+#!/bin/sh
+# ledger: the referee's decision-ledger check, on the jig.  Every change to a
+# human-only path (constitution/human-only.toml) is named by a decision in
+# decisions/ in the same change, decided by a key in constitution/keys/; a
+# later decision may amend an earlier commit (rule 20).  Stays a script here
+# because it reads git history, which the sealed system will not have: inside
+# AiOs, admission does this job.  The rest of the referee is
+# pool/AGT.referee@1/referee.c.
+#
+#   sh jig/ledger               everything changed since the last commit
+#   sh jig/ledger --cached      what is staged (the pre-commit hook)
+#   sh jig/ledger --commit REV  one commit as made (jig/test, every commit
+#                               since the last recorded run)
+set -eu
+repo=$(cd "$(dirname "$0")/.." && pwd); cd "$repo"
+die() { printf 'refused: %s\n' "$*" >&2; exit 1; }
+field() { sed -n "s/^$2 *= *\"\([^\"]*\)\".*/\1/p" "$1" | head -1; }
+list_field() { sed -n "s/^$2 *= *\[\(.*\)\].*/\1/p" "$1" | tr ',' '\n' | sed 's/[" ]//g' | grep . || true; }
+
+cmd_ledger() {
+	amends=""
+	if [ "${1:-}" = "--cached" ]; then
+		changed=$(git diff --cached --name-only --diff-filter=ACMRD HEAD)
+	elif [ "${1:-}" = "--commit" ]; then
+		# one commit, as it was made: what it changed, against its parent.  The
+		# second lock, run where nobody types (jig/test), so --no-verify on a
+		# PC only delays the refusal.
+		rev=${2:-HEAD}
+		git cat-file -e "$rev:constitution/human-only.toml" 2>/dev/null || { printf 'ledger: %s predates the ledger (no constitution/human-only.toml in it); nothing to hold it to\n' "$(git rev-parse --short "$rev")"; return 0; }
+		changed=$(git diff-tree --no-commit-id --name-only -r --diff-filter=ACMRD "$rev")
+		# a gap in history closes with a later decision that names the commit
+		# it amends: the commit cannot change, so the close sits beside it
+		full=$(git rev-parse "$rev")
+		amends=$(grep -l "^amends *= *\"" decisions/*.toml 2>/dev/null | while read -r d; do a=$(field "$d" amends); case "$full" in "$a"*) echo "$d" ;; esac; done)
+	else
+		changed=$( { git diff --name-only HEAD; git ls-files --others --exclude-standard; } | sort -u)
+	fi
+	decisions=$( { echo "$changed" | grep '^decisions/[0-9]*\.toml$'; echo "${amends:-}"; } | grep . || true)
+	for d in $decisions; do
+		[ -f "$d" ] || continue
+		by=$(field "$d" by)
+		[ -f "constitution/keys/${by#KEY.}.toml" ] || die "ledger: $d is decided by \"$by\", which is not a key in constitution/keys/"
+	done
+	n=0
+	set -f	# the globs in human-only.toml are patterns, not file names: with
+		# globbing on, "tests/*.toml" became the files that exist, and a
+		# deleted test matched nothing (findings 0017 #7)
+	for p in $changed; do
+		kind=""
+		while IFS= read -r line; do
+			k=$(echo "$line" | sed -n 's/^\([a-z][a-z ]*[a-z]\) *= *\[.*/\1/p')
+			[ -n "$k" ] || continue
+			for g in $(echo "$line" | sed 's/^[^=]*= *\[\(.*\)\].*/\1/' | tr ',' '\n' | sed 's/[" ]//g' | grep .); do
+				case "$p" in $g) kind=$k ;; esac
+			done
+		done < constitution/human-only.toml
+		[ -n "$kind" ] || continue
+		named=""
+		for d in $decisions; do
+			[ -f "$d" ] || continue
+			for g in $(list_field "$d" touches); do
+				case "$p" in $g) named=$d ;; esac
+			done
+		done
+		[ -n "$named" ] || die "ledger: $p changed; $kind are human-only, and no decision in this change names it"
+		n=$((n + 1))
+	done
+	set +f
+	printf 'ledger: %s human-only change(s), each named by a decision, decided by a key in constitution/keys/\n' "$n"
+}
+
+cmd_ledger "${1:-}" "${2:-}"

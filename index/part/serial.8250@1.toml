@@ -1,4 +1,5 @@
 code          = "PART.serial.8250@1"
+sentence      = "The serial port driver, lifted from Linux: sets up the 16550 and sends bytes, waiting for the chip before each one."
 status        = "draft"
 admitted      = ""
 retired_by    = ""

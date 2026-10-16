@@ -1,4 +1,5 @@
 code          = "PART.fs.minix@1"
+sentence      = "The original Minix filesystem, lifted from Linux: finds, reads and creates files in the root directory of one disk."
 status        = "draft"
 admitted      = ""
 retired_by    = ""

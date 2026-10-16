@@ -1,4 +1,5 @@
 code          = "PART.timer.tsc-pit@2"
+sentence      = "The same measurement, but it gives up on a machine where reading the 8254 is slow and takes the hypervisor's word instead."
 status        = "draft"
 admitted      = ""
 retired_by    = ""

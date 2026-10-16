@@ -1,0 +1,11 @@
+id      = "0009"
+date    = 2026-10-16
+kind    = "rules and words"
+touches = ["index/cap/fs.write@1.toml", "index/cap/fs.write@2.toml", "index/tool/*.toml", "schema/petition.md", "pool/AGT.referee@1/*", "specs/referee.2-8@1.toml", "tests/referee.2-8@1.toml", "tests/programs/rules.sh", "tests/mutations.txt", "constitution/keys/README.md", "CLAUDE.md", "posts/voice.md"]
+asked   = "Four small ones from the part 15 diagrams: every catalogue entry carries one plain sentence (rule 21, checked), the tools included; the file-writing capability's sentence said never an existing file, which stopped being true in part 14, so CAP.fs.write@2 corrects it and the editor and loader@7 point at it; the jig's key is made on the jig and never leaves it; rules 2 to 8 start refusing builds the day part 16 makes the four petitions pass?"
+options = ["all four as drafted", "sentences without a check", "fix the capability's sentence in place"]
+default = "all four as drafted"
+chose   = "all four as drafted"
+why     = "findings/0017.md"
+by      = "KEY.chris@1"
+drafted = "Claude"
