@@ -42,11 +42,6 @@ code   = "CAP.dev.disk@1"
 reason = "SPEC.disk.1@1"
 scope  = ""
 
-[[capability]]
-code   = "CAP.hv.kvmclock@1"
-reason = "SPEC.timer.3@1"
-scope  = ""
-
 [[component]]
 code     = "PART.editor@1"
 role     = "primary"
@@ -58,22 +53,12 @@ role     = "toolchain"
 admitted = false
 
 [[component]]
-code     = "PART.loader@7"
+code     = "PART.loader@8"
 role     = "boot"
 admitted = false
 
 [[component]]
 code     = "PART.serial.8250@2"
-role     = "dependency"
-admitted = false
-
-[[component]]
-code     = "PART.timer.kvmclock@1"
-role     = "dependency"
-admitted = false
-
-[[component]]
-code     = "PART.timer.tsc-pit@2"
 role     = "dependency"
 admitted = false
 
@@ -84,21 +69,6 @@ admitted = false
 
 [[component]]
 code     = "PART.disk.ata-pio@1"
-role     = "dependency"
-admitted = false
-
-[[component]]
-code     = "PART.irq.pic@1"
-role     = "dependency"
-admitted = false
-
-[[component]]
-code     = "PART.timer.pit-tick@1"
-role     = "dependency"
-admitted = false
-
-[[component]]
-code     = "PART.archive.cpio@1"
 role     = "dependency"
 admitted = false
 
@@ -131,4 +101,7 @@ code = "TST.editor.status-line@1"
 code = "TST.fs.overwrite-clean@1"
 
 [[test]]
-code = "TST.loader.ladder-7@1"
+code = "TST.loader.ladder-8-editor@1"
+
+[[test]]
+code = "TST.loader.partition@1"

@@ -1,0 +1,11 @@
+id      = "0011"
+date    = 2026-10-16
+kind    = "rules and words"
+touches = ["jig/aios", "schema/entries.md", "pool/AGT.referee@1/*", "specs/loader.13@1.toml", "specs/share.1@1.toml", "tests/*.toml", "tests/programs/*", "tests/mutations.txt"]
+asked   = "Plan 5.8, the petition is the partition: every kernel through loader@7 was the one before plus one more part, so each carried everything any earlier kernel needed, and the referee refused four petitions for it.  Build it the way it was always meant: one kernel source, PART.loader@8, every part behind a switch, the builder turning on only the parts the flavor's petitions name; sharing moves out into PART.share@1; the clocks and the filesystems expose the capabilities they provide; sort, the sieve and the editor move onto it and their petitions name only what each uses; the referee walks the petition's boot kernel and finds sharing wherever a part exposes it; loader@5 to @7 are built by nothing (their program formats stay, the programs were built for them); ladder-5 to -7 retire for one ladder test per flavor on @8, and TST.loader.partition@1 checks every kernel holds exactly its petitions' parts?"
+options = ["as written", "leave the three old petitions on their old kernels"]
+default = "as written"
+chose   = "as written"
+why     = "findings/0018.md"
+by      = "KEY.chris@1"
+drafted = "Claude"

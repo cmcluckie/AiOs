@@ -6,7 +6,7 @@
 #          second, give or take the boot
 #   pic    the share flavor: the setup Linux's init_8259A does, then only IRQ 0
 #          unmasked, and an EOI for every tick
-#   plain  hello alone under loader@6: exactly hello's 14 bytes, and the 8259 is
+#   plain  hello alone under the share flavor's kernel: exactly hello's 14 bytes, and the 8259 is
 #          never touched
 set -u
 cd "$(dirname "$0")/../.."
@@ -35,7 +35,7 @@ pic)
 	echo "Linux's setup, only IRQ 0 unmasked, $eois EOIs for $ticks ticks" ;;
 plain)
 	PATH="$t/bin:$PATH" timeout 10 sh $m out/share/loader.elf out/hello/hello.bin < /dev/null > "$t/out" 2> /dev/null
-	cmp -s "$t/out" tests/expected/hello.exact-bytes@1.out || { echo "hello under loader@6 changed: $(cmp "$t/out" tests/expected/hello.exact-bytes@1.out 2>&1)"; exit 1; }
+	cmp -s "$t/out" tests/expected/hello.exact-bytes@1.out || { echo "hello under the share flavor's kernel changed: $(cmp "$t/out" tests/expected/hello.exact-bytes@1.out 2>&1)"; exit 1; }
 	n=$(cat "$t/trace" 2> /dev/null | grep -c pic_)
 	[ "$n" -eq 0 ] || { echo "one plain program, and the 8259 was touched $n times"; exit 1; }
 	echo "hello unchanged, the 8259 untouched" ;;

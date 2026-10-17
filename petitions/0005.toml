@@ -32,21 +32,6 @@ code   = "CAP.dev.disk@1"
 reason = "SPEC.disk.1@1"
 scope  = ""
 
-[[capability]]
-code   = "CAP.hv.kvmclock@1"
-reason = "SPEC.timer.3@1"
-scope  = ""
-
-[[component]]
-code     = "PART.timer.kvmclock@1"
-role     = "dependency"
-admitted = false
-
-[[component]]
-code     = "PART.timer.tsc-pit@2"
-role     = "dependency"
-admitted = false
-
 [[component]]
 code     = "PART.sort@1"
 role     = "primary"
@@ -58,17 +43,12 @@ role     = "toolchain"
 admitted = false
 
 [[component]]
-code     = "PART.loader@5"
+code     = "PART.loader@8"
 role     = "boot"
 admitted = false
 
 [[component]]
 code     = "PART.serial.8250@2"
-role     = "dependency"
-admitted = false
-
-[[component]]
-code     = "PART.timer.tsc-pit@1"
 role     = "dependency"
 admitted = false
 
@@ -100,3 +80,6 @@ code = "TST.sort.second-boot@1"
 
 [[test]]
 code = "TST.fs.fsck-clean@1"
+
+[[test]]
+code = "TST.loader.ladder-8-sort@1"

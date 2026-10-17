@@ -1,0 +1,8 @@
+code       = "CAP.dev.vga@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+touches    = "the VGA card's 80 by 25 text cells, a character and a colour each, and nothing else of the card"
+mechanism  = "memory at 0xb8000-0xb8f9f; only PART.screen.vga may touch it, and never the card's registers (the card's own BIOS set the mode)"
+scope      = "none"
+scope_rule = "^$"

@@ -1,0 +1,4 @@
+# Conway's Game of Life on a screen, in colour (petition 0009, part 16).
+name      = "screen"
+machine   = "MACHINE.serial-vga@1"
+petitions = ["0009"]

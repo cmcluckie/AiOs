@@ -1,0 +1,10 @@
+code       = "TST.loader.ladder-8-share@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+binds      = "SPEC.loader.13@1"
+red_when   = "hello, hanoi, life or calc, each built for its own loader, booted unchanged under PART.loader@8 as built for the share flavor's petitions, differs by one byte from its own expected output"
+timeout_ms = 60000
+isolates   = "PART.loader@8"
+runner     = "jig/test ladder share"
+mutations  = 1

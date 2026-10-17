@@ -1,0 +1,7 @@
+code       = "SPEC.life.2@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+component  = "PART.life@2"
+clause     = "On start, the component writes, exactly as a reference implementation produces them: the escapes that clear the screen, the generation and population after 200 generations of the centred R-pentomino in a 256 by 96 universe with dead edges, then the middle 80 by 24 cells, a cell born in the last generation as a bright yellow '#', one that survived it as a green '#', an empty one as a blue '.'; then it waits for one key and exits."
+author     = "KEY.chris"

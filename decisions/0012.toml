@@ -1,0 +1,11 @@
+id      = "0012"
+date    = 2026-10-16
+kind    = "rules and words"
+touches = ["constitution/purposes/0009@1.toml", "index/cap/dev.vga@1.toml", "index/cap/screen.write@1.toml", "index/cap/*", "specs/life.2@1.toml", "specs/life.3@1.toml", "specs/vga.1@1.toml", "specs/machine.5@1.toml", "tests/*.toml", "tests/expected/*", "tests/fixtures/*", "tests/programs/*", "tests/mutations.txt", "pool/AGT.referee@1/*"]
+asked   = "Petition 0009, the screen (plan 9.15): Conway's Game of Life on a screen, in colour.  PUR.0009@1; the VGA card as a device capability nothing may touch but the screen part, and its registers never; the screen as a capability of its own, written through the same write system call, every byte to every console; PART.screen.vga@1 lifted from Linux's early_printk.c and vt.c, with the fixed colour made the program's; MACHINE.serial-vga@1 booting through SeaBIOS so the card's own BIOS sets text mode; PART.life@2; tests that read QEMU's picture of the screen, pixels not bytes, skipping the lines the cursor blinks on; and rule 12 failing closed when it cannot compile a program?"
+options = ["as written", "the screen without colour", "a machine that sets the card up itself, no BIOS"]
+default = "as written"
+chose   = "as written"
+why     = "findings/0019.md"
+by      = "KEY.chris@1"
+drafted = "Claude"

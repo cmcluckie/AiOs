@@ -1,0 +1,15 @@
+code          = "PART.screen.vga@1"
+sentence      = "Puts text on a PC's 80 by 25 screen, scrolling at the bottom, the way Linux's earliest console does, in the colour the program asked for."
+status        = "draft"
+admitted      = ""
+retired_by    = ""
+kind          = "driver"
+source        = "lifted/PART.screen.vga@1/"
+licence       = "GPL-2.0-only"
+depends       = []
+build_depends = ["TOOL.c@1"]
+exposes       = ["CAP.screen.write@1"]
+requires      = ["CAP.dev.vga@1"]
+scaffold      = false
+as_built      = "index/part/screen.vga@1.as-built.md"
+reproducible  = ""

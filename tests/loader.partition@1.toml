@@ -1,0 +1,10 @@
+code       = "TST.loader.partition@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+binds      = "SPEC.loader.13@1"
+red_when   = "for any flavor whose kernel is PART.loader@8, the built kernel holds a function from a part the flavor's petitions do not name (directly or through what they depend on), or lacks one from a part they do"
+timeout_ms = 60000
+isolates   = "PART.loader@8"
+runner     = "jig/test cmd sh tests/programs/partition.sh"
+mutations  = 2

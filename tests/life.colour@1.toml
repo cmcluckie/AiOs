@@ -1,0 +1,10 @@
+code       = "TST.life.colour@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+binds      = "SPEC.life.2@1"
+red_when   = "the bytes the component writes on the screen machine, a key typed once it is waiting, differ by one from the 3075 an independent reference implementation produces for the same rules, seed, universe, generations and colours"
+timeout_ms = 30000
+isolates   = "PART.life@2"
+runner     = "jig/test boot screen tests/fixtures/key.in"
+mutations  = 2

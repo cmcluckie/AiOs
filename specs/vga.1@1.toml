@@ -1,0 +1,7 @@
+code       = "SPEC.vga.1@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+component  = "PART.screen.vga@1"
+clause     = "Every byte a program writes reaches the screen at the cursor, in the colour the program last asked for with an ANSI escape, scrolling up one line when the bottom is full, exactly as on the serial port; a program that writes no escapes looks as it does on Linux's early console, light grey on black."
+author     = "KEY.chris"

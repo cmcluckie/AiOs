@@ -19,7 +19,7 @@ scope  = ""
 
 [[capability]]
 code   = "CAP.cpu.share@1"
-reason = "SPEC.loader.11@1"
+reason = "SPEC.share.1@1"
 scope  = ""
 
 [[capability]]
@@ -63,17 +63,12 @@ role     = "toolchain"
 admitted = false
 
 [[component]]
-code     = "PART.loader@6"
+code     = "PART.loader@8"
 role     = "boot"
 admitted = false
 
 [[component]]
 code     = "PART.serial.8250@2"
-role     = "dependency"
-admitted = false
-
-[[component]]
-code     = "PART.timer.tsc-pit@1"
 role     = "dependency"
 admitted = false
 
@@ -107,3 +102,11 @@ code = "TST.share.on-time@1"
 
 [[test]]
 code = "TST.share.separate@1"
+
+[[component]]
+code     = "PART.share@1"
+role     = "dependency"
+admitted = false
+
+[[test]]
+code = "TST.loader.ladder-8-share@1"

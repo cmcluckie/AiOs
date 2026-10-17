@@ -1,0 +1,99 @@
+[petition]
+id         = "0009"
+purpose    = "PUR.0009@1"
+submitted  = 2026-10-16
+submitter  = "KEY.chris@1"
+expires    = 2027-04-16
+supersedes = ""
+status     = "pending"
+
+[[capability]]
+code   = "CAP.tty.write@1"
+reason = "SPEC.life.2@1"
+scope  = "console0"
+
+[[capability]]
+code   = "CAP.screen.write@1"
+reason = "SPEC.life.3@1"
+scope  = ""
+
+[[capability]]
+code   = "CAP.tty.read@1"
+reason = "SPEC.life.2@1"
+scope  = "console0"
+
+[[capability]]
+code   = "CAP.proc.exit@1"
+reason = "SPEC.life.2@1"
+scope  = ""
+
+[[capability]]
+code   = "CAP.mem.alloc@1"
+reason = "SPEC.life.2@1"
+scope  = ""
+
+[[capability]]
+code   = "CAP.dev.serial@1"
+reason = "SPEC.machine.5@1"
+scope  = ""
+
+[[capability]]
+code   = "CAP.dev.vga@1"
+reason = "SPEC.vga.1@1"
+scope  = ""
+
+[[component]]
+code     = "PART.life@2"
+role     = "primary"
+admitted = false
+
+[[component]]
+code     = "TOOL.c@1"
+role     = "toolchain"
+admitted = false
+
+[[component]]
+code     = "PART.loader@8"
+role     = "boot"
+admitted = false
+
+[[component]]
+code     = "PART.serial.8250@2"
+role     = "dependency"
+admitted = false
+
+[[component]]
+code     = "PART.screen.vga@1"
+role     = "dependency"
+admitted = false
+
+[[component]]
+code     = "MACHINE.serial-vga@1"
+role     = "machine"
+admitted = false
+
+[[component]]
+code     = "TOOL.qemu@1"
+role     = "machine"
+admitted = false
+
+[[test]]
+code = "TST.life.colour@1"
+
+[[test]]
+code = "TST.life.screen@1"
+
+[[test]]
+code = "TST.vga.plain@1"
+
+[[test]]
+code = "TST.loader.ladder-8-screen@1"
+
+[[test]]
+code = "TST.loader.partition@1"
+
+[[test]]
+code = "TST.machine.vga-only@1"
+
+[[test]]
+code = "TST.machine.vga-no-sockets@1"

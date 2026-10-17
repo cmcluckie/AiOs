@@ -1,0 +1,7 @@
+code       = "SPEC.life.3@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+component  = "PART.life@2"
+clause     = "On a machine with a screen, the screen shows what SPEC.life.2@1 writes: 25 rows of 80 cells, each cell's character and colours where the writes put them, nothing left over from before."
+author     = "KEY.chris"

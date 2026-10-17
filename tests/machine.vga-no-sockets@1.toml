@@ -1,0 +1,10 @@
+code       = "TST.machine.vga-no-sockets@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+binds      = "SPEC.machine.5@1"
+red_when   = "strace of the screen machine from start to the end of its 5-second watch records any socket, connect, bind or listen call"
+timeout_ms = 10000
+isolates   = "MACHINE.serial-vga@1"
+runner     = "jig/test strace screen 5"
+mutations  = 0

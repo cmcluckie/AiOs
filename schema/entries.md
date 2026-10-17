@@ -51,6 +51,7 @@ were one table, @@component@@ (findings 0014).
     source        = "pool/PART.hello@1/"  # directory under pool/ (ours) or lifted/ (upstream), nothing outside
     licence       = "GPL-2.0-only"
     depends       = []                   # component catalogue numbers needed at run time; empty is a statement, not an omission
+    builds_with   = []                   # kernels only, from PART.loader@8: parts it can be built with, each behind a switch; a build turns on only those the flavor's petitions name (plan 5.8)
     build_depends = ["TOOL.c@1"]  # component catalogue numbers needed to build; never in the image
     exposes       = []                   # CAP catalogue numbers this component provides to others
     requires      = ["CAP.tty.write@1", "CAP.proc.exit@1"]   # CAP catalogue numbers it needs

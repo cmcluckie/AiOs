@@ -20,4 +20,8 @@ gcc $CF -c -o out/cheat/c.o pool/PART.hello@1/hello.c && gcc $CF -static -no-pie
 cd "$OLDPWD" && sh jig/aios build hello > /dev/null || { echo "the real hello does not build"; exit 1; }
 timeout 20 sh pool/MACHINE.serial-only@1/machine.sh out/hello/loader.elf "$t/out/cheat/hello.bin" < /dev/null > "$t/cap" 2> /dev/null
 cmp -s "$t/cap" tests/expected/hello.exact-bytes@1.out || { echo "the cheat's output differs from hello's, so the demonstration proves nothing: $(cmp "$t/cap" tests/expected/hello.exact-bytes@1.out 2>&1)"; exit 1; }
-echo "the cheat printed hello's 14 bytes exactly, so hello's test would pass it; the referee refused it under rule 12"
+# fail closed: a program the referee cannot compile is refused, not waved through
+printf 'this is not C\n' > "$t/broken.c"
+sh pool/AGT.referee@1/referee hardware PART.broken "$t/broken.c" > "$t/r" 2>&1 && { echo "the referee passed a program it could not compile"; exit 1; }
+grep -q 'rule 12: PART.broken could not be compiled' "$t/r" || { echo "an uncompilable program refused, but not by rule 12: $(cat "$t/r")"; exit 1; }
+echo "the cheat printed hello's 14 bytes exactly, so hello's test would pass it; the referee refused it under rule 12, and refused a program it could not read"

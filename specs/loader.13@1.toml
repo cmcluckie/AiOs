@@ -1,0 +1,7 @@
+code       = "SPEC.loader.13@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+component  = "PART.loader@8"
+clause     = "The kernel built for a flavor contains the serial console, alloc and exit, and exactly the parts the flavor's petitions name and those parts depend on; no other part's code is in it, and every earlier program runs under it unchanged."
+author     = "KEY.chris"

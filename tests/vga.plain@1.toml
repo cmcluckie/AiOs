@@ -1,0 +1,10 @@
+code       = "TST.vga.plain@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+binds      = "SPEC.vga.1@1"
+red_when   = "a probe that writes thirty plain lines, no escapes, then waits: the picture of the screen is not the last 25 of them, light grey on black, one per row, the first five scrolled away"
+timeout_ms = 90000
+isolates   = "PART.screen.vga@1"
+runner     = "jig/test cmd sh tests/programs/screen.sh tests/expected/vga.plain@1.cells tests/programs/scroll.c"
+mutations  = 1

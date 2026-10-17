@@ -1,0 +1,40 @@
+# Where this part came from, exactly enough to lift it again.  Read by jig/upstream.
+# Format: schema/entries.md, "Origin".
+
+[upstream]
+name       = "linux"
+repo       = "https://github.com/torvalds/linux.git"
+canonical  = "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git"
+commit     = "a5ebb76233b79db01e82e061173cb73c6d2b5c6b"
+committed  = 2026-10-10T16:57:30-07:00
+subject    = "Merge tag 'edac_urgent_for_v7.3_rc7' of git://git.kernel.org/pub/scm/linux/kernel/git/ras/ras"
+licence    = "GPL-2.0-only"
+
+[lift]
+by         = "KEY.chris@1"
+on         = 2026-10-16T18:00:00-07:00
+into       = "vga.c"
+
+[[lift.from]]
+file   = "arch/x86/kernel/early_printk.c"
+blob   = "cba75306e5b6289c26b734ad8bff614834643c86"
+lines  = [[25, 29], [31, 48], [57, 70]]
+what   = "VGABASE and the cursor, early_vga_write without the debugger's block"
+
+[[lift.from]]
+file   = "drivers/tty/vt/vt.c"
+blob   = "49a140b49eff0a7bc460b2a811e0d6fcaa103194"
+lines  = [[1399, 1400]]
+what   = "color_table: ANSI colour numbers to VGA's"
+
+[cut]
+removed = [
+  "__ISA_IO_base",
+  "readw and writew from asm/io.h, for plain volatile accesses",
+  "the CONFIG_KGDB_KDB backspace and carriage-return block",
+  "struct console early_vga_console",
+  "the console argument",
+]
+changed = [
+  "(0x7 << 8): the fixed light grey on black became vga_color",
+]

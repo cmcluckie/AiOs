@@ -1,7 +1,7 @@
 code       = "TST.loader.ladder-7@1"
 status     = "draft"
 admitted   = ""
-retired_by = ""
+retired_by = "TST.loader.ladder-8-editor@1"
 binds      = "SPEC.loader.12@1"
 red_when   = "hello, hanoi, life or calc, each built for its own loader, booted unchanged under PART.loader@7 on the editor machine, differs by one byte from its own expected output"
 timeout_ms = 60000

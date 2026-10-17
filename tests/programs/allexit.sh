@@ -1,6 +1,6 @@
 #!/bin/sh
 # Probe for TST.share.all-exit@1: hello and Hanoi, each built for loader@1,
-# packed into one archive and run together under loader@6 on the share
+# packed into one archive and run together under the share flavor's kernel on the share
 # machine.  Green when both say everything they always say, Hanoi's 15 moves
 # in order, nothing else, and the machine halts by itself once both have exited.
 set -u

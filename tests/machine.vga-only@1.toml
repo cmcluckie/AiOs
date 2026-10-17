@@ -1,0 +1,10 @@
+code       = "TST.machine.vga-only@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+binds      = "SPEC.machine.5@1"
+red_when   = "the device tree of the paused screen machine contains any device other than: isa-serial, isa-vga, isabus-bridge, ioapic, fw_cfg_io, kvmclock or kvmvapic, and the eight empty virtio-mmio transports microvm cannot omit, or not exactly one serial port and one VGA card"
+timeout_ms = 5000
+isolates   = "MACHINE.serial-vga@1"
+runner     = "jig/test qtree screen"
+mutations  = 1

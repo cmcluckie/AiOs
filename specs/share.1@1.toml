@@ -1,0 +1,7 @@
+code       = "SPEC.share.1@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+component  = "PART.share@1"
+clause     = "Given more than one program, it runs them all at once: none can keep the processor from the others for more than one tick (1/100 s), none can read or write another's memory, and one that faults is stopped alone while the rest carry on."
+author     = "KEY.chris"

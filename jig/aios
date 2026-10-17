@@ -56,10 +56,25 @@ cmd_list() {
 	echo "petitions:"; for p in petitions/*.toml; do printf '  %s  %s  %s\n' "$(field "$p" id)" "$(field "$p" status)" "$(field "$(code_file "$(field "$p" purpose)")" sentence)"; done
 }
 
-# the loader for a set of programs: the newest one any of them depends on
+# the kernel for a flavor: the newest boot component its petitions name (rule 19's
+# kernel too).  A petition with no boot component falls back to the newest kernel
+# its programs depend on, the way it was chosen before plan 5.8.
+petition_boot() {
+	awk '/^\[\[component\]\]/{c="";r=""} /^code/{gsub(/[" ]/,"",$3);c=$3} /^role/{gsub(/[" ]/,"",$3);r=$3; if(r=="boot")print c}' "$1"
+}
+petition_parts() {	# every PART a petition names as a dependency
+	awk '/^\[\[component\]\]/{c="";r=""} /^code/{gsub(/[" ]/,"",$3);c=$3} /^role/{gsub(/[" ]/,"",$3);r=$3; if(r=="dependency")print c}' "$1"
+}
 loader_for() {
 	for p in "$@"; do list_field "$(code_file "$p")" depends; done | sort -t@ -k2,2n | tail -1
 }
+kernel_for() {	# FLAVOR_FILE PROGRAMS...
+	ff=$1; shift
+	k=$(for id in $(list_field "$ff" petitions); do petition_boot "petitions/$id.toml"; done | sort -t@ -k2,2n | tail -1)
+	[ -n "$k" ] && echo "$k" || loader_for "$@"
+}
+# PART.timer.tsc-pit@2 -> HAVE_TIMER_TSC_PIT
+have_of() { n=${1#PART.}; n=${n%@*}; echo "HAVE_$(echo "$n" | tr 'a-z.-' 'A-Z__')"; }
 
 # newc ARCHIVE NAME FILE...: a cpio archive in the "new ASCII" format (magic 070701),
 # the one Linux's initramfs uses, one regular file per program, in order.
@@ -83,20 +98,40 @@ cmd_build() {
 	progs=$(for id in $(list_field "$f" petitions); do petition_primary "petitions/$id.toml"; done)
 	# walk run-time depends from the programs down; the loader is the newest any of them depends on
 	for prog in $progs; do [ -n "$(list_field "$(code_file "$prog")" depends)" ] || die "rule 17: $prog depends on nothing; a program needs a loader"; done
-	loader=$(loader_for $progs)
-	ldir=$(field "$(code_file "$loader")" source)
-	ddirs=""	# everything the loader depends on (lifted parts), built into it
-	for dep in $(list_field "$(code_file "$loader")" depends); do
-		ddirs="$ddirs $(field "$(code_file "$dep")" source)"
-	done
-	for d in "$ldir" $ddirs; do [ -d "$d" ] || die "rule 18: source $d is not in the pool"; done
+	loader=$(kernel_for "$f" $progs)
+	lf=$(code_file "$loader"); ldir=$(field "$lf" source)
 	out="out/$1"; mkdir -p "$out"
 	CC=${CC:-gcc}
 	CFLAGS="-m32 -std=c11 -ffreestanding -fno-pic -fno-pie -fno-stack-protector -fno-builtin -fno-asynchronous-unwind-tables -mno-sse -mno-mmx -mno-red-zone -mgeneral-regs-only -nostdlib -nostdinc -O2 -Wall -Wextra -Werror"
 	LDFLAGS="-static -no-pie -nostartfiles -Wl,--build-id=none -Wl,-z,noexecstack"
+	if [ -n "$(list_field "$lf" builds_with)" ]; then
+		# plan 5.8, the petition is the partition: the kernel's own depends, plus
+		# every part the flavor's petitions name that it builds with, plus what
+		# those depend on, one version of each (the newest named), and nothing else
+		want=$( { list_field "$lf" depends
+			for id in $(list_field "$f" petitions); do petition_parts "petitions/$id.toml"; done | while read -r c; do
+				list_field "$lf" builds_with | grep -qx "$c" && echo "$c"; done; } | sort -u)
+		while :; do
+			more=$(for c in $want; do list_field "$(code_file "$c")" depends; done | sort -u)
+			next=$(printf '%s\n' $want $more | grep . | sort -u)
+			[ "$next" = "$want" ] && break; want=$next
+		done
+		parts=""; for n in $(for c in $want; do echo "${c%@*}"; done | sort -u); do
+			parts="$parts $(for c in $want; do case $c in "$n"@*) echo "$c" ;; esac; done | sort -t@ -k2,2n | tail -1)"
+		done
+		ddirs=""; incs="-I $ldir"; haves=""
+		for c in $parts; do d=$(field "$(code_file "$c")" source); ddirs="$ddirs $d"; incs="$incs -I $d"; haves="$haves -D$(have_of "$c")"; done
+		echo "$parts" | tr ' ' '\n' | grep . > "$out/kernel-parts.txt"
+	else
+		ddirs=""; incs=""; haves=""	# before @8: everything the loader depends on, built into it
+		for dep in $(list_field "$lf" depends); do ddirs="$ddirs $(field "$(code_file "$dep")" source)"; done
+		rm -f "$out/kernel-parts.txt"
+	fi
+	for d in "$ldir" $ddirs; do [ -d "$d" ] || die "rule 18: source $d is not in the pool"; done
 	objs=""
-	for src in $(for d in $ddirs; do echo "$d"*.c; done) "$ldir"*.S "$ldir"*.c; do
-		o="$out/$(basename "${src%.*}").o"; $CC $CFLAGS -c -o "$o" "$src"; objs="$objs $o"
+	# the parts, then the kernel's own .S then .c: the link order every earlier kernel was built in
+	for src in $(for d in $ddirs; do for x in "$d"*.c "$d"*.S; do [ -e "$x" ] && echo "$x"; done; done) $(for x in "$ldir"*.S "$ldir"*.c; do [ -e "$x" ] && echo "$x"; done); do
+		o="$out/$(basename "${src%.*}").o"; $CC $CFLAGS $haves $incs -c -o "$o" "$src"; objs="$objs $o"
 	done
 	$CC $CFLAGS $LDFLAGS -T "$ldir/loader.ld" -o "$out/loader.elf" $objs
 	# each program is built against its own loader's program format, unchanged

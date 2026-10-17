@@ -223,6 +223,18 @@ struct set { char items[MAXS][MAXL]; int n; };
 static int in_set(struct set *s, const char *x) { for (int i = 0; i < s->n; i++) if (!strcmp(s->items[i], x)) return 1; return 0; }
 static void add_set(struct set *s, const char *x) { if (!in_set(s, x) && s->n < MAXS) strcpy(s->items[s->n++], x); }
 
+/* the version after the @, 1 if there is none */
+static int version_of(const char *code) { const char *at = strchr(code, '@'); return at ? atoi(at + 1) : 1; }
+
+/* Is this component a kernel?  (kind = "kernel" in its catalogue entry) */
+static int is_kernel(const char *code)
+{
+	char cf[PATHL], kind[MAXL];
+	if (!code_file(code, cf, sizeof cf)) return 0;
+	field(cf, "kind", kind, sizeof kind);
+	return !strcmp(kind, "kernel");
+}
+
 static int cmpstr(const void *a, const void *b) { return strcmp((const char *)a, (const char *)b); }
 
 static int listdir(const char *dir, const char *suffix, char names[][MAXL], int max)
@@ -301,10 +313,31 @@ static int cmd_check(const char *flavor)
 		free(t);
 	}
 	if (np > 1) {
+		/* the kernel is the newest boot component the petitions name (as jig/aios
+		 * builds it), else the newest kernel the programs depend on; sharing is
+		 * there if the kernel or any part a petition names exposes it */
 		char loader[MAXL], lf[PATHL], ex[64][MAXL];
-		loader_for(primaries, np, loader);
+		int ok = 0;
+		loader[0] = 0;
+		for (int i = 0; i < npet; i++) {
+			char pf[PATHL]; snprintf(pf, sizeof pf, "petitions/%s.toml", pets[i]);
+			char *t = slurp(pf);
+			static struct row rows[256];
+			int nr = rows_of(t, rows, 256);
+			for (int r = 0; r < nr; r++) {
+				if (strcmp(rows[r].kind, "component")) continue;
+				if (!strcmp(rows[r].b, "boot") && (!loader[0] || version_of(rows[r].code) > version_of(loader))) strcpy(loader, rows[r].code);
+				if (!strcmp(rows[r].b, "dependency")) {
+					char cf[PATHL]; code_file(rows[r].code, cf, sizeof cf);
+					int ne = list(cf, "exposes", ex, 64);
+					for (int e = 0; e < ne; e++) if (!strncmp(ex[e], "CAP.cpu.share@", 14)) ok = 1;
+				}
+			}
+			free(t);
+		}
+		if (!loader[0]) loader_for(primaries, np, loader);
 		code_file(loader, lf, sizeof lf);
-		int ne = list(lf, "exposes", ex, 64), ok = 0;
+		int ne = list(lf, "exposes", ex, 64);
 		for (int i = 0; i < ne; i++) if (!strncmp(ex[i], "CAP.cpu.share@", 14)) ok = 1;
 		if (!ok) die("rule 19: flavor %s needs %d programs on one machine; %s runs one (CAP.cpu.share, plan 9.6)", flavor, np, loader);
 	}
@@ -351,8 +384,11 @@ static int cmd_hardware(const char *code, const char *src)
 		}
 		if (!hit[0] && cr && !strncmp(p, "mov", 3) && strstr(p, "%cr") && strspn(strstr(p, "%cr") + 3, "0123456789")) snprintf(hit, sizeof hit, "%.*s", (int)strcspn(p, "\r\n"), p);
 	}
-	pclose(f);
+	int st = pclose(f);
 	if (hit[0]) die("rule 12: %s touches the hardware itself (%s); a program asks the system, through its system calls", code, hit);
+	/* fail closed: a program the compiler would not turn into instructions was
+	 * never looked at, so it is not passed (findings 0019 #6) */
+	if (st != 0) die("rule 12: %s could not be compiled to read its instructions; nothing was checked, so it is refused", code);
 	return 0;
 }
 
@@ -391,17 +427,25 @@ static int cmd_rules(void)
 		field_in(t, "id", id, sizeof id);
 		int nr = rows_of(t, rows, 256);
 		caps.n = comps.n = all.n = exposed.n = 0;
-		char primary[MAXL] = "";
+		char primary[MAXL] = "", boot[MAXL] = "";
 		for (int r = 0; r < nr; r++) {
 			if (!strcmp(rows[r].kind, "capability")) add_set(&caps, rows[r].code);
-			if (!strcmp(rows[r].kind, "component")) { add_set(&comps, rows[r].code); add_set(&all, rows[r].code); if (!strcmp(rows[r].b, "primary")) strcpy(primary, rows[r].code); }
+			if (!strcmp(rows[r].kind, "component")) { add_set(&comps, rows[r].code); add_set(&all, rows[r].code); if (!strcmp(rows[r].b, "primary")) strcpy(primary, rows[r].code); if (!strcmp(rows[r].b, "boot")) strcpy(boot, rows[r].code); }
 		}
-		/* the components and everything they depend on, walked once */
+		/* the components and everything they depend on, walked once.  A program
+		 * depends on the kernel it was built for; it runs on the petition's boot
+		 * kernel instead when that one is newer (the ladder, SPEC.loader.4@1), so
+		 * that is the kernel walked (plan 5.8). */
 		for (int k = 0; k < all.n; k++) {
 			char cf[PATHL], deps[64][MAXL];
 			code_file(all.items[k], cf, sizeof cf);
 			int nd = list(cf, "depends", deps, 64);
-			for (int j = 0; j < nd; j++) add_set(&all, deps[j]);
+			for (int j = 0; j < nd; j++) {
+				if (boot[0] && strcmp(deps[j], boot) && is_kernel(deps[j]) && version_of(boot) >= version_of(deps[j]))
+					add_set(&all, boot);
+				else
+					add_set(&all, deps[j]);
+			}
 		}
 		char bad[MAXS * 2];
 		/* rule 2: every capability's reason is a SPEC clause of a component in the petition */
