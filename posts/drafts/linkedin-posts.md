@@ -210,7 +210,7 @@ The referee didn't.  "Rule 12: PART.hello@1 touches the hardware itself."  After
 
 Then the cheat everyone worries about.  A test fails, and the AI loosens the test instead of fixing the code.  So tests, specs and the rules themselves are now on a list only I decide, and changing any of them takes a written decision signed with my key.  Claude tried it without one, then with a name that isn't on the list.  Refused both times.
 
-The first night the referee read all the paperwork, it found four petitions that had never asked for a permission their code was using.  The tests had been green for four posts, and nothing could say so.
+The first night the referee read all the paperwork, it found four petitions that had never asked for a permission their code was using.  The tests had been green for three posts, and nothing could say so.
 
 Writing code is the AI's job.  Deciding what counts as correct is mine.
 
