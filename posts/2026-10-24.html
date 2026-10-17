@@ -124,7 +124,12 @@ When the options would all do the job, I take the one with history.
 <script>
 function flash(b){b.textContent='Copied';b.classList.add('done');setTimeout(function(){b.textContent='Copy';b.classList.remove('done')},1500)}
 function select(id){var r=document.createRange();r.selectNodeContents(document.getElementById(id));var s=getSelection();s.removeAllRanges();s.addRange(r);return s}
-function copyRich(id,b){var s=select(id);document.execCommand('copy');s.removeAllRanges();flash(b)}
+// A pasted image doesn't survive into LinkedIn, so each one is copied as a marker naming its file.
+function copyRich(id,b){var c=document.getElementById(id).cloneNode(true);c.removeAttribute('id');
+  c.querySelectorAll('img').forEach(function(i){var p=document.createElement('p');p.innerHTML='<strong>[Upload '+i.getAttribute('src')+' here]</strong>';(i.closest('p.img')||i).replaceWith(p)});
+  c.style.position='fixed';c.style.left='-9999px';document.body.appendChild(c);
+  var r=document.createRange();r.selectNodeContents(c);var s=window.getSelection();s.removeAllRanges();s.addRange(r);
+  document.execCommand('copy');s.removeAllRanges();c.remove();flash(b)}
 function copyText(id,b){var t=document.getElementById(id).innerText.trim();
   if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(function(){flash(b)},function(){copyRich(id,b)})}else{copyRich(id,b)}}
 </script>
