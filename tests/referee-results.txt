@@ -1,5 +1,5 @@
 # tests/referee-results.txt, written by the referee (AGT.referee@1, rules).  Do not edit by hand.
-# run 2026-10-16T21:36Z at commit 99fa5e6: rules 2 to 8 and 21 of schema/petition.md, every petition
+# run 2026-10-17T01:26Z at commit cf303c1: rules 2 to 8 and 21 of schema/petition.md, every petition
 PASS  rule 2  petition 0000
 PASS  rule 3  petition 0000
 PASS  rule 4  petition 0000
@@ -42,7 +42,7 @@ PASS  rule 8  petition 0004
 PASS  rule 21  petition 0004
 PASS  rule 2  petition 0005
 PASS  rule 3  petition 0005
-FAIL  rule 4  petition 0005  PART.timer.tsc-pit@2 requires CAP.dev.pit@1, not asked for
+PASS  rule 4  petition 0005
 PASS  rule 5  petition 0005
 PASS  rule 6  petition 0005
 PASS  rule 7  petition 0005
@@ -50,15 +50,15 @@ PASS  rule 8  petition 0005
 PASS  rule 21  petition 0005
 PASS  rule 2  petition 0006
 PASS  rule 3  petition 0006
-FAIL  rule 4  petition 0006  PART.disk.ata-pio@1 requires CAP.dev.disk@1, not asked for
+PASS  rule 4  petition 0006
 PASS  rule 5  petition 0006
-FAIL  rule 6  petition 0006  PART.fs.minix@1 is depended on but not listed
+PASS  rule 6  petition 0006
 PASS  rule 7  petition 0006
 PASS  rule 8  petition 0006
 PASS  rule 21  petition 0006
 PASS  rule 2  petition 0007
 PASS  rule 3  petition 0007
-FAIL  rule 4  petition 0007  PART.timer.tsc-pit@2 requires CAP.dev.pit@1, not asked for
+PASS  rule 4  petition 0007
 PASS  rule 5  petition 0007
 PASS  rule 6  petition 0007
 PASS  rule 7  petition 0007
@@ -72,4 +72,12 @@ PASS  rule 6  petition 0008
 PASS  rule 7  petition 0008
 PASS  rule 8  petition 0008
 PASS  rule 21  petition 0008
-# 4 failure(s)
+PASS  rule 2  petition 0009
+PASS  rule 3  petition 0009
+PASS  rule 4  petition 0009
+PASS  rule 5  petition 0009
+PASS  rule 6  petition 0009
+PASS  rule 7  petition 0009
+PASS  rule 8  petition 0009
+PASS  rule 21  petition 0009
+# 0 failure(s)

@@ -1,5 +1,5 @@
 # tests/mutations-results.txt, written by jig/mutate.  Do not edit by hand.
-# run 2026-10-16T21:24Z at commit 99fa5e6
+# run 2026-10-17T01:13Z at commit cf303c1
 KILLED    hello.exact-bytes@1  one wrong letter in hello's message
 KILLED    hello.exact-bytes@1  the newline goes missing
 KILLED    hello.exact-bytes@1  one extra write before exit
@@ -39,7 +39,7 @@ KILLED    loader.ladder-4@1  loader@4 breaks the read door the calculator, built
 KILLED    sort.first-boot@1  insertion sort slides the wrong way: largest first
 KILLED    sort.first-boot@1  K&R's rand() from seed 2: twenty different numbers
 KILLED    sort.first-boot@1  every sector read and written one along from where it was asked for
-KILLED    sort.second-boot@1  the load door forgets every file
+KILLED    sort.second-boot@1  the load system call forgets every file
 KILLED    sort.second-boot@1  the directory never finds a name, so the file is saved again
 KILLED    fs.fsck-clean@1  a zone is used without being marked busy in the zone map
 KILLED    fs.fsck-clean@1  the root directory forgets it grew, so the file has no name
@@ -47,7 +47,7 @@ KILLED    fs.fsck-clean@1  the new file's inode says nothing links to it
 SURVIVED  fs.fsck-clean@1  save no longer flushes the drive's cache: QEMU writes straight through, so no test can see it; a real drive could lose the file at power-off (findings 0010 #6)  (known, written down)
 KILLED    disk.no-disk@1  a missing disk (0xff, busy bit and all) is waited on forever
 KILLED    loader.doors-wait@1  the loader looks at the disk at boot, before anyone asked
-KILLED    loader.ladder-5@1  loader@5 breaks the read door the calculator relies on
+KILLED    loader.ladder-8-sort@1  the sort flavor's kernel breaks the read system call the calculator relies on
 KILLED    loader.door-layout@1  an entry inserted before load: load and save move
 KILLED    machine.disk-only@1  the sort machine grows a device nobody asked for
 KILLED    machine.disk-no-sockets@1  the sort machine opens a network socket
@@ -59,7 +59,7 @@ KILLED    tick.rate@1  the tick at 50 a second instead of 100
 KILLED    pic.setup@1  a line nobody petitioned for (IRQ 4, the serial port) unmasked
 KILLED    share.all-exit@1  the next file is looked for inside this one's data
 KILLED    loader.plain-6@1  one plain program is treated as an archive too
-KILLED    loader.ladder-6@1  loader@6 breaks the read door the calculator relies on
+KILLED    loader.ladder-8-share@1  the share flavor's kernel breaks the read system call the calculator relies on
 KILLED    machine.irq-only@1  the share machine grows a device nobody asked for
 KILLED    machine.irq-no-sockets@1  the share machine opens a network socket
 KILLED    sieve.primes@1  the last flag is never struck out
@@ -69,7 +69,7 @@ KILLED    editor.typing@1  Delete takes the letter after the one under the curso
 KILLED    editor.typing@1  the up arrow stays on the same line
 KILLED    editor.typing@1  the down arrow from past the end of a shorter line lands at its start, not its end
 KILLED    editor.save-over@1  Ctrl+S saves all but the last letter
-KILLED    editor.save-over@1  loader@7 linked with the old filesystem, which never writes over a file
+KILLED    editor.save-over@1  the editor's petition names the old filesystem, which never writes over a file, and its kernel is built with it
 KILLED    editor.undo@1  every key is its own run, so undo takes back one letter
 KILLED    editor.undo@1  the second Ctrl+Z no longer puts it back
 KILLED    editor.quit-asks@1  Ctrl+Q quits with unsaved changes, no question asked
@@ -77,7 +77,7 @@ KILLED    editor.quit-asks@1  it asks every time, so the second Ctrl+Q never qui
 KILLED    editor.status-line@1  a message pushes the commands off the bottom line
 KILLED    fs.overwrite-clean@1  a freed zone stays marked busy: the disk leaks a block every save
 KILLED    fs.overwrite-clean@1  saving over a file no longer truncates it first
-KILLED    loader.ladder-7@1  loader@7 breaks the read system call the calculator relies on
+KILLED    loader.ladder-8-editor@1  the editor flavor's kernel breaks the read system call the calculator relies on
 KILLED    ledger.human-only@1  the ledger lets a human-only change through with no decision
 KILLED    ledger.human-only@1  any name will do as the decider: a decision by a key nobody holds counts
 KILLED    ledger.human-only@1  globbing back on: the human-only globs become the files that exist, and a deleted test matches nothing
@@ -94,4 +94,14 @@ KILLED    referee.2-8@1  rule 21 switched off: a catalogue entry with no sentenc
 KILLED    referee.verb-noun@1  any verb will do: the constitution's list is not consulted
 KILLED    referee.verb-noun@1  any noun will do: the catalogue is not consulted
 KILLED    referee.verb-noun@1  a seat may ask for a verb that already exists, and so use it in the same breath
-# 92 killed, 0 survived unexpectedly, 2 known survivors, 0 no-ops, 0 no-builds
+KILLED    loader.partition@1  the builder turns on every part the kernel can be built with, asked for or not: the bundle is back
+KILLED    loader.partition@1  the builder ignores the petitions: every kernel is the bare console, and the editor loses its disk
+KILLED    life.colour@1  a newborn cell is dark yellow, not bright
+KILLED    life.colour@1  every live cell is green: who was just born is lost
+KILLED    life.screen@1  ANSI colours used as VGA colours: red and blue swap, and the serial port cannot tell
+KILLED    life.screen@1  the 80th character wraps at once, VT100 or not: Life comes out double-spaced
+KILLED    vga.plain@1  at the bottom the cursor jumps to the top instead of scrolling
+KILLED    loader.ladder-8-screen@1  the screen flavor's kernel breaks the read system call the calculator relies on
+KILLED    machine.vga-only@1  the machine grows a device nobody asked for
+KILLED    referee.no-hardware@1  the referee waves through a program it could not compile, so never looked at
+# 102 killed, 0 survived unexpectedly, 2 known survivors, 0 no-ops, 0 no-builds

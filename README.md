@@ -25,6 +25,7 @@ Each file holds the short post, the title and the full article.
 | 13 | 2026-10-30 | [Language matters](posts/2026-10-30.html) |
 | 14 | 2026-11-01 | [Give me Notepad or die](posts/2026-11-01.html) |
 | 15 | 2026-11-03 | [Unplug from the matrix](posts/2026-11-03.html) |
+| 16 | 2026-11-05 | [I never looked](posts/2026-11-05.html) |
 
 ![AiOs: the nucleus at the centre, the agents that build and guard it around it, and the jig underneath](docs/aios-components.png)
 

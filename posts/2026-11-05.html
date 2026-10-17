@@ -1,0 +1,137 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>I never looked</title>
+<style>
+body{max-width:760px;margin:32px auto;padding:0 16px;font-family:Georgia,serif;font-size:18px;line-height:1.6;color:#222;background:#fff}
+section{border:1px solid #ddd;border-radius:10px;padding:0 20px 12px;margin:0 0 28px}
+.bar{display:flex;justify-content:space-between;align-items:center;margin:0 -20px 12px;padding:8px 20px;background:#f4f3ef;border-bottom:1px solid #ddd;border-radius:10px 10px 0 0;font:600 14px system-ui,sans-serif;color:#555;user-select:none}
+button{font:600 14px system-ui,sans-serif;padding:6px 16px;border-radius:16px;border:1px solid #0a66c2;background:#0a66c2;color:#fff;cursor:pointer}
+button.done{background:#fff;color:#0a66c2}
+.text{white-space:pre-wrap;font-family:system-ui,sans-serif;font-size:15px}
+.img{font:14px system-ui,sans-serif;color:#555}
+</style></head><body>
+<section id="post">
+<div class="bar"><span>1. Post</span><button onclick="copyText('post-body',this)">Copy</button></div>
+<div id="post-body" class="text">
+AiOs, part 16 (Kernel code: 1099 lines). "It grew, one reasonable step at a time, which is how every bundle I've ever seen in a real product got there."...
+
+I haven't looked at a single program in this project besides hello world.  The tests are green, so I trust them.  This part I finally put a screen on it: Conway's Game of Life, in colour, drawn by Linux's own screen code.
+
+The first picture was double-spaced.  Linux's early screen code wraps at the 80th character, then the newline wraps again.  Terminals have waited politely since the VT100 in 1978.  No test caught it, because no test could see the screen yet.  Looking caught it.  Now a test checks QEMU's picture of the screen, all 2,000 cells.
+
+Before that, Claude found something worse.  Every new kernel since part 10 had been the last one plus one more part.  The editor's kernel carried the stopwatch's clocks.  Nobody decided that.  It grew, one reasonable step at a time.  Now each kernel holds exactly what its applications asked for.
+
+Don't look, trust the tests.  Then look once, and turn what you saw into a test.
+
+#AiOs
+</div>
+</section>
+<section id="title">
+<div class="bar"><span>2. Title</span><button onclick="copyText('title-body',this)">Copy</button></div>
+<div id="title-body"><h1>I never looked</h1></div>
+</section>
+<section id="article">
+<div class="bar"><span>3. Article</span><button onclick="copyRich('article-body',this)">Copy</button></div>
+<div id="article-body">
+<p><em>The story behind AiOs, part 16.</em></p>
+<h2>Play authentic</h2>
+<p>Remember Gibson's "play authentic" video?  2019, the one they pulled after the outcry.  If you play guitar, you just cringed.  If you don't, <a href="https://www.guitarworld.com/news/gibson-pulls-controversial-youtube-video-following-outcry">Guitar World has the story</a>.  Hold that cringe, I'm coming back to it.</p>
+<h2>Why is this weirdo doing this?</h2>
+<p>That's the question, and it's fair.  Linux has been around forever, everybody trusts it, and nobody needs a better one.  That's not why I'm doing this.</p>
+<p>One, I needed a creative outlet.  Two, I've wanted to do a creative blog series like this for a long time.  Three, I want to show how far you can actually go with AI, so I picked the most complicated project I could think of.</p>
+<p>And I gave myself a rule.  The posts go up as fast as possible, they're written with AI, and they have to be me.  The first six went out a day apart, and most of the series was written in about two days and scheduled, so the rest is already on GitHub if you want to read ahead.  I sign off that I contributed 90% of the articles.  The articles, not the code.  Claude writes the code.  The articles are mostly me dictating and Claude editing.</p>
+<h2>Written by AI, big surprise, still me</h2>
+<p>So the secret's out: I'm using AI to write these.  Are they still me?  Yes.  My voice, my tone, my stupid sense of humour.  Not fake.</p>
+<p>Here's where the cringe comes back.  Every trade has people saying "we don't need it, I'm against it," and they're half right, because there are two ways to use AI.  The inauthentic way is "AI, write this," and people pick that out in about two sentences.  The other way is to change how you think about it.  You give it as much information and as much of your personality as you possibly can, and you stay in the room the whole time.  As Gibson says, play authentic.  Code authentic.  It goes for writing code and writing articles exactly the same.</p>
+<p>At some point I'll prove it.  One post in this series will be written the inauthentic way: a separate Claude, a synopsis, "write a blog," slipped in without saying which one.  Yes, that one breaks my own rule.  That's the point.  If anybody's reading, I'd love to see who finds it.</p>
+<h2>Who's ever unit tested hello world?</h2>
+<p>Here's the bigger trust thing.  Don't write the code, write the spec.  On this project I'm telling myself not to look at the code, and so far I haven't looked at a single program besides hello world.  The only screens I've looked at are the passes and fails.</p>
+<p>You're thinking: Chris, you're crazy, you need to look at the application.  Fine.  Tell me who's ever written a unit test for a hello world program, and then come back and ask me that.  The one program I did look at is the one nobody bothers testing.</p>
+<p>I haven't looked on purpose.  That's the whole point: to get the real speed out of these tools, we have to trust them with some of this.  Should you go as far as I have?  Absolutely not.  Can you trust it a little more than you do, with good governance and good QA around it?  Absolutely.  People make mistakes too, me included, plenty of them.  That's why we invented reviews and tests in the first place.</p>
+<h2>I recorded my band without listening</h2>
+<p>A lot of musicians are scared of this.  I'm not.  I think AI could completely change how music gets written, refined, edited and marketed.</p>
+<p>My band just started advertising, and we needed to record a practice.  Instead of a sound guy, I gave Claude a spec of what I wanted it to sound like, running on my studio MacBook.  During the whole practice, without listening to the music, only the levels, it kept making adjustments to get everything where the spec said.  I couldn't add anything once we started.  That was a huge trust thing for me.  It came out sounding really freaking good.  I'm not sharing it here, it's not a business thing, but if you want to find it, it's out there.</p>
+<h2>Then I realised I'd never seen it</h2>
+<p>And that brings me to this part.  I've been purposely not looking at the output, because I trusted the tests.  And everything goes to a serial port anyway.  I can watch it scroll by in a terminal, but nothing is really being shown to a person.</p>
+<p>Claude pointed out I could have run every program myself any time, and I never had, because the tests were green.  Claude's line, not mine: looking is the test you write when you can't write a test.  Anything that bugs me when I actually use it is a rule nobody wrote down.</p>
+<p>So this part brings in the monitor.  But before Claude got to the screen, it found something that made me grumpy.</p>
+<h2>Why would you even think that's close?</h2>
+<p>The plan said each kernel gets built from exactly the parts its programs' petitions (their written lists of what they need) ask for.  Claude came back with a question: what about the sort, the sieve and the editor, which the referee (the checker with no AI in it that reads every petition) had been failing since part 15?  So I asked why.  Since part 10, every new kernel had been built by copying the one before and adding one more part.  The editor's kernel had the stopwatch's clocks in it.  The sieve's had the disk code.  Nobody asked for any of that.  It just piled up.</p>
+<p>My reaction, more or less word for word: if a kernel gets built for a set of applications, it has the code their petitions asked for.  Delete an application and its parts go with it.  Period.  Why would you even think that's close to what we should have?</p>
+<p>Claude's answer was honest.  It had read "petitions add, never swap" as "each kernel stacks on the last one."  The rule was about petitions.  Nobody decided the bundle.  It grew, one reasonable step at a time, which is how every bundle I've ever seen in a real product got there.</p>
+<p>So that got fixed first.  One kernel source now, every part behind a switch, and the builder turns on only what the petitions name.  The editor's kernel went from 19,704 bytes to 11,372 (measured on Claude's machine, not the jig, the machine everything really runs on).  The referee went from four failures to none.  And a new test opens every kernel and checks that every function in it belongs to a part somebody asked for.  Put the bundle back on purpose and it goes red.</p>
+<h2>The monitor</h2>
+<p>Now the fun part: Conway's Game of Life, on a screen, in colour.</p>
+<p>The screen is VGA text mode, 80 columns by 25 rows, which every PC has had since IBM's PS/2 in 1987.  Each spot on the screen is two bytes in memory: the letter and its colour.  Write to that memory and the letter appears.</p>
+<p>Here's the part I love.  The code that does it is Linux's, from the same file the serial driver came from in part 1.  Linux uses it to print before anything else in the kernel is ready, and it prints everything light grey on black, forever.  Claude changed exactly one thing: the colour comes from the program now.  The table that turns a terminal's colour numbers into the screen's is Linux's too, from a file that still says "Copyright (C) 1991, 1992 Linus Torvalds" at the top.  ANSI calls red 1.  VGA calls it 4.  Somebody had to write that table down, and he did.</p>
+<h2>A screen needs a BIOS</h2>
+<p>The first try showed nothing.  QEMU (the program that pretends to be a PC) just said "Guest has not initialized the display (yet)."  A VGA card comes up blank.  On a real PC, the card's own little BIOS runs at power-on and puts it in text mode.  Linux never has to, because the screen's already set up by the time it runs.  Our machines boot through a tiny firmware that skips all that.  So the screen machine boots through SeaBIOS, the open source PC BIOS that comes with QEMU, and the card's BIOS does exactly what it did in 1987.  The kernel just writes letters.</p>
+<h2>The first picture was double-spaced</h2>
+<p>The first time Life actually drew, every row had a blank row under it, and the top line had scrolled off the screen.</p>
+<p>Linux's early screen code jumps to the next line the instant the 80th character lands.  Then the newline at the end of the row jumps again.  Two lines for one.  Real terminals have waited politely since DEC's VT100 in 1978.  The serial terminal got it right.  The screen didn't.</p>
+<p>The fix is in the kernel's console, not in Linux's lines: if the line already ended at the edge, the screen doesn't get told about the newline.  And that bug is the point.  No test caught it, because the test didn't exist yet.  Looking caught it.</p>
+<h2>The tester gets eyes</h2>
+<p>Then Claude wrote the test.</p>
+<p>Every test until now read bytes off the serial port.  This one takes QEMU's picture of the screen and checks it pixel by pixel, cell by cell, all 2,000 of them: the background colour, whether anything is drawn, and what colour it's drawn in.</p>
+<p>Here's why that matters.  Swap Linux's colour table for one that uses the terminal numbers as VGA numbers, and every byte on the serial port is still exactly right.  The serial test passes.  The blue dots come out red.  Only the test with eyes goes red.</p>
+<h2>Two things the referee missed</h2>
+<p>Rule 12 is the referee's check that a program never touches the hardware directly.  Turns out it had been passing programs it couldn't even read.  It looked at nothing and called that clean.  Now it refuses what it can't read.</p>
+<p>And the screen opened a hole rule 12 can't see.  To the processor, the screen is just memory, so a program can write straight to it without a single forbidden instruction.  There's a file in the repo that does exactly that, the screen cheat, and the referee passes it.  The real fix is running programs with less power than the kernel.  That's a later rung, and it's written down.</p>
+<h2>What I'm taking away</h2>
+<p>The first half of this post says don't look.  The second half is a bug only looking caught.  Both are true.  The tests caught everything they were written for.  The double-spaced screen was caught by somebody looking at it, and then it became a test so nobody has to look again.  That's the order it should go in.</p>
+<p>And the bundle: when something grows one reasonable step at a time, nobody decided it, and nobody notices until something asks "why is that there?"  Here, the referee asked.</p>
+<p>Code authentic still means staying in the room.  Sometimes that means looking.</p>
+<h2>Read along</h2>
+<ol>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/pool/PART.loader@8/loader.c">pool/PART.loader@8/loader.c</a>.  The kernel built from the petition.  Find <code>HAVE_</code>: every switch.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/lifted/PART.screen.vga@1/vga.c">lifted/PART.screen.vga@1/vga.c</a>.  Linux's screen code, and the one line Claude changed.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/pool/PART.life@2/life.c">pool/PART.life@2/life.c</a>.  Life in colour.  Find <code>BORN</code>.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/programs/screen.sh">tests/programs/screen.sh</a>.  The test with eyes.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/programs/screencheat.c">tests/programs/screencheat.c</a>.  The screen cheat: the one rule 12 can't see.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/findings/0018.md">findings/0018.md</a>.  The bundle, and how it grew.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/findings/0019.md">findings/0019.md</a>.  The screen: the BIOS, the double spacing, the cursor, the cheat.</li>
+</ol>
+<h2>Try this</h2>
+<p>Open the repo in Codespaces and run <code>sh tests/programs/partition.sh</code>.  It builds every kernel and names the parts in each.  Then run <code>AIOS_SHOT=life.ppm sh tests/programs/screen.sh tests/expected/life.screen@1.cells</code> and open life.ppm: that's what the test saw.</p>
+<h2>As built</h2>
+<ul>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/index/part/loader@8.as-built.md">loader@8</a></li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/index/part/share@1.as-built.md">share@1</a></li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/index/part/screen.vga@1.as-built.md">screen.vga@1</a></li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/index/part/life@2.as-built.md">life@2</a></li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/index/machine/serial-vga@1.as-built.md">serial-vga@1</a></li>
+</ul>
+<h2>Addendum: the tests</h2>
+<p>Every test for this post, from tests/results.txt and tests/mutations-results.txt, run on the jig under KVM at commit cf303c1.  The whole suite: 63 passed, 0 failed, 5 skipped.  Of 104 deliberate breakages, 102 were caught; the 2 that survive are the known ones from parts 10 and 12, and all 13 of this post's were caught.  The referee's own file, tests/referee-results.txt: 80 lines, 0 FAIL.</p>
+<ul>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/loader.partition@1.toml">loader.partition@1</a>.  Checks: every kernel built from the new source holds exactly the parts its petitions name.  Passed: 4 flavors on PART.loader@8, each kernel exactly its petitions' parts.  Mutations caught: 2.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/loader.ladder-8-editor@1.toml">loader.ladder-8-editor@1</a>, <a href="https://github.com/cmcluckie/aios/blob/main/tests/loader.ladder-8-sort@1.toml">-sort@1</a>, <a href="https://github.com/cmcluckie/aios/blob/main/tests/loader.ladder-8-share@1.toml">-share@1</a>, <a href="https://github.com/cmcluckie/aios/blob/main/tests/loader.ladder-8-screen@1.toml">-screen@1</a>.  Checks: hello, Hanoi, Life and the calculator, built for their own kernels, run unchanged on each new kernel.  Passed: 4 programs byte-identical under loader@8, all four times.  Mutations caught: 4.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/life.colour@1.toml">life.colour@1</a>.  Checks: every byte Life in colour writes, against a reference written separately.  Passed: 3075 bytes, exact.  Mutations caught: 2.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/life.screen@1.toml">life.screen@1</a>.  Checks: QEMU's picture of the screen, all 2,000 cells.  Passed: 2000 cells, 1947 drawn, every one where it should be, in its colours.  Mutations caught: 2.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/vga.plain@1.toml">vga.plain@1</a>.  Checks: thirty plain lines scroll the way Linux's early console scrolls them.  Passed: 2000 cells, 146 drawn, every one where it should be, in its colours.  Mutations caught: 1.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/machine.vga-only@1.toml">machine.vga-only@1</a>.  Checks: the screen machine has a serial port, a VGA card, and nothing nobody asked for.  Passed: 15 devices: the serial port, the VGA card, and what microvm forces.  Mutations caught: 1.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/machine.vga-no-sockets@1.toml">machine.vga-no-sockets@1</a>.  Checks: the screen machine never touches the network.  Passed: 38281 syscalls traced, none on the network.  No mutation written for it.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/referee.no-hardware@1.toml">referee.no-hardware@1</a>.  Checks: a program that touches the hardware is refused, and so is one the referee can't read.  Passed: the cheat printed hello's 14 bytes exactly, so hello's test would pass it; the referee refused it under rule 12, and refused a program it could not read.  Mutations caught: 2, one of them new.</li>
+</ul>
+<h2>Code on GitHub</h2>
+<p><a href="https://github.com/cmcluckie/aios/compare/a1dd78f...cf303c1">Every line that changed, on one page</a>.</p>
+<p>The commits behind this post, in order:</p>
+<ol>
+<li><a href="https://github.com/cmcluckie/aios/commit/cf303c1">The kernel built from the petition; the screen; rule 12 fails closed</a></li>
+</ol>
+<p><a href="https://github.com/cmcluckie/aios">The whole repo</a>.</p>
+</div>
+</section>
+<p class="img">Image: 2026-10-22.png, in this folder.</p>
+<script>
+function flash(b){b.textContent='Copied';b.classList.add('done');setTimeout(function(){b.textContent='Copy';b.classList.remove('done')},1500)}
+function select(id){var r=document.createRange();r.selectNodeContents(document.getElementById(id));var s=getSelection();s.removeAllRanges();s.addRange(r);return s}
+// A pasted image doesn't survive into LinkedIn, so each one is copied as a marker naming its file.
+function copyRich(id,b){var c=document.getElementById(id).cloneNode(true);c.removeAttribute('id');
+  c.querySelectorAll('img').forEach(function(i){var p=document.createElement('p');p.innerHTML='<strong>[Upload '+i.getAttribute('src')+' here]</strong>';(i.closest('p.img')||i).replaceWith(p)});
+  c.style.position='fixed';c.style.left='-9999px';document.body.appendChild(c);
+  var r=document.createRange();r.selectNodeContents(c);var s=window.getSelection();s.removeAllRanges();s.addRange(r);
+  document.execCommand('copy');s.removeAllRanges();c.remove();flash(b)}
+function copyText(id,b){var t=document.getElementById(id).innerText.trim();
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(function(){flash(b)},function(){copyRich(id,b)})}else{copyRich(id,b)}}
+</script>
+</body></html>
