@@ -10,14 +10,14 @@
 #
 # The key is read from ~/.aios/aws (AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY,
 # AWS_REGION), a file outside the repo; AIOS_AWS=file points elsewhere.  The
-# model is MODEL_NAME (the row in jig/prices.toml, default the Sonnet row) and
+# model is MODEL_NAME (the row in jig/prices.toml, default the Sonnet 4.6 row) and
 # MODEL_ID (the Bedrock id to call, default its global profile).
 # MODEL_FAKE=file reads a saved reply from that file and calls nothing (tests).
 # Exit 0 answered, 1 refused (reason on stderr), 2 cannot run here.
 set -u
 repo=$(cd "$(dirname "$0")/.." && pwd)
-MODEL_NAME=${MODEL_NAME:-bedrock:global.anthropic.claude-sonnet-5-5}
-MODEL_ID=${MODEL_ID:-global.anthropic.claude-sonnet-5-5}
+MODEL_NAME=${MODEL_NAME:-bedrock:global.anthropic.claude-sonnet-4-6}
+MODEL_ID=${MODEL_ID:-global.anthropic.claude-sonnet-4-6}
 AIOS_AWS=${AIOS_AWS:-$HOME/.aios/aws}
 MODEL_MAX_COST=${MODEL_MAX_COST:-0.05}
 die() { echo "model: $*" >&2; exit 1; }

@@ -1,0 +1,11 @@
+id      = "0016"
+date    = 2026-10-17
+kind    = "rules and words"
+touches = ["jig/prices.toml", "jig/model", "findings/0020.md"]
+asked   = "The first exam sits Claude Sonnet 4.6 on Amazon Bedrock in us-west-2 through the global profile global.anthropic.claude-sonnet-4-6, priced at 3.00 dollars per million input tokens and 15.00 per million output from the same page, because the account is refused Claude Sonnet 5.5 and Sonnet 5 (AccessDeniedException, not available for this account, in the console and by API) while Sonnet 4.6 and Opus 4.6 answer.  The Sonnet 5.5 row stays in jig/prices.toml, unused, and sits the same exam as a second row on the scorecard when AWS opens it."
+options = ["as written", "Opus 4.6 for the first exam", "wait for Sonnet 5.5"]
+default = "as written"
+chose   = "as written"
+why     = "findings/0020.md"
+by      = "KEY.chris@1"
+drafted = "Claude"
