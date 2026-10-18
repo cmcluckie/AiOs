@@ -1,0 +1,1 @@
+{"metrics":{"latencyMs":812},"output":{"message":{"content":[{"text":"ready"}],"role":"assistant"}},"stopReason":"end_turn","usage":{"inputTokens":14,"outputTokens":6,"totalTokens":20}}

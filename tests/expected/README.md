@@ -17,3 +17,10 @@ The .out files are made once, on a normal computer, never on the jig:
 
 The references are written from the spec clauses, not translated from the C.
 If a reference changes, its .out file is regenerated in the same commit.
+
+Part 17:
+    reader.find@1.out          jig/reader find, callers and calls, run once on a normal computer
+                               against the pinned commit and checked against a grep of the same
+                               file: serial8250_early_out has 1 definition and 10 calls
+    scorecard.table@1.out      worked out by hand from the spec, with made-up costs for two made-up
+                               models, before jig/scorecard existed; the script has to match it

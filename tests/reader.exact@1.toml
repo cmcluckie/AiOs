@@ -1,0 +1,10 @@
+code       = "TST.reader.exact@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+binds      = "SPEC.reader.2@1"
+red_when   = "read returns a line that differs from the one in an archive of the pinned commit, drops the first or last line of a range, numbers lines wrongly, or list or ports answers something other than the pinned tree"
+timeout_ms = 60000
+isolates   = "TOOL.reader@1"
+runner     = "jig/test cmd sh tests/programs/reader.sh exact"
+mutations  = 5

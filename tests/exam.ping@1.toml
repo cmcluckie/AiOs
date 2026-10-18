@@ -1,0 +1,10 @@
+code       = "TST.exam.ping@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+binds      = "SPEC.exam.6@1"
+red_when   = "a saved reply is not costed at its tokens times the price or is not recorded once as ping, or a call is let through for a model with no price, a missing key file, a key file others can read, or a cap with no room"
+timeout_ms = 60000
+isolates   = "TOOL.exam@1"
+runner     = "jig/test cmd sh tests/programs/exam.sh ping"
+mutations  = 5

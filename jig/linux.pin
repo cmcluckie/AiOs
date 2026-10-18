@@ -1,0 +1,4 @@
+# The one Linux commit the shared source reader (jig/reader) answers from.
+# Every lifted part's origin.toml names this same commit today.  Moving the
+# pin is a human decision: every answer the reader gave changes with it.
+commit = "a5ebb76233b79db01e82e061173cb73c6d2b5c6b"

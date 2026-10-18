@@ -1,0 +1,7 @@
+code       = "SPEC.reader.2@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+component  = "TOOL.reader@1"
+clause     = "Asked for lines, the reader returns exactly the pinned commit's lines, each as FILE:LINE: text, byte for byte."
+author     = "KEY.chris"

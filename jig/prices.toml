@@ -1,0 +1,11 @@
+# What a model costs, dollars per million tokens, from the provider's own price
+# page (named in priced_from, with the day it was read).  A model with no row
+# here does not sit the exam: jig/runs refuses to record a run for it, so a try
+# is never recorded as free by leaving the price out.  A local model's row is
+# 0, and says so: the electricity is not counted.  Human-only.
+
+[[model]]
+name = "bedrock:global.anthropic.claude-sonnet-5-5"
+per_million_input  = 2.00
+per_million_output = 10.00
+priced_from = "Amazon Bedrock pricing page, Anthropic models, Global Cross-region Inference, US West (Oregon), read 2026-10-17"

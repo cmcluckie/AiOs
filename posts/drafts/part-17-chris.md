@@ -1,0 +1,19 @@
+# Part 17, "The exam", Chris's notes, dictated 2026-10-17
+
+The opening.  Most of what's in the old dictation about past risks he mostly does not want: at most one line ("people thought I was crazy, and it's still a company today") if it fits, otherwise out.  No credit fight, no lawyer talk, no money, no names; the risk is the point, not the credit.  He is afraid it reads bitter or like bragging, and it doesn't hurt anymore.
+
+The fear, in his words, to carry the opening.  This project scares him and he doesn't know why.  So many questions go through his head while he works on it.  What will people think.  How will they interpret it.  Will they think I'm stupid for trying to make changes to Linux.  Am I trying to show off.  Am I being too cocky.  Am I being naive.  He looks at the risks he took in his career, and this post is where everything starts to get really real.
+
+Why this post is the hard one.  The quartermaster is probably the most challenging part of the whole project, because this is where AI independently gets introduced.  It has to take a program, interpret what it does, work out which operating system calls it needs and what it needs from the OS, and slice that down to a piece small enough to use.  Depending on the AI, the slices could look completely different: Claude could give one thing, another model (Qwen or the like) a completely different one.
+
+What the AI knows.  He thinks (and asked Claude to verify) that most AIs already know Linux well, because the source is free and it's among the first things they train on.  There is no AI trained only on Linux; they all have it.  So they should all be pretty good at it.  Still hard, because nobody has split the OS into parts like this.  This is where the rubber hits the road: the first real Linux program, not a university example, and the system starts to produce things itself.
+
+The stakes.  This is where the blog either completely fails and he stops posting, or goes to the next level.  He's pretty confident it will go through, but he's still scared.  Keep: "this is where, honestly, the blog either completely fails and I stop posting, or we go to the next level."
+
+The product manager angle.  The run record, cost per attempt, is one of the first things he thinks about as a product manager to decide whether this is viable.  Say so in the post.
+
+How the quartermaster knows what to pull (from the Q&A, goes in the article as the centre, plain English).  1. It starts from the petition, which says in plain terms what the part must do.  2. The model names where it thinks that lives (a file and a function), from what it knows of Linux.  3. The script checks the name is real in the pinned source; a name that doesn't exist is rejected, so the model can't invent code.  4. The script hands back just those lines.  5. The model reads them, sees what they call, asks for those next, and repeats until it has everything.  6. It trims to what the part needs.  7. The jig compiles it and runs the tests, so it is judged on the result, not on how confident it sounded.  Three tools: search by name, list a folder, read a line range.  "That needs to be in the article."
+
+Decided today.  Claude (Bedrock, one small pinned model) for the first exam, not the 3090: one unknown at a time; if it fails with a small local model we wouldn't know whether the method or the model is at fault.  The runner has one interface for any model, so the 3090 (Ollama) and others are a later row on the same scorecard, same exam, same pinned source.  End part 17 with "next, the same exam on the 3090".  The scorecard has one row per model; the first post shows one row.  The scorecard card image comes from the real run file.
+
+The cost.  Cost per part that passes (failed tries count) and cost against the hand lift.  A hard cap in the script, shown in the post.  Any figure beyond the recorded runs is labelled an estimate.

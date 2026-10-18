@@ -1,0 +1,18 @@
+# fixture for TST.exam.*: three items with small hand lifts of known size
+[[item]]
+name  = "serial"
+asks  = "fixture"
+hand  = "hand-serial.c hand-serial.h"
+tests = "none"
+
+[[item]]
+name  = "timer"
+asks  = "fixture"
+hand  = "hand-timer.c"
+tests = "none"
+
+[[item]]
+name  = "screen"
+asks  = "fixture"
+hand  = "hand-screen.c"
+tests = "none"

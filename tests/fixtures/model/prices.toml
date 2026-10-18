@@ -1,0 +1,6 @@
+# fixture prices, dollars per million tokens; not any provider's
+[[model]]
+name = "test:model"
+per_million_input  = 2.00
+per_million_output = 10.00
+priced_from = "fixture"

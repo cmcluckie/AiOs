@@ -1,0 +1,103 @@
+#!/bin/sh
+# reader: the shared source reader (plan 7.0, findings 0015).  It reads Linux,
+# only at the pinned commit in jig/linux.pin, and answers from that commit and
+# nothing else.  It decides nothing and changes nothing; the same question gets
+# the same answer, with no model in it, so the referee may rely on it.  The
+# quartermaster calls it; so will the historian.  A name, file or line range
+# that is not in the pinned source is refused, never guessed at.
+#
+#   reader pin                       the commit every answer comes from
+#   reader list DIR                  what is in a directory ("." for the top); folders end in /
+#   reader read FILE FIRST LAST      those lines, each as  FILE:LINE: text
+#   reader check FILE FIRST LAST     exit 0 if that file and those lines exist at the pin
+#   reader find NAME                 where a function, macro or variable is defined
+#   reader callers NAME              the lines that call it
+#   reader calls NAME                what it calls
+#   reader ports FILE FIRST LAST     the lines in that range that read or write an I/O port
+#
+# find, callers and calls use cscope (Bell Labs, early 1980s; Linux's own
+# `make cscope` uses it).  It indexes a copy of the pinned tree, kept in a
+# cache folder named by the pin, the way `make cscope` writes cscope.out
+# beside the source.  READER_DIRS names what is indexed (default: all of it).
+#
+# Exit 0 answered, 1 refused (the reason is on stderr), 2 cannot run here.
+# At most READER_MAX lines (default 200) come back from any one question, so a
+# model is never handed a whole file by accident.
+#
+# Needs a clone of Linux: LINUX=/path/to/linux (default ../linux), as jig/upstream.
+set -eu
+repo=$(cd "$(dirname "$0")/.." && pwd)
+LINUX=${LINUX:-$repo/../linux}
+MAX=${READER_MAX:-200}
+PIN=${READER_PIN:-$(sed -n 's/^commit *= *"\([0-9a-f]\{40\}\)".*/\1/p' "$repo/jig/linux.pin")}
+DIRS=${READER_DIRS:-.}
+
+die()  { echo "reader: $*" >&2; exit 1; }
+skip() { echo "reader: $*" >&2; exit 2; }
+g()    { git -C "$LINUX" "$@"; }
+
+[ -d "$LINUX/.git" ] || skip "no Linux clone at $LINUX (set LINUX=)"
+[ -n "$PIN" ] || skip "no commit in jig/linux.pin"
+g cat-file -e "$PIN^{commit}" 2>/dev/null || skip "the clone at $LINUX lacks the pinned commit $PIN"
+
+num() { case "$2" in ''|*[!0-9]*) die "$1 must be a whole number, not '$2'" ;; esac; }
+name() { case "$1" in ''|*[!A-Za-z0-9_]*) die "'$1' is not a function, macro or variable name" ;; esac; }
+
+# range FILE FIRST LAST: refuse unless the file is in the pin and the lines are in the file
+range() {
+	[ $# -eq 3 ] || die "needs FILE FIRST LAST"
+	num FIRST "$2"; num LAST "$3"
+	[ "$2" -ge 1 ] || die "FIRST must be 1 or more"
+	[ "$3" -ge "$2" ] || die "LAST ($3) is before FIRST ($2)"
+	[ $(($3 - $2 + 1)) -le "$MAX" ] || die "$(($3 - $2 + 1)) lines asked for; at most $MAX at a time"
+	[ "$(g cat-file -t "$PIN:$1" 2>/dev/null)" = blob ] || die "$1 is not a file at $PIN"
+	total=$(g show "$PIN:$1" | awk 'END { print NR }')
+	[ "$3" -le "$total" ] || die "$1 has $total lines; $3 is past the end"
+}
+
+lines() { g show "$PIN:$1" | awk -v f="$1" -v s="$2" -v e="$3" 'NR >= s && NR <= e { printf "%s:%d: %s\n", f, NR, $0 }'; }
+
+# index: a copy of the pinned tree with cscope's database beside it
+index() {
+	command -v cscope > /dev/null || skip "cscope is not installed"
+	key=$(printf '%s' "$DIRS" | cksum | cut -d' ' -f1)
+	cache=${READER_CACHE:-${TMPDIR:-/tmp}/aios-reader-$(printf '%.12s' "$PIN")-$key}
+	if [ ! -f "$cache/.indexed" ]; then
+		rm -rf "$cache"; mkdir -p "$cache"
+		# shellcheck disable=SC2086
+		g archive "$PIN" $DIRS 2> "$cache.err" | tar -x -C "$cache" 2>> "$cache.err" ||
+			{ msg=$(head -1 "$cache.err"); rm -rf "$cache" "$cache.err"; die "could not copy $DIRS from $PIN: $msg"; }
+		rm -f "$cache.err"
+		(cd "$cache" && find . -type f \( -name '*.c' -o -name '*.h' -o -name '*.S' \) | sed 's|^\./||' | sort > cscope.files &&
+			cscope -b -k -f cscope.out > /dev/null 2>&1 && : > .indexed) || skip "cscope could not index $DIRS"
+	fi
+}
+
+# ask N NAME: one of cscope's questions, as  FILE:LINE: FUNCTION: text
+ask() {
+	name "$2"; index
+	out=$(cd "$cache" && cscope -d -f cscope.out -L "-$1" "$2" |
+		awk '{ f = $1; fn = $2; l = $3; $1 = $2 = $3 = ""; sub(/^ +/, ""); printf "%s:%d: %s: %s\n", f, l, fn, $0 }' |
+		sort -t: -k1,1 -k2,2n -s)
+	[ -n "$out" ] || die "nothing for $2 in $DIRS at $PIN"
+	n=$(printf '%s\n' "$out" | wc -l)
+	printf '%s\n' "$out" | head -n "$MAX"
+	[ "$n" -le "$MAX" ] || echo "reader: $((n - MAX)) more not shown (READER_MAX=$MAX)" >&2
+	return 0
+}
+
+cmd=${1:-}; [ $# -gt 0 ] && shift
+case "$cmd" in
+pin)	echo "$PIN" ;;
+list)	[ $# -eq 1 ] || die "needs DIR"
+	d=${1%/}; [ "$d" = . ] && d=""
+	[ "$(g cat-file -t "$PIN:$d" 2>/dev/null)" = tree ] || die "${1} is not a directory at $PIN"
+	g ls-tree "$PIN:$d" | awk -F'\t' '{ split($1, a, " "); print $2 (a[2] == "tree" ? "/" : "") }' | head -n "$MAX" ;;
+read)	range "$@"; lines "$1" "$2" "$3" ;;
+check)	range "$@"; echo "ok $1 $2-$3" ;;
+find)	[ $# -eq 1 ] || die "needs NAME"; ask 1 "$1" ;;
+callers) [ $# -eq 1 ] || die "needs NAME"; ask 3 "$1" ;;
+calls)	[ $# -eq 1 ] || die "needs NAME"; ask 2 "$1" ;;
+ports)	range "$@"; lines "$1" "$2" "$3" | grep -E '[^A-Za-z0-9_](inb|inw|inl|outb|outw|outl|inb_p|outb_p|insb|insw|insl|outsb|outsw|outsl)[(]' || true ;;
+*)	die "unknown question '$cmd'; see the top of jig/reader" ;;
+esac

@@ -1,0 +1,101 @@
+#!/bin/sh
+# runs: the exam's run record, its line counter and its budget (part 17).  An
+# AI that is asked to lift a part from Linux is graded on what it kept, how many
+# tries it took and what it cost; this is where each try is written down, so
+# that every number on the scorecard is a number in a file.  It decides nothing.
+#
+#   runs count FILE...                code lines: non-blank lines outside comments
+#                                     (a comment marker inside a string is not understood)
+#   runs record ITEM MODEL VERSION TRY IN_TOKENS OUT_TOKENS RESULT LINES INPUT OUTPUT
+#                                     write runs/<id>/ : run.toml, a copy of INPUT and OUTPUT;
+#                                     RESULT is pass, fail or refused; the cost is the tokens
+#                                     times the model's price in jig/prices.toml, and a model
+#                                     with no price there is refused, never recorded as free
+#   runs spent [YYYY-MM]              the cost of every run recorded in that month (default: now)
+#   runs budget CEILING               exit 1 if this month's spend plus CEILING (the most the
+#                                     next call could cost, in dollars) would pass the cap in
+#                                     jig/budget.toml; the runner asks before every call
+#
+# RUNS=dir (default runs/), PRICES=file (default jig/prices.toml), BUDGET=file
+# (default jig/budget.toml), RUNS_NOW=timestamp (for tests).
+set -eu
+repo=$(cd "$(dirname "$0")/.." && pwd)
+RUNS=${RUNS:-$repo/runs}
+PRICES=${PRICES:-$repo/jig/prices.toml}
+BUDGET=${BUDGET:-$repo/jig/budget.toml}
+die() { echo "runs: $*" >&2; exit 1; }
+whole() { case "$2" in ''|*[!0-9]*) die "$1 must be a whole number, not '$2'" ;; esac; }
+money() { case "$2" in ''|*[!0-9.]*|*.*.*|.) die "$1 must be dollars like 0.25, not '$2'" ;; esac; }
+
+count() {
+	awk '{
+		line = $0; out = ""
+		while (length(line) > 0) {
+			if (inc) { i = index(line, "*/"); if (i == 0) line = ""; else { line = substr(line, i + 2); inc = 0 } }
+			else {
+				i = index(line, "/*"); j = index(line, "//")
+				if (j > 0 && (i == 0 || j < i)) { out = out substr(line, 1, j - 1); line = "" }
+				else if (i > 0) { out = out substr(line, 1, i - 1); line = substr(line, i + 2); inc = 1 }
+				else { out = out line; line = "" }
+			}
+		}
+		if (out ~ /[^ \t\r]/) n++
+	} END { print n + 0 }' "$@"
+}
+
+cmd=${1:-}; [ $# -gt 0 ] && shift
+case "$cmd" in
+count)	[ $# -ge 1 ] || die "needs FILE..."
+	for f in "$@"; do [ -f "$f" ] || die "$f is not a file"; done
+	cat "$@" | count ;;
+record)	[ $# -eq 10 ] || die "needs ITEM MODEL VERSION TRY IN_TOKENS OUT_TOKENS RESULT LINES INPUT OUTPUT"
+	item=$1; model=$2; version=$3; try=$4; tin=$5; tout=$6; result=$7; lines=$8; input=$9; shift 9; output=$1
+	case "$item" in ''|*[!a-z0-9_-]*) die "ITEM must be lower-case letters, digits, - or _, not '$item'" ;; esac
+	[ -n "$model" ] && [ -n "$version" ] || die "MODEL and VERSION are both needed"
+	whole TRY "$try"; whole IN_TOKENS "$tin"; whole OUT_TOKENS "$tout"; whole LINES "$lines"
+	[ "$try" -ge 1 ] || die "TRY starts at 1"
+	case "$result" in pass|fail|refused) ;; *) die "RESULT is pass, fail or refused, not '$result'" ;; esac
+	[ -f "$input" ] || die "$input is not a file"; [ -f "$output" ] || die "$output is not a file"
+	[ -f "$PRICES" ] || die "no price list at $PRICES"
+	cost=$(awk -v m="$model" -v ti="$tin" -v to="$tout" '
+		/^\[\[model\]\]/ { name = ""; pi = ""; po = "" }
+		/^name *=/ { s = $0; sub(/^[^"]*"/, "", s); sub(/".*$/, "", s); name = s }
+		/^per_million_input *=/ { split($0, a, "="); gsub(/ /, "", a[2]); pi = a[2] }
+		/^per_million_output *=/ { split($0, a, "="); gsub(/ /, "", a[2]); po = a[2]
+			if (name == m && pi != "") { printf "%.6f\n", ti * pi / 1000000 + to * po / 1000000; found = 1; exit } }
+		END { if (!found) exit 1 }' "$PRICES") || die "no price for $model in $PRICES: a model with no price does not sit the exam"
+	now=${RUNS_NOW:-$(date -u +%Y-%m-%dT%H:%M:%SZ)}
+	slug=$(printf '%s' "$model" | tr -c 'A-Za-z0-9\n' '-')
+	id="$(printf '%s' "$now" | tr -d ':-')-$item-$try-$slug"
+	[ ! -e "$RUNS/$id" ] || die "$id is already recorded"
+	mkdir -p "$RUNS/$id"
+	cp "$input" "$RUNS/$id/input.txt"; cp "$output" "$RUNS/$id/output.txt"
+	cat > "$RUNS/$id/run.toml" <<EOF
+id            = "$id"
+date          = "$now"
+item          = "$item"
+model         = "$model"
+version       = "$version"
+try           = $try
+input_tokens  = $tin
+output_tokens = $tout
+cost_usd      = $cost
+result        = "$result"
+lines         = $lines
+EOF
+	echo "$id" ;;
+spent)	month=${1:-$(printf '%.7s' "${RUNS_NOW:-$(date -u +%Y-%m-%dT%H:%M:%SZ)}")}
+	for f in "$RUNS"/*/run.toml; do [ -f "$f" ] && cat "$f"; done 2> /dev/null |
+		awk -v m="$month" '/^date *=/ { d = $0; sub(/^[^"]*"/, "", d); ok = (substr(d, 1, 7) == m) }
+			/^cost_usd *=/ { split($0, a, "="); if (ok) t += a[2] } END { printf "%.6f\n", t + 0 }' ;;
+budget)	[ $# -eq 1 ] || die "needs CEILING"; money CEILING "$1"
+	[ -f "$BUDGET" ] || die "no budget at $BUDGET"
+	cap=$(sed -n 's/^monthly_cap_usd *= *\([0-9.]*\).*/\1/p' "$BUDGET")
+	[ -n "$cap" ] || die "no monthly_cap_usd in $BUDGET"
+	spent=$(sh "$0" spent)
+	if awk -v s="$spent" -v c="$1" -v cap="$cap" 'BEGIN { exit !(s + c > cap) }'; then
+		die "refused: $spent spent this month and a call that could cost $1 would pass the cap of $cap"
+	fi
+	echo "ok: $spent spent this month, cap $cap" ;;
+*)	die "unknown command '$cmd'; see the top of jig/runs" ;;
+esac

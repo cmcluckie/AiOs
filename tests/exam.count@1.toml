@@ -1,0 +1,10 @@
+code       = "TST.exam.count@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+binds      = "SPEC.exam.1@1"
+red_when   = "a fixture with 10, 6 or 4 code lines is counted as any other number, or a comment, a blank or a part of a block comment is counted as code, or a code line with a trailing comment is not"
+timeout_ms = 60000
+isolates   = "TOOL.exam@1"
+runner     = "jig/test cmd sh tests/programs/exam.sh count"
+mutations  = 3

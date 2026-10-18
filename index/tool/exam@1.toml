@@ -1,0 +1,15 @@
+code          = "TOOL.exam@1"
+sentence      = "The exam's run record, spending cap and scorecard on the jig (jig/runs, jig/scorecard); scaffolding, a placeholder for parts."
+status        = "draft"
+admitted      = ""
+retired_by    = ""
+kind          = "program"
+source        = ""
+licence       = "GPL-2.0-only"
+depends       = []
+build_depends = []
+exposes       = []
+requires      = []
+scaffold      = true
+as_built      = ""
+reproducible  = ""

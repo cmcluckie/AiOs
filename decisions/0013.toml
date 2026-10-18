@@ -1,0 +1,11 @@
+id      = "0013"
+date    = 2026-10-17
+kind    = "rules and words"
+touches = ["jig/reader", "jig/linux.pin", "constitution/human-only.toml", "index/tool/reader@1.toml", "index/tool/*", "specs/reader.1@1.toml", "specs/reader.2@1.toml", "specs/reader.3@1.toml", "specs/reader.4@1.toml", "specs/*", "tests/*.toml", "tests/expected/*", "tests/programs/*", "tests/mutations.txt"]
+asked   = "Plan 7.0, the shared source reader (findings 0015): jig/reader, a shell placeholder that answers about Linux from one pinned commit (jig/linux.pin, the commit all twelve lifts already name) and refuses what is not there; cscope for find, callers and calls (the default with the history, with a row in design.md's tool table); filed as TOOL.reader@1, a scaffold, until findings 0015's promise of a name is kept; jig/reader and jig/linux.pin added to the human-only list because the referee may rely on its answers; four specs and four tests, each with mutations?"
+options = ["as written", "the reader as a part of its own kind, named now", "no human-only entry: the reader is only a script"]
+default = "as written"
+chose   = "as written"
+why     = "findings/0020.md"
+by      = "KEY.chris@1"
+drafted = "Claude"

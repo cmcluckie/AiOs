@@ -1,0 +1,10 @@
+code       = "TST.reader.find@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+binds      = "SPEC.reader.3@1"
+red_when   = "find, callers or calls answers differently from tests/expected/reader.find@1.out, differently the second time, or answers for a name the index does not know, or a cut-short answer does not say so"
+timeout_ms = 300000
+isolates   = "TOOL.reader@1"
+runner     = "jig/test cmd sh tests/programs/reader.sh find"
+mutations  = 6

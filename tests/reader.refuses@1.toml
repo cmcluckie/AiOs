@@ -1,0 +1,10 @@
+code       = "TST.reader.refuses@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+binds      = "SPEC.reader.1@1"
+red_when   = "the reader answers a missing file, a directory read as a file, lines past the end of the file, line 0, a backwards range, a word for a number, a missing directory, a file listed as a directory or a name with a semicolon in it, or says yes to a check outside the file, or runs on a commit the clone lacks"
+timeout_ms = 60000
+isolates   = "TOOL.reader@1"
+runner     = "jig/test cmd sh tests/programs/reader.sh refuses"
+mutations  = 8

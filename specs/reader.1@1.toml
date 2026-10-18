@@ -1,0 +1,7 @@
+code       = "SPEC.reader.1@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+component  = "TOOL.reader@1"
+clause     = "The reader refuses, with a reason and exit status 1, any file, directory, line range, number or name that is not in Linux at the pinned commit, and never answers with something nearby."
+author     = "KEY.chris"

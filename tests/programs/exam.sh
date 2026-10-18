@@ -1,0 +1,122 @@
+#!/bin/sh
+# Probe for TST.exam.*@1: jig/runs and jig/scorecard on small fixtures in
+# tests/fixtures/exam, nothing from the real runs/.  One mode per test:
+#   count      code lines are counted the same way for every file
+#   record     a run is recorded with its cost, or refused with a reason
+#   budget     the monthly cap refuses a call that could pass it
+#   scorecard  the table for two models matches tests/expected/scorecard.table@1.out
+#   judge      a lift stands in for the hand lift and the item's tests decide
+# Exit 0 is green, 1 is red, 2 means this host cannot run it (no QEMU).
+set -u
+cd "$(dirname "$0")/../.."
+mode=${1:-}
+fx=tests/fixtures/exam
+tmp=$(mktemp -d); trap 'rm -rf "$tmp"' EXIT
+export RUNS="$tmp/runs" PRICES="$fx/prices.toml" BUDGET="$fx/budget.toml"
+fail() { echo "$*"; exit 1; }
+runs() { sh jig/runs "$@"; }
+# refuse WHAT FRAGMENT COMMAND...: exit status 1, FRAGMENT on stderr, nothing recorded
+refuse() {
+	what=$1; frag=$2; shift 2
+	"$@" > "$tmp/out" 2> "$tmp/err"; rc=$?
+	[ $rc -eq 1 ] || fail "$what: exit status $rc, not a refusal"
+	grep -q -- "$frag" "$tmp/err" || fail "$what: refused, but the reason says '$(head -1 "$tmp/err")', not '$frag'"
+}
+# rec NOW ITEM MODEL VERSION TRY IN OUT RESULT LINES
+rec() { RUNS_NOW=$1 runs record "$2" "$3" "$4" "$5" "$6" "$7" "$8" "$9" "$fx/sample.in" "$fx/sample.out"; }
+
+case "$mode" in
+count)
+	[ "$(runs count $fx/hand-serial.c)" = 10 ] || fail "hand-serial.c has 10 code lines, count says $(runs count $fx/hand-serial.c)"
+	[ "$(runs count $fx/hand-timer.c)" = 6 ] || fail "hand-timer.c has 6 code lines, count says $(runs count $fx/hand-timer.c)"
+	[ "$(runs count $fx/hand-screen.c)" = 4 ] || fail "hand-screen.c has 4 code lines, count says $(runs count $fx/hand-screen.c)"
+	[ "$(runs count $fx/hand-serial.c $fx/hand-timer.c)" = 16 ] || fail "two files together should be 16, count says $(runs count $fx/hand-serial.c $fx/hand-timer.c)"
+	refuse "a file that is not there" "is not a file" sh jig/runs count $fx/nosuch.c
+	echo "10, 6 and 4 code lines in the three fixtures, 16 for two together: blanks, one-line and two-line block comments, // comments and a comment in the middle of a line are not counted; a code line with a trailing comment is" ;;
+record)
+	id=$(rec 2026-10-17T10:00:00Z serial test:big v1 1 1000 2000 fail 9) || fail "a good run was refused"
+	[ "$id" = "20261017T100000Z-serial-1-test-big" ] || fail "the id is '$id'"
+	r="$RUNS/$id"
+	grep -q '^cost_usd      = 0.033000$' "$r/run.toml" || fail "1000 in and 2000 out at 3 and 15 dollars a million should cost 0.033000: $(grep cost_usd "$r/run.toml")"
+	for kv in 'item          = "serial"' 'model         = "test:big"' 'version       = "v1"' 'try           = 1' 'input_tokens  = 1000' 'output_tokens = 2000' 'result        = "fail"' 'lines         = 9'; do
+		grep -q "^$kv\$" "$r/run.toml" || fail "run.toml lacks: $kv"
+	done
+	cmp -s "$r/input.txt" $fx/sample.in && cmp -s "$r/output.txt" $fx/sample.out || fail "the input and output were not kept as they were"
+	refuse "a model with no price" "no price for test:free" env RUNS_NOW=2026-10-17T10:01:00Z sh jig/runs record serial test:free v1 1 1 1 pass 1 $fx/sample.in $fx/sample.out
+	refuse "the same run twice" "already recorded" env RUNS_NOW=2026-10-17T10:00:00Z sh jig/runs record serial test:big v1 1 1000 2000 fail 9 $fx/sample.in $fx/sample.out
+	refuse "a result that is not pass, fail or refused" "RESULT is" rec 2026-10-17T10:02:00Z serial test:big v1 1 1 1 maybe 1
+	refuse "try 0" "TRY starts at 1" rec 2026-10-17T10:03:00Z serial test:big v1 0 1 1 pass 1
+	refuse "tokens that are not a number" "IN_TOKENS must be a whole number" rec 2026-10-17T10:04:00Z serial test:big v1 1 lots 1 pass 1
+	refuse "an input file that is not there" "is not a file" env RUNS_NOW=2026-10-17T10:05:00Z sh jig/runs record serial test:big v1 1 1 1 pass 1 $fx/nosuch.in $fx/sample.out
+	[ "$(ls "$RUNS" | wc -l)" -eq 1 ] || fail "$(ls "$RUNS" | wc -l) runs on disk after six refusals; the refused ones left something behind"
+	echo "one run recorded with cost 0.033000 (1000 in, 2000 out), its input and output kept as they were; a model with no price, a repeat, a result that is not pass, fail or refused, try 0, tokens that are words and a missing input were each refused and left nothing behind" ;;
+budget)
+	rec 2026-10-02T09:00:00Z serial test:big v1 1 0 60000 pass 5 > /dev/null || fail "the October run was refused"
+	rec 2026-09-30T09:00:00Z serial test:big v1 1 0 20000 pass 5 > /dev/null || fail "the September run was refused"
+	[ "$(runs spent 2026-10)" = 0.900000 ] || fail "October spent should be 0.900000, spent says $(runs spent 2026-10)"
+	[ "$(runs spent 2026-09)" = 0.300000 ] || fail "September spent should be 0.300000, spent says $(runs spent 2026-09)"
+	[ "$(runs spent 2026-08)" = 0.000000 ] || fail "August spent should be 0.000000, spent says $(runs spent 2026-08)"
+	export RUNS_NOW=2026-10-17T12:00:00Z
+	runs budget 0.05 > "$tmp/out" 2>&1 || fail "0.05 on top of 0.90 under a cap of 1.00 was refused: $(cat "$tmp/out")"
+	runs budget 0.10 > "$tmp/out" 2>&1 || fail "0.10 on top of 0.90 is exactly the cap and was refused: $(cat "$tmp/out")"
+	refuse "a call that could pass the cap" "would pass the cap of 1.00" sh jig/runs budget 0.15
+	refuse "a ceiling that is not dollars" "CEILING must be dollars" sh jig/runs budget lots
+	echo "October's 0.900000 is counted and September's 0.300000 is not; a call that could cost 0.05 or 0.10 is let through and 0.15 is refused against the 1.00 cap" ;;
+scorecard)
+	R() { rec "$@" > /dev/null || fail "run '$*' was refused"; }
+	R 2026-10-17T10:00:00Z serial test:big v1 1 1000 2000 fail 9
+	R 2026-10-17T10:01:00Z serial test:big v1 2 1000 1500 pass 8
+	R 2026-10-17T10:02:00Z timer test:big v1 1 2000 1000 pass 5
+	R 2026-10-17T11:00:00Z serial test:local v2 1 5000 500 pass 12
+	R 2026-10-17T11:01:00Z timer test:local v2 1 100 100 fail 0
+	R 2026-10-17T11:02:00Z timer test:local v2 2 100 100 fail 0
+	R 2026-10-17T11:03:00Z timer test:local v2 3 100 100 fail 0
+	EXAM="$fx/items.toml" EXAM_ROOT="$fx" sh jig/scorecard > "$tmp/got" 2>&1 || fail "the scorecard failed: $(head -2 "$tmp/got")"
+	cmp -s "$tmp/got" tests/expected/scorecard.table@1.out || fail "the scorecard differs from tests/expected/scorecard.table@1.out: $(diff "$tmp/got" tests/expected/scorecard.table@1.out | head -2 | tr '\n' ' ')"
+	rm -rf "$RUNS"; mkdir "$RUNS"
+	EXAM="$fx/items.toml" EXAM_ROOT="$fx" sh jig/scorecard > "$tmp/got" 2>&1 || fail "the scorecard failed on no runs"
+	[ "$(cat "$tmp/got")" = "no runs recorded in $RUNS" ] || fail "with no runs it said '$(head -1 "$tmp/got")'"
+	echo "two models, seven runs: the table matches the one written by hand (passes, lines beside the hand lift's, tries, cost including the failed tries, an item never sat, cost per item passed), and with no runs it says so" ;;
+judge)
+	command -v qemu-system-x86_64 > /dev/null || { echo "no qemu-system-x86_64"; exit 2; }
+	hand=lifted/PART.serial.8250@1
+	before=$(cksum < $hand/serial8250.c)
+	sh jig/judge serial $hand > "$tmp/out" 2>&1; rc=$?
+	[ $rc -eq 0 ] && [ "$(cat "$tmp/out")" = "pass 57 lines" ] || fail "the hand lift itself should pass with 57 lines: exit $rc, '$(head -1 "$tmp/out")'"
+	# a lift that never waits for the chip to be ready
+	mkdir "$tmp/nowait"; cp $hand/serial8250.c "$tmp/nowait/"
+	sed -i 's/while ((inb(base + UART_LSR) \& UART_LSR_THRE) == 0)/while (0)/' "$tmp/nowait/serial8250.c"
+	cmp -s $hand/serial8250.c "$tmp/nowait/serial8250.c" && fail "the fixture edit changed nothing"
+	sh jig/judge serial "$tmp/nowait" > "$tmp/out" 2>&1; rc=$?
+	[ $rc -eq 1 ] && grep -q '^fail .* lines: serial.waits-ready@1' "$tmp/out" || fail "a lift that never waits for the chip: exit $rc, '$(head -1 "$tmp/out")'"
+	# a lift that sends every newline twice
+	mkdir "$tmp/twice"; cp $hand/serial8250.c "$tmp/twice/"
+	sed -i 's/^\toutb(c, base + UART_TX);/\tif (c == 10) outb(13, base + UART_TX);\n\toutb(c, base + UART_TX);/' "$tmp/twice/serial8250.c"
+	cmp -s $hand/serial8250.c "$tmp/twice/serial8250.c" && fail "the second fixture edit changed nothing"
+	sh jig/judge serial "$tmp/twice" > "$tmp/out" 2>&1; rc=$?
+	[ $rc -eq 1 ] && grep -q '^fail 58 lines: serial.in-order@1' "$tmp/out" || fail "a lift that adds a byte: exit $rc, '$(head -1 "$tmp/out")'"
+	# a lift that is not C
+	mkdir "$tmp/junk"; cp $hand/serial8250.c "$tmp/junk/"; echo 'this is not C' >> "$tmp/junk/serial8250.c"
+	sh jig/judge serial "$tmp/junk" > "$tmp/out" 2>&1; rc=$?
+	[ $rc -eq 1 ] && grep -q '^fail ' "$tmp/out" || fail "a lift that is not C: exit $rc, '$(head -1 "$tmp/out")'"
+	mkdir "$tmp/empty"
+	refuse "a folder without the lift's file" "has no serial8250.c" sh jig/judge serial "$tmp/empty"
+	sh jig/judge nosuchitem "$tmp/empty" > "$tmp/out" 2>&1; [ $? -eq 2 ] || fail "an item that is not in the exam should be 'cannot judge' (exit 2)"
+	[ "$(cksum < $hand/serial8250.c)" = "$before" ] || fail "judging changed the hand lift in the repo"
+	echo "the hand lift passes at 57 lines; a lift that never waits for the chip fails on serial.waits-ready@1, one that adds a byte fails on serial.in-order@1, one that is not C fails; a missing file is refused, an unknown item is 'cannot judge', and the repo's own hand lift is never touched" ;;
+ping)
+	mfx=tests/fixtures/model
+	export PRICES="$mfx/prices.toml" MODEL_NAME=test:model MODEL_FAKE="$mfx/ping.json"
+	sh jig/model ping > "$tmp/out" 2>&1 || fail "a saved reply was refused: $(head -1 "$tmp/out")"
+	grep -qx 'reply: ready' "$tmp/out" && grep -qx 'tokens: 14 in, 6 out' "$tmp/out" && grep -qx 'cost: 0.000088' "$tmp/out" || fail "the reply, tokens or cost are wrong: $(tr '\n' ' ' < "$tmp/out")"
+	[ "$(ls "$RUNS" | wc -l)" -eq 1 ] && grep -q '^item *= "ping"$' "$RUNS"/*/run.toml && grep -q '^cost_usd *= 0.000088$' "$RUNS"/*/run.toml || fail "the call was not recorded once, as ping, with its cost"
+	refuse "a model with no price" "no price for test:none" env MODEL_NAME=test:none sh jig/model ping
+	[ "$(ls "$RUNS" | wc -l)" -eq 1 ] || fail "a refused call left a run behind"
+	refuse "a call that could pass the cap" "would pass the cap" env MODEL_MAX_COST=5.00 sh jig/model ping
+	env -u MODEL_FAKE AIOS_AWS="$tmp/nokey" sh jig/model ping > "$tmp/out" 2>&1; rc=$?
+	[ $rc -eq 2 ] && grep -q "no key file" "$tmp/out" || fail "no key file gave exit $rc, not 'cannot run here'"
+	printf 'AWS_ACCESS_KEY_ID=x\n' > "$tmp/open"; chmod 644 "$tmp/open"
+	refuse "a key file others can read" "can be read by others" env -u MODEL_FAKE AIOS_AWS="$tmp/open" sh jig/model ping
+	echo "a saved reply gives its word, 14 in and 6 out and a cost of 0.000088 and is recorded once as ping; a model with no price, a call that could pass the cap, a missing key file and a key file others can read each stop it before any call" ;;
+*)	fail "tests/programs/exam.sh needs a mode: count, record, budget, scorecard, judge or ping" ;;
+esac

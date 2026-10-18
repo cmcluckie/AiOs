@@ -1,0 +1,24 @@
+# The exam (part 17, plan 7.0 and the quartermaster): the three lifts a person
+# already did by hand, set to the quartermaster as questions.  Each item says
+# what the part must do, never how the hand lift did it; the hand lift is what
+# the model's is compared with, and the tests are what decides a pass: the
+# model's lift stands in for the hand lift in a copy of the repo, and the listed
+# tests must go green.  Human-only: this file decides what a pass means.
+
+[[item]]
+name  = "serial"
+asks  = "Send bytes out of a PC's first serial port, 8 data bits, no parity, one stop bit, 115200 baud, waiting for the chip to say it is ready for each one, the way Linux's early console does.  Sending only; the receiving side was added later."
+hand  = "lifted/PART.serial.8250@1/serial8250.c lifted/PART.serial.8250@1/serial8250.h"
+tests = "serial.in-order@1 serial.init-8n1@1 serial.waits-ready@1"
+
+[[item]]
+name  = "timer"
+asks  = "Measure how many CPU cycles pass in a millisecond by timing it against the PC's 8254 timer, and give up on that and take the hypervisor's word on a machine where reading the 8254 is slow."
+hand  = "lifted/PART.timer.tsc-pit@2/tsccal.c lifted/PART.timer.tsc-pit@2/tsccal.h"
+tests = "timer.rate@1 timer.slow-reads@1"
+
+[[item]]
+name  = "screen"
+asks  = "Put text on a PC's 80 by 25 screen, scrolling at the bottom, the way Linux's earliest console does, in the colour the program asked for."
+hand  = "lifted/PART.screen.vga@1/vga.c lifted/PART.screen.vga@1/vga.h"
+tests = "vga.plain@1 life.screen@1"

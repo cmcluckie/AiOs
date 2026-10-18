@@ -1,0 +1,11 @@
+id      = "0014"
+date    = 2026-10-17
+kind    = "tests"
+touches = ["exam/items.toml", "exam/*", "jig/runs", "jig/scorecard", "jig/judge", "jig/prices.toml", "jig/budget.toml", "constitution/human-only.toml", "index/tool/exam@1.toml", "index/tool/*", "specs/exam.1@1.toml", "specs/exam.2@1.toml", "specs/exam.3@1.toml", "specs/exam.4@1.toml", "specs/exam.5@1.toml", "specs/*", "tests/*.toml", "tests/exam.judge@1.toml", "tests/expected/*", "tests/fixtures/*", "tests/programs/*", "tests/mutations.txt"]
+asked   = "Part 17, the exam: the quartermaster is graded on three lifts a person already did by hand (serial 57 code lines, timer 103, screen 55, counted by jig/runs), each question saying what the part must do and the listed tests deciding a pass (exam/items.toml); every try written down by jig/runs with its model, version, tokens, input, output and a cost computed from jig/prices.toml, a model with no price refused; a monthly cap of 20 dollars in jig/budget.toml checked before each call; jig/scorecard showing pass, lines beside the hand lift's, tries and cost per model from the runs alone; four specs and four tests, each with mutations?"
+options = ["as written", "a cap of 10 dollars", "the exam's three items chosen differently"]
+default = "as written"
+chose   = "as written"
+why     = "findings/0020.md"
+by      = "KEY.chris@1"
+drafted = "Claude"

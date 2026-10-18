@@ -62,7 +62,7 @@ The detailed plan is plan/full.md; this file is the one to read.
    6.7. First green build of 0000 with its bloat figure recorded; every unjustified line is a finding. [done]
 
 7. Quartermaster: decide what enters the ecosystem. [coming up]
-   7.0. One shared source reader for the quartermaster and the historian, built first: a mechanical half (cscope by default, no model) and an AI half on top; not an agent; findings 0015. [coming up]
+   7.0. One shared source reader for the quartermaster and the historian, built first: a mechanical half (cscope by default, no model) and an AI half on top; not an agent; findings 0015.  Mechanical half built 2026-10-17 (part 17): jig/reader, shell, pinned by jig/linux.pin, refusing what is not in the pin, capped answers, TST.reader.* with 22 mutations (decision 0013, findings 0020); the AI half, and the historian moving onto it, are not built. [in progress]
    7.1. Catalogue derived from source: components, dependencies, exposed capabilities. [coming up]
    7.2. Build failures mapped to catalogue numbers, never raw tool output. [coming up]
    7.3. Pool-admission petitions drafted automatically from a failure. [coming up]
@@ -70,6 +70,7 @@ The detailed plan is plan/full.md; this file is the one to read.
    7.5. Capabilities as labels: every component carries the capabilities it may use as its label, the quartermaster drafts them from the source, the decision ledger records each, a new capability is human-only, the nucleus enforces them; findings 0013. [coming up]
    7.6. Open question, not decided: when a mechanic's fix touches lifted lines, does the quartermaster decide whether it goes back upstream to Linux?  Every Linux patch carries a person's Signed-off-by, so the answer has to cover who signs. [parked]
    7.7. Bob the Builders, a placeholder name until they are formally defined: the agents that write a new part when new requirements come in, the way the editor was written.  A whole blog series of their own, not a part of this one.  Only the mechanic writes code today, and only fixes.  Define them, name them, and give them a row in design.md's agent table; until then, Bob is Claude.  Part 15. [coming up]
+   7.8. The exam: the quartermaster, on one small pinned model, re-lifts the serial driver, the timer and the screen the hand lifts already are, graded on whether the item's tests go green with its lift standing in for the hand lift, the code lines it kept beside the hand lift's (57, 103 and 55), the tries and the cost; every try recorded (jig/runs), a monthly cap checked before each call, a scorecard per model (jig/scorecard); the same exam later on the RTX 3090 and other models, one more row.  Built 2026-10-17: the run record, the cap, the line counter and the scorecard (decision 0014); not built: the model runner, the judging, the first run.  Decided 2026-10-16 and 2026-10-17.  Part 17. [in progress]
 
 8. Committee: competing priorities, slow policy. [coming up]
    8.1. Six seats on separate models, each bias written down: security, performance, portability, experience, stability, purpose-fit; with six, the quorum rule says how a tie is broken. [coming up]

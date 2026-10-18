@@ -111,3 +111,49 @@ vga.plain@1             | red      | lifted/PART.screen.vga@1/vga.c        | s/\
 loader.ladder-8-screen@1 | red     | pool/PART.loader@8/loader.c           | s/p\[got++\] = serial8250_getc(CONSOLE_PORT);/p[got++] = (unsigned char)(serial8250_getc(CONSOLE_PORT) ^ 1);/ | the screen flavor's kernel breaks the read system call the calculator relies on
 machine.vga-only@1      | red      | pool/MACHINE.serial-vga@1/machine.sh  | s/-device isa-vga/-device isa-vga -device isa-debug-exit/            | the machine grows a device nobody asked for
 referee.no-hardware@1   | red      | pool/AGT.referee@1/referee.c          | s/\tif (st != 0) die(/\tif (0 \&\& st != 0) die(/                   | the referee waves through a program it could not compile, so never looked at
+reader.refuses@1 | red | jig/reader | /is past the end/d | lines past the end of a file are handed back as if they were there
+reader.refuses@1 | red | jig/reader | /is not a file at/d | a name that is not a file at the pin is read anyway
+reader.refuses@1 | red | jig/reader | /is before FIRST/d | a range written backwards is accepted
+reader.refuses@1 | red | jig/reader | s/^name() { case.*$/name() { :; }/ | any text counts as a name, semicolons and all
+reader.refuses@1 | red | jig/reader | /is not a directory at/d | a directory that is not there is listed anyway
+reader.refuses@1 | red | jig/reader | s/^num() { case.*$/num() { :; }/ | a word counts as a line number
+reader.refuses@1 | red | jig/reader | /lacks the pinned commit/d | a clone without the pinned commit is used anyway
+reader.refuses@1 | red | jig/reader | /FIRST must be 1/d | line 0 is accepted
+reader.exact@1 | red | jig/reader | s/NR >= s \&\& NR <= e/NR >= s \&\& NR < e/ | the last line of every range goes missing
+reader.exact@1 | red | jig/reader | s/NR >= s \&\& NR <= e/NR > s \&\& NR <= e/ | the first line of every range goes missing
+reader.exact@1 | red | jig/reader | s/printf "%s:%d: %s\\n", f, NR, \$0/printf "%s:%d: %s\\n", f, NR + 1, $0/ | every line is numbered one too high
+reader.exact@1 | red | jig/reader | s/[|]outb[|]outw[|]/|xoutb|outw|/ | ports stops seeing outb
+reader.exact@1 | red | jig/reader | s/"tree" ? "\/" : ""/"tree" ? "" : ""/ | list stops marking folders
+reader.find@1 | red | jig/reader | s/ask 1 "\$1"/ask 3 "$1"/ | find answers with the callers instead
+reader.find@1 | red | jig/reader | s/ask 3 "\$1"/ask 2 "$1"/ | callers answers with what the name calls instead
+reader.find@1 | red | jig/reader | s/ask 2 "\$1"/ask 1 "$1"/ | calls answers with the definition instead
+reader.find@1 | red | jig/reader | s/printf '%s\\n' "\$out" [|] head -n "\$MAX"/printf '%s\\n' "$out"/ | a cscope answer is no longer cut to READER_MAX
+reader.find@1 | red | jig/reader | /more not shown/d | a cut-short answer no longer says so
+reader.find@1 | red | jig/reader | /nothing for \$2/d | a name nothing defines is answered with silence and success
+reader.bounded@1 | red | jig/reader | /at a time/d | any number of lines can be asked for at once
+reader.bounded@1 | red | jig/reader | s/[|] head -n "\$MAX" ;;/;;/ | list stops at nothing
+reader.bounded@1 | red | jig/reader | s/MAX=\${READER_MAX:-200}/MAX=200/ | READER_MAX is ignored
+exam.count@1 | red | jig/runs | s/if (out ~ \/\[^ \\t\\r\]\/) n++/if (1) n++/ | blank lines are counted as code
+exam.count@1 | red | jig/runs | s/if (inc) {/if (0) {/ | the inside of a block comment is counted as code
+exam.count@1 | red | jig/runs | s/if (j > 0 \&\& (i == 0 || j < i))/if (0)/ | a // comment is counted as code
+exam.record@1 | red | jig/runs | s/ || die "no price for \$model in \$PRICES: a model with no price does not sit the exam"/ || cost=0.000000/ | a model with no price is recorded as free
+exam.record@1 | red | jig/runs | s/ + to \* po \/ 1000000// | the output tokens cost nothing
+exam.record@1 | red | jig/runs | s/cp "\$output" "\$RUNS\/\$id\/output.txt"/:/ | the model's output is not kept
+exam.record@1 | red | jig/runs | /is already recorded/d | a run can be recorded twice over
+exam.budget@1 | red | jig/runs | s/s + c > cap/s + c > cap + 1000/ | the cap is a thousand dollars higher than written
+exam.budget@1 | red | jig/runs | s/ok = (substr(d, 1, 7) == m)/ok = 1/ | every month's spend is counted in this month
+exam.budget@1 | red | jig/runs | s/s + c > cap/s + c >= cap/ | spending exactly the cap is refused
+exam.scorecard@1 | red | jig/scorecard | s/k = key SUBSEP \$3; nrun\[k\]++; cost\[k\] += \$7/k = key SUBSEP $3; nrun[k]++; if ($5 == "pass") cost[k] += $7/ | the cost of a failed try is left off
+exam.scorecard@1 | red | jig/scorecard | s/hand\[order\[i\]\]/kept[k]/ | the hand lift's lines are shown as the model's
+exam.scorecard@1 | red | jig/scorecard | s/tries\[k\] = nrun\[k\]/tries[k] = 1/ | every pass is said to have taken one try
+exam.scorecard@1 | red | jig/scorecard | s/if (!(k in nrun)) {/if (0) {/ | an item a model never sat is shown as a failure
+exam.judge@1 | red | jig/judge | s/\[ -z "\$red" \] || { echo "fail \$lines lines: \$red"; exit 1; }/:/ | a lift whose test went red is judged to pass
+exam.judge@1 | red | jig/judge | s/\[ -f "\$dir\/\$(basename "\$f")" \] \&\& cp "\$dir\/\$(basename "\$f")" "\$tmp\/\$f"/:/ | the lift is never put in place of the hand lift, so the hand lift is judged every time
+exam.judge@1 | red | jig/judge | s/lift="\$lift \$dir\/\$(basename "\$f")" ;;/lift="$lift $f" ;;/ | the lines counted are the hand lift's, not the lift's
+exam.judge@1 | red | jig/judge | s/no item '\$item' in \$EXAM" >\&2; exit 2/no item '$item' in $EXAM" >\&2; exit 1/ | an item that is not in the exam is a failure, not a thing that cannot be judged
+exam.judge@1 | survives | jig/judge | s/SKIP\*) skipped="\$skipped \$t" ;;/SKIP*) ;;/ | a skipped test is judged as a pass: no test the exam lists skips on this host, so nothing can see it yet
+exam.ping@1 | red | jig/model | s/grep -q "^name \*= \*\\"\$MODEL_NAME\\"" "\${PRICES:-\$repo\/jig\/prices.toml}" 2> \/dev\/null \|\| die/true || die/ | a call is made to a model whose price is not in the list, and costs money before it is refused
+exam.ping@1 | red | jig/model | s/sh "\$repo\/jig\/runs" budget "\$MODEL_MAX_COST" > \/dev\/null || exit 1/:/ | the cap is not asked before a call
+exam.ping@1 | red | jig/model | s/\[ -z "\$(find "\$AIOS_AWS" -perm \/077 2> \/dev\/null)" \] || die/true || die/ | a key file anyone can read is used
+exam.ping@1 | red | jig/model | s/\[ -f "\$AIOS_AWS" \] || cannot/true || cannot/ | a missing key file goes on to a call instead of stopping
+exam.ping@1 | red | jig/model | s/record ping "\$MODEL_NAME" "\$(date -u +%Y-%m-%d)" 1 "\$tin" "\$tout"/record ping "$MODEL_NAME" "$(date -u +%Y-%m-%d)" 1 "$tout" "$tin"/ | the input and output tokens are swapped, so the cost is wrong

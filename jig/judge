@@ -1,0 +1,56 @@
+#!/bin/sh
+# judge: grade one lift from the exam (exam/items.toml).  The model's lift
+# stands in for the hand lift in a throwaway copy of the repo, and the item's
+# tests run there with jig/test; the lift passes only if every one of them goes
+# green.  The repo itself is never touched.  It decides nothing the tests did
+# not already decide: no model, no opinion.
+#
+#   judge ITEM DIR       DIR holds the lift: a file with the same name as each
+#                        of the hand lift's .c files (a .h that is missing stays
+#                        the hand lift's)
+#
+# Prints   pass LINES lines   or   fail LINES lines: <the first test that went red>
+# where LINES is the lift's code lines, counted by jig/runs.
+# Exit 0 passed, 1 failed, 2 cannot be judged here (a test skipped, or no item).
+set -u
+repo=$(cd "$(dirname "$0")/.." && pwd); cd "$repo"
+EXAM=${EXAM:-exam/items.toml}
+[ $# -eq 2 ] || { echo "judge: needs ITEM DIR" >&2; exit 1; }
+item=$1; dir=$2
+[ -d "$dir" ] || { echo "judge: $dir is not a directory" >&2; exit 1; }
+row=$(awk -v n="$item" '/^\[\[item\]\]/ { if (hit) exit; hit = 0 }
+	/^name *=/ { s = $0; sub(/^[^"]*"/, "", s); sub(/".*$/, "", s); hit = (s == n) }
+	hit && /^hand *=/ { s = $0; sub(/^[^"]*"/, "", s); sub(/".*$/, "", s); h = s }
+	hit && /^tests *=/ { s = $0; sub(/^[^"]*"/, "", s); sub(/".*$/, "", s); t = s }
+	END { if (h != "") print h "|" t }' "$EXAM")
+[ -n "$row" ] || { echo "judge: no item '$item' in $EXAM" >&2; exit 2; }
+hand=${row%%|*}; tests=${row#*|}
+
+lift=""
+for f in $hand; do
+	case "$f" in
+	*.c) [ -f "$dir/$(basename "$f")" ] || { echo "judge: $dir has no $(basename "$f")" >&2; exit 1; }
+	     lift="$lift $dir/$(basename "$f")" ;;
+	esac
+done
+# shellcheck disable=SC2086
+lines=$(sh jig/runs count $lift) || exit 1
+
+tmp=$(mktemp -d); trap 'rm -rf "$tmp"' EXIT
+tar --exclude=./out --exclude=./.git -cf - . | tar -xf - -C "$tmp"
+for f in $hand; do
+	[ -f "$dir/$(basename "$f")" ] && cp "$dir/$(basename "$f")" "$tmp/$f"
+done
+red=""; skipped=""
+for t in $tests; do
+	out=$(cd "$tmp" && sh jig/test "$t" 2>&1)
+	line=$(printf '%s\n' "$out" | grep "^[A-Z]* *TST\.$t " | head -n 1)
+	case "$line" in
+	PASS*) ;;
+	SKIP*) skipped="$skipped $t" ;;
+	*) [ -n "$red" ] || red="$t: $(printf '%s' "${line:-$(printf '%s\n' "$out" | tail -n 1)}" | cut -c1-120)" ;;
+	esac
+done
+[ -z "$red" ] || { echo "fail $lines lines: $red"; exit 1; }
+[ -z "$skipped" ] || { echo "cannot judge: skipped here:$skipped" >&2; exit 2; }
+echo "pass $lines lines"

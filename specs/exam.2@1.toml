@@ -1,0 +1,7 @@
+code       = "SPEC.exam.2@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+component  = "TOOL.exam@1"
+clause     = "A run is recorded only with its model, version, token counts, result, input and output, at a cost computed from the price list; a model with no price, or a field that is malformed, is refused and leaves nothing behind."
+author     = "KEY.chris"

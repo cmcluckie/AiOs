@@ -1,0 +1,11 @@
+id      = "0015"
+date    = 2026-10-17
+kind    = "rules and words"
+touches = ["jig/prices.toml", "jig/model", "specs/exam.6@1.toml", "tests/exam.ping@1.toml", "jig/configuration.nix", "design.md"]
+asked   = "The first exam sits Claude Sonnet 5.5 on Amazon Bedrock in us-west-2, called through the global cross-region profile global.anthropic.claude-sonnet-5-5 (the plain model id only takes a profile); priced at 2.00 dollars per million input tokens and 10.00 per million output, the global cross-region price on Bedrock's own pricing page read today.  The US-only profile us.anthropic.claude-sonnet-5-5 is not priced here and is not used until a row says what it costs.  The first call to a model is made by jig/model: costed, capped and recorded, the key read from a file outside the repo (~/.aios/aws, readable by no one else), curl added to the jig and to the tool table."
+options = ["as written", "the US-only profile instead, priced when read", "no row yet"]
+default = "as written"
+chose   = "as written"
+why     = "findings/0020.md"
+by      = "KEY.chris@1"
+drafted = "Claude"

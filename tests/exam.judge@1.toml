@@ -1,0 +1,10 @@
+code       = "TST.exam.judge@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+binds      = "SPEC.exam.5@1"
+red_when   = "a lift that never waits for the chip, one that sends an extra byte or one that is not C is judged to pass, the hand lift is judged to fail or to have other than 57 code lines, a missing file is not refused, an unknown item is not cannot-judge, or the repo's hand lift is changed by judging"
+timeout_ms = 300000
+isolates   = "TOOL.exam@1"
+runner     = "jig/test cmd sh tests/programs/exam.sh judge"
+mutations  = 4

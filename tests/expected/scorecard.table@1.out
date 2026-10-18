@@ -1,0 +1,10 @@
+test:big (v1)
+  serial  PASS  8 lines (hand 10)  2 tries  $0.058500
+  timer   PASS  5 lines (hand 6)  1 try  $0.021000
+  screen  not sat
+  2 of 3 passed  $0.079500 spent  $0.039750 per item passed
+test:local (v2)
+  serial  PASS  12 lines (hand 10)  1 try  $0.000000
+  timer   FAIL  3 tries  $0.000000
+  screen  not sat
+  1 of 3 passed  $0.000000 spent  $0.000000 per item passed

@@ -1,0 +1,7 @@
+code       = "SPEC.exam.1@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+component  = "TOOL.exam@1"
+clause     = "Code lines are counted the same way for every lift, the model's and the hand's: non-blank lines outside comments."
+author     = "KEY.chris"

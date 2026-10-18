@@ -1,0 +1,7 @@
+code       = "SPEC.exam.4@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+component  = "TOOL.exam@1"
+clause     = "The scorecard shows, for each model and each exam item, whether it passed, the lines kept beside the hand lift's, the tries and the total cost of every try, from the recorded runs only; an item a model never sat is shown as not sat."
+author     = "KEY.chris"

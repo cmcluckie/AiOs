@@ -1,0 +1,7 @@
+code       = "SPEC.exam.6@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+component  = "TOOL.exam@1"
+clause     = "A call to a model is made only when its model has a price, the key file is there and is readable by no one else, and the monthly cap has room for the most the call could cost; each call is then written into the run record with its tokens and its cost."
+author     = "KEY.chris"

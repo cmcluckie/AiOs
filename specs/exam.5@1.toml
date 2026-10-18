@@ -1,0 +1,7 @@
+code       = "SPEC.exam.5@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+component  = "TOOL.exam@1"
+clause     = "A lift is judged by standing it in for the hand lift in a copy of the repo and running the item's tests there: it passes only if every one goes green, a lift that breaks one fails naming the first that went red, and the repo itself is never changed."
+author     = "KEY.chris"

@@ -1,0 +1,10 @@
+code       = "TST.reader.bounded@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+binds      = "SPEC.reader.4@1"
+red_when   = "a read of 201 lines, or of more than READER_MAX lines, is answered, or list gives more than READER_MAX entries"
+timeout_ms = 60000
+isolates   = "TOOL.reader@1"
+runner     = "jig/test cmd sh tests/programs/reader.sh bounded"
+mutations  = 3

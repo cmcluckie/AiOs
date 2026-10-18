@@ -1,0 +1,68 @@
+#!/bin/sh
+# scorecard: the exam's results, one block per model, from the recorded runs
+# (jig/runs) and nothing else.  For each exam item (exam/items.toml) it shows
+# whether the model passed, the lines of code its lift kept beside the hand
+# lift's (counted the same way for both), the tries it took and what every try
+# cost, failed ones included; an item the model never sat is "not sat".  It
+# decides nothing and invents nothing: a number that is not in runs/ or in the
+# hand lift's file is not on the card.
+#
+#   scorecard                 every model that has a run
+#
+# RUNS=dir (default runs/), EXAM=file (default exam/items.toml), EXAM_ROOT=dir
+# (default the repo; where the items' hand-lift paths start).
+set -eu
+repo=$(cd "$(dirname "$0")/.." && pwd)
+RUNS=${RUNS:-$repo/runs}
+EXAM=${EXAM:-$repo/exam/items.toml}
+EXAM_ROOT=${EXAM_ROOT:-$repo}
+die() { echo "scorecard: $*" >&2; exit 1; }
+[ -f "$EXAM" ] || die "no exam at $EXAM"
+tmp=$(mktemp -d); trap 'rm -rf "$tmp"' EXIT
+
+# the items in the order the exam lists them, each with the hand lift's code lines
+awk '/^\[\[item\]\]/ { if (n != "") print n "\t" h; n = ""; h = "" }
+	/^name *=/ { s = $0; sub(/^[^"]*"/, "", s); sub(/".*$/, "", s); n = s }
+	/^hand *=/ { s = $0; sub(/^[^"]*"/, "", s); sub(/".*$/, "", s); h = s }
+	END { if (n != "") print n "\t" h }' "$EXAM" > "$tmp/items.raw"
+[ -s "$tmp/items.raw" ] || die "$EXAM lists no items"
+while IFS="$(printf '\t')" read -r name hand; do
+	files=""; for f in $hand; do case "$f" in *.c) files="$files $EXAM_ROOT/$f" ;; esac; done
+	[ -n "$files" ] || die "item $name has no hand-lift .c file"
+	# shellcheck disable=SC2086
+	printf '%s\t%s\n' "$name" "$(sh "$repo/jig/runs" count $files)"
+done < "$tmp/items.raw" > "$tmp/items"
+
+# every run, one line each: model, version, item, try, result, lines, cost
+for f in "$RUNS"/*/run.toml; do
+	[ -f "$f" ] || continue
+	awk 'function val(s) { sub(/^[^=]*= */, "", s); gsub(/"/, "", s); return s }
+		/^model *=/ { m = val($0) } /^version *=/ { v = val($0) } /^item *=/ { i = val($0) }
+		/^try *=/ { t = val($0) } /^result *=/ { r = val($0) } /^lines *=/ { l = val($0) } /^cost_usd *=/ { c = val($0) }
+		END { printf "%s\t%s\t%s\t%d\t%s\t%s\t%s\n", m, v, i, t, r, l, c }' "$f"
+done | sort -t"$(printf '\t')" -k1,1 -k2,2 -k3,3 -k4,4n > "$tmp/runs"
+[ -s "$tmp/runs" ] || { echo "no runs recorded in $RUNS"; exit 0; }
+
+awk -F'\t' '
+FILENAME == ITEMS { order[++n] = $1; hand[$1] = $2; next }
+{ key = $1 " (" $2 ")"; if (!(key in seen)) { seen[key] = 1; models[++nm] = key }
+  k = key SUBSEP $3; nrun[k]++; cost[k] += $7
+  if ($5 == "pass" && !(k in passed)) { passed[k] = 1; tries[k] = nrun[k]; kept[k] = $6 } }
+END {
+	for (m = 1; m <= nm; m++) {
+		print models[m]; ok = 0; total = 0
+		for (i = 1; i <= n; i++) {
+			k = models[m] SUBSEP order[i]
+			if (!(k in nrun)) { printf "  %-7s not sat\n", order[i]; continue }
+			total += cost[k]
+			if (k in passed) {
+				ok++
+				printf "  %-7s PASS  %d lines (hand %d)  %d %s  $%.6f\n", order[i], kept[k], hand[order[i]], tries[k], (tries[k] == 1 ? "try" : "tries"), cost[k]
+			} else {
+				printf "  %-7s FAIL  %d %s  $%.6f\n", order[i], nrun[k], (nrun[k] == 1 ? "try" : "tries"), cost[k]
+			}
+		}
+		if (ok > 0) per = sprintf("$%.6f", total / ok); else per = "n/a"
+		printf "  %d of %d passed  $%.6f spent  %s per item passed\n", ok, n, total, per
+	}
+}' ITEMS="$tmp/items" "$tmp/items" "$tmp/runs"
