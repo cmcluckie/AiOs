@@ -1,0 +1,11 @@
+id      = "0019"
+date    = 2026-10-17
+kind    = "rules and words"
+touches = ["jig/prices.toml", "jig/runs", "jig/sit", "specs/exam.7@1.toml", "specs/exam.8@1.toml", "tests/exam.sit@1.toml", "tests/exam.cache@1.toml", "tests/fixtures/*", "tests/programs/exam.sh", "tests/mutations.txt", "findings/0020.md"]
+asked   = "The exam runner marks the prompt, the tools and the latest message to be cached, so that each later call in a try is charged the cached rate for what it has already sent (0.30 dollars per million for Sonnet 4.6 against 3.00); the run record keeps the cached tokens beside the others and costs them at per_million_cache_read and per_million_cache_write in jig/prices.toml (read from the same Bedrock page, the 5 minute write price), a model with no cache price being refused when it reports cached tokens.  The first real run cost 0.52 dollars for 62 lines with no caching; the cost per passing part is the number the scorecard exists to show."
+options = ["as written", "no caching, keep the first run's price as the headline", "the 1 hour cache instead of the 5 minute one"]
+default = "as written"
+chose   = "as written"
+why     = "findings/0020.md"
+by      = "KEY.chris@1"
+drafted = "Claude"

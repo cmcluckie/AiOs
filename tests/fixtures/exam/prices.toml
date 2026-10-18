@@ -10,3 +10,11 @@ name = "test:local"
 per_million_input  = 0
 per_million_output = 0
 priced_from = "fixture"
+
+[[model]]
+name = "test:cache"
+per_million_input  = 3.00
+per_million_output = 15.00
+per_million_cache_read  = 0.30
+per_million_cache_write = 3.75
+priced_from = "fixture"

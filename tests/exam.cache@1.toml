@@ -1,0 +1,10 @@
+code       = "TST.exam.cache@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+binds      = "SPEC.exam.8@1"
+red_when   = "cached tokens are costed at the ordinary input price or not at all, are not written into run.toml, or are recorded for a model with no cache price, or a run with no cached tokens is refused for such a model"
+timeout_ms = 30000
+isolates   = "TOOL.exam@1"
+runner     = "jig/test cmd sh tests/programs/exam.sh cache"
+mutations  = 3

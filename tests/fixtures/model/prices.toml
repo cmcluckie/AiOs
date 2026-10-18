@@ -4,3 +4,5 @@ name = "test:model"
 per_million_input  = 2.00
 per_million_output = 10.00
 priced_from = "fixture"
+per_million_cache_read  = 0.20
+per_million_cache_write = 2.50

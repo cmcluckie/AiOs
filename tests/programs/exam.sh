@@ -113,7 +113,10 @@ sit)
 	sh jig/sit part > "$tmp/out" 2>&1; rc=$?
 	[ $rc -eq 0 ] || fail "a model that passes on its second try gave exit $rc: $(tr '\n' ' ' < "$tmp/out")"
 	grep -q '^try 1: fail (fail 7 lines: serial.waits-ready@1)  300 in, 50 out$' "$tmp/out" || fail "try 1 should fail on serial.waits-ready@1 with 300 in and 50 out: $(head -1 "$tmp/out")"
-	grep -q '^try 2: pass (pass 5 lines)  300 in, 40 out$' "$tmp/out" || fail "try 2 should pass at 5 lines with 300 in and 40 out: $(sed -n 2p "$tmp/out")"
+	grep -q '^try 2: pass (pass 5 lines)  300 in (1000 read from cache, 500 written to it), 40 out$' "$tmp/out" || fail "try 2 should pass at 5 lines with 300 in, 1000 read from the cache, 500 written to it and 40 out: $(sed -n 2p "$tmp/out")"
+	grep -qx 'cost_usd      = 0.002450' "$RUNS"/*-part-2-*/run.toml || fail "try 2 should cost 0.002450 with its cached tokens at their own prices: $(grep -h cost_usd "$RUNS"/*-part-2-*/run.toml)"
+	[ "$(jq '[.. | objects | select(has("cachePoint"))] | length' "$tmp/sit/part-try2/req.json")" = 3 ] && [ "$(jq '.messages[:-1] | [.. | objects | select(has("cachePoint"))] | length' "$tmp/sit/part-try2/req.json")" = 0 ] || fail "the request should mark the prompt, the tools and the last message to be cached, and nothing else"
+	[ "$(jq '[.. | objects | select(has("cachePoint"))] | length' "$tmp/sit/part-try2/messages.json")" = 0 ] || fail "the markers were saved into the conversation, where they would pile up"
 	[ "$(ls "$RUNS" | wc -l)" -eq 2 ] || fail "$(ls "$RUNS" | wc -l) runs recorded, not 2"
 	grep -qx 'cost_usd      = 0.001100' "$RUNS"/*-part-1-*/run.toml || fail "try 1 should have cost 0.001100: $(grep -h cost_usd "$RUNS"/*-part-1-*/run.toml)"
 	grep -qx 'result        = "fail"' "$RUNS"/*-part-1-*/run.toml && grep -qx 'result        = "pass"' "$RUNS"/*-part-2-*/run.toml && grep -qx 'lines         = 5' "$RUNS"/*-part-2-*/run.toml || fail "the two runs are not recorded as fail then pass at 5 lines"
@@ -133,6 +136,17 @@ sit)
 	JUDGE="sh $tmp/badjudge.sh" MODEL_FAKE="$tmp/fake3" sh jig/sit part > "$tmp/out" 2>&1; rc=$?
 	[ $rc -eq 2 ] && [ ! -e "$tmp/fake3/.n" ] && [ ! -d "$RUNS" ] || fail "a judge that fails the hand lift: exit $rc, a call was made or a run recorded"
 	echo "a model that fails then passes is recorded as two runs, fail then pass at 5 lines, costing 0.001100 for the first; the reader's answers and a refused command reach it, the second try is shown the failing test and its own file, only the file asked for is kept and fences are dropped; a reply with no file is recorded as refused with its cost; a judge that fails the hand lift stops it before any call" ;;
+cache)
+	export RUNS_NOW=2026-10-17T10:00:00Z
+	RUNS_CACHE_READ=10000 RUNS_CACHE_WRITE=2000 runs record serial test:cache v1 1 1000 500 pass 8 "$fx/sample.in" "$fx/sample.out" > /dev/null || fail "a run with cached tokens was refused"
+	r="$RUNS/20261017T100000Z-serial-1-test-cache"
+	grep -qx 'cost_usd      = 0.021000' "$r/run.toml" || fail "1000 in, 500 out, 10000 read and 2000 written at 3, 15, 0.30 and 3.75 should cost 0.021000: $(grep cost_usd "$r/run.toml")"
+	grep -qx 'cache_read_tokens  = 10000' "$r/run.toml" && grep -qx 'cache_write_tokens = 2000' "$r/run.toml" || fail "the cached tokens were not written into run.toml"
+	refuse "cached tokens for a model with no cache price" "no cache price for test:big" env RUNS_NOW=2026-10-17T10:01:00Z RUNS_CACHE_READ=5 sh jig/runs record serial test:big v1 1 1 1 pass 1 $fx/sample.in $fx/sample.out
+	refuse "cached tokens that are words" "RUNS_CACHE_READ must be a whole number" env RUNS_NOW=2026-10-17T10:02:00Z RUNS_CACHE_READ=lots sh jig/runs record serial test:cache v1 1 1 1 pass 1 $fx/sample.in $fx/sample.out
+	RUNS_NOW=2026-10-17T10:03:00Z runs record serial test:big v1 1 1000 2000 fail 9 "$fx/sample.in" "$fx/sample.out" > /dev/null || fail "a run with no cached tokens was refused for a model with no cache price"
+	[ "$(ls "$RUNS" | wc -l)" -eq 2 ] || fail "$(ls "$RUNS" | wc -l) runs on disk, not 2: a refused run left something behind"
+	echo "cached tokens are costed at their own prices (1000 in, 500 out, 10000 read, 2000 written: 0.021000) and kept in run.toml; cached tokens for a model with no cache price, or that are words, are refused and leave nothing behind; a run with none still records for a model with no cache price" ;;
 ping)
 	mfx=tests/fixtures/model
 	export PRICES="$mfx/prices.toml" MODEL_NAME=test:model MODEL_FAKE="$mfx/ping.json"
@@ -147,5 +161,5 @@ ping)
 	printf 'AWS_ACCESS_KEY_ID=x\n' > "$tmp/open"; chmod 644 "$tmp/open"
 	refuse "a key file others can read" "can be read by others" env -u MODEL_FAKE AIOS_AWS="$tmp/open" sh jig/model ping
 	echo "a saved reply gives its word, 14 in and 6 out and a cost of 0.000088 and is recorded once as ping; a model with no price, a call that could pass the cap, a missing key file and a key file others can read each stop it before any call" ;;
-*)	fail "tests/programs/exam.sh needs a mode: count, record, budget, scorecard, judge, sit or ping" ;;
+*)	fail "tests/programs/exam.sh needs a mode: count, record, budget, scorecard, judge, sit, cache or ping" ;;
 esac

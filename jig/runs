@@ -11,6 +11,10 @@
 #                                     RESULT is pass, fail or refused; the cost is the tokens
 #                                     times the model's price in jig/prices.toml, and a model
 #                                     with no price there is refused, never recorded as free
+#                                     cached tokens, when the model reports them, are given as
+#                                     RUNS_CACHE_READ and RUNS_CACHE_WRITE (default 0) and cost
+#                                     per_million_cache_read and per_million_cache_write; a model
+#                                     with no such price is refused rather than costed as free
 #   runs spent [YYYY-MM]              the cost of every run recorded in that month (default: now)
 #   runs budget CEILING               exit 1 if this month's spend plus CEILING (the most the
 #                                     next call could cost, in dollars) would pass the cap in
@@ -57,13 +61,21 @@ record)	[ $# -eq 10 ] || die "needs ITEM MODEL VERSION TRY IN_TOKENS OUT_TOKENS 
 	case "$result" in pass|fail|refused) ;; *) die "RESULT is pass, fail or refused, not '$result'" ;; esac
 	[ -f "$input" ] || die "$input is not a file"; [ -f "$output" ] || die "$output is not a file"
 	[ -f "$PRICES" ] || die "no price list at $PRICES"
-	cost=$(awk -v m="$model" -v ti="$tin" -v to="$tout" '
-		/^\[\[model\]\]/ { name = ""; pi = ""; po = "" }
-		/^name *=/ { s = $0; sub(/^[^"]*"/, "", s); sub(/".*$/, "", s); name = s }
-		/^per_million_input *=/ { split($0, a, "="); gsub(/ /, "", a[2]); pi = a[2] }
-		/^per_million_output *=/ { split($0, a, "="); gsub(/ /, "", a[2]); po = a[2]
-			if (name == m && pi != "") { printf "%.6f\n", ti * pi / 1000000 + to * po / 1000000; found = 1; exit } }
-		END { if (!found) exit 1 }' "$PRICES") || die "no price for $model in $PRICES: a model with no price does not sit the exam"
+	cread=${RUNS_CACHE_READ:-0}; cwrite=${RUNS_CACHE_WRITE:-0}
+	whole RUNS_CACHE_READ "$cread"; whole RUNS_CACHE_WRITE "$cwrite"
+	cost=$(awk -v m="$model" -v ti="$tin" -v to="$tout" -v cr="$cread" -v cw="$cwrite" '
+		function val(s) { sub(/^[^=]*= */, "", s); gsub(/ /, "", s); return s }
+		/^\[\[model\]\]/ { if (hit) exit; hit = 0 }
+		/^name *=/ { s = $0; sub(/^[^"]*"/, "", s); sub(/".*$/, "", s); hit = (s == m); if (hit) found = 1 }
+		hit && /^per_million_input *=/ { pi = val($0) }
+		hit && /^per_million_output *=/ { po = val($0) }
+		hit && /^per_million_cache_read *=/ { pcr = val($0) }
+		hit && /^per_million_cache_write *=/ { pcw = val($0) }
+		END { if (!found || pi == "" || po == "") exit 1
+			if ((cr > 0 && pcr == "") || (cw > 0 && pcw == "")) exit 2
+			printf "%.6f\n", ti * pi / 1000000 + to * po / 1000000 + cr * pcr / 1000000 + cw * pcw / 1000000 }' "$PRICES") || {
+		[ $? -eq 2 ] && die "no cache price for $model in $PRICES: cached tokens cannot be costed, so they are not recorded"
+		die "no price for $model in $PRICES: a model with no price does not sit the exam"; }
 	now=${RUNS_NOW:-$(date -u +%Y-%m-%dT%H:%M:%SZ)}
 	slug=$(printf '%s' "$model" | tr -c 'A-Za-z0-9\n' '-')
 	id="$(printf '%s' "$now" | tr -d ':-')-$item-$try-$slug"
@@ -79,6 +91,8 @@ version       = "$version"
 try           = $try
 input_tokens  = $tin
 output_tokens = $tout
+cache_read_tokens  = $cread
+cache_write_tokens = $cwrite
 cost_usd      = $cost
 result        = "$result"
 lines         = $lines

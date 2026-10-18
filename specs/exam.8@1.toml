@@ -1,0 +1,7 @@
+code       = "SPEC.exam.8@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+component  = "TOOL.exam@1"
+clause     = "Tokens a model reports as read from or written to its cache are costed at the model's own cache prices and written into the run record beside the other tokens; a model with no cache price is refused when it reports cached tokens, never costed as if they were free."
+author     = "KEY.chris"

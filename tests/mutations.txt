@@ -136,7 +136,7 @@ reader.bounded@1 | red | jig/reader | s/MAX=\${READER_MAX:-200}/MAX=200/ | READE
 exam.count@1 | red | jig/runs | s/if (out ~ \/\[^ \\t\\r\]\/) n++/if (1) n++/ | blank lines are counted as code
 exam.count@1 | red | jig/runs | s/if (inc) {/if (0) {/ | the inside of a block comment is counted as code
 exam.count@1 | red | jig/runs | s/if (j > 0 \&\& (i == 0 || j < i))/if (0)/ | a // comment is counted as code
-exam.record@1 | red | jig/runs | s/ || die "no price for \$model in \$PRICES: a model with no price does not sit the exam"/ || cost=0.000000/ | a model with no price is recorded as free
+exam.record@1 | red | jig/runs | s/die "no price for \$model in \$PRICES: a model with no price does not sit the exam"; }/cost=0.000000; }/ | a model with no price is recorded as free
 exam.record@1 | red | jig/runs | s/ + to \* po \/ 1000000// | the output tokens cost nothing
 exam.record@1 | red | jig/runs | s/cp "\$output" "\$RUNS\/\$id\/output.txt"/:/ | the model's output is not kept
 exam.record@1 | red | jig/runs | /is already recorded/d | a run can be recorded twice over
@@ -167,3 +167,10 @@ exam.sit@1 | red | jig/sit | s#/^```/ { next }#/^NEVER/ { next }# | code fences 
 exam.sit@1 | red | jig/sit | s#\$JUDGE "\$item" "\$repo/\$handdir" > /dev/null 2>&1 \|\| cannot#true || cannot# | a call is made though the judge cannot pass the hand lift
 exam.sit@1 | red | jig/sit | s#result=refused; lines=0#result=fail; lines=0# | a reply with no file is recorded as a failed lift, not a refusal
 exam.sit@1 | red | jig/sit | s#jq --slurpfile r "\$d/res.json" '. + \$r\[0\]'#jq --slurpfile r "$d/res.json" '.'# | what the reader said is never given back to the model
+exam.cache@1 | red | jig/runs | s# + cw \* pcw / 1000000## | cache writes are not charged
+exam.cache@1 | red | jig/runs | s#if ((cr > 0 \&\& pcr == "") \|\| (cw > 0 \&\& pcw == "")) exit 2#if (0) exit 2# | cached tokens are recorded for a model with no cache price, as if they were free
+exam.cache@1 | red | jig/runs | s#^cache_write_tokens = \$cwrite$## | cache writes are costed but not kept in the run record
+exam.sit@1 | red | jig/sit | s#RUNS_CACHE_READ=\$cread RUNS_CACHE_WRITE=\$cwrite sh#sh# | the cached tokens a reply reports are not passed to the record, so the try is costed too low
+exam.sit@1 | red | jig/sit | s#\| \.\[-1\]\.content += \[\$cp\]#| .# | the latest message is not marked to be cached, so every call resends it at full price
+exam.sit@1 | red | jig/sit | s#,\$cp\],messages:#],messages:# | the prompt is not marked to be cached
+exam.sit@1 | red | jig/sit | s#cread=\$((cread + \$(jq '.usage.cacheReadInputTokens // 0' "\$d/reply.json")))#cread=0# | tokens read from the cache are not counted

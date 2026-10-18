@@ -8,10 +8,14 @@
 name = "bedrock:global.anthropic.claude-sonnet-5-5"
 per_million_input  = 2.00
 per_million_output = 10.00
-priced_from = "Amazon Bedrock pricing page, Anthropic models, Global Cross-region Inference, US West (Oregon), read 2026-10-17"
+per_million_cache_read  = 0.10
+per_million_cache_write = 2.50
+priced_from = "Amazon Bedrock pricing page, Anthropic models, Global Cross-region Inference, US West (Oregon), read 2026-10-17; cache write is the 5 minute price"
 
 [[model]]
 name = "bedrock:global.anthropic.claude-sonnet-4-6"
 per_million_input  = 3.00
 per_million_output = 15.00
-priced_from = "Amazon Bedrock pricing page, Anthropic models, Global Cross-region Inference, US West (Oregon), read 2026-10-17"
+per_million_cache_read  = 0.30
+per_million_cache_write = 3.75
+priced_from = "Amazon Bedrock pricing page, Anthropic models, Global Cross-region Inference, US West (Oregon), read 2026-10-17; cache write is the 5 minute price"
