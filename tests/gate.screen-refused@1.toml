@@ -1,0 +1,10 @@
+code       = "TST.gate.screen-refused@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+binds      = "SPEC.gate.1@1"
+red_when   = "a probe that stores a character into the screen's memory at 0xb8000 on a plain kernel gets its marker byte out, or is not stopped with a Guru Meditation line naming vector 0000000E and address 000B8000"
+timeout_ms = 15000
+isolates   = "PART.gate@1"
+runner     = "jig/test cmd sh tests/programs/gate-screen.sh"
+mutations  = 0

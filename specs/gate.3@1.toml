@@ -1,0 +1,7 @@
+code       = "SPEC.gate.3@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+component  = "PART.gate@1"
+clause     = "The system call table a program is handed keeps its seven entries at their offsets, so every earlier program runs unchanged, and each entry that has no Linux number yet (alloc, ms, load, save) uses an AiOs-only number of 1000 or more, marked in the source as tech debt and listed in findings 0021."
+author     = "KEY.chris"

@@ -1,0 +1,7 @@
+code       = "SPEC.gate.1@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+component  = "PART.gate@1"
+clause     = "Every program runs in ring 3: a program that reads or writes the kernel's memory, the screen's memory or an I/O port is stopped by the processor, the kernel names the fault on the console, and the kernel itself carries on; a program that does none of these runs exactly as it did before."
+author     = "KEY.chris"

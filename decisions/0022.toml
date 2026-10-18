@@ -1,0 +1,11 @@
+id      = "0022"
+date    = 2026-10-18
+kind    = "tests"
+touches = ["specs/gate.1@1.toml", "specs/gate.2@1.toml", "specs/gate.3@1.toml", "specs/gate.4@1.toml", "tests/gate.screen-refused@1.toml", "tests/gate.port-refused@1.toml", "tests/gate.kernel-refused@1.toml", "tests/gate.int80@1.toml", "tests/gate.ladder@1.toml", "tests/gate.debt-listed@1.toml", "findings/0021.md"]
+asked   = "Plan 9.13, the gate: programs run in ring 3 and ask the kernel with int 0x80, so a program can no longer reach the kernel, the screen or a port.  Protection by paging, in a new part the shared-programs part depends on, not by segments and not copied into each kernel.  The four system calls with no Linux number yet (alloc, ms, load, save) get AiOs-only numbers from 1000, marked in the source as tech debt that has to be removed, and listed in findings 0021."
+options = ["paging, in a new part (as written)", "paging copied into each kernel", "segments"]
+default = "paging, in a new part (as written)"
+chose   = "paging, in a new part (as written)"
+why     = "findings/0021.md"
+by      = "KEY.chris@1"
+drafted = "Claude"

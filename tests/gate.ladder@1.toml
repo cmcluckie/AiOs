@@ -1,0 +1,10 @@
+code       = "TST.gate.ladder@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+binds      = "SPEC.gate.3@1"
+red_when   = "any earlier program, built for its own loader and booted unchanged under the gate, prints anything but its own expected output, or the system call table's seven entries are not at offsets 0 to 24"
+timeout_ms = 60000
+isolates   = "PART.gate@1"
+runner     = "jig/test ladder gate"
+mutations  = 0

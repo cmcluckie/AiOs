@@ -93,7 +93,7 @@ The detailed plan is plan/full.md; this file is the one to read.
    9.12. The clock on the screen: the time of day, not just time passing; the petition argues for a clock chip or asking the host. [coming up]
    9.15. Petition 0009, the screen: VGA text mode, 80 by 25, a character and a colour per cell at a fixed address; Life in colour, the first thing you can see; a new machine with a display and a new capability; QEMU's screendump as the tester's new sense, pixels not bytes; built on 5.8, the kernel from the petition, because only this flavor wants the VGA part.  Findings: a program writing the screen's memory is not a forbidden instruction, the first cheat rule 12 cannot see (9.13).  Chris, 2026-10-16.  Part 16. Built 2026-10-16: PART.screen.vga@1, MACHINE.serial-vga@1 (SeaBIOS runs the card's BIOS), PART.life@2, the screen tests, rule 12 failing closed (decision 0012, findings 0019).  [done]
    9.14. HashLife, Life that remembers: the first program that asks for more memory while running and gives it back; today a program gets its memory once, at load, and nothing can ask for more mid-run.  Suggested by a reader on part 5.  Not soon. [coming up]
-   9.13. Programs lose the kernel's privilege: they run in ring 3 and the system call table becomes a gate they cannot step around; parked to get back to the components around the nucleus. [parked]
+   9.13. Programs lose the kernel's privilege: they run in ring 3 and the system call table becomes a gate they cannot step around.  Part 18. [in progress]
 
 10. Lifecycle: grow, prove, strip, seal, molt. [coming up]
    10.1. Gateway as the only component that talks to the outside. [coming up]

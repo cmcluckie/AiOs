@@ -1,0 +1,10 @@
+code       = "TST.gate.int80@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+binds      = "SPEC.gate.2@1"
+red_when   = "a probe that never uses the system call table and asks for write (4) then exit (1) with int 0x80 alone does not put its message on the serial port and halt the machine"
+timeout_ms = 15000
+isolates   = "PART.gate@1"
+runner     = "jig/test cmd sh tests/programs/gate-int80.sh"
+mutations  = 0

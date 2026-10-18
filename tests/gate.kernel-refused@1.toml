@@ -1,0 +1,10 @@
+code       = "TST.gate.kernel-refused@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+binds      = "SPEC.gate.1@1"
+red_when   = "a probe that writes one byte into the kernel's own memory at 0x00100000 says it got away with it, or is not stopped with a Guru Meditation line naming vector 0000000E and address 00100000"
+timeout_ms = 15000
+isolates   = "PART.gate@1"
+runner     = "jig/test cmd sh tests/programs/gate-kernel.sh"
+mutations  = 0

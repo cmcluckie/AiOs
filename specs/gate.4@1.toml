@@ -1,0 +1,7 @@
+code       = "SPEC.gate.4@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+component  = "PART.gate@1"
+clause     = "Every line of source marked TECH-DEBT has an entry in findings 0021 saying what replaces it and when it goes, and every entry there has its marked line."
+author     = "KEY.chris"

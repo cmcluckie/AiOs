@@ -1,0 +1,7 @@
+code       = "SPEC.gate.2@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+component  = "PART.gate@1"
+clause     = "A program asks the kernel for a system call with int 0x80, the call's number in eax and its arguments in the registers Linux's 32-bit x86 convention names, and the answer comes back in eax; write is 4, read is 3 and exit is 1, Linux's numbers."
+author     = "KEY.chris"
