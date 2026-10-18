@@ -1,5 +1,5 @@
 # tests/mutations-results.txt, written by jig/mutate.  Do not edit by hand.
-# run 2026-10-17T01:13Z at commit cf303c1
+# run 2026-10-18T03:50Z at commit c550ddc
 KILLED    hello.exact-bytes@1  one wrong letter in hello's message
 KILLED    hello.exact-bytes@1  the newline goes missing
 KILLED    hello.exact-bytes@1  one extra write before exit
@@ -104,4 +104,75 @@ KILLED    vga.plain@1  at the bottom the cursor jumps to the top instead of scro
 KILLED    loader.ladder-8-screen@1  the screen flavor's kernel breaks the read system call the calculator relies on
 KILLED    machine.vga-only@1  the machine grows a device nobody asked for
 KILLED    referee.no-hardware@1  the referee waves through a program it could not compile, so never looked at
-# 102 killed, 0 survived unexpectedly, 2 known survivors, 0 no-ops, 0 no-builds
+KILLED    reader.refuses@1  lines past the end of a file are handed back as if they were there
+KILLED    reader.refuses@1  a name that is not a file at the pin is read anyway
+KILLED    reader.refuses@1  a range written backwards is accepted
+KILLED    reader.refuses@1  any text counts as a name, semicolons and all
+KILLED    reader.refuses@1  a directory that is not there is listed anyway
+KILLED    reader.refuses@1  a word counts as a line number
+KILLED    reader.refuses@1  a clone without the pinned commit is used anyway
+KILLED    reader.refuses@1  line 0 is accepted
+KILLED    reader.exact@1  the last line of every range goes missing
+KILLED    reader.exact@1  the first line of every range goes missing
+KILLED    reader.exact@1  every line is numbered one too high
+KILLED    reader.exact@1  ports stops seeing outb
+KILLED    reader.exact@1  list stops marking folders
+KILLED    reader.find@1  find answers with the callers instead
+KILLED    reader.find@1  callers answers with what the name calls instead
+KILLED    reader.find@1  calls answers with the definition instead
+KILLED    reader.find@1  a cscope answer is no longer cut to READER_MAX
+KILLED    reader.find@1  a cut-short answer no longer says so
+KILLED    reader.find@1  a name nothing defines is answered with silence and success
+KILLED    reader.bounded@1  any number of lines can be asked for at once
+KILLED    reader.bounded@1  list stops at nothing
+KILLED    reader.bounded@1  READER_MAX is ignored
+KILLED    exam.count@1  blank lines are counted as code
+KILLED    exam.count@1  the inside of a block comment is counted as code
+KILLED    exam.count@1  a // comment is counted as code
+KILLED    exam.record@1  a model with no price is recorded as free
+KILLED    exam.record@1  the output tokens cost nothing
+KILLED    exam.record@1  the model's output is not kept
+KILLED    exam.record@1  a run can be recorded twice over
+KILLED    exam.budget@1  the cap is a thousand dollars higher than written
+KILLED    exam.budget@1  every month's spend is counted in this month
+KILLED    exam.budget@1  spending exactly the cap is refused
+KILLED    exam.judge@1  a lift whose test went red is judged to pass
+KILLED    exam.judge@1  the lift is never put in place of the hand lift, so the hand lift is judged every time
+KILLED    exam.judge@1  the lines counted are the hand lift's, not the lift's
+KILLED    exam.judge@1  an item that is not in the exam is a failure, not a thing that cannot be judged
+SURVIVED  exam.judge@1  a skipped test is judged as a pass: no test the exam lists skips on this host, so nothing can see it yet  (known, written down)
+KILLED    exam.ping@1  a call is made to a model whose price is not in the list, and costs money before it is refused
+KILLED    exam.ping@1  the cap is not asked before a call
+KILLED    exam.ping@1  a key file anyone can read is used
+KILLED    exam.ping@1  a missing key file goes on to a call instead of stopping
+KILLED    exam.ping@1  the input and output tokens are swapped, so the cost is wrong
+KILLED    exam.sit@1  the exam goes on trying after a try has passed
+KILLED    exam.sit@1  a failed try is not shown the failing test or its own file
+KILLED    exam.sit@1  any command the model names is run, not only the reader's
+KILLED    exam.sit@1  output tokens are not counted, so the cost of a try is too low
+KILLED    exam.sit@1  every judged try is recorded as a pass
+KILLED    exam.sit@1  files the item did not ask for are kept
+KILLED    exam.sit@1  code fences are kept in the file
+KILLED    exam.sit@1  a call is made though the judge cannot pass the hand lift
+KILLED    exam.sit@1  a reply with no file is recorded as a failed lift, not a refusal
+KILLED    exam.sit@1  what the reader said is never given back to the model
+KILLED    exam.cache@1  cache writes are not charged
+KILLED    exam.cache@1  cached tokens are recorded for a model with no cache price, as if they were free
+KILLED    exam.cache@1  cache writes are costed but not kept in the run record
+KILLED    exam.sit@1  the cached tokens a reply reports are not passed to the record, so the try is costed too low
+KILLED    exam.sit@1  the latest message is not marked to be cached, so every call resends it at full price
+KILLED    exam.sit@1  the prompt is not marked to be cached
+KILLED    exam.sit@1  tokens read from the cache are not counted
+KILLED    exam.record@1  the sitting given is not written into the run
+KILLED    exam.cache@1  the prompt fingerprint given is not written into the run
+KILLED    exam.sit@1  each try of one start is made a sitting of its own
+KILLED    exam.sit@1  the prompt fingerprint is cut short
+KILLED    exam.scorecard@1  two sittings of one item are added together into one line
+KILLED    exam.scorecard@1  the cost of a failed try is left off
+KILLED    exam.scorecard@1  the hand lift's lines are shown as the model's
+KILLED    exam.scorecard@1  no sitting is ever listed
+KILLED    exam.scorecard@1  an item a model never sat is shown as a failure
+KILLED    exam.scorecard@1  the prompt fingerprint is not shown on a passing line
+KILLED    exam.scorecard@1  the cost of failed sittings is spread over the passing ones
+KILLED    exam.scorecard@1  runs recorded before sittings existed are all added into one
+# 172 killed, 0 survived unexpectedly, 3 known survivors, 0 no-ops, 0 no-builds
