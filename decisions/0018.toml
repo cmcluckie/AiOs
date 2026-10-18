@@ -1,0 +1,11 @@
+id      = "0018"
+date    = 2026-10-17
+kind    = "rules and words"
+touches = ["exam/prompt.txt", "findings/0020.md"]
+asked   = "The exam prompt (exam/prompt.txt) now tells the model how its file is built: freestanding 32-bit x86 with gcc, no C library, no standard or system headers, warnings are errors, port instructions in inline assembly.  The first real run failed to build because the prompt left this out (findings/0020.md 15); the first run stays on the scorecard as it was, and the change and its reason are to be told in the article."
+options = ["as written", "leave the prompt as it was and run again", "tell it the build flags exactly"]
+default = "as written"
+chose   = "as written"
+why     = "findings/0020.md"
+by      = "KEY.chris@1"
+drafted = "Claude"

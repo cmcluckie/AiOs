@@ -2,6 +2,8 @@ You are lifting one small part out of the Linux kernel into a stand-alone C file
 
 You may look at Linux only through the reader tool.  It reads one fixed copy of Linux and answers the same way every time.  Its commands: list DIR, read FILE FIRST LAST (at most 200 lines), find NAME, callers NAME, calls NAME, ports FILE FIRST LAST, check FILE FIRST LAST.  Give each command's arguments as a list, for example command read with args ["drivers/tty/serial/8250/8250_early.c", "50", "120"].  Look up the real code, not what you remember of it, and keep what Linux actually does.
 
+The file is built with gcc as freestanding 32-bit x86 code: no C library, no operating system under it, no standard or system headers at all (the build uses -nostdinc, so not even <stdint.h> exists), and every warning is an error.  The processor's port instructions have to be written as inline assembly.
+
 Keep only what the job needs.  Leave out anything about other hardware, other configurations and other kernel services.  Do not add behaviour Linux does not have.
 
 Your answer is the finished C file or files and nothing else: no explanation and no code fences.  Write each file after a line of exactly this form, with the file's name between the equals signs:
