@@ -143,10 +143,6 @@ exam.record@1 | red | jig/runs | /is already recorded/d | a run can be recorded 
 exam.budget@1 | red | jig/runs | s/s + c > cap/s + c > cap + 1000/ | the cap is a thousand dollars higher than written
 exam.budget@1 | red | jig/runs | s/ok = (substr(d, 1, 7) == m)/ok = 1/ | every month's spend is counted in this month
 exam.budget@1 | red | jig/runs | s/s + c > cap/s + c >= cap/ | spending exactly the cap is refused
-exam.scorecard@1 | red | jig/scorecard | s/k = key SUBSEP \$3; nrun\[k\]++; cost\[k\] += \$7/k = key SUBSEP $3; nrun[k]++; if ($5 == "pass") cost[k] += $7/ | the cost of a failed try is left off
-exam.scorecard@1 | red | jig/scorecard | s/hand\[order\[i\]\]/kept[k]/ | the hand lift's lines are shown as the model's
-exam.scorecard@1 | red | jig/scorecard | s/tries\[k\] = nrun\[k\]/tries[k] = 1/ | every pass is said to have taken one try
-exam.scorecard@1 | red | jig/scorecard | s/if (!(k in nrun)) {/if (0) {/ | an item a model never sat is shown as a failure
 exam.judge@1 | red | jig/judge | s/\[ -z "\$red" \] || { echo "fail \$lines lines: \$red"; exit 1; }/:/ | a lift whose test went red is judged to pass
 exam.judge@1 | red | jig/judge | s/\[ -f "\$dir\/\$(basename "\$f")" \] \&\& cp "\$dir\/\$(basename "\$f")" "\$tmp\/\$f"/:/ | the lift is never put in place of the hand lift, so the hand lift is judged every time
 exam.judge@1 | red | jig/judge | s/lift="\$lift \$dir\/\$(basename "\$f")" ;;/lift="$lift $f" ;;/ | the lines counted are the hand lift's, not the lift's
@@ -174,3 +170,15 @@ exam.sit@1 | red | jig/sit | s#RUNS_CACHE_READ=\$cread RUNS_CACHE_WRITE=\$cwrite
 exam.sit@1 | red | jig/sit | s#\| \.\[-1\]\.content += \[\$cp\]#| .# | the latest message is not marked to be cached, so every call resends it at full price
 exam.sit@1 | red | jig/sit | s#,\$cp\],messages:#],messages:# | the prompt is not marked to be cached
 exam.sit@1 | red | jig/sit | s#cread=\$((cread + \$(jq '.usage.cacheReadInputTokens // 0' "\$d/reply.json")))#cread=0# | tokens read from the cache are not counted
+exam.record@1 | red | jig/runs | s#^sitting       = "\$sitting"#sitting       = "x"# | the sitting given is not written into the run
+exam.cache@1 | red | jig/runs | s#^prompt        = "\$prompt"#prompt        = "-"# | the prompt fingerprint given is not written into the run
+exam.sit@1 | red | jig/sit | s#RUNS_SITTING=\$sitting #RUNS_SITTING=$sitting$try # | each try of one start is made a sitting of its own
+exam.sit@1 | red | jig/sit | s#cut -c1-8#cut -c1-4# | the prompt fingerprint is cut short
+exam.scorecard@1 | red | jig/scorecard | s#sk = k SUBSEP \$4#sk = k#  | two sittings of one item are added together into one line
+exam.scorecard@1 | red | jig/scorecard | s#sc\[sk\] += \$8#if ($6 == "pass") sc[sk] += $8# | the cost of a failed try is left off
+exam.scorecard@1 | red | jig/scorecard | s#sl\[sk\] = \$7#sl[sk] = hand[$3]# | the hand lift's lines are shown as the model's
+exam.scorecard@1 | red | jig/scorecard | s#if (!(sk in sn)) { ns\[k\]++#if (0) { ns[k]++# | no sitting is ever listed
+exam.scorecard@1 | red | jig/scorecard | s#if (ns\[k\] == 0) {#if (0) {# | an item a model never sat is shown as a failure
+exam.scorecard@1 | red | jig/scorecard | s#, spr\[sk\]$#, "-"# | the prompt fingerprint is not shown on a passing line
+exam.scorecard@1 | red | jig/scorecard | s#passcost / npass#total / npass# | the cost of failed sittings is spread over the passing ones
+exam.scorecard@1 | red | jig/scorecard | s#if (st == "") {#if (0) {# | runs recorded before sittings existed are all added into one

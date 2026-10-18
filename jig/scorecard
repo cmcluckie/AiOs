@@ -3,9 +3,11 @@
 # (jig/runs) and nothing else.  For each exam item (exam/items.toml) it shows
 # whether the model passed, the lines of code its lift kept beside the hand
 # lift's (counted the same way for both), the tries it took and what every try
-# cost, failed ones included; an item the model never sat is "not sat".  It
-# decides nothing and invents nothing: a number that is not in runs/ or in the
-# hand lift's file is not on the card.
+# cost, failed ones included; an item the model never sat is "not sat".  Each
+# start of the runner is a sitting and gets a line of its own, with the
+# fingerprint of the prompt it was given, so that two runs of one item are
+# never added together into one pass.  It decides nothing and invents nothing:
+# a number that is not in runs/ or in the hand lift's file is not on the card.
 #
 #   scorecard                 every model that has a run
 #
@@ -33,36 +35,45 @@ while IFS="$(printf '\t')" read -r name hand; do
 	printf '%s\t%s\n' "$name" "$(sh "$repo/jig/runs" count $files)"
 done < "$tmp/items.raw" > "$tmp/items"
 
-# every run, one line each: model, version, item, try, result, lines, cost
+# every run, one line each: model, version, item, sitting, try, result, lines, cost, prompt
 for f in "$RUNS"/*/run.toml; do
 	[ -f "$f" ] || continue
 	awk 'function val(s) { sub(/^[^=]*= */, "", s); gsub(/"/, "", s); return s }
+		/^id *=/ { id = val($0) } /^sitting *=/ { st = val($0) } /^prompt *=/ { pr = val($0) }
 		/^model *=/ { m = val($0) } /^version *=/ { v = val($0) } /^item *=/ { i = val($0) }
 		/^try *=/ { t = val($0) } /^result *=/ { r = val($0) } /^lines *=/ { l = val($0) } /^cost_usd *=/ { c = val($0) }
-		END { printf "%s\t%s\t%s\t%d\t%s\t%s\t%s\n", m, v, i, t, r, l, c }' "$f"
-done | sort -t"$(printf '\t')" -k1,1 -k2,2 -k3,3 -k4,4n > "$tmp/runs"
+		END { if (st == "") { st = id; sub(/-.*/, "", st) } if (pr == "") pr = "-"
+			printf "%s\t%s\t%s\t%s\t%d\t%s\t%s\t%s\t%s\n", m, v, i, st, t, r, l, c, pr }' "$f"
+done | sort -t"$(printf '\t')" -k1,1 -k2,2 -k3,3 -k4,4 -k5,5n > "$tmp/runs"
 [ -s "$tmp/runs" ] || { echo "no runs recorded in $RUNS"; exit 0; }
 
+# a sitting is one start of the runner: up to three tries, shown as one line with the cost of all of them
 awk -F'\t' '
 FILENAME == ITEMS { order[++n] = $1; hand[$1] = $2; next }
 { key = $1 " (" $2 ")"; if (!(key in seen)) { seen[key] = 1; models[++nm] = key }
-  k = key SUBSEP $3; nrun[k]++; cost[k] += $7
-  if ($5 == "pass" && !(k in passed)) { passed[k] = 1; tries[k] = nrun[k]; kept[k] = $6 } }
+  k = key SUBSEP $3; sk = k SUBSEP $4
+  if (!(sk in sn)) { ns[k]++; sid[k, ns[k]] = $4; spr[sk] = $9 }
+  sn[sk]++; sc[sk] += $8
+  if ($6 == "pass" && !(sk in sp)) { sp[sk] = 1; sl[sk] = $7 } }
 END {
 	for (m = 1; m <= nm; m++) {
-		print models[m]; ok = 0; total = 0
+		print models[m]; ok = 0; total = 0; nsit = 0; npass = 0; passcost = 0
 		for (i = 1; i <= n; i++) {
-			k = models[m] SUBSEP order[i]
-			if (!(k in nrun)) { printf "  %-7s not sat\n", order[i]; continue }
-			total += cost[k]
-			if (k in passed) {
-				ok++
-				printf "  %-7s PASS  %d lines (hand %d)  %d %s  $%.6f\n", order[i], kept[k], hand[order[i]], tries[k], (tries[k] == 1 ? "try" : "tries"), cost[k]
-			} else {
-				printf "  %-7s FAIL  %d %s  $%.6f\n", order[i], nrun[k], (nrun[k] == 1 ? "try" : "tries"), cost[k]
+			k = models[m] SUBSEP order[i]; got = 0
+			if (ns[k] == 0) { printf "  %-7s not sat\n", order[i]; continue }
+			for (j = 1; j <= ns[k]; j++) {
+				sk = k SUBSEP sid[k, j]; nsit++; total += sc[sk]
+				tries = sprintf("%d %s", sn[sk], (sn[sk] == 1 ? "try" : "tries"))
+				if (sk in sp) {
+					npass++; passcost += sc[sk]; got = 1
+					printf "  %-7s PASS  %d lines (hand %d)  %s  $%.6f  prompt %s\n", order[i], sl[sk], hand[order[i]], tries, sc[sk], spr[sk]
+				} else
+					printf "  %-7s FAIL  %s  $%.6f  prompt %s\n", order[i], tries, sc[sk], spr[sk]
 			}
+			ok += got
 		}
-		if (ok > 0) per = sprintf("$%.6f", total / ok); else per = "n/a"
-		printf "  %d of %d passed  $%.6f spent  %s per item passed\n", ok, n, total, per
+		if (npass > 0) per = sprintf("$%.6f", passcost / npass); else per = "n/a"
+		printf "  %d of %d items passed  %d %s, %d passed\n", ok, n, nsit, (nsit == 1 ? "sitting" : "sittings"), npass
+		printf "  $%.6f spent  %s per passing sitting\n", total, per
 	}
 }' ITEMS="$tmp/items" "$tmp/items" "$tmp/runs"

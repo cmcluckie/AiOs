@@ -15,6 +15,9 @@
 #                                     RUNS_CACHE_READ and RUNS_CACHE_WRITE (default 0) and cost
 #                                     per_million_cache_read and per_million_cache_write; a model
 #                                     with no such price is refused rather than costed as free
+#                                     RUNS_SITTING names the sitting the run belongs to (one start of
+#                                     jig/sit; default: the run's own time, so a run is its own sitting)
+#                                     and RUNS_PROMPT a fingerprint of the prompt it was given (default -)
 #   runs spent [YYYY-MM]              the cost of every run recorded in that month (default: now)
 #   runs budget CEILING               exit 1 if this month's spend plus CEILING (the most the
 #                                     next call could cost, in dollars) would pass the cap in
@@ -77,8 +80,11 @@ record)	[ $# -eq 10 ] || die "needs ITEM MODEL VERSION TRY IN_TOKENS OUT_TOKENS 
 		[ $? -eq 2 ] && die "no cache price for $model in $PRICES: cached tokens cannot be costed, so they are not recorded"
 		die "no price for $model in $PRICES: a model with no price does not sit the exam"; }
 	now=${RUNS_NOW:-$(date -u +%Y-%m-%dT%H:%M:%SZ)}
+	stamp=$(printf '%s' "$now" | tr -d ':-')
+	sitting=${RUNS_SITTING:-$stamp}; prompt=${RUNS_PROMPT:--}
+	case "$sitting$prompt" in *[!A-Za-z0-9_.-]*) die "RUNS_SITTING and RUNS_PROMPT are letters, digits, . _ and - only" ;; esac
 	slug=$(printf '%s' "$model" | tr -c 'A-Za-z0-9\n' '-')
-	id="$(printf '%s' "$now" | tr -d ':-')-$item-$try-$slug"
+	id="$stamp-$item-$try-$slug"
 	[ ! -e "$RUNS/$id" ] || die "$id is already recorded"
 	mkdir -p "$RUNS/$id"
 	cp "$input" "$RUNS/$id/input.txt"; cp "$output" "$RUNS/$id/output.txt"
@@ -88,6 +94,8 @@ date          = "$now"
 item          = "$item"
 model         = "$model"
 version       = "$version"
+sitting       = "$sitting"
+prompt        = "$prompt"
 try           = $try
 input_tokens  = $tin
 output_tokens = $tout

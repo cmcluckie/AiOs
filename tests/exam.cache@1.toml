@@ -7,4 +7,4 @@ red_when   = "cached tokens are costed at the ordinary input price or not at all
 timeout_ms = 30000
 isolates   = "TOOL.exam@1"
 runner     = "jig/test cmd sh tests/programs/exam.sh cache"
-mutations  = 3
+mutations  = 4

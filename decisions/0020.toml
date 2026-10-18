@@ -1,0 +1,11 @@
+id      = "0020"
+date    = 2026-10-17
+kind    = "rules and words"
+touches = ["jig/runs", "jig/scorecard", "jig/sit", "specs/exam.2@1.toml", "specs/exam.4@1.toml", "tests/exam.record@1.toml", "tests/exam.cache@1.toml", "tests/exam.sit@1.toml", "tests/exam.scorecard@1.toml", "tests/expected/scorecard.table@1.out", "tests/programs/exam.sh", "tests/mutations.txt", "findings/0020.md"]
+asked   = "The scorecard showed one line per item and added every run of it together, so two sittings of the serial item read as one pass with the cost of both.  Each start of the runner is now a sitting, named by its time, and every run records its sitting and a fingerprint of exam/prompt.txt (the first 8 characters of its git hash); the scorecard prints a line per sitting with the fingerprint, and the cost per passing sitting, which counts what the failed sittings cost.  A run recorded before this has no sitting and is its own sitting, with the fingerprint shown as a dash."
+options = ["as written", "keep one line per item and show only the cheapest pass", "leave the scorecard and write the sittings in the article by hand"]
+default = "as written"
+chose   = "as written"
+why     = "findings/0020.md"
+by      = "KEY.chris@1"
+drafted = "Claude"

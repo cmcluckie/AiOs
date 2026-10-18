@@ -38,6 +38,7 @@ record)
 	[ "$id" = "20261017T100000Z-serial-1-test-big" ] || fail "the id is '$id'"
 	r="$RUNS/$id"
 	grep -q '^cost_usd      = 0.033000$' "$r/run.toml" || fail "1000 in and 2000 out at 3 and 15 dollars a million should cost 0.033000: $(grep cost_usd "$r/run.toml")"
+	grep -qx 'sitting       = "20261017T100000Z"' "$r/run.toml" && grep -qx 'prompt        = "-"' "$r/run.toml" || fail "a run recorded with no sitting or prompt given should be its own sitting, named by its time, with prompt '-': $(grep -E 'sitting|prompt' "$r/run.toml" | tr '\n' ' ')"
 	for kv in 'item          = "serial"' 'model         = "test:big"' 'version       = "v1"' 'try           = 1' 'input_tokens  = 1000' 'output_tokens = 2000' 'result        = "fail"' 'lines         = 9'; do
 		grep -q "^$kv\$" "$r/run.toml" || fail "run.toml lacks: $kv"
 	done
@@ -64,19 +65,32 @@ budget)
 	echo "October's 0.900000 is counted and September's 0.300000 is not; a call that could cost 0.05 or 0.10 is let through and 0.15 is refused against the 1.00 cap" ;;
 scorecard)
 	R() { rec "$@" > /dev/null || fail "run '$*' was refused"; }
+	export RUNS_SITTING=20261017T100000Z RUNS_PROMPT=aaaa1111
 	R 2026-10-17T10:00:00Z serial test:big v1 1 1000 2000 fail 9
 	R 2026-10-17T10:01:00Z serial test:big v1 2 1000 1500 pass 8
-	R 2026-10-17T10:02:00Z timer test:big v1 1 2000 1000 pass 5
+	export RUNS_SITTING=20261017T103000Z RUNS_PROMPT=bbbb2222
+	R 2026-10-17T10:30:00Z serial test:big v1 1 500 200 pass 7
+	unset RUNS_SITTING
+	R 2026-10-17T10:40:00Z timer test:big v1 1 2000 1000 pass 5
+	export RUNS_SITTING=20261017T104500Z
+	R 2026-10-17T10:45:00Z timer test:big v1 1 1000 1000 fail 0
+	unset RUNS_PROMPT RUNS_SITTING
 	R 2026-10-17T11:00:00Z serial test:local v2 1 5000 500 pass 12
+	R 2026-10-17T11:05:00Z serial test:local v2 1 5000 500 fail 0
+	for old in "$RUNS"/*-serial-1-*; do
+		case "$old" in *110000Z* | *110500Z*) sed -i '/^sitting /d;/^prompt /d' "$old/run.toml" ;; esac
+	done
+	export RUNS_SITTING=20261017T110100Z
 	R 2026-10-17T11:01:00Z timer test:local v2 1 100 100 fail 0
 	R 2026-10-17T11:02:00Z timer test:local v2 2 100 100 fail 0
 	R 2026-10-17T11:03:00Z timer test:local v2 3 100 100 fail 0
+	unset RUNS_SITTING
 	EXAM="$fx/items.toml" EXAM_ROOT="$fx" sh jig/scorecard > "$tmp/got" 2>&1 || fail "the scorecard failed: $(head -2 "$tmp/got")"
 	cmp -s "$tmp/got" tests/expected/scorecard.table@1.out || fail "the scorecard differs from tests/expected/scorecard.table@1.out: $(diff "$tmp/got" tests/expected/scorecard.table@1.out | head -2 | tr '\n' ' ')"
 	rm -rf "$RUNS"; mkdir "$RUNS"
 	EXAM="$fx/items.toml" EXAM_ROOT="$fx" sh jig/scorecard > "$tmp/got" 2>&1 || fail "the scorecard failed on no runs"
 	[ "$(cat "$tmp/got")" = "no runs recorded in $RUNS" ] || fail "with no runs it said '$(head -1 "$tmp/got")'"
-	echo "two models, seven runs: the table matches the one written by hand (passes, lines beside the hand lift's, tries, cost including the failed tries, an item never sat, cost per item passed), and with no runs it says so" ;;
+	echo "two models, eleven runs in seven sittings: the table matches the one written by hand (a line per sitting with its passes, lines beside the hand lift's, tries, cost including the failed tries and prompt fingerprint, an item never sat, and the cost per passing sitting), and with no runs it says so" ;;
 judge)
 	command -v qemu-system-x86_64 > /dev/null || { echo "no qemu-system-x86_64"; exit 2; }
 	hand=lifted/PART.serial.8250@1
@@ -119,6 +133,9 @@ sit)
 	[ "$(jq '[.. | objects | select(has("cachePoint"))] | length' "$tmp/sit/part-try2/messages.json")" = 0 ] || fail "the markers were saved into the conversation, where they would pile up"
 	[ "$(ls "$RUNS" | wc -l)" -eq 2 ] || fail "$(ls "$RUNS" | wc -l) runs recorded, not 2"
 	grep -qx 'cost_usd      = 0.001100' "$RUNS"/*-part-1-*/run.toml || fail "try 1 should have cost 0.001100: $(grep -h cost_usd "$RUNS"/*-part-1-*/run.toml)"
+	s1=$(sed -n 's/^sitting *= *"\(.*\)"$/\1/p' "$RUNS"/*-part-1-*/run.toml); s2=$(sed -n 's/^sitting *= *"\(.*\)"$/\1/p' "$RUNS"/*-part-2-*/run.toml)
+	[ -n "$s1" ] && [ "$s1" = "$s2" ] || fail "the two tries of one start should share a sitting: '$s1' and '$s2'"
+	grep -Eq '^prompt +\= "[0-9a-f]{8}"$' "$RUNS"/*-part-1-*/run.toml && grep -Eq '^prompt +\= "[0-9a-f]{8}"$' "$RUNS"/*-part-2-*/run.toml || fail "each try should carry the first 8 characters of the prompt's git hash"
 	grep -qx 'result        = "fail"' "$RUNS"/*-part-1-*/run.toml && grep -qx 'result        = "pass"' "$RUNS"/*-part-2-*/run.toml && grep -qx 'lines         = 5' "$RUNS"/*-part-2-*/run.toml || fail "the two runs are not recorded as fail then pass at 5 lines"
 	grep -q 'stub line from the reader' "$tmp/sit/part-try1/messages.json" || fail "what the reader said did not reach the model"
 	grep -q "the reader has no command 'rm'" "$tmp/sit/part-try1/messages.json" || fail "a command the reader does not have was not turned down"
@@ -138,10 +155,12 @@ sit)
 	echo "a model that fails then passes is recorded as two runs, fail then pass at 5 lines, costing 0.001100 for the first; the reader's answers and a refused command reach it, the second try is shown the failing test and its own file, only the file asked for is kept and fences are dropped; a reply with no file is recorded as refused with its cost; a judge that fails the hand lift stops it before any call" ;;
 cache)
 	export RUNS_NOW=2026-10-17T10:00:00Z
-	RUNS_CACHE_READ=10000 RUNS_CACHE_WRITE=2000 runs record serial test:cache v1 1 1000 500 pass 8 "$fx/sample.in" "$fx/sample.out" > /dev/null || fail "a run with cached tokens was refused"
+	RUNS_SITTING=sit-9 RUNS_PROMPT=pr-9 RUNS_CACHE_READ=10000 RUNS_CACHE_WRITE=2000 runs record serial test:cache v1 1 1000 500 pass 8 "$fx/sample.in" "$fx/sample.out" > /dev/null || fail "a run with cached tokens was refused"
 	r="$RUNS/20261017T100000Z-serial-1-test-cache"
 	grep -qx 'cost_usd      = 0.021000' "$r/run.toml" || fail "1000 in, 500 out, 10000 read and 2000 written at 3, 15, 0.30 and 3.75 should cost 0.021000: $(grep cost_usd "$r/run.toml")"
 	grep -qx 'cache_read_tokens  = 10000' "$r/run.toml" && grep -qx 'cache_write_tokens = 2000' "$r/run.toml" || fail "the cached tokens were not written into run.toml"
+	grep -qx 'sitting       = "sit-9"' "$r/run.toml" && grep -qx 'prompt        = "pr-9"' "$r/run.toml" || fail "the sitting and prompt given were not written into run.toml: $(grep -E 'sitting|prompt' "$r/run.toml" | tr '\n' ' ')"
+	refuse "a sitting name with a space in it" "letters, digits" env RUNS_NOW=2026-10-17T10:04:00Z "RUNS_SITTING=a b" sh jig/runs record serial test:cache v1 1 1 1 pass 1 $fx/sample.in $fx/sample.out
 	refuse "cached tokens for a model with no cache price" "no cache price for test:big" env RUNS_NOW=2026-10-17T10:01:00Z RUNS_CACHE_READ=5 sh jig/runs record serial test:big v1 1 1 1 pass 1 $fx/sample.in $fx/sample.out
 	refuse "cached tokens that are words" "RUNS_CACHE_READ must be a whole number" env RUNS_NOW=2026-10-17T10:02:00Z RUNS_CACHE_READ=lots sh jig/runs record serial test:cache v1 1 1 1 pass 1 $fx/sample.in $fx/sample.out
 	RUNS_NOW=2026-10-17T10:03:00Z runs record serial test:big v1 1 1000 2000 fail 9 "$fx/sample.in" "$fx/sample.out" > /dev/null || fail "a run with no cached tokens was refused for a model with no cache price"

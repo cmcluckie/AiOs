@@ -1,10 +1,15 @@
 test:big (v1)
-  serial  PASS  8 lines (hand 10)  2 tries  $0.058500
-  timer   PASS  5 lines (hand 6)  1 try  $0.021000
+  serial  PASS  8 lines (hand 10)  2 tries  $0.058500  prompt aaaa1111
+  serial  PASS  7 lines (hand 10)  1 try  $0.004500  prompt bbbb2222
+  timer   PASS  5 lines (hand 6)  1 try  $0.021000  prompt bbbb2222
+  timer   FAIL  1 try  $0.018000  prompt bbbb2222
   screen  not sat
-  2 of 3 passed  $0.079500 spent  $0.039750 per item passed
+  2 of 3 items passed  4 sittings, 3 passed
+  $0.102000 spent  $0.028000 per passing sitting
 test:local (v2)
-  serial  PASS  12 lines (hand 10)  1 try  $0.000000
-  timer   FAIL  3 tries  $0.000000
+  serial  PASS  12 lines (hand 10)  1 try  $0.000000  prompt -
+  serial  FAIL  1 try  $0.000000  prompt -
+  timer   FAIL  3 tries  $0.000000  prompt -
   screen  not sat
-  1 of 3 passed  $0.000000 spent  $0.000000 per item passed
+  1 of 3 items passed  3 sittings, 1 passed
+  $0.000000 spent  $0.000000 per passing sitting

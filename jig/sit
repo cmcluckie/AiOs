@@ -46,6 +46,8 @@ mkdir -p "$SIT_OUT"
 cp='{"cachePoint":{"type":"default"}}'
 tools='{"tools":[{"toolSpec":{"name":"reader","description":"Read Linux, one fixed copy of it. command is one of list, read, find, callers, calls, ports, check; args is the list of its arguments.","inputSchema":{"json":{"type":"object","properties":{"command":{"type":"string","enum":["list","read","find","callers","calls","ports","check"]},"args":{"type":"array","items":{"type":"string"}}},"required":["command","args"]}}}},{"cachePoint":{"type":"default"}}]}'
 today=$(date -u +%Y-%m-%d)
+sitting=$(date -u +%Y%m%dT%H%M%SZ)
+prompt=$(git -C "$repo" hash-object "$repo/exam/prompt.txt" 2> /dev/null | cut -c1-8); [ -n "$prompt" ] || prompt=-
 prev=""; feedback=""; passed=""
 try=1
 while [ "$try" -le "$SIT_TRIES" ] && [ -z "$passed" ]; do
@@ -108,7 +110,7 @@ EOT
 		[ -n "$lines" ] || lines=0
 	fi
 	cp "$d/messages.json" "$d/input.txt"; cp "$d/final.txt" "$d/output.txt"
-	RUNS_CACHE_READ=$cread RUNS_CACHE_WRITE=$cwrite sh "$repo/jig/runs" record "$item" "$MODEL_NAME" "$today" "$try" "$tin" "$tout" "$result" "$lines" "$d/input.txt" "$d/output.txt" > /dev/null || exit 1
+	RUNS_SITTING=$sitting RUNS_PROMPT=$prompt RUNS_CACHE_READ=$cread RUNS_CACHE_WRITE=$cwrite sh "$repo/jig/runs" record "$item" "$MODEL_NAME" "$today" "$try" "$tin" "$tout" "$result" "$lines" "$d/input.txt" "$d/output.txt" > /dev/null || exit 1
 	cached=""; [ $((cread + cwrite)) -eq 0 ] || cached=" ($cread read from cache, $cwrite written to it)"
 	echo "try $try: $result ($line)  $tin in${cached}, $tout out"
 	[ "$result" = pass ] && passed=1
