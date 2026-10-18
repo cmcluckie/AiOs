@@ -1,0 +1,7 @@
+code       = "SPEC.exam.7@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+component  = "TOOL.exam@1"
+clause     = "A model sits an exam item by being shown the question and the part's header, looking at Linux only through the reader, and writing the file the item asks for; the lift is judged by the judge, a failed try is shown its failing test and its own file before the next, every try is recorded with its tokens and cost whether it passed, failed or wrote nothing, and nothing is called when the judge cannot pass the hand lift."
+author     = "KEY.chris"

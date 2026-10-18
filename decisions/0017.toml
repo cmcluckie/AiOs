@@ -1,0 +1,11 @@
+id      = "0017"
+date    = 2026-10-17
+kind    = "rules and words"
+touches = ["jig/sit", "jig/model", "exam/prompt.txt", "jig/configuration.nix", "design.md", "specs/exam.7@1.toml", "tests/exam.sit@1.toml", "tests/fixtures/sit/*", "tests/programs/exam.sh", "tests/mutations.txt", "constitution/human-only.toml"]
+asked   = "The exam runner (jig/sit) sits one item: the model is shown the question and the part's fixed header, may look at Linux only through the reader, writes the file the item asks for, and is judged by jig/judge, with up to three tries, a failed try being shown its failing test and its own file; every try is recorded with its tokens and cost, a reply with no file being recorded as refused; nothing is called when the judge cannot pass the hand lift.  The words the model is given are in exam/prompt.txt and are human-only like the rest of the exam.  jq is added to the jig and the tool table, because the replies are JSON, jq being the long-standing tool for it; the other ways were awk and sed, which break on a quote or a newline in a lifted file, and a JSON reader written in C."
+options = ["as written", "awk and sed instead of jq", "a JSON reader written in C"]
+default = "as written"
+chose   = "as written"
+why     = "findings/0020.md"
+by      = "KEY.chris@1"
+drafted = "Claude"

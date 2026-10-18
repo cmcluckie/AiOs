@@ -1,0 +1,10 @@
+code       = "TST.exam.sit@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+binds      = "SPEC.exam.7@1"
+red_when   = "a try that passes is followed by another, a failed try is not shown its failing test and file, a command other than the reader's is run, a try is recorded with the wrong result or cost, a file the item did not ask for is kept or a fence is left in it, what the reader said does not reach the model, or a call is made when the judge cannot pass the hand lift"
+timeout_ms = 120000
+isolates   = "TOOL.exam@1"
+runner     = "jig/test cmd sh tests/programs/exam.sh sit"
+mutations  = 10

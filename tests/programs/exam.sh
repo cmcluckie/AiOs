@@ -104,6 +104,35 @@ judge)
 	sh jig/judge nosuchitem "$tmp/empty" > "$tmp/out" 2>&1; [ $? -eq 2 ] || fail "an item that is not in the exam should be 'cannot judge' (exit 2)"
 	[ "$(cksum < $hand/serial8250.c)" = "$before" ] || fail "judging changed the hand lift in the repo"
 	echo "the hand lift passes at 57 lines; a lift that never waits for the chip fails on serial.waits-ready@1, one that adds a byte fails on serial.in-order@1, one that is not C fails; a missing file is refused, an unknown item is 'cannot judge', and the repo's own hand lift is never touched" ;;
+sit)
+	command -v jq > /dev/null || { echo "jq is not installed"; exit 2; }
+	sfx=tests/fixtures/sit
+	export EXAM="$sfx/items.toml" SIT_OUT="$tmp/sit" PRICES="$fx/../model/prices.toml" MODEL_NAME=test:model
+	export READER="sh $sfx/reader.sh" JUDGE="sh $sfx/judge.sh"
+	cp -r $sfx/fake "$tmp/fake"; export MODEL_FAKE="$tmp/fake"
+	sh jig/sit part > "$tmp/out" 2>&1; rc=$?
+	[ $rc -eq 0 ] || fail "a model that passes on its second try gave exit $rc: $(tr '\n' ' ' < "$tmp/out")"
+	grep -q '^try 1: fail (fail 7 lines: serial.waits-ready@1)  300 in, 50 out$' "$tmp/out" || fail "try 1 should fail on serial.waits-ready@1 with 300 in and 50 out: $(head -1 "$tmp/out")"
+	grep -q '^try 2: pass (pass 5 lines)  300 in, 40 out$' "$tmp/out" || fail "try 2 should pass at 5 lines with 300 in and 40 out: $(sed -n 2p "$tmp/out")"
+	[ "$(ls "$RUNS" | wc -l)" -eq 2 ] || fail "$(ls "$RUNS" | wc -l) runs recorded, not 2"
+	grep -qx 'cost_usd      = 0.001100' "$RUNS"/*-part-1-*/run.toml || fail "try 1 should have cost 0.001100: $(grep -h cost_usd "$RUNS"/*-part-1-*/run.toml)"
+	grep -qx 'result        = "fail"' "$RUNS"/*-part-1-*/run.toml && grep -qx 'result        = "pass"' "$RUNS"/*-part-2-*/run.toml && grep -qx 'lines         = 5' "$RUNS"/*-part-2-*/run.toml || fail "the two runs are not recorded as fail then pass at 5 lines"
+	grep -q 'stub line from the reader' "$tmp/sit/part-try1/messages.json" || fail "what the reader said did not reach the model"
+	grep -q "the reader has no command 'rm'" "$tmp/sit/part-try1/messages.json" || fail "a command the reader does not have was not turned down"
+	grep -q 'Your last try failed: fail 7 lines: serial.waits-ready@1' "$tmp/sit/part-try2/first.txt" && grep -q 'BAD lift' "$tmp/sit/part-try2/first.txt" || fail "try 2 was not shown the failing test and its own file"
+	[ "$(cat "$tmp/sit/part-try2/lift/part.c")" = "GOOD new lift" ] && [ ! -e "$tmp/sit/part-try2/lift/other.c" ] || fail "the file written is not exactly the one asked for, without fences"
+	grep -q 'The fixed header part.h' "$tmp/sit/part-try1/first.txt" || fail "the model was not shown the header"
+	# a model that writes no file is recorded as refused, with its cost
+	rm -rf "$tmp/runs" "$tmp/sit"; cp -r $sfx/fake-refused "$tmp/fake2"
+	MODEL_FAKE="$tmp/fake2" SIT_TRIES=1 sh jig/sit part > "$tmp/out" 2>&1; rc=$?
+	[ $rc -eq 1 ] && grep -q '^try 1: refused (no usable file: part.c)  50 in, 10 out$' "$tmp/out" || fail "a reply with no file: exit $rc, '$(head -1 "$tmp/out")'"
+	grep -qx 'result        = "refused"' "$RUNS"/*/run.toml || fail "the empty reply was not recorded as refused"
+	# nothing is spent when the judge cannot pass the hand lift
+	rm -rf "$tmp/runs" "$tmp/sit"; cp -r $sfx/fake "$tmp/fake3"
+	printf 'exit 1\n' > "$tmp/badjudge.sh"
+	JUDGE="sh $tmp/badjudge.sh" MODEL_FAKE="$tmp/fake3" sh jig/sit part > "$tmp/out" 2>&1; rc=$?
+	[ $rc -eq 2 ] && [ ! -e "$tmp/fake3/.n" ] && [ ! -d "$RUNS" ] || fail "a judge that fails the hand lift: exit $rc, a call was made or a run recorded"
+	echo "a model that fails then passes is recorded as two runs, fail then pass at 5 lines, costing 0.001100 for the first; the reader's answers and a refused command reach it, the second try is shown the failing test and its own file, only the file asked for is kept and fences are dropped; a reply with no file is recorded as refused with its cost; a judge that fails the hand lift stops it before any call" ;;
 ping)
 	mfx=tests/fixtures/model
 	export PRICES="$mfx/prices.toml" MODEL_NAME=test:model MODEL_FAKE="$mfx/ping.json"
@@ -118,5 +147,5 @@ ping)
 	printf 'AWS_ACCESS_KEY_ID=x\n' > "$tmp/open"; chmod 644 "$tmp/open"
 	refuse "a key file others can read" "can be read by others" env -u MODEL_FAKE AIOS_AWS="$tmp/open" sh jig/model ping
 	echo "a saved reply gives its word, 14 in and 6 out and a cost of 0.000088 and is recorded once as ping; a model with no price, a call that could pass the cap, a missing key file and a key file others can read each stop it before any call" ;;
-*)	fail "tests/programs/exam.sh needs a mode: count, record, budget, scorecard, judge or ping" ;;
+*)	fail "tests/programs/exam.sh needs a mode: count, record, budget, scorecard, judge, sit or ping" ;;
 esac

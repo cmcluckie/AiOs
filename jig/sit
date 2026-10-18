@@ -1,0 +1,114 @@
+#!/bin/sh
+# sit: one model sits one exam item (exam/items.toml).  It is shown the question and
+# the part's header, may look at Linux only through jig/reader, writes the C file the
+# header asks for, and is judged by jig/judge, with up to SIT_TRIES tries (a failed try
+# is shown the failing test and its own file).  Every try is written into the run
+# record (jig/runs) with its tokens and cost whether it passed or not, and no call is
+# made past the cap (jig/model checks).  It decides nothing: the judge's tests do.
+#
+#   sit ITEM       exit 0 if a try passed, 1 if every try failed, 2 cannot run here
+#
+# SIT_TRIES (3), SIT_TURNS (25 model calls in one try), SIT_MAXTOKENS (8000 per reply),
+# SIT_OUT (out/sit), EXAM (exam/items.toml), READER and JUDGE (the commands to use,
+# default jig/reader and jig/judge), MODEL_NAME and MODEL_ID (see jig/model).
+# Needs jq, which the jig has: replies and requests are JSON.
+set -u
+repo=$(cd "$(dirname "$0")/.." && pwd)
+EXAM=${EXAM:-$repo/exam/items.toml}
+READER=${READER:-sh $repo/jig/reader}
+JUDGE=${JUDGE:-sh $repo/jig/judge}
+SIT_TRIES=${SIT_TRIES:-3}; SIT_TURNS=${SIT_TURNS:-25}; SIT_MAXTOKENS=${SIT_MAXTOKENS:-8000}
+SIT_OUT=${SIT_OUT:-$repo/out/sit}
+MODEL_NAME=${MODEL_NAME:-bedrock:global.anthropic.claude-sonnet-4-6}
+MODEL_MAX_COST=${MODEL_MAX_COST:-0.25}
+export MODEL_NAME MODEL_MAX_COST
+die() { echo "sit: $*" >&2; exit 1; }
+cannot() { echo "sit: $*" >&2; exit 2; }
+command -v jq > /dev/null || cannot "jq is not installed"
+[ $# -eq 1 ] || die "needs ITEM"
+item=$1
+field() { awk -v n="$item" -v k="$1" '/^\[\[item\]\]/ { if (hit) exit; hit = 0 }
+	/^name *=/ { s = $0; sub(/^[^"]*"/, "", s); sub(/".*$/, "", s); hit = (s == n) }
+	hit && $0 ~ "^" k " *=" { s = $0; sub(/^[^"]*"/, "", s); sub(/".*$/, "", s); print s }' "$EXAM"; }
+asks=$(field asks); hand=$(field hand)
+[ -n "$asks" ] && [ -n "$hand" ] || die "no item '$item' in $EXAM"
+names=""; headers=""
+for f in $hand; do
+	case "$f" in *.c) names="$names $(basename "$f")"; handdir=$(dirname "$f") ;; *.h) headers="$headers $f" ;; esac
+done
+[ -n "$names" ] || die "item $item has no hand-lift .c file"
+
+# before spending anything: the reader answers, and the hand lift itself passes the judge
+$READER pin > /dev/null 2>&1 || cannot "the reader cannot run here"
+$JUDGE "$item" "$repo/$handdir" > /dev/null 2>&1 || cannot "the judge does not pass the hand lift here, so no lift could be judged"
+
+mkdir -p "$SIT_OUT"
+tools='{"tools":[{"toolSpec":{"name":"reader","description":"Read Linux, one fixed copy of it. command is one of list, read, find, callers, calls, ports, check; args is the list of its arguments.","inputSchema":{"json":{"type":"object","properties":{"command":{"type":"string","enum":["list","read","find","callers","calls","ports","check"]},"args":{"type":"array","items":{"type":"string"}}},"required":["command","args"]}}}}]}'
+today=$(date -u +%Y-%m-%d)
+prev=""; feedback=""; passed=""
+try=1
+while [ "$try" -le "$SIT_TRIES" ] && [ -z "$passed" ]; do
+	d="$SIT_OUT/$item-try$try"; rm -rf "$d"; mkdir -p "$d/lift"
+	# the first message: the question, the header, and (after a failure) what went wrong
+	{ printf 'Part to lift: %s\n\nName of the C file to write:%s\n' "$asks" "$names"
+	  for h in $headers; do printf '\nThe fixed header %s:\n\n' "$(basename "$h")"; cat "$repo/$h"; done
+	  if [ -n "$feedback" ]; then printf '\nYour last try failed: %s\n\nThis is what you wrote last time:\n\n' "$feedback"; cat "$prev"; fi
+	} > "$d/first.txt"
+	jq -n --rawfile t "$d/first.txt" '[{role:"user",content:[{text:$t}]}]' > "$d/messages.json"
+	tin=0; tout=0; turn=0; final=""; why=""
+	while :; do
+		turn=$((turn + 1))
+		[ "$turn" -le "$SIT_TURNS" ] || { why="more than $SIT_TURNS calls"; break; }
+		jq -n --slurpfile m "$d/messages.json" --rawfile s "$repo/exam/prompt.txt" --argjson tc "$tools" --argjson mt "$SIT_MAXTOKENS" \
+			'{system:[{text:$s}],messages:$m[0],toolConfig:$tc,inferenceConfig:{maxTokens:$mt}}' > "$d/req.json"
+		sh "$repo/jig/model" converse "$d/req.json" "$d/reply.json" || { rc=$?; [ $rc -eq 2 ] && exit 2; why="the call was refused"; break; }
+		tin=$((tin + $(jq '.usage.inputTokens // 0' "$d/reply.json"))); tout=$((tout + $(jq '.usage.outputTokens // 0' "$d/reply.json")))
+		jq --slurpfile r "$d/reply.json" '. + [$r[0].output.message]' "$d/messages.json" > "$d/m.new" && mv "$d/m.new" "$d/messages.json"
+		stop=$(jq -r '.stopReason // ""' "$d/reply.json")
+		if [ "$stop" = tool_use ]; then
+			results='[]'
+			while IFS= read -r tu; do
+				id=$(printf '%s' "$tu" | jq -r .toolUseId); cmd=$(printf '%s' "$tu" | jq -r '.input.command // ""')
+				case "$cmd" in
+				list|read|find|callers|calls|ports|check)
+					set --; for a in $(printf '%s' "$tu" | jq -r '(.input.args // [])[] | tostring'); do set -- "$@" "$a"; done
+					out=$($READER "$cmd" "$@" 2>&1); rc=$?
+					[ $rc -eq 0 ] && st=success || st=error ;;
+				*) out="the reader has no command '$cmd'"; st=error ;;
+				esac
+				results=$(printf '%s' "$results" | jq --arg id "$id" --arg t "$(printf '%s' "$out" | head -c 20000)" --arg st "$st" '. + [{toolResult:{toolUseId:$id,content:[{text:$t}],status:$st}}]')
+			done <<EOT
+$(jq -c '.output.message.content[] | select(.toolUse) | .toolUse' "$d/reply.json")
+EOT
+			printf '%s' "$results" | jq '[{role:"user",content:.}]' > "$d/res.json"
+			jq --slurpfile r "$d/res.json" '. + $r[0]' "$d/messages.json" > "$d/m.new" && mv "$d/m.new" "$d/messages.json"
+			continue
+		fi
+		[ "$stop" = end_turn ] || { why="the reply stopped with $stop"; break; }
+		final=$(jq -r '[.output.message.content[] | select(.text) | .text] | join("\n")' "$d/reply.json")
+		break
+	done
+	printf '%s\n' "$final" > "$d/final.txt"
+	# the files the model wrote: only the names the item asks for
+	awk -v dir="$d/lift" -v want="$names" 'BEGIN { n = split(want, w, " "); for (i = 1; i <= n; i++) ok[w[i]] = 1 }
+		/^=== .* ===$/ { f = $0; sub(/^=== /, "", f); sub(/ ===$/, "", f); out = (f in ok) ? dir "/" f : ""; next }
+		/^```/ { next }
+		out != "" { print > out }' "$d/final.txt"
+	missing=""; for n in $names; do [ -s "$d/lift/$n" ] || missing="$missing $n"; done
+	if [ -n "$missing" ]; then
+		result=refused; lines=0; line="no usable file:$missing${why:+ ($why)}"
+	else
+		line=$($JUDGE "$item" "$d/lift" 2>&1); rc=$?
+		lines=$(printf '%s' "$line" | sed -n 's/^[a-z]* \([0-9][0-9]*\) lines.*/\1/p')
+		case $rc in 0) result=pass ;; *) result=fail ;; esac
+		[ -n "$lines" ] || lines=0
+	fi
+	cp "$d/messages.json" "$d/input.txt"; cp "$d/final.txt" "$d/output.txt"
+	sh "$repo/jig/runs" record "$item" "$MODEL_NAME" "$today" "$try" "$tin" "$tout" "$result" "$lines" "$d/input.txt" "$d/output.txt" > /dev/null || exit 1
+	echo "try $try: $result ($line)  $tin in, $tout out"
+	[ "$result" = pass ] && passed=1
+	prev=$d/lift/$(echo $names | cut -d' ' -f1); feedback=$line
+	[ -f "$prev" ] || prev=/dev/null
+	try=$((try + 1))
+done
+[ -n "$passed" ]

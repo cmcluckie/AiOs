@@ -1,0 +1,6 @@
+# fixture for TST.exam.sit: one item whose hand lift is a file of this folder
+[[item]]
+name  = "part"
+asks  = "fixture question"
+hand  = "tests/fixtures/sit/part.c tests/fixtures/sit/part.h"
+tests = "none"

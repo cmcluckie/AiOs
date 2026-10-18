@@ -4,6 +4,9 @@
 # first and written into the run record (jig/runs) after.  It is the only thing
 # in the exam that reaches the network, and it decides nothing about a lift.
 #
+#   model converse REQ OUT   one call with the request body in REQ (Converse JSON); the reply
+#                         is written to OUT; refused first if the model has no price or the
+#                         cap has no room
 #   model ping            ask for one word back; prints the word, the tokens
 #                         and what the call cost.  The first thing run, to prove
 #                         the key, the policy and the model id work.
@@ -12,7 +15,8 @@
 # AWS_REGION), a file outside the repo; AIOS_AWS=file points elsewhere.  The
 # model is MODEL_NAME (the row in jig/prices.toml, default the Sonnet 4.6 row) and
 # MODEL_ID (the Bedrock id to call, default its global profile).
-# MODEL_FAKE=file reads a saved reply from that file and calls nothing (tests).
+# MODEL_FAKE=file reads a saved reply from that file and calls nothing (tests); a folder
+# of 1.json, 2.json, ... hands them out in order.
 # Exit 0 answered, 1 refused (reason on stderr), 2 cannot run here.
 set -u
 repo=$(cd "$(dirname "$0")/.." && pwd)
@@ -27,7 +31,16 @@ cannot() { echo "model: $*" >&2; exit 2; }
 number() { sed -n "s/.*\"$1\" *: *\([0-9][0-9]*\).*/\1/p" "$2" | head -n 1; }
 text() { sed -n 's/.*"text" *: *"\(\([^"\\]\|\\.\)*\)".*/\1/p' "$1" | head -n 1; }
 
+guard() {	# nothing is called for a model with no price, or past the cap
+	grep -q "^name *= *\"$MODEL_NAME\"" "${PRICES:-$repo/jig/prices.toml}" 2> /dev/null || die "no price for $MODEL_NAME: not calling a model whose calls cannot be costed"
+	sh "$repo/jig/runs" budget "$MODEL_MAX_COST" > /dev/null || exit 1
+}
+
 call() {	# call IN OUT: IN is the request body, OUT gets the reply
+	if [ -d "${MODEL_FAKE:-}" ]; then	# a folder of saved replies, 1.json, 2.json, ... handed out in order
+		n=$(cat "$MODEL_FAKE/.n" 2> /dev/null || echo 0); n=$((n + 1)); echo "$n" > "$MODEL_FAKE/.n"
+		cp "$MODEL_FAKE/$n.json" "$2" 2> /dev/null || cannot "no saved reply number $n in $MODEL_FAKE"; return 0
+	fi
 	if [ -n "${MODEL_FAKE:-}" ]; then cp "$MODEL_FAKE" "$2" || cannot "no fake reply at $MODEL_FAKE"; return 0; fi
 	command -v curl > /dev/null || cannot "curl is not installed"
 	[ -f "$AIOS_AWS" ] || cannot "no key file at $AIOS_AWS"
@@ -45,8 +58,7 @@ call() {	# call IN OUT: IN is the request body, OUT gets the reply
 cmd=${1:-}; [ $# -gt 0 ] && shift
 case "$cmd" in
 ping)	tmp=$(mktemp -d); trap 'rm -rf "$tmp"' EXIT
-	grep -q "^name *= *\"$MODEL_NAME\"" "${PRICES:-$repo/jig/prices.toml}" 2> /dev/null || die "no price for $MODEL_NAME: not calling a model whose calls cannot be costed"
-	sh "$repo/jig/runs" budget "$MODEL_MAX_COST" > /dev/null || exit 1
+	guard
 	printf '%s\n' 'Say the single word: ready' > "$tmp/in.txt"
 	printf '{"messages":[{"role":"user","content":[{"text":"Say the single word: ready"}]}],"inferenceConfig":{"maxTokens":20}}' > "$tmp/req.json"
 	call "$tmp/req.json" "$tmp/out.json"
@@ -59,5 +71,8 @@ ping)	tmp=$(mktemp -d); trap 'rm -rf "$tmp"' EXIT
 	echo "tokens: $tin in, $tout out"
 	echo "cost: $(sed -n 's/^cost_usd *= *//p' "${RUNS:-$repo/runs}/$id/run.toml")"
 	echo "recorded: $id" ;;
+converse)	[ $# -eq 2 ] || die "needs REQUEST_FILE REPLY_FILE"
+	[ -f "$1" ] || die "$1 is not a file"
+	guard; call "$1" "$2" ;;
 *)	die "unknown command '$cmd'; see the top of jig/model" ;;
 esac

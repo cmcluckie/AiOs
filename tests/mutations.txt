@@ -157,3 +157,13 @@ exam.ping@1 | red | jig/model | s/sh "\$repo\/jig\/runs" budget "\$MODEL_MAX_COS
 exam.ping@1 | red | jig/model | s/\[ -z "\$(find "\$AIOS_AWS" -perm \/077 2> \/dev\/null)" \] || die/true || die/ | a key file anyone can read is used
 exam.ping@1 | red | jig/model | s/\[ -f "\$AIOS_AWS" \] || cannot/true || cannot/ | a missing key file goes on to a call instead of stopping
 exam.ping@1 | red | jig/model | s/record ping "\$MODEL_NAME" "\$(date -u +%Y-%m-%d)" 1 "\$tin" "\$tout"/record ping "$MODEL_NAME" "$(date -u +%Y-%m-%d)" 1 "$tout" "$tin"/ | the input and output tokens are swapped, so the cost is wrong
+exam.sit@1 | red | jig/sit | s# \&\& \[ -z "\$passed" \]; do#; do# | the exam goes on trying after a try has passed
+exam.sit@1 | red | jig/sit | s#if \[ -n "\$feedback" \]; then printf#if false; then printf# | a failed try is not shown the failing test or its own file
+exam.sit@1 | red | jig/sit | s#list|read|find|callers|calls|ports|check)$#*)# | any command the model names is run, not only the reader's
+exam.sit@1 | red | jig/sit | s#tout=\$((tout + \$(jq '.usage.outputTokens // 0' "\$d/reply.json")))#tout=0# | output tokens are not counted, so the cost of a try is too low
+exam.sit@1 | red | jig/sit | s#case \$rc in 0) result=pass ;; \*) result=fail ;; esac#result=pass# | every judged try is recorded as a pass
+exam.sit@1 | red | jig/sit | s#out = (f in ok) ? dir "/" f : ""#out = dir "/" f# | files the item did not ask for are kept
+exam.sit@1 | red | jig/sit | s#/^```/ { next }#/^NEVER/ { next }# | code fences are kept in the file
+exam.sit@1 | red | jig/sit | s#\$JUDGE "\$item" "\$repo/\$handdir" > /dev/null 2>&1 \|\| cannot#true || cannot# | a call is made though the judge cannot pass the hand lift
+exam.sit@1 | red | jig/sit | s#result=refused; lines=0#result=fail; lines=0# | a reply with no file is recorded as a failed lift, not a refusal
+exam.sit@1 | red | jig/sit | s#jq --slurpfile r "\$d/res.json" '. + \$r\[0\]'#jq --slurpfile r "$d/res.json" '.'# | what the reader said is never given back to the model

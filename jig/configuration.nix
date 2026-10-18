@@ -12,7 +12,7 @@
   nix.channel.enable = false;
   documentation.enable = false;
   environment.defaultPackages = [ ];
-  environment.systemPackages = with pkgs; [ git qemu_kvm gcc_multi strace cscope curl ];  # gcc_multi: the loader is built -m32
+  environment.systemPackages = with pkgs; [ git qemu_kvm gcc_multi strace cscope curl jq ];  # gcc_multi: the loader is built -m32
   services.openssh.enable = true;
   services.openssh.settings.PasswordAuthentication = false;
   users.users.chris = {

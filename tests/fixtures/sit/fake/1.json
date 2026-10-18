@@ -1,0 +1,1 @@
+{"output":{"message":{"role":"assistant","content":[{"toolUse":{"toolUseId":"t1","name":"reader","input":{"command":"read","args":["x.c","1","3"]}}},{"toolUse":{"toolUseId":"t2","name":"reader","input":{"command":"rm","args":["-rf"]}}}]}},"stopReason":"tool_use","usage":{"inputTokens":100,"outputTokens":20}}
