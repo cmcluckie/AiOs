@@ -1,5 +1,5 @@
 code          = "TOOL.exam@1"
-sentence      = "The exam's run record, spending cap and scorecard on the jig (jig/runs, jig/scorecard); scaffolding, a placeholder for parts."
+sentence      = "The exam on the jig (jig/sit, judge, model, runs, scorecard): sits a model for a lift, judges it, records and costs every try, keeps the spending cap, prints the scorecard; scaffolding, a placeholder for parts."
 status        = "draft"
 admitted      = ""
 retired_by    = ""
@@ -11,5 +11,5 @@ build_depends = []
 exposes       = []
 requires      = []
 scaffold      = true
-as_built      = ""
+as_built      = "index/tool/exam@1.as-built.md"
 reproducible  = ""

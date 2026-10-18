@@ -1,0 +1,11 @@
+id      = "0021"
+date    = 2026-10-17
+kind    = "rules and words"
+touches = ["index/tool/exam@1.toml", "index/tool/exam@1.as-built.md", "index/tool/reader@1.toml", "index/tool/reader@1.as-built.md", "findings/0020.md"]
+asked   = "CLAUDE.md says a component with no as-built spec makes a post not ready, and the exam and reader tools had none.  Both now have one, written by hand from the scripts, and their catalogue entries point at them.  The exam entry's one-line description also named only the run record and scorecard, so it now names the runner, judge and model call too."
+options = ["as written", "publish the post with the gap stated on its page", "leave the tools out of the catalogue"]
+default = "as written"
+chose   = "as written"
+why     = "findings/0020.md"
+by      = "KEY.chris@1"
+drafted = "Claude"
