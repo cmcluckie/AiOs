@@ -1,0 +1,11 @@
+id      = "0023"
+date    = 2026-10-18
+kind    = "tests"
+touches = ["tests/programs/gate-lib.sh", "tests/programs/gate-screen.sh", "tests/programs/gate-screen.c", "tests/programs/gate-port.sh", "tests/programs/gate-port.c", "tests/programs/gate-kernel.sh", "tests/programs/gate-kernel.c", "tests/programs/gate-int80.sh", "tests/programs/gate-int80.c", "tests/programs/gate-debt.sh"]
+asked   = "The probe programs and scripts behind the six TST.gate.* tests of decision 0022: three programs that reach for the screen's memory, a serial port and the kernel's memory; one that asks for write and exit with int 0x80 alone; a script that checks every TECH-DEBT mark against findings 0021.  Written before any gate code, so each test is shown red on the kernel as it is now."
+options = ["as written", "reuse tests/programs/screencheat.c for the screen probe"]
+default = "as written"
+chose   = "as written"
+why     = "findings/0021.md"
+by      = "KEY.chris@1"
+drafted = "Claude"
