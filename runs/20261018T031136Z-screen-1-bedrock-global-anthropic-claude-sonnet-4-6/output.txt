@@ -1,0 +1,125 @@
+I have everything I need. Linux's `early_vga_write` does not move the hardware cursor — it only writes to the frame buffer. The attribute is hardcoded as `0x7` (light grey on black); I need to replace that with the configurable colour. The scroll blank line uses `0x720` (space with attr `0x07`); I'll use the current colour there too. The `readw`/`writew` are plain volatile memory word accesses. Here is the complete file:
+
+=== vga.c ===
+/*
+ * VGA text-mode console, lifted from arch/x86/kernel/early_printk.c
+ * (early_vga_write) and drivers/tty/vt/vt.c (color_table).
+ *
+ * Built freestanding (-nostdinc), 32-bit x86.  No kernel headers.
+ */
+#include "vga.h"
+
+/* ANSI colour number -> VGA colour number, from drivers/tty/vt/vt.c:1399 */
+const unsigned char color_table[16] = {
+	0, 4, 2, 6, 1, 5, 3, 7,
+	8, 12, 10, 14, 9, 13, 11, 15
+};
+
+/* VGA frame buffer: physical address 0xb8000, identity-mapped. */
+#define VGABASE  ((volatile unsigned short *)0xb8000)
+
+#define MAX_XPOS  80
+#define MAX_YPOS  25
+
+/*
+ * Linux starts current_ypos at 25 so the first write triggers a scroll
+ * that clears the bottom line before use.
+ */
+static int current_ypos = MAX_YPOS;
+static int current_xpos;
+
+/* Attribute byte used for every character written; default 0x07 = light grey on black */
+static unsigned char vga_attr = 0x07;
+
+/* ---------- helpers matching Linux readw / writew (volatile word r/w) ---------- */
+
+static inline unsigned short vga_readw(volatile unsigned short *addr)
+{
+	unsigned short val;
+	__asm__ __volatile__("movw %1, %0"
+			     : "=r"(val)
+			     : "m"(*addr)
+			     : "memory");
+	return val;
+}
+
+static inline void vga_writew(unsigned short val, volatile unsigned short *addr)
+{
+	__asm__ __volatile__("movw %0, %1"
+			     :
+			     : "r"(val), "m"(*addr)
+			     : "memory");
+}
+
+/* ---------- public API -------------------------------------------------------- */
+
+void vga_set_color(unsigned char attr)
+{
+	vga_attr = attr;
+}
+
+void vga_home(void)
+{
+	current_xpos = 0;
+	current_ypos = 0;
+}
+
+void vga_clear(void)
+{
+	int x, y;
+	unsigned short blank = (unsigned short)((unsigned short)vga_attr << 8) | ' ';
+
+	for (y = 0; y < MAX_YPOS; y++)
+		for (x = 0; x < MAX_XPOS; x++)
+			vga_writew(blank, VGABASE + y * MAX_XPOS + x);
+
+	current_xpos = 0;
+	current_ypos = 0;
+}
+
+/*
+ * vga_write — from early_vga_write in arch/x86/kernel/early_printk.c.
+ *
+ * Differences from the Linux original:
+ *  - no struct console * parameter (not needed here)
+ *  - the attribute comes from vga_attr instead of the hardcoded 0x7
+ *  - the blank cell used when scrolling uses vga_attr rather than 0x07
+ *  - no CONFIG_KGDB_KDB backspace/carriage-return handling (not in base kernel)
+ */
+void vga_write(const char *str, unsigned n)
+{
+	char c;
+	int i, k, j;
+
+	while ((c = *str++) != '\0' && n-- > 0) {
+		if (current_ypos >= MAX_YPOS) {
+			/* scroll 1 line up */
+			for (k = 1, j = 0; k < MAX_YPOS; k++, j++) {
+				for (i = 0; i < MAX_XPOS; i++) {
+					vga_writew(
+						vga_readw(VGABASE + MAX_XPOS * k + i),
+						VGABASE + MAX_XPOS * j + i);
+				}
+			}
+			/* blank the new bottom line with the current attribute */
+			for (i = 0; i < MAX_XPOS; i++)
+				vga_writew(
+					((unsigned short)vga_attr << 8) | ' ',
+					VGABASE + MAX_XPOS * j + i);
+			current_ypos = MAX_YPOS - 1;
+		}
+
+		if (c == '\n') {
+			current_xpos = 0;
+			current_ypos++;
+		} else if (c != '\r') {
+			vga_writew(
+				((unsigned short)vga_attr << 8) | (unsigned char)c,
+				VGABASE + MAX_XPOS * current_ypos + current_xpos++);
+			if (current_xpos >= MAX_XPOS) {
+				current_xpos = 0;
+				current_ypos++;
+			}
+		}
+	}
+}

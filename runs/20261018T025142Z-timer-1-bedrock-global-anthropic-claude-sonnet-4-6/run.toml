@@ -1,0 +1,15 @@
+id            = "20261018T025142Z-timer-1-bedrock-global-anthropic-claude-sonnet-4-6"
+date          = "2026-10-18T02:51:42Z"
+item          = "timer"
+model         = "bedrock:global.anthropic.claude-sonnet-4-6"
+version       = "2026-10-18"
+sitting       = "20261018T025118Z"
+prompt        = "98ad3b40"
+try           = 1
+input_tokens  = 16
+output_tokens = 1815
+cache_read_tokens  = 235382
+cache_write_tokens = 34859
+cost_usd      = 0.228609
+result        = "refused"
+lines         = 0

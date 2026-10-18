@@ -1,0 +1,221 @@
+Now I have everything I need. The key insight is:
+1. `quick_pit_calibrate` uses PIT channel 2 to time TSC ticks
+2. It fails fast (returns 0) when `d1+d2 >= (delta * MAX_QUICK_PIT_ITERATIONS) >> 11` at i==1 — this is the "slow PIT / hypervisor" detection
+3. The divisor in `do_div(delta, i*256*1000)` is a 32-bit value, so I can use `divl` inline asm
+
+The build is 32-bit freestanding, so I need to implement 64-bit division carefully. The divisor `i*256*1000` fits in 32 bits. Also `delta *= PIT_TICK_RATE` — PIT_TICK_RATE is 1193182, a 32-bit value multiplied by a 64-bit, producing a 64-bit result.
+
+=== tsccal.c ===
+/*
+ * tsccal.c - measure TSC frequency against the 8254 PIT (channel 2).
+ *
+ * Provenance: arch/x86/kernel/tsc.c, function quick_pit_calibrate(),
+ * Linux kernel.  Trimmed to just the PIT-vs-TSC measurement and the
+ * fast-fail that gives up when reading the PIT is slow (virtualised
+ * environment).  No HPET, no PMTIMER, no CPUID paths.
+ *
+ * Build: gcc -m32 -nostdinc -ffreestanding -Wall -Werror -o tsccal tsccal.c
+ */
+
+#include "tsccal.h"
+
+/* ---- basic types (no <stdint.h>) --------------------------------------- */
+typedef unsigned char      u8;
+typedef unsigned int       u32;
+typedef unsigned long      ulong;
+typedef unsigned long long u64;
+
+#define ULONG_MAX  (~0UL)
+
+/* ---- PIT constants ----------------------------------------------------- */
+#define PIT_TICK_RATE          1193182UL   /* Hz */
+#define MAX_QUICK_PIT_MS       50
+/* each PIT MSB step = 256 ticks; iterations cover at most 50 ms */
+#define MAX_QUICK_PIT_ITERATIONS \
+	(MAX_QUICK_PIT_MS * PIT_TICK_RATE / 1000 / 256)
+
+/* ---- port I/O (freestanding inline asm) -------------------------------- */
+static inline u8 inb(u32 port)
+{
+	u8 v;
+	__asm__ __volatile__("inb %w1, %0" : "=a"(v) : "Nd"(port));
+	return v;
+}
+
+static inline void outb(u8 v, u32 port)
+{
+	__asm__ __volatile__("outb %0, %w1" : : "a"(v), "Nd"(port));
+}
+
+/* ---- read the TSC ------------------------------------------------------ */
+unsigned long long tsccal_cycles(void)
+{
+	u32 lo, hi;
+	__asm__ __volatile__("rdtsc" : "=a"(lo), "=d"(hi));
+	return ((u64)hi << 32) | lo;
+}
+
+/* ---- 64-bit multiply: a (64-bit) * b (32-bit) -> 64-bit ---------------- */
+static inline u64 mul64_32(u64 a, u32 b)
+{
+	u32 alo = (u32)a;
+	u32 ahi = (u32)(a >> 32);
+	u64 lo, hi;
+	/* lo = alo * b (64-bit result) */
+	__asm__("mull %2" : "=A"(lo) : "a"(alo), "rm"(b));
+	/* hi = ahi * b (64-bit result), but we only need its low 32 bits
+	 * added into the high half */
+	__asm__("mull %2" : "=A"(hi) : "a"(ahi), "rm"(b));
+	return lo + ((u64)(u32)hi << 32);
+}
+
+/*
+ * do_div64_32: divide a 64-bit n by a 32-bit base in-place (n = n/base).
+ * Mirrors the x86-32 do_div() macro from arch/x86/include/asm/div64.h.
+ */
+static inline void do_div64_32(u64 *n, u32 base)
+{
+	u32 lo, hi, upper, mod;
+	__asm__("" : "=a"(lo), "=d"(hi) : "A"(*n));
+	upper = hi;
+	if (hi) {
+		upper = hi % base;
+		hi    = hi / base;
+	}
+	__asm__("divl %2" : "=a"(lo), "=d"(mod)
+		: "rm"(base), "0"(lo), "1"(upper));
+	__asm__("" : "=A"(*n) : "a"(lo), "d"(hi));
+}
+
+/* ---- PIT helpers (from quick_pit_calibrate) ---------------------------- */
+
+/*
+ * pit_verify_msb - read and discard LSB, return 1 if MSB == val.
+ * Two reads from port 0x42: first is LSB, second is MSB.
+ */
+static inline int pit_verify_msb(u8 val)
+{
+	inb(0x42);            /* discard LSB */
+	return inb(0x42) == val;
+}
+
+/*
+ * pit_expect_msb - spin until the MSB of the PIT counter changes away from
+ * val, recording the TSC at the last moment it still held.
+ *
+ * Returns 1 if we saw it hold for at least 5 iterations (real hardware),
+ * 0 if the counter appeared to be stuck or moved too fast.
+ *
+ * *tscp   = TSC at the last sample where MSB == val
+ * *deltap = rough cost of one (TSC read + pit_verify_msb) pair
+ */
+static int pit_expect_msb(u8 val, u64 *tscp, ulong *deltap)
+{
+	int count;
+	u64 tsc = 0, prev_tsc = 0;
+
+	for (count = 0; count < 50000; count++) {
+		if (!pit_verify_msb(val))
+			break;
+		prev_tsc = tsc;
+		tsc = tsccal_cycles();
+	}
+	*deltap = (ulong)(tsccal_cycles() - prev_tsc);
+	*tscp   = tsc;
+	return count > 5;
+}
+
+/* ---- main calibration entry point ------------------------------------- */
+
+/*
+ * quick_pit_calibrate - calibrate TSC against PIT channel 2.
+ *
+ * Programs PIT channel 2 in one-shot mode, then watches the MSB of the
+ * counter decrease.  When the accumulated error is < 500 ppm, converts
+ * the elapsed TSC ticks to kHz.
+ *
+ * Returns TSC frequency in kHz, or 0 on failure.
+ *
+ * On a machine where each PIT port read is slow (>= ~2 µs, which happens
+ * under some hypervisors), the fast-fail at i==1 returns 0 immediately so
+ * the caller can take the hypervisor's word instead.
+ */
+static unsigned long quick_pit_calibrate(void)
+{
+	int i;
+	u64 tsc, delta;
+	ulong d1, d2;
+
+	/* Set the Gate high, disable speaker */
+	outb((inb(0x61) & ~0x02) | 0x01, 0x61);
+
+	/*
+	 * Counter 2, mode 0 (one-shot / interrupt-on-terminal-count),
+	 * binary count.  Mode 0 decrements by one each tick, which lets
+	 * us read individual MSB values cleanly.
+	 */
+	outb(0xb0, 0x43);
+
+	/* Load initial count 0xffff (LSB then MSB) */
+	outb(0xff, 0x42);
+	outb(0xff, 0x42);
+
+	/*
+	 * The PIT starts counting on the next clock edge.  Doing one
+	 * full 16-bit read (discard) gives it time to latch the first
+	 * value.
+	 */
+	pit_verify_msb(0);
+
+	if (pit_expect_msb(0xff, &tsc, &d1)) {
+		for (i = 1; i <= (int)MAX_QUICK_PIT_ITERATIONS; i++) {
+			if (!pit_expect_msb((u8)(0xff - i), &delta, &d2))
+				break;
+
+			delta -= tsc;
+
+			/*
+			 * After the first MSB step, extrapolate how small
+			 * the error would be after MAX_QUICK_PIT_ITERATIONS
+			 * steps.  If it can never reach 500 ppm, the PIT
+			 * reads are too slow (virtualised hardware) — give up
+			 * now so the caller can use the hypervisor clock.
+			 */
+			if (i == 1 &&
+			    d1 + d2 >= (delta * MAX_QUICK_PIT_ITERATIONS) >> 11)
+				return 0;
+
+			/*
+			 * Keep iterating until the relative error
+			 * (d1+d2)/delta < 1/2048 (~500 ppm).
+			 */
+			if (d1 + d2 >= delta >> 11)
+				continue;
+
+			/*
+			 * One final MSB check to confirm the PIT and TSC
+			 * reads were consistent throughout.
+			 */
+			if (!pit_verify_msb((u8)(0xfe - i)))
+				break;
+
+			/*
+			 * kHz = (t2-t1) * PIT_TICK_RATE / (i * 256 * 1000)
+			 *
+			 * delta is (t2-t1) in TSC ticks; i MSB decrements
+			 * each represent 256 PIT ticks.
+			 */
+			delta = mul64_32(delta, (u32)PIT_TICK_RATE);
+			do_div64_32(&delta, (u32)(i * 256 * 1000));
+			return (unsigned long)delta;
+		}
+	}
+	return 0;
+}
+
+/* ---- public API -------------------------------------------------------- */
+
+unsigned long tsccal_khz(void)
+{
+	return quick_pit_calibrate();
+}
