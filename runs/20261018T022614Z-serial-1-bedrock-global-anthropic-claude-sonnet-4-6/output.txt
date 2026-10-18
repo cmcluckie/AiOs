@@ -1,0 +1,121 @@
+I now have everything needed. The Linux early serial code is clear: `early_serial_hw_init` sets up the UART, `early_serial_putc` polls `LSR` bit 5 (`XMTRDY = 0x20`) before writing, and `early_serial_write` loops over bytes. The divisor for 115200 baud is `115200/115200 = 1`. I use inline `asm` for `inb`/`outb` as required (no C library, no kernel headers).
+
+=== serial8250.c ===
+/*
+ * Early 8250/16550 serial port output for x86 I/O-port-mapped UARTs.
+ *
+ * Lifted from arch/x86/kernel/early_printk.c and
+ * drivers/tty/serial/8250/8250_early.c
+ * (c) Copyright 2004 Hewlett-Packard Development Company, L.P.
+ *     Bjorn Helgaas <bjorn.helgaas@hp.com>
+ * Based on 8250.c, Copyright (C) 2001 Russell King,
+ * and early_printk.c by Andi Kleen.
+ * GPL-2.0
+ *
+ * Provenance: Linux drivers/tty/serial/8250/8250_early.c and
+ *             arch/x86/kernel/early_printk.c, commit a5ebb76233b7.
+ */
+
+#include "serial8250.h"
+
+/* Register offsets from base I/O port (one byte each) */
+#define TXR     0   /* Transmit register       (WRITE) */
+#define IER     1   /* Interrupt Enable                */
+#define FCR     2   /* FIFO control                    */
+#define LCR     3   /* Line control                    */
+#define MCR     4   /* Modem control                   */
+#define LSR     5   /* Line Status                     */
+#define DLL     0   /* Divisor Latch Low  (DLAB=1)     */
+#define DLH     1   /* Divisor Latch High (DLAB=1)     */
+
+/* LSR bit 5: transmitter holding register empty – safe to write */
+#define XMTRDY  0x20
+
+/* LCR bit 7: Divisor Latch Access Bit */
+#define DLAB    0x80
+
+/* LCR value for 8 data bits, no parity, 1 stop bit */
+#define LCR_8N1 0x03
+
+/* MCR: DTR + RTS asserted */
+#define MCR_DTR_RTS 0x03
+
+/* ---------- raw I/O port helpers (inline asm, no libc) ---------- */
+
+static inline void outb(unsigned char val, unsigned short port)
+{
+    __asm__ __volatile__("outb %0, %1" : : "a"(val), "Nd"(port));
+}
+
+static inline unsigned char inb(unsigned short port)
+{
+    unsigned char val;
+    __asm__ __volatile__("inb %1, %0" : "=a"(val) : "Nd"(port));
+    return val;
+}
+
+/* ---------- public API ------------------------------------------ */
+
+/*
+ * serial8250_init - programme the UART for 8n1 at 115200 baud.
+ *
+ * Mirrors early_serial_hw_init() in arch/x86/kernel/early_printk.c,
+ * using a fixed divisor of 1 (115200 / 115200 = 1).
+ */
+void serial8250_init(unsigned short base)
+{
+    unsigned char c;
+
+    outb(LCR_8N1,     base + LCR); /* 8n1, DLAB=0              */
+    outb(0,           base + IER); /* no interrupts             */
+    outb(0,           base + FCR); /* no FIFO                   */
+    outb(MCR_DTR_RTS, base + MCR); /* DTR + RTS                 */
+
+    /* Set baud-rate divisor: latch open → write DLL/DLH → latch close */
+    c = inb(base + LCR);
+    outb(c | DLAB,    base + LCR); /* open divisor latch        */
+    outb(1,           base + DLL); /* divisor low  = 1          */
+    outb(0,           base + DLH); /* divisor high = 0          */
+    outb(c & ~DLAB,   base + LCR); /* close divisor latch       */
+}
+
+/*
+ * serial8250_putc - wait until the UART can accept a byte, then send it.
+ *
+ * Mirrors early_serial_putc() in arch/x86/kernel/early_printk.c:
+ * poll LSR bit 5 (XMTRDY) before writing to TXR.
+ */
+void serial8250_putc(unsigned short base, unsigned char c)
+{
+    while ((inb(base + LSR) & XMTRDY) == 0)
+        ;   /* cpu_relax() – spin until THR empty */
+    outb(c, base + TXR);
+}
+
+/*
+ * serial8250_write - send n bytes from buffer s.
+ *
+ * Mirrors early_serial8250_write() / uart_console_write() in Linux:
+ * each byte is handed to serial8250_putc individually.
+ */
+void serial8250_write(unsigned short base, const void *s, unsigned long n)
+{
+    const unsigned char *p = (const unsigned char *)s;
+    unsigned long i;
+
+    for (i = 0; i < n; i++)
+        serial8250_putc(base, p[i]);
+}
+
+/*
+ * serial8250_flush - wait until the transmitter shift register is empty.
+ *
+ * Mirrors the tail-poll in serial_putc() in 8250_early.c (UART_LSR_TEMT,
+ * bit 6 – both THR and shift register empty).
+ */
+void serial8250_flush(unsigned short base)
+{
+    /* UART_LSR_TEMT = 0x40: transmitter empty (shift register drained) */
+    while ((inb(base + LSR) & 0x40) == 0)
+        ;
+}
