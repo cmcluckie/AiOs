@@ -1,0 +1,7 @@
+code       = "SPEC.gate.5@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+component  = "PART.gate@1"
+clause     = "A system call that is handed an address outside the program's own memory, for a buffer or a file name, is refused with -14 (Linux's EFAULT) and the kernel does not touch that address."
+author     = "KEY.chris"

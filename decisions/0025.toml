@@ -1,0 +1,11 @@
+id      = "0025"
+date    = 2026-10-18
+kind    = "spec"
+touches = ["specs/gate.5@1.toml", "tests/gate.refuses-address@1.toml", "tests/programs/gate-address.c", "tests/programs/gate-address.sh"]
+asked   = "A fifth clause for the gate: a system call handed an address that is not the program's own is refused with -14 and the kernel does not touch it; one test, whose probe hands write and read the kernel's own address.  The code already does this; the clause and the test make it checked."
+options = ["as written", "leave it to a later part"]
+default = "as written"
+chose   = "as written"
+why     = "findings/0021.md"
+by      = "KEY.chris@1"
+drafted = "Claude"
