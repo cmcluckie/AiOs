@@ -1,0 +1,10 @@
+code       = "TST.gate.on-time@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+binds      = "SPEC.gate.6@1"
+red_when   = "the stopwatch booted after a program that never makes a system call and never ends, on the kernel behind the gate and watched for 10 seconds by the host's clock, does not show every second once, in order, through 00:09 or 00:10"
+timeout_ms = 15000
+isolates   = "PART.share@2"
+runner     = "jig/test cmd env AIOS_SHARE=gateshare sh tests/programs/hog.sh"
+mutations  = 1

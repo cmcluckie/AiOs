@@ -1,0 +1,101 @@
+[petition]
+id         = "0011"
+purpose    = "PUR.0010@1"
+submitted  = 2026-10-18
+submitter  = "KEY.chris@1"
+expires    = 2027-04-18
+supersedes = ""
+status     = "pending"
+
+[[capability]]
+code   = "CAP.cpu.ring3@1"
+reason = "SPEC.gate.6@1"
+scope  = ""
+
+[[capability]]
+code   = "CAP.cpu.share@1"
+reason = "SPEC.gate.6@1"
+scope  = ""
+
+[[capability]]
+code   = "CAP.dev.serial@1"
+reason = "SPEC.machine.4@1"
+scope  = ""
+
+[[capability]]
+code   = "CAP.dev.pit@1"
+reason = "SPEC.tick.1@1"
+scope  = ""
+
+[[capability]]
+code   = "CAP.dev.pic@1"
+reason = "SPEC.pic.1@1"
+scope  = ""
+
+[[component]]
+code     = "PART.loader@9"
+role     = "boot"
+admitted = false
+
+[[component]]
+code     = "PART.gate@1"
+role     = "dependency"
+admitted = false
+
+[[component]]
+code     = "PART.share@2"
+role     = "dependency"
+admitted = false
+
+[[component]]
+code     = "PART.serial.8250@2"
+role     = "dependency"
+admitted = false
+
+[[component]]
+code     = "PART.irq.pic@1"
+role     = "dependency"
+admitted = false
+
+[[component]]
+code     = "PART.timer.pit-tick@1"
+role     = "dependency"
+admitted = false
+
+[[component]]
+code     = "PART.archive.cpio@1"
+role     = "dependency"
+admitted = false
+
+[[component]]
+code     = "TOOL.c@1"
+role     = "toolchain"
+admitted = false
+
+[[component]]
+code     = "MACHINE.serial-irq@1"
+role     = "machine"
+admitted = false
+
+[[component]]
+code     = "TOOL.qemu@1"
+role     = "machine"
+admitted = false
+
+[[test]]
+code = "TST.gate.separate@1"
+
+[[test]]
+code = "TST.gate.on-time@1"
+
+[[test]]
+code = "TST.gate.all-exit@1"
+
+[[test]]
+code = "TST.gate.share-ladder@1"
+
+[[test]]
+code = "TST.gate.shared-port@1"
+
+[[test]]
+code = "TST.gate.partition@1"

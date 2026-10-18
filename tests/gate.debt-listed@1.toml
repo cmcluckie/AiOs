@@ -7,4 +7,4 @@ red_when   = "a line marked TECH-DEBT in pool/ has no entry in findings/0021.md,
 timeout_ms = 5000
 isolates   = "PART.gate@1"
 runner     = "jig/test cmd sh tests/programs/gate-debt.sh"
-mutations  = 0
+mutations  = 1

@@ -7,4 +7,4 @@ red_when   = "a probe that writes one byte into the kernel's own memory at 0x001
 timeout_ms = 15000
 isolates   = "PART.gate@1"
 runner     = "jig/test cmd sh tests/programs/gate-kernel.sh"
-mutations  = 0
+mutations  = 1

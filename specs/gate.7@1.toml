@@ -1,0 +1,7 @@
+code       = "SPEC.gate.7@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+component  = "PART.loader@9"
+clause     = "The kernel built for a flavor on the gate contains the serial console, the gate, alloc and exit, and exactly the parts the flavor's petitions name and those parts depend on; no other part's code is in it."
+author     = "KEY.chris"

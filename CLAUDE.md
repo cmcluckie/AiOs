@@ -187,6 +187,18 @@ exactly; when a new one is needed, add it here in the same commit.
   The term Unix has used since 1971.  Called "the door" until 2026-10-23
   (findings 0014); the code still says door.h, as the kernel is still
   called the loader.  "Door" now means only the one way in: a petition.
+- **Gate.**  PART.gate: runs every program in ring 3, the processor's least
+  privileged level, and gives it one way to the nucleus: the system call, as
+  `int 0x80`, with Linux's numbers where Linux has one.  Whatever else a
+  program reaches for (the nucleus's memory, the screen's, a port) the
+  processor refuses, and the nucleus prints a Guru Meditation line.  Page
+  tables do the fencing, not the processor's older way of cutting memory
+  (Chris's ruling, 2026-10-18).  Part 18, findings 0021.
+- **Tech debt.**  A line that is there on purpose and has to go.  It is marked
+  `TECH-DEBT n` in a comment in the source and listed under the same number in
+  the findings, with what replaces it and when it goes; a test checks the two
+  lists match.  Nothing else uses the mark.  First entry: the system call
+  numbers 1000 to 1003 (findings 0021 #5).
 - **Program.**  A flat binary linked with the loader's program.ld, entered at
   byte 0 with the system call table.  Hello, Hanoi, the rungs.
 - **Machine (MACHINE).**  The VM definition: one serial port,

@@ -1,0 +1,11 @@
+id      = "0026"
+date    = 2026-10-18
+kind    = "spec"
+touches = ["specs/gate.6@1.toml", "tests/gate.separate@1.toml", "tests/gate.on-time@1.toml", "tests/gate.all-exit@1.toml", "tests/gate.share-ladder@1.toml", "tests/gate.shared-port@1.toml", "tests/gate.screen-refused@1.toml", "tests/gate.kernel-refused@1.toml", "tests/gate.port-refused@1.toml", "tests/gate.int80@1.toml", "tests/gate.refuses-address@1.toml", "tests/gate.ladder@1.toml", "tests/gate.debt-listed@1.toml", "tests/mutations.txt", "tests/programs/gate-shared-port.sh", "tests/programs/separate.sh", "tests/programs/hog.sh", "tests/programs/allexit.sh"]
+asked   = "A sixth clause for the gate (several programs at once, each in ring 3 and in its own memory, taking turns, a stopped one stopped alone) and five tests that run on the kernel behind the gate: the stopwatch with the vandal, with the hog, hello with Hanoi, a port-writer, and the four-program ladder.  The three existing probe scripts (separate, hog, allexit) read the flavor from AIOS_SHARE and default to share, so the same scripts check both kernels.  Thirteen mutations for the gate tests, all killed, and the mutation counts in their files."
+options = ["as written", "copy the three scripts instead of parameterising them"]
+default = "as written"
+chose   = "as written"
+why     = "findings/0021.md"
+by      = "KEY.chris@1"
+drafted = "Claude"

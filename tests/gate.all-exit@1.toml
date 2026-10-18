@@ -1,0 +1,10 @@
+code       = "TST.gate.all-exit@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+binds      = "SPEC.gate.6@1"
+red_when   = "hello and Hanoi packed into one archive and run together on the kernel behind the gate: hello's line or Hanoi's 15 moves are not all there, whole and in order, or anything else is printed, or the machine has not halted 20 seconds later"
+timeout_ms = 30000
+isolates   = "PART.share@2"
+runner     = "jig/test cmd env AIOS_SHARE=gateshare sh tests/programs/allexit.sh"
+mutations  = 1

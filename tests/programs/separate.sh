@@ -6,13 +6,13 @@
 # goes on showing every second.
 set -u
 cd "$(dirname "$0")/../.."
-sh jig/aios build share > /dev/null && sh jig/aios build stopwatch > /dev/null || { echo "build failed"; exit 1; }
+sh jig/aios build ${AIOS_SHARE:-share} > /dev/null && sh jig/aios build stopwatch > /dev/null || { echo "build failed"; exit 1; }
 t=$(mktemp -d); trap 'rm -rf "$t"' EXIT
 CF="-m32 -std=c11 -ffreestanding -fno-pic -fno-pie -fno-stack-protector -fno-builtin -fno-asynchronous-unwind-tables -mno-sse -mno-mmx -mno-red-zone -mgeneral-regs-only -nostdlib -nostdinc -O2 -Wall -Wextra -Werror"
 gcc $CF -I pool/PART.loader@6 -c -o "$t/vandal.o" tests/programs/vandal.c &&
 gcc $CF -static -no-pie -nostartfiles -Wl,--build-id=none -Wl,-z,noexecstack -T pool/PART.loader@6/program.ld -o "$t/vandal.bin" "$t/vandal.o" || { echo "probe does not build"; exit 1; }
 sh jig/aios pack "$t/both.bin" stopwatch out/stopwatch/stopwatch.bin vandal "$t/vandal.bin"
-timeout 6 sh pool/MACHINE.serial-irq@1/machine.sh out/share/loader.elf "$t/both.bin" < /dev/null 2> /dev/null | tr '\r' '\n' > "$t/out"
+timeout 6 sh pool/MACHINE.serial-irq@1/machine.sh out/${AIOS_SHARE:-share}/loader.elf "$t/both.bin" < /dev/null 2> /dev/null | tr '\r' '\n' > "$t/out"
 grep -q 'got away with it' "$t/out" && { echo "the vandal wrote past its own memory and carried on"; exit 1; }
 guru=$(grep 'Guru Meditation' "$t/out")
 [ -n "$guru" ] || { echo "the vandal was never stopped"; exit 1; }

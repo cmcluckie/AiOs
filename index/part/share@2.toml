@@ -1,0 +1,15 @@
+code          = "PART.share@2"
+sentence      = "More than one program on one processor, behind the gate: a timer takes the processor back a hundred times a second and gives it to the next program, each in ring 3 and in its own memory."
+status        = "draft"
+admitted      = ""
+retired_by    = ""
+kind          = "library"
+source        = "pool/PART.share@2/"
+licence       = "GPL-2.0-only"
+depends       = ["PART.gate@1", "PART.irq.pic@1", "PART.timer.pit-tick@1", "PART.archive.cpio@1"]
+build_depends = ["TOOL.c@1"]
+exposes       = ["CAP.cpu.share@1"]
+requires      = []
+scaffold      = false
+as_built      = "index/part/share@2.as-built.md"
+reproducible  = ""

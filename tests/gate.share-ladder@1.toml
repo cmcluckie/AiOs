@@ -1,0 +1,10 @@
+code       = "TST.gate.share-ladder@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+binds      = "SPEC.gate.3@1"
+red_when   = "hello, hanoi, life or calc, each built for its own loader and booted unchanged on the kernel behind the gate as built for the gateshare flavor's petitions, differs by one byte from its own expected output"
+timeout_ms = 60000
+isolates   = "PART.share@2"
+runner     = "jig/test ladder gateshare"
+mutations  = 1

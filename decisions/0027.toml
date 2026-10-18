@@ -1,0 +1,11 @@
+id      = "0027"
+date    = 2026-10-18
+kind    = "spec"
+touches = ["specs/gate.7@1.toml", "tests/gate.partition@1.toml", "tests/programs/gate-partition.sh", "tests/mutations.txt", "CLAUDE.md"]
+asked   = "A seventh clause for the gate (the kernel built for a flavor on the gate holds exactly the parts its petitions name, and what they depend on, plus the console and the gate) with its test, the partition probe pointed at PART.loader@9, and two mutations that the existing partition test's mutations also use; and two words in CLAUDE.md's terms: gate and tech debt."
+options = ["as written", "extend TST.loader.partition@1 to cover loader@9 instead of a new test"]
+default = "as written"
+chose   = "as written"
+why     = "findings/0021.md"
+by      = "KEY.chris@1"
+drafted = "Claude"

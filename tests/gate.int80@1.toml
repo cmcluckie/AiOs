@@ -7,4 +7,4 @@ red_when   = "a probe that never uses the system call table and asks for write (
 timeout_ms = 15000
 isolates   = "PART.gate@1"
 runner     = "jig/test cmd sh tests/programs/gate-int80.sh"
-mutations  = 0
+mutations  = 2

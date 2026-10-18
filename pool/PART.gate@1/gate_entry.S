@@ -56,6 +56,19 @@ trap\vec:
 	TRAP 30, 1
 	TRAP 31
 	TRAP 0x80
+	/* hardware interrupts, when a sharing part asks for them (gate_schedule): the
+	 * 8259's sixteen from 0x30, and the APIC's spurious vector */
+	.irp v, 0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x3a, 0x3b, 0x3c, 0x3d, 0x3e, 0x3f, 0xff
+	TRAP \v
+	.endr
+
+	.data
+	.globl	trap_irq_table
+trap_irq_table:
+	.long	trap0x30, trap0x31, trap0x32, trap0x33, trap0x34, trap0x35, trap0x36, trap0x37
+	.long	trap0x38, trap0x39, trap0x3a, trap0x3b, trap0x3c, trap0x3d, trap0x3e, trap0x3f
+	.long	trap0xff
+	.text
 
 trap_common:
 	pushl	%ds
@@ -68,6 +81,20 @@ trap_common:
 	pushl	%esp
 	call	gate_trap
 	addl	$4, %esp
+	movl	%eax, %esp
+	popal
+	popl	%es
+	popl	%ds
+	addl	$8, %esp
+	iret
+
+/* gate_resume_frame(cr3, frame): switch to that address space, and return into
+ * the program whose registers were saved at FRAME as if from a trap.  Never returns. */
+	.globl	gate_resume_frame
+gate_resume_frame:
+	movl	4(%esp), %ecx
+	movl	8(%esp), %eax
+	movl	%ecx, %cr3
 	movl	%eax, %esp
 	popal
 	popl	%es

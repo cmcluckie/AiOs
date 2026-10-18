@@ -7,4 +7,4 @@ red_when   = "a probe that stores a character into the screen's memory at 0xb800
 timeout_ms = 15000
 isolates   = "PART.gate@1"
 runner     = "jig/test cmd sh tests/programs/gate-screen.sh"
-mutations  = 0
+mutations  = 1

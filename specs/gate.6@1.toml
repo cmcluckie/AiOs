@@ -1,0 +1,7 @@
+code       = "SPEC.gate.6@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+component  = "PART.share@2"
+clause     = "Several programs run at once behind the gate, each in ring 3 and in its own memory, taking turns on the timer; a program the processor stops is stopped alone, with the Guru Meditation line, and the others carry on."
+author     = "KEY.chris"

@@ -7,8 +7,8 @@
  * program is handed is the same seven entries as before (door.h), so earlier
  * programs run unchanged; each entry is a stub that does the int 0x80.
  *
- * Not here yet: PART.share (several programs at once).  @9 runs one program
- * at a time; sharing moves onto the gate in a later part.
+ * Several programs at once are PART.share@2, on the gate; a program on its own
+ * is run by the gate directly.
  *
  * Everything below is as @8: one kernel source, every part behind a switch
  * the builder sets from the flavor's petitions.
@@ -20,6 +20,7 @@
  *   HAVE_TIMER_KVMCLOCK   PART.timer.kvmclock@1   the hypervisor says how fast the counter ticks
  *   HAVE_TIMER_TSC_PIT    PART.timer.tsc-pit@N    the counter timed against the 8254
  *   HAVE_FS_MINIX         PART.fs.minix@N         load and save, on PART.disk.ata-pio@1
+ *   HAVE_SHARE            PART.share@2          more than one program at once, behind the gate
  *   HAVE_SCREEN_VGA       PART.screen.vga@1       the screen, a second console
  *
  * With both clocks the kernel asks the hypervisor first and times the 8254 if
@@ -55,6 +56,9 @@
 #ifdef HAVE_FS_MINIX
 #include "minix.h"
 #endif
+#ifdef HAVE_SHARE
+#include "share.h"
+#endif
 #include "gate.h"
 #ifdef HAVE_SCREEN_VGA
 #include "vga.h"
@@ -67,6 +71,12 @@ static struct heap plain;
 
 static struct heap *heap(void)
 {
+#ifdef HAVE_SHARE
+	struct heap *h = share_heap();
+
+	if (h)
+		return h;
+#endif
 	return &plain;
 }
 
@@ -274,8 +284,9 @@ static void door_write(const void *s, unsigned long n)
 	irq_restore(f);
 }
 
-/* Wait for one byte, then take whatever else has already arrived.  While a
- * program waits, the others keep their turns. */
+/* Wait for one byte, then take whatever else has already arrived.  TECH-DEBT 2:
+ * a system call runs with interrupts off, so while a program waits here no
+ * other program gets a turn.  It goes in the mechanic, after the series. */
 static unsigned long door_read(void *buf, unsigned long n)
 {
 	unsigned char *p = buf;
@@ -363,6 +374,9 @@ static long door_save(const char *name, const void *buf, unsigned long n)
 static void __attribute__((noreturn)) door_exit(int code)
 {
 	(void)code;			/* unobservable from outside the machine; findings 0000 #9 */
+#ifdef HAVE_SHARE
+	share_exit();			/* resumes the next program, if there is one */
+#endif
 	__asm__ volatile("cli");
 	kernel_flush();
 	kernel_halt();
@@ -403,12 +417,18 @@ void __attribute__((noreturn)) loader_main(const struct hvm_start_info *si)
 	mod = (const struct hvm_modlist_entry *)(unsigned long)si->modlist_paddr;
 	src = (const unsigned char *)(unsigned long)mod[0].paddr;
 
-	/* An archive of programs ("070701", cpio's new ASCII header) needs sharing,
-	 * which is not on this kernel yet (findings 0021 #3): it stops without a
-	 * word, and the referee refuses such a flavor before it is built (rule 19). */
+	/* An archive of programs ("070701", cpio's new ASCII header): share, if a
+	 * petition asked to.  If none did, nothing here can run more than one
+	 * program, and the machine stops without a word: the referee refuses
+	 * such a flavor before it is built (rule 19). */
 	if (mod[0].size > 6 && src[0] == '0' && src[1] == '7' && src[2] == '0' &&
-	    src[3] == '7' && src[4] == '0' && src[5] == '1')
+	    src[3] == '7' && src[4] == '0' && src[5] == '1') {
+#ifdef HAVE_SHARE
+		share(si, (void *)src, (unsigned long)mod[0].size, &kernel_calls);
+#else
 		kernel_halt();
+#endif
+	}
 
 	/* One plain program, as @5: copy it to PROGRAM_BASE.  Then the gate runs it in ring 3. */
 	dst = (unsigned char *)PROGRAM_BASE;

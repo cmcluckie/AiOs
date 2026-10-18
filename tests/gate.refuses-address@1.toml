@@ -7,4 +7,4 @@ red_when   = "a probe that asks for write and read with a buffer inside the kern
 timeout_ms = 15000
 isolates   = "PART.gate@1"
 runner     = "jig/test cmd sh tests/programs/gate-address.sh"
-mutations  = 0
+mutations  = 1

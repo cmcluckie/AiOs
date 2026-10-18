@@ -1,0 +1,5 @@
+# Two programs at once behind the gate (petition 0011, part 18): the share flavor's
+# programs and machine, on the kernel that runs every program in ring 3.
+name      = "gateshare"
+machine   = "MACHINE.serial-irq@1"
+petitions = ["0004", "0006", "0011"]

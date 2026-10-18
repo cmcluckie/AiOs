@@ -7,4 +7,4 @@ red_when   = "a probe that writes a byte to the serial port with outb gets the b
 timeout_ms = 15000
 isolates   = "PART.gate@1"
 runner     = "jig/test cmd sh tests/programs/gate-port.sh"
-mutations  = 0
+mutations  = 1

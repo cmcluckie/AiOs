@@ -1,0 +1,141 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>The gate</title>
+<style>
+body{max-width:760px;margin:32px auto;padding:0 16px;font-family:Georgia,serif;font-size:18px;line-height:1.6;color:#222;background:#fff}
+section{border:1px solid #ddd;border-radius:10px;padding:0 20px 12px;margin:0 0 28px}
+.bar{display:flex;justify-content:space-between;align-items:center;margin:0 -20px 12px;padding:8px 20px;background:#f4f3ef;border-bottom:1px solid #ddd;border-radius:10px 10px 0 0;font:600 14px system-ui,sans-serif;color:#555;user-select:none}
+button{font:600 14px system-ui,sans-serif;padding:6px 16px;border-radius:16px;border:1px solid #0a66c2;background:#0a66c2;color:#fff;cursor:pointer}
+button.done{background:#fff;color:#0a66c2}
+.text{white-space:pre-wrap;font-family:system-ui,sans-serif;font-size:15px}
+.img{font:14px system-ui,sans-serif;color:#555}
+</style></head><body>
+<section id="post">
+<div class="bar"><span>1. Post</span><button onclick="copyText('post-body',this)">Copy</button></div>
+<div id="post-body" class="text">
+AiOs, part 18 (Kernel code: 1102 lines). "From what I read back then, the 386 added protected mode.  It turns out the 286 did, and it sucked so much that nobody used it."...
+
+Years ago I pulled apart an old IBM 5150 to find the processor.  It was a long rectangle, not the square chips I knew, and it had no protection at all.  Every program had every privilege.  So does everything on AiOs, until this part.
+
+The gate runs programs with fewer privileges.  A program can't touch the nucleus, the screen or a port.  It puts a message on a bus, the nucleus picks it up, does the job and hands back the answer.  I wonder why school glossed over something that simple.
+
+Claude and I wrote the tests first, and they cheat on purpose.  One writes into the screen's memory, one pokes the serial port, one reads the nucleus.  Each is stopped with a Guru Meditation line while the stopwatch next to it keeps counting.  Then Claude sabotaged the nucleus to trust every address, and it printed its own bytes on the console.  That's a test going red, and I loved it.
+
+Setting a limit is easy.  Knowing it holds takes a program that spends its life trying to break it.
+
+#AiOs
+</div>
+</section>
+<section id="title">
+<div class="bar"><span>2. Title</span><button onclick="copyText('title-body',this)">Copy</button></div>
+<div id="title-body"><h1>The gate</h1></div>
+</section>
+<section id="article">
+<div class="bar"><span>3. Article</span><button onclick="copyRich('article-body',this)">Copy</button></div>
+<div id="article-body">
+<p><em>The story behind AiOs, part 18.</em></p>
+<h2>The long rectangle</h2>
+<p>Around the time I got into programming, the mother of the person I was dating gave me an old IBM 5150.  I wrote a video game on it, a spaceship shooter.  About three weeks in, I pulled the machine apart to see how it all connected, and I regretted it fast, because then I couldn't test my game anymore.  I went looking for the processor.  I think it was an 8088, and I remember finding it odd that it was a long rectangle, nothing like the square Pentiums I'd seen.</p>
+<p>Later I read books on something called protected mode, and nobody explained it well.  Here's the part I'm leaving in on purpose.  From what I read back then, the 386 added it.  But in writing this part I learned the 286 did, and it sucked so much that nobody used it.  Maybe the 386 was just the first one where it was usable.  I haven't looked into it, and I'd rather leave the doubt in than pretend I know.  [Apparently OS/2 used it, but who the hell used OS/2?]</p>
+<p>Here's what the 5150 has to do with this.  The 8088 inside it has no protected mode at all, so every program on that machine ran with every privilege there was.  That's exactly where AiOs has been until this part.</p>
+<p>[The first candidate for this project was getting Linux running on a 6502.  I dropped that idea quickly, once I realized how impossible and useless it was.]</p>
+<h2>What was wrong</h2>
+<p>Part 16 gave every program its own memory, so two programs can't see each other.  That part is real.  But I never asked the harder question: what can a program do to the machine itself?</p>
+<p>Answer: anything.  A program can write straight into the screen's memory.  It can poke the serial port without asking.  It can read the nucleus.  The nucleus is what I call the centre of AiOs, the thing everything else is built around, and the rest of the world would say the kernel.  The hole was even written down in the findings, and I'd read it, and it hadn't really sunk in.</p>
+<p>Here's an AI miss worth owning.  When I asked Claude what the share part did and didn't protect, it told me the first megabyte of memory, the screen's included, was mapped into every program.  That turned out to be wrong.  Share doesn't map the screen at all.  Claude found out when it read the code for the real answer, and said so.  The real hole is simpler and bigger: programs run at the highest privilege the processor has.</p>
+<h2>The idea, in plain English</h2>
+<p>The nucleus starts a program and tells the processor it runs with fewer privileges.  It can't touch the nucleus's memory, the screen or the ports.  Instead of reaching for those directly, the program puts a message on a bus.  The nucleus picks it up, does the job, and hands the answer back.</p>
+<p>[For the exact version: the program runs one instruction, <code>int 0x80</code>, which is a trap.  The processor jumps to a fixed place in the nucleus with the arguments sitting in registers.  The nucleus does the job and returns.  The processor has four levels of privilege, called rings.  The nucleus runs in ring 0 and programs run in ring 3.]</p>
+<p>I call the part that does this the gate.</p>
+<h2>I had no idea what either meant</h2>
+<p>Claude stopped and asked me two questions.  First: should the processor fence off memory the old way, or with something called paging?  Second: what numbers should the system calls get that Linux has no number for?  I had no idea what either question meant, and I told Claude so, in words I won't print.  Then I asked what I should have asked first: what is this protecting against?  Tell me that, then ask me to choose.</p>
+<p>Once it was in plain words, the choice was easy.  The processor has two ways to fence memory.  The old way cuts memory into slices, and it can't hide the nucleus, which sits under the programs.  The other way is paging: the nucleus keeps a map of which pieces of memory a program may touch, and the processor checks the map on every single access.  I said this is a modern operating system, so it gets done the way it's meant to be done.</p>
+<h2>Linux's numbers</h2>
+<p>A program asks for something by number.  Linux already has numbers for the three calls that matter most: exit is 1, read is 3, write is 4.  So AiOs now uses Linux's numbers.  That's a little step toward running real Linux programs one day.</p>
+<p>Four of AiOs's own calls, alloc, ms, load and save, have no Linux number yet.  They get numbers from 1000 up, as a temporary measure.  I said they must be marked as tech debt that has to be removed, so every one of them has a <code>TECH-DEBT 1</code> comment in the code and an entry in the findings saying what replaces it and when it goes.  There's a test that checks the two lists match.  Forget a mark, or forget the entry, and the test goes red.</p>
+<h2>Tests that cheat</h2>
+<p>Claude and I wrote the tests first, and they cheat on purpose.  One program writes into the screen's memory.  One pokes the serial port.  One reads the nucleus's own memory.  One never uses the table at all and asks with the raw trap.  Each one was shown failing on the old nucleus before the gate existed.</p>
+<p>Then Claude built the gate.  The screen cheat stops with a page fault at <code>000B8000</code>.  The nucleus read stops at <code>00100000</code>.  The port write stops with a general protection fault.  Each prints a Guru Meditation line, the Amiga's name for a program that's been stopped.</p>
+<p>Here's the thing I loved: when more than one program is running, the one that cheats is stopped, and the stopwatch next to it never skips a second.</p>
+<h2>What nobody asked for</h2>
+<p>A program doesn't only reach for memory directly.  It can hand the nucleus an address and say "write these bytes to the console from here."  If that address belongs to the nucleus, the nucleus would happily read its own private memory out to the screen.</p>
+<p>Nobody asked for that check.  Claude put it in, and then told me it had no spec and no test, which is exactly the kind of thing that rots.  I said go.  The spec is one sentence: a call handed an address outside the program's own memory is refused with the same error Linux uses, and the nucleus doesn't touch the address.  Then, to prove the test can fail, Claude sabotaged the check so it accepted everything.  The nucleus printed its own bytes on the console, a line of garbage, and the test went red.  Isn't that cool?  Tests are written to fail, and a test that can't go red is decoration.  Then Claude put the check back.</p>
+<h2>A bug that said nothing</h2>
+<p>My favourite failure.  The machine just reset.  No message, no error, nothing, right at the first system call.  A reset with no message is the worst kind of bug.</p>
+<p>Claude asked the emulator to log every interrupt, and the log told the story.  The processor had complained about a table, couldn't handle its own complaint, and given up and rebooted.  The cause was one line.  The address of a table the processor needs was being cut short because a number was too small to hold it, so the processor was looking in the wrong place.  The fix was a cast to a bigger number.</p>
+<h2>Sharing again</h2>
+<p>Sharing was the big move.  Part 16's share part had its own page tables, its own interrupt table, and its own code for saving a program's registers.  All of that now lives in the gate, and share keeps only the turn taking: the timer, who's next, and what to do when a program exits or is stopped.  Share's code went from 353 lines (share.c and isr.S) to 177 (share.c).</p>
+<p>The old nucleus and the old share are untouched.  A new flavor, called gateshare, runs the same stopwatch and sieve on the new one.  It passes the old checks and new ones, including the stopwatch beside a vandal and beside a program that never gives up the processor.</p>
+<p>One honest wrinkle.  In a full run of everything, one older test failed once: the stopwatch reached 00:06 in a 6 second window where the test accepts 00:04 or 00:05.  That nucleus wasn't touched, it passed three reruns, and I read it as timing at the edge of the window.  It stays on the list until I've seen it again.</p>
+<h2>Two holes I left open on purpose</h2>
+<p>The gate has two known holes, and I'm leaving both open.</p>
+<p>The first: a system call runs with the timer switched off.  So if one program waits for a key, nothing else gets a turn, and the stopwatch freezes.  The second: a program's memory is handed out in 4 MiB chunks, so if its end doesn't land on a chunk boundary, it can reach the rest of that chunk, memory it was never given.  No test catches either, because none of them ask for it.</p>
+<p>Claude found both in a cold read of the code, with no knowledge of how it was built.  Claude checked each one in the code and had already written the fix for the first.  I said leave them.  Both are marked <code>TECH-DEBT 2</code> and <code>TECH-DEBT 3</code> in the code and listed in the findings, so the test that matches marks to entries still passes.</p>
+<p>Here's why.  This series is the climb up to a working system, and I'm saving a mechanic series for after it: go back, fix what's rough, and write each fix up as its own post.  If I fix everything now, that series has nothing to write about.  These two are the start of its list.  A hole you know about, marked and written down, is a different thing from a hole you didn't find.</p>
+<h2>What I'm taking away</h2>
+<p>The piece this rung added: a limit is only a limit if the machine enforces it, and you only know it holds if you've watched something try to break it.  A program can ask.  It can't reach.</p>
+<p>That's the shape I want for the AI agents later.  An agent can ask for what it needs, and a check, not the agent's good intentions, decides what it gets.  I'm not pitching that yet.  I'm just noting the shape came out of a processor from 1982.</p>
+<h2>Read along</h2>
+<ol>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/pool/PART.gate@1/gate_user.S">pool/PART.gate@1/gate_user.S</a>.  The table of stubs a program is handed.  Each one is a single trap.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/pool/PART.gate@1/gate.c">pool/PART.gate@1/gate.c</a>.  The whole gate.  Look for <code>user_ok</code>, and for the <code>TECH-DEBT</code> marks.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/programs/gate-screen.c">tests/programs/gate-screen.c</a>.  The program that reaches for the screen.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/pool/PART.share@2/share.c">pool/PART.share@2/share.c</a>.  What's left of sharing.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/findings/0021.md">findings/0021.md</a>.  The plan, my rulings, the tech debt, and the correction.</li>
+</ol>
+<h2>Try this</h2>
+<p>Open the repo in Codespaces and run <code>sh tests/programs/gate-screen.sh</code>.  You'll see the program stopped at <code>000B8000</code>.  Then open <code>pool/PART.gate@1/gate.c</code>, find the line in <code>base_init</code> that gives each kernel page the flag <code>0x3</code>, change it to <code>0x7</code>, and run it again.  Now the screen is open to the program, and the test goes red.  <code>sh jig/mutate gate.screen</code> does that for you and reports KILLED.  Both need QEMU, and the script says SKIP if it isn't there.</p>
+<h2>As built</h2>
+<p>This part added three components and changed none: the gate, the kernel behind it, and sharing on top of it.  Each has a catalogue entry and an as-built spec, hand-written from the code (<a href="https://github.com/cmcluckie/aios/blob/main/index/part/gate@1.as-built.md">gate@1</a>, <a href="https://github.com/cmcluckie/aios/blob/main/index/part/loader@9.as-built.md">loader@9</a>, <a href="https://github.com/cmcluckie/aios/blob/main/index/part/share@2.as-built.md">share@2</a>).</p>
+<h2>Addendum: the tests</h2>
+<p>Every test for this post, run by <code>sh jig/test</code> and <code>sh jig/mutate</code> in software emulation (QEMU without KVM) in Claude's workspace.  They have not been run on the jig yet, so every line below says emulation, not the jig.  13 tests, 13 passed, 0 failed, and 15 deliberate breakages, every one caught.  One older test, share.separate@1, failed once in a full run (the stopwatch reached 00:06 in a 6 second window) and passed three reruns; it is not one of this post's tests and its code was not touched.  The flavor gate and the flavor gateshare are what these tests boot.</p>
+<h3>PART.gate@1</h3>
+<ul>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/gate.screen-refused@1.toml">gate.screen-refused@1</a>.  Checks: Every program runs in ring 3: a program that reads or writes the kernel&#x27;s memory, the screen&#x27;s memory or an I/O port is stopped by the processor, the kernel names the fault on the console, and the kernel itself carries on; a program that does none of these runs exactly as it did before.  Red when: a probe that stores a character into the screen&#x27;s memory at 0xb8000 on a plain kernel gets its marker byte out, or is not stopped with a Guru Meditation line naming vector 0000000E and address 000B8000.  Passed in software emulation: stopped at 000B8000 (page fault).  Mutations caught: 1.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/gate.kernel-refused@1.toml">gate.kernel-refused@1</a>.  Checks: Every program runs in ring 3: a program that reads or writes the kernel&#x27;s memory, the screen&#x27;s memory or an I/O port is stopped by the processor, the kernel names the fault on the console, and the kernel itself carries on; a program that does none of these runs exactly as it did before.  Red when: a probe that writes one byte into the kernel&#x27;s own memory at 0x00100000 says it got away with it, or is not stopped with a Guru Meditation line naming vector 0000000E and address 00100000.  Passed in software emulation: stopped at 00100000 (page fault).  Mutations caught: 1.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/gate.port-refused@1.toml">gate.port-refused@1</a>.  Checks: Every program runs in ring 3: a program that reads or writes the kernel&#x27;s memory, the screen&#x27;s memory or an I/O port is stopped by the processor, the kernel names the fault on the console, and the kernel itself carries on; a program that does none of these runs exactly as it did before.  Red when: a probe that writes a byte to the serial port with outb gets the byte out, or is not stopped with a Guru Meditation line naming vector 0000000D.  Passed in software emulation: stopped on its first port write (general protection).  Mutations caught: 1.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/gate.int80@1.toml">gate.int80@1</a>.  Checks: A program asks the kernel for a system call with int 0x80, the call&#x27;s number in eax and its arguments in the registers Linux&#x27;s 32-bit x86 convention names, and the answer comes back in eax; write is 4, read is 3 and exit is 1, Linux&#x27;s numbers.  Red when: a probe that never uses the system call table and asks for write (4) then exit (1) with int 0x80 alone does not put its message on the serial port and halt the machine.  Passed in software emulation: write and exit through int 0x80 alone.  Mutations caught: 2.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/gate.refuses-address@1.toml">gate.refuses-address@1</a>.  Checks: A system call that is handed an address outside the program&#x27;s own memory, for a buffer or a file name, is refused with -14 (Linux&#x27;s EFAULT) and the kernel does not touch that address.  Red when: a probe that asks for write and read with a buffer inside the kernel&#x27;s memory is answered with anything but -14, or the kernel&#x27;s bytes reach the serial port.  Passed in software emulation: write and read handed a kernel address both came back -14.  Mutations caught: 1.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/gate.ladder@1.toml">gate.ladder@1</a>.  Checks: The system call table a program is handed keeps its seven entries at their offsets, so every earlier program runs unchanged, and each entry that has no Linux number yet (alloc, ms, load, save) uses an AiOs-only number of 1000 or more, marked in the source as tech debt and listed in findings 0021.  Red when: any earlier program, built for its own loader and booted unchanged under the gate, prints anything but its own expected output, or the system call table&#x27;s seven entries are not at offsets 0 to 24.  Passed in software emulation: 4 programs byte-identical under loader@9.  Mutations caught: 1.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/gate.debt-listed@1.toml">gate.debt-listed@1</a>.  Checks: Every line of source marked TECH-DEBT has an entry in findings 0021 saying what replaces it and when it goes, and every entry there has its marked line.  Red when: a line marked TECH-DEBT in pool/ has no entry in findings/0021.md, or an entry in findings/0021.md has no marked line.  Passed in software emulation: TECH-DEBT marks and findings/0021.md agree: 1.  Mutations caught: 1.</li>
+</ul>
+<h3>PART.share@2</h3>
+<ul>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/gate.separate@1.toml">gate.separate@1</a>.  Checks: Several programs run at once behind the gate, each in ring 3 and in its own memory, taking turns on the timer; a program the processor stops is stopped alone, with the Guru Meditation line, and the others carry on.  Red when: the stopwatch booted with a probe that writes one byte just past its own memory, on the kernel behind the gate: the probe is not stopped with a Guru Meditation line naming vector 0000000E, address 00C00000 and program 2, or the stopwatch misses a second in the 5 seconds after.  Passed in software emulation: vandal stopped at 00C00000 (page fault); the stopwatch reached 00:05.  Mutations caught: 1.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/gate.on-time@1.toml">gate.on-time@1</a>.  Checks: Several programs run at once behind the gate, each in ring 3 and in its own memory, taking turns on the timer; a program the processor stops is stopped alone, with the Guru Meditation line, and the others carry on.  Red when: the stopwatch booted after a program that never makes a system call and never ends, on the kernel behind the gate and watched for 10 seconds by the host&#x27;s clock, does not show every second once, in order, through 00:09 or 00:10.  Passed in software emulation: next to a program that never yields: 00:00 to 00:09, every second once, in order, in 10 s by the host.  Mutations caught: 1.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/gate.all-exit@1.toml">gate.all-exit@1</a>.  Checks: Several programs run at once behind the gate, each in ring 3 and in its own memory, taking turns on the timer; a program the processor stops is stopped alone, with the Guru Meditation line, and the others carry on.  Red when: hello and Hanoi packed into one archive and run together on the kernel behind the gate: hello&#x27;s line or Hanoi&#x27;s 15 moves are not all there, whole and in order, or anything else is printed, or the machine has not halted 20 seconds later.  Passed in software emulation: both programs whole, 16 lines, and the machine halted.  Mutations caught: 1.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/gate.share-ladder@1.toml">gate.share-ladder@1</a>.  Checks: The system call table a program is handed keeps its seven entries at their offsets, so every earlier program runs unchanged, and each entry that has no Linux number yet (alloc, ms, load, save) uses an AiOs-only number of 1000 or more, marked in the source as tech debt and listed in findings 0021.  Red when: hello, hanoi, life or calc, each built for its own loader and booted unchanged on the kernel behind the gate as built for the gateshare flavor&#x27;s petitions, differs by one byte from its own expected output.  Passed in software emulation: 4 programs byte-identical under loader@9.  Mutations caught: 1.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/gate.shared-port@1.toml">gate.shared-port@1</a>.  Checks: Several programs run at once behind the gate, each in ring 3 and in its own memory, taking turns on the timer; a program the processor stops is stopped alone, with the Guru Meditation line, and the others carry on.  Red when: the stopwatch booted with a probe that writes to the serial port with outb, on the kernel behind the gate: PORTCHEAT reaches the port, or the probe is not stopped with a Guru Meditation line naming vector 0000000D and program 2, or the stopwatch misses a second in the 5 seconds after.  Passed in software emulation: port write stopped (general protection) as program 2; the stopwatch reached 00:05.  Mutations caught: 1.</li>
+</ul>
+<h3>PART.loader@9</h3>
+<ul>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/gate.partition@1.toml">gate.partition@1</a>.  Checks: The kernel built for a flavor on the gate contains the serial console, the gate, alloc and exit, and exactly the parts the flavor&#x27;s petitions name and those parts depend on; no other part&#x27;s code is in it.  Red when: for any flavor whose kernel is PART.loader@9, the built kernel holds a function from a part the flavor&#x27;s petitions do not name (directly or through what they depend on), or lacks one from a part they do.  Passed in software emulation: 2 flavors on PART.loader@9, each kernel exactly its petitions&#x27; parts.  Mutations caught: 2.</li>
+</ul>
+<h2>Code on GitHub</h2>
+<p>Every line that changed, on one page (hash when committed)</p>
+<p>The commits behind this post, in order:</p>
+<ol>
+<li><a href="https://github.com/cmcluckie/aios/commit/67f472b">Part 18: the gate planned: findings 0021, decision 0022, four specs, six red tests, and Chris&#x27;s notes</a></li>
+<li><a href="https://github.com/cmcluckie/aios/commit/bdcb457">Part 18: the probes behind the six gate tests, shown red on loader@8</a></li>
+<li><a href="https://github.com/cmcluckie/aios/commit/52dcf56">Part 18: the gate, stage A: PART.gate@1 and PART.loader@9 (ring 3, int 0x80), petition 0010, flavor gate, PUR.0010, CAP.cpu.ring3@1, findings 0021 #1 corrected</a></li>
+<li><a href="https://github.com/cmcluckie/aios/commit/2b8c090">Part 18: the ledger hashes for the notes, plan, probes and stage A</a></li>
+<li><a href="https://github.com/cmcluckie/aios/commit/f0acd35">Part 18: SPEC.gate.5 and TST.gate.refuses-address@1: a system call handed an address outside the program is refused with -14</a></li>
+<li>Part 18: share@2 on the gate, flavor gateshare, petition 0011, SPEC.gate.6 and five tests (hash when committed)</li>
+<li>Part 18: the as-built specs, SPEC.gate.7 and the partition test, the article and its image (hash when committed)</li>
+</ol>
+<p><a href="https://github.com/cmcluckie/aios">The whole repo</a>.</p>
+</div>
+</section>
+<p class="img">Image: 2026-11-09.png, in this folder.</p>
+<script>
+function flash(b){b.textContent='Copied';b.classList.add('done');setTimeout(function(){b.textContent='Copy';b.classList.remove('done')},1500)}
+function select(id){var r=document.createRange();r.selectNodeContents(document.getElementById(id));var s=getSelection();s.removeAllRanges();s.addRange(r);return s}
+// A pasted image doesn't survive into LinkedIn, so each one is copied as a marker naming its file.
+function copyRich(id,b){var c=document.getElementById(id).cloneNode(true);c.removeAttribute('id');
+  c.querySelectorAll('img').forEach(function(i){var p=document.createElement('p');p.innerHTML='<strong>[Upload '+i.getAttribute('src')+' here]</strong>';(i.closest('p.img')||i).replaceWith(p)});
+  c.style.position='fixed';c.style.left='-9999px';document.body.appendChild(c);
+  var r=document.createRange();r.selectNodeContents(c);var s=window.getSelection();s.removeAllRanges();s.addRange(r);
+  document.execCommand('copy');s.removeAllRanges();c.remove();flash(b)}
+function copyText(id,b){var t=document.getElementById(id).innerText.trim();
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(function(){flash(b)},function(){copyRich(id,b)})}else{copyRich(id,b)}}
+</script>
+</body></html>
