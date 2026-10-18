@@ -1,0 +1,11 @@
+id            = "20261018T020247Z-serial-1-bedrock-global-anthropic-claude-sonnet-4-6"
+date          = "2026-10-18T02:02:47Z"
+item          = "serial"
+model         = "bedrock:global.anthropic.claude-sonnet-4-6"
+version       = "2026-10-18"
+try           = 1
+input_tokens  = 133817
+output_tokens = 3991
+cost_usd      = 0.461316
+result        = "fail"
+lines         = 68

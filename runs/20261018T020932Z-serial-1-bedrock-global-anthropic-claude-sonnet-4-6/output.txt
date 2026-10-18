@@ -1,0 +1,174 @@
+I now have everything I need. The Linux early serial code uses:
+- `inb`/`outb` for I/O port access (x86 inline asm)
+- `early_serial_hw_init` logic: LCR=0x03 (8n1), IER=0 (no interrupts), FCR=0 (no FIFO), MCR=0x03 (DTR+RTS), then set DLAB, write divisor DLL/DLM, clear DLAB
+- Baud divisor = 115200 / baud (from `early_serial_init`: `divisor = 115200 / baud`)
+- `serial_putc`: wait for LSR THRE (bit 5, 0x20) before writing — the `early_printk.c` uses `XMTRDY = 0x20` (THRE) to poll before write; while `8250_early.c`'s `serial_putc` writes first then polls for `uart_lsr_tx_empty` (TEMT|THRE both set). For `serial8250_flush` we wait for TEMT|THRE both empty; for `putc` we wait for THRE before writing (as `early_printk.c` does).
+
+=== serial8250.c ===
+
+/*
+ * Stand-alone 16550 UART transmit driver.
+ *
+ * Lifted from:
+ *   drivers/tty/serial/8250/8250_early.c
+ *     (c) Copyright 2004 Hewlett-Packard Development Company, L.P.
+ *     Bjorn Helgaas <bjorn.helgaas@hp.com>
+ *     Based on 8250.c, Copyright (C) 2001 Russell King
+ *   arch/x86/kernel/early_printk.c
+ *     Serial functions loosely based on a similar package from
+ *     Klaus P. Gerlicher
+ *
+ * Only the I/O-port (x86 port-mapped) transmit path is kept.
+ * 8 data bits, no parity, 1 stop bit, 115200 baud.
+ */
+
+#include "serial8250.h"
+
+/* Register offsets from the UART base I/O port (DLAB=0) */
+#define UART_TX         0   /* Out: Transmit buffer             */
+#define UART_IER        1   /* Out: Interrupt Enable Register   */
+#define UART_FCR        2   /* Out: FIFO Control Register       */
+#define UART_LCR        3   /* Out: Line Control Register       */
+#define UART_MCR        4   /* Out: Modem Control Register      */
+#define UART_LSR        5   /* In:  Line Status Register        */
+
+/* Register offsets from the UART base I/O port (DLAB=1) */
+#define UART_DLL        0   /* Out: Divisor Latch Low           */
+#define UART_DLM        1   /* Out: Divisor Latch High          */
+
+/* LCR bits */
+#define UART_LCR_WLEN8  0x03  /* 8-bit word length              */
+#define UART_LCR_DLAB   0x80  /* Divisor Latch Access Bit       */
+
+/* MCR bits */
+#define UART_MCR_DTR    0x01  /* DTR complement                 */
+#define UART_MCR_RTS    0x02  /* RTS complement                 */
+
+/* LSR bits */
+#define UART_LSR_THRE   0x20  /* Transmit-hold-register empty   */
+#define UART_LSR_TEMT   0x40  /* Transmitter empty (shift+hold) */
+
+/* Both shift register and holding register empty */
+#define UART_LSR_BOTH_EMPTY  (UART_LSR_TEMT | UART_LSR_THRE)
+
+/*
+ * The PC's standard crystal gives 115200 as the base rate.
+ * divisor = 115200 / baud  — for 115200 baud that is 1.
+ * (arch/x86/kernel/early_printk.c: divisor = 115200 / baud)
+ */
+#define UART_BASE_BAUD  115200
+#define BAUD            115200
+#define UART_DIVISOR    (UART_BASE_BAUD / BAUD)   /* = 1 */
+
+/* ------------------------------------------------------------
+ * Raw I/O port helpers — written as inline asm because there
+ * are no standard headers (build uses -nostdinc).
+ * ------------------------------------------------------------ */
+
+static inline void outb_p(unsigned char value, unsigned short port)
+{
+    __asm__ __volatile__("outb %0, %1"
+                         : : "a"(value), "Nd"(port));
+}
+
+static inline unsigned char inb_p(unsigned short port)
+{
+    unsigned char value;
+    __asm__ __volatile__("inb %1, %0"
+                         : "=a"(value) : "Nd"(port));
+    return value;
+}
+
+/* ------------------------------------------------------------
+ * serial8250_init
+ *
+ * Mirrors init_port() in 8250_early.c and early_serial_hw_init()
+ * in early_printk.c:
+ *
+ *   outb(LCR, WLEN8);          -- 8n1, DLAB=0
+ *   outb(IER, 0);              -- no interrupts
+ *   outb(FCR, 0);              -- no FIFO
+ *   outb(MCR, DTR|RTS);        -- assert DTR and RTS
+ *   read LCR, set DLAB
+ *   outb(DLL, divisor & 0xff)
+ *   outb(DLM, divisor >> 8)
+ *   write LCR back with DLAB cleared
+ * ------------------------------------------------------------ */
+
+void serial8250_init(unsigned short base)
+{
+    unsigned char c;
+
+    /* 8n1 — 8 data bits, no parity, 1 stop bit */
+    outb_p(UART_LCR_WLEN8, base + UART_LCR);
+
+    /* Disable all interrupts */
+    outb_p(0, base + UART_IER);
+
+    /* Disable FIFO */
+    outb_p(0, base + UART_FCR);
+
+    /* Assert DTR and RTS */
+    outb_p(UART_MCR_DTR | UART_MCR_RTS, base + UART_MCR);
+
+    /* Set baud rate divisor via DLAB */
+    c = inb_p(base + UART_LCR);
+    outb_p(c | UART_LCR_DLAB, base + UART_LCR);
+    outb_p(UART_DIVISOR & 0xff,        base + UART_DLL);
+    outb_p((UART_DIVISOR >> 8) & 0xff, base + UART_DLM);
+    outb_p(c & ~UART_LCR_DLAB,         base + UART_LCR);
+}
+
+/* ------------------------------------------------------------
+ * serial8250_putc
+ *
+ * Wait until the transmit-hold register is empty (THRE), then
+ * write the byte.  Mirrors early_serial_putc() in early_printk.c:
+ *
+ *   while ((inb(LSR) & XMTRDY) == 0)   -- XMTRDY == THRE == 0x20
+ *       cpu_relax();
+ *   outb(TXR, ch);
+ * ------------------------------------------------------------ */
+
+void serial8250_putc(unsigned short base, unsigned char c)
+{
+    while ((inb_p(base + UART_LSR) & UART_LSR_THRE) == 0)
+        ;
+    outb_p(c, base + UART_TX);
+}
+
+/* ------------------------------------------------------------
+ * serial8250_write
+ *
+ * Write n bytes.  Mirrors early_serial8250_write() /
+ * uart_console_write() — no newline expansion; the caller owns
+ * that policy.
+ * ------------------------------------------------------------ */
+
+void serial8250_write(unsigned short base, const void *s, unsigned long n)
+{
+    const unsigned char *p = (const unsigned char *)s;
+    unsigned long i;
+
+    for (i = 0; i < n; i++)
+        serial8250_putc(base, p[i]);
+}
+
+/* ------------------------------------------------------------
+ * serial8250_flush
+ *
+ * Wait until both the transmit-hold register and the shift
+ * register are empty (TEMT | THRE).  Mirrors the poll loop in
+ * serial_putc() in 8250_early.c which calls uart_lsr_tx_empty():
+ *
+ *   #define UART_LSR_BOTH_EMPTY  (UART_LSR_TEMT | UART_LSR_THRE)
+ *   static inline bool uart_lsr_tx_empty(u16 lsr) {
+ *       return (lsr & UART_LSR_BOTH_EMPTY) == UART_LSR_BOTH_EMPTY;
+ *   }
+ * ------------------------------------------------------------ */
+
+void serial8250_flush(unsigned short base)
+{
+    while ((inb_p(base + UART_LSR) & UART_LSR_BOTH_EMPTY) != UART_LSR_BOTH_EMPTY)
+        ;
+}
