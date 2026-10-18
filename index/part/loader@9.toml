@@ -1,0 +1,16 @@
+code          = "PART.loader@9"
+sentence      = "The kernel behind the gate: as @8, but the program runs in ring 3 and reaches the kernel only by int 0x80; one program at a time until sharing moves onto the gate."
+status        = "draft"
+admitted      = ""
+retired_by    = ""
+kind          = "kernel"
+source        = "pool/PART.loader@9/"
+licence       = "GPL-2.0-only"
+depends       = ["PART.serial.8250@2", "PART.gate@1"]
+builds_with   = ["PART.timer.kvmclock@1", "PART.timer.tsc-pit@1", "PART.timer.tsc-pit@2", "PART.fs.minix@1", "PART.fs.minix@2", "PART.screen.vga@1"]
+build_depends = ["TOOL.c@1"]
+exposes       = ["CAP.proc.exit@1", "CAP.mem.alloc@1"]
+requires      = []
+scaffold      = false
+as_built      = "index/part/loader@9.as-built.md"
+reproducible  = ""

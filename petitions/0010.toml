@@ -1,0 +1,84 @@
+[petition]
+id         = "0010"
+purpose    = "PUR.0010@1"
+submitted  = 2026-10-18
+submitter  = "KEY.chris@1"
+expires    = 2027-04-18
+supersedes = ""
+status     = "pending"
+
+[[capability]]
+code   = "CAP.tty.write@1"
+reason = "SPEC.hello.1@1"
+scope  = "console0"
+
+[[capability]]
+code   = "CAP.proc.exit@1"
+reason = "SPEC.hello.1@1"
+scope  = ""
+
+[[capability]]
+code   = "CAP.cpu.ring3@1"
+reason = "SPEC.gate.1@1"
+scope  = ""
+
+[[capability]]
+code   = "CAP.dev.serial@1"
+reason = "SPEC.machine.1@1"
+scope  = ""
+
+[[component]]
+code     = "PART.hello@1"
+role     = "primary"
+admitted = false
+
+[[component]]
+code     = "TOOL.c@1"
+role     = "toolchain"
+admitted = false
+
+[[component]]
+code     = "PART.loader@9"
+role     = "boot"
+admitted = false
+
+[[component]]
+code     = "PART.gate@1"
+role     = "dependency"
+admitted = false
+
+[[component]]
+code     = "PART.serial.8250@2"
+role     = "dependency"
+admitted = false
+
+[[component]]
+code     = "MACHINE.serial-only@1"
+role     = "machine"
+admitted = false
+
+[[component]]
+code     = "TOOL.qemu@1"
+role     = "machine"
+admitted = false
+
+[[test]]
+code = "TST.hello.exact-bytes@1"
+
+[[test]]
+code = "TST.gate.screen-refused@1"
+
+[[test]]
+code = "TST.gate.port-refused@1"
+
+[[test]]
+code = "TST.gate.kernel-refused@1"
+
+[[test]]
+code = "TST.gate.int80@1"
+
+[[test]]
+code = "TST.gate.ladder@1"
+
+[[test]]
+code = "TST.gate.debt-listed@1"

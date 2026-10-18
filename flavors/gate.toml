@@ -1,0 +1,4 @@
+# Hello behind the gate (petition 0010, part 18): the first kernel whose program runs in ring 3.
+name      = "gate"
+machine   = "MACHINE.serial-only@1"
+petitions = ["0010"]

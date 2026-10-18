@@ -24,6 +24,6 @@
       "command": "sh jig/aios run ${input:flavor}", "windows": { "command": "wsl sh jig/aios run ${input:flavor}" } }
   ],
   "inputs": [
-    { "id": "flavor", "type": "pickString", "description": "Which flavor?", "options": ["hello", "hanoi", "life", "calc", "stopwatch", "sort", "share", "both"], "default": "hello" }
+    { "id": "flavor", "type": "pickString", "description": "Which flavor?", "options": ["hello", "gate", "hanoi", "life", "calc", "stopwatch", "sort", "share", "both"], "default": "hello" }
   ]
 }

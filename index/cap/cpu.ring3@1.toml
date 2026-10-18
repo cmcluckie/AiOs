@@ -1,0 +1,8 @@
+code       = "CAP.cpu.ring3@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+touches    = "the processor's privilege level: every program runs in ring 3 and cannot reach the kernel's memory, the screen's memory or an I/O port"
+mechanism  = "the gate: ring 3 segments, a task state segment, page tables that open only the program's own window, and int 0x80 as the one way in"
+scope      = "none"
+scope_rule = "^$"

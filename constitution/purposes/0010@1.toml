@@ -1,0 +1,6 @@
+code       = "PUR.0010@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+sentence   = "Run a program so that it reaches the machine only by asking the kernel, and is stopped if it reaches any other way."
+holder     = "KEY.chris"

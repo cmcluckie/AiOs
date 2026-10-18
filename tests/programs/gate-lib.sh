@@ -1,4 +1,4 @@
-# Shared by the TST.gate.* probe scripts (sourced, not run).  Builds the hello
+# Shared by the TST.gate.* probe scripts (sourced, not run).  Builds the gate
 # flavor's kernel, builds a probe program against the newest loader's system
 # call table and program link script, boots it alone on the serial-only machine,
 # and leaves what came out on the serial port in $out and the machine's exit
@@ -13,9 +13,9 @@ t=$(mktemp -d); trap 'rm -rf "$t"' EXIT
 
 # gate_boot PROBE.c SECONDS
 gate_boot() {
-	sh jig/aios build hello > /dev/null || { echo "build of the hello flavor failed"; exit 1; }
+	sh jig/aios build gate > /dev/null || { echo "build of the gate flavor failed"; exit 1; }
 	gcc $CF -I "$L" -c -o "$t/p.o" "$1" &&
 	gcc $CF -static -no-pie -nostartfiles -Wl,--build-id=none -Wl,-z,noexecstack -T "$L/program.ld" -o "$t/p.bin" "$t/p.o" || { echo "probe $1 does not build"; exit 1; }
-	out=$(timeout "$2" sh pool/MACHINE.serial-only@1/machine.sh out/hello/loader.elf "$t/p.bin" < /dev/null 2> /dev/null | tr '\r' '\n')
+	out=$(timeout "$2" sh pool/MACHINE.serial-only@1/machine.sh out/gate/loader.elf "$t/p.bin" < /dev/null 2> /dev/null | tr '\r' '\n')
 	rc=$?
 }

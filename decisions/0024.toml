@@ -1,0 +1,11 @@
+id      = "0024"
+date    = 2026-10-18
+kind    = "purpose"
+touches = ["constitution/purposes/0010@1.toml", "index/cap/cpu.ring3@1.toml", "tests/programs/gate-lib.sh"]
+asked   = "The purpose and capability that let the gate be built: PUR.0010 (run a program so that it reaches the machine only by asking the kernel, and is stopped if it reaches any other way) and CAP.cpu.ring3@1 (the processor's privilege level); and gate-lib.sh pointed at the new gate flavor, now that a flavor boots loader@9."
+options = ["as written", "fold the capability into CAP.proc.exit"]
+default = "as written"
+chose   = "as written"
+why     = "findings/0021.md"
+by      = "KEY.chris@1"
+drafted = "Claude"

@@ -1,0 +1,15 @@
+code          = "PART.gate@1"
+sentence      = "The gate: programs run in ring 3 and ask the kernel with int 0x80; anything else they reach for, the processor refuses."
+status        = "draft"
+admitted      = ""
+retired_by    = ""
+kind          = "library"
+source        = "pool/PART.gate@1/"
+licence       = "GPL-2.0-only"
+depends       = []
+build_depends = ["TOOL.c@1"]
+exposes       = ["CAP.cpu.ring3@1"]
+requires      = []
+scaffold      = false
+as_built      = "index/part/gate@1.as-built.md"
+reproducible  = ""
