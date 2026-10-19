@@ -64,7 +64,7 @@ Sharing was the big move.  Part 16's share part had its own page tables, its own
 
 The old nucleus and the old share are untouched.  A new flavor, called gateshare, runs the same stopwatch and sieve on the new one.  It passes the old checks and new ones, including the stopwatch beside a vandal and beside a program that never gives up the processor.
 
-One honest wrinkle.  In a full run of everything, one older test failed once: the stopwatch reached 00:06 in a 6 second window where the test accepts 00:04 or 00:05.  That nucleus wasn't touched, it passed three reruns, and I read it as timing at the edge of the window.  It stays on the list until I've seen it again.
+One honest wrinkle.  In a full run of everything, one older test failed once: the stopwatch reached 00:06 in a 6 second window where the test accepts 00:04 or 00:05.  That nucleus wasn't touched, it passed three reruns, and I read it as timing at the edge of the window.  It didn't fail in the jig run, and it stays on the list until I've seen it again.
 
 ## Two holes I left open on purpose
 

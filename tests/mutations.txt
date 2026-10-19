@@ -189,7 +189,7 @@ gate.int80@1            | red      | pool/PART.gate@1/gate.c               | s/#
 gate.int80@1            | red      | pool/PART.gate@1/gate.c               | s/#define NR_EXIT\t\t1\t/#define NR_EXIT\t\t2\t/ | exit is answered at 2, not Linux's 1
 gate.refuses-address@1  | red      | pool/PART.gate@1/gate.c               | s/\tunsigned long e = p + n;/\tunsigned long e = p + n;\n\n\treturn 1;/    | the kernel believes every address a program hands it
 gate.ladder@1           | red      | pool/PART.gate@1/gate_user.S          | s/\.long\td_write, d_exit,/.long\td_exit, d_write,/                       | the system call table's first two entries swapped
-gate.debt-listed@1      | red      | pool/PART.gate@1/gate.c               | s/NR_MS\t\t1001\t\t\/\* TECH-DEBT 1/NR_MS\t\t1001\t\t\/* TECH-DEBT 2/       | a debt mark in the source with no entry in the findings
+gate.debt-listed@1      | red      | pool/PART.gate@1/gate.c               | s/NR_MS\t\t1001\t\t\/\* TECH-DEBT 1/NR_MS\t\t1001\t\t\/* TECH-DEBT 9/       | a debt mark in the source with no entry in the findings
 gate.separate@1         | red      | pool/PART.gate@1/gate.c               | s/pd\[i\] = (i << 22) [|] 0x83;/pd[i] = (i << 22) + 0x87;/ | every 4 MiB page outside the windows is opened to ring 3
 gate.on-time@1          | red      | pool/PART.share@2/share.c             | s/if (vec == (unsigned long)PIC_VECTOR(PIT_IRQ)) {/if (vec == 0xfe) {/   | the tick no longer gives the processor to the next program
 gate.all-exit@1         | red      | pool/PART.share@2/share.c             | s/\t\tgate_resume(tasks\[n\].space);/\t\tkernel_halt();/               | the machine halts when the first program exits

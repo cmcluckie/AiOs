@@ -1,0 +1,11 @@
+id      = "0028"
+date    = 2026-10-18
+kind    = "test"
+touches = ["tests/mutations.txt"]
+asked   = "The jig run of dfa7e7e showed gate.debt-listed@1 surviving its mutation: the mutation renumbers a debt mark to 2, and once TECH-DEBT 2 and 3 were listed on purpose that was no longer a mismatch.  The mutation now renumbers it to 9, which is listed nowhere.  The test and the clause are unchanged."
+options = ["as written", "leave the mutation and mark it as a known survivor"]
+default = "as written"
+chose   = "as written"
+why     = "The mutation exists to prove the test can go red; a survivor here means the test could not be shown to."
+by      = "KEY.chris@1"
+drafted = "Claude"

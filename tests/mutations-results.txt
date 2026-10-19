@@ -1,5 +1,5 @@
 # tests/mutations-results.txt, written by jig/mutate.  Do not edit by hand.
-# run 2026-10-18T03:50Z at commit c550ddc
+# run 2026-10-18T23:48Z at commit dfa7e7e
 KILLED    hello.exact-bytes@1  one wrong letter in hello's message
 KILLED    hello.exact-bytes@1  the newline goes missing
 KILLED    hello.exact-bytes@1  one extra write before exit
@@ -175,4 +175,19 @@ KILLED    exam.scorecard@1  an item a model never sat is shown as a failure
 KILLED    exam.scorecard@1  the prompt fingerprint is not shown on a passing line
 KILLED    exam.scorecard@1  the cost of failed sittings is spread over the passing ones
 KILLED    exam.scorecard@1  runs recorded before sittings existed are all added into one
-# 172 killed, 0 survived unexpectedly, 3 known survivors, 0 no-ops, 0 no-builds
+KILLED    gate.screen-refused@1  the kernel's own pages, the screen's among them, are opened to ring 3
+KILLED    gate.kernel-refused@1  the kernel's own pages are opened to ring 3
+KILLED    gate.port-refused@1  the program is given I/O privilege 3, so every port is open to it
+KILLED    gate.int80@1  write is answered at 5, not Linux's 4
+KILLED    gate.int80@1  exit is answered at 2, not Linux's 1
+KILLED    gate.refuses-address@1  the kernel believes every address a program hands it
+KILLED    gate.ladder@1  the system call table's first two entries swapped
+SURVIVED  gate.debt-listed@1  a debt mark in the source with no entry in the findings  <-- this test is decoration
+KILLED    gate.separate@1  every 4 MiB page outside the windows is opened to ring 3
+KILLED    gate.on-time@1  the tick no longer gives the processor to the next program
+KILLED    gate.all-exit@1  the machine halts when the first program exits
+KILLED    gate.share-ladder@1  the system call table's first two entries swapped
+KILLED    gate.shared-port@1  each shared program is given I/O privilege 3
+KILLED    gate.partition@1  the builder turns on every part the kernel can be built with, asked for or not: the bundle is back
+KILLED    gate.partition@1  the builder ignores the petitions: every kernel is the bare console, and the editor loses its disk
+# 186 killed, 1 survived unexpectedly, 3 known survivors, 0 no-ops, 0 no-builds
