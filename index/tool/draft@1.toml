@@ -11,5 +11,5 @@ build_depends = []
 exposes       = []
 requires      = []
 scaffold      = true
-as_built      = ""
+as_built      = "index/tool/draft@1.as-built.md"
 reproducible  = ""

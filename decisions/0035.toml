@@ -1,0 +1,11 @@
+id      = "0035"
+date    = 2026-10-19
+kind    = "as-built specs"
+touches = ["index/tool/builder@1.toml", "index/tool/builder@1.as-built.md", "index/tool/draft@1.toml", "index/tool/draft@1.as-built.md"]
+asked   = "TOOL.builder@1 and TOOL.draft@1 were added in part 19 as scaffolds with no as-built spec (as_built = \"\"), and every component a post adds or changes has to have one.  The two as-built specs are written from jig/aios and jig/draft, in the form TOOL.reader@1 has, and each catalogue entry now points at its spec.  Nothing else in either entry changes."
+options = ["as written", "leave the two scaffolds without specs until the generator (plan 7.1) writes them"]
+default = "as written"
+chose   = "as written"
+why     = "The post links the as-built spec of every component it adds, and a component with no as-built spec is a finding.  Hand-derived specs are what TOOL.reader@1 and TOOL.exam@1 already have."
+by      = "KEY.chris@1"
+drafted = "Claude"
