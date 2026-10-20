@@ -34,6 +34,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 #include <dirent.h>
 #include <time.h>
 #include <unistd.h>
@@ -600,6 +601,22 @@ static int cmd_petition(const char *path)
 	char *t = slurp(path), v[MAXL], id[MAXL], now[16], exp[16] = "";
 	if (!t) die("well-formed: %s cannot be read", path);
 	if (strncmp(t, "[petition]", 10) && !strstr(t, "\n[petition]")) die("well-formed: %s has no [petition] table", path);
+	/* a petition is fields, never prose: every line is a comment, a table header or key = value */
+	int ln = 1;
+	for (const char *p = t; *p; ln++) {
+		const char *e = strchr(p, '\n');
+		size_t n = e ? (size_t)(e - p) : strlen(p);
+		const char *q = p, *end = p + n;
+		while (q < end && (*q == ' ' || *q == '\t' || *q == '\r')) q++;
+		if (q < end && *q != '#' && *q != '[') {
+			const char *k = q;
+			while (k < end && (isalnum((unsigned char)*k) || *k == '_' || *k == '-')) k++;
+			const char *name_end = k;
+			while (k < end && (*k == ' ' || *k == '\t')) k++;
+			if (name_end == q || k >= end || *k != '=') die("well-formed: line %d is not TOML, a petition is fields and never prose: '%.40s'", ln, q);
+		}
+		p = e ? e + 1 : end;
+	}
 	for (int i = 0; need[i]; i++)
 		if (!field_in(t, need[i], v, sizeof v) || !v[0]) die("well-formed: [petition] has no %s", need[i]);
 	field_in(t, "id", id, sizeof id);

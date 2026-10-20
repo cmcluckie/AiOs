@@ -1,7 +1,7 @@
 #!/bin/sh
 # Probe for TST.referee.draft@1: `referee petition FILE` on a draft petition.  A
 # good fixture (tests/fixtures/draft/petition-good.toml, written by hand as a
-# stand-in for a model's draft) must be accepted; then it is spoiled nine ways,
+# stand-in for a model's draft) must be accepted; then it is spoiled ten ways,
 # one at a time, and every spoiled copy must be refused with the reason named.
 # Exit 0 is green, 1 is red.
 set -u
@@ -28,6 +28,8 @@ spoil() {
 printf 'Sure, here is a petition for cat.\n' > "$tmp/prose.toml"
 $ref "$tmp/prose.toml" > "$tmp/out" 2> "$tmp/err"; rc=$?
 [ $rc -eq 1 ] && grep -q "no \[petition\] table" "$tmp/err" || fail "prose: exit status $rc and '$(head -1 "$tmp/err")'"
+spoil "prose in front of a proper petition" "is not TOML" -e '1i\
+Now I have the full picture.  The program reads files.'
 spoil "a role the schema does not have" "the role 'chief'" -e 's/^role     = "primary"/role     = "chief"/'
 spoil "a petition that has expired" "rule 9" -e 's/^expires    = .*/expires    = 2020-01-01/'
 spoil "a number with no version" "PART.cat has no version\|PART.cat is not\|has no version" -e 's/^code     = "PART.cat@1"/code     = "PART.cat"/'
@@ -38,4 +40,4 @@ spoil "a table that is not one" "is not a catalogue number" -e 's/^code     = "P
 printf '\n[[component]]\ncode     = "PART.nothing-here@1"\nrole     = "dependency"\nadmitted = true\n' | cat "$good" - > "$tmp/bad.toml"
 $ref "$tmp/bad.toml" > "$tmp/out" 2> "$tmp/err"; rc=$?
 [ $rc -eq 1 ] && grep -q "rule 1: missing PART.nothing-here@1" "$tmp/err" || fail "a number that resolves nowhere, with no component to bring it: exit status $rc and '$(head -1 "$tmp/err")'"
-echo "a good draft accepted and listed; prose and eight spoiled copies refused, each naming its reason"
+echo "a good draft accepted and listed; prose and nine spoiled copies refused, each naming its reason"

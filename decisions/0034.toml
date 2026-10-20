@@ -1,0 +1,11 @@
+id      = "0034"
+date    = 2026-10-19
+kind    = "specs and tests"
+touches = ["pool/AGT.referee@1/referee.c", "specs/referee.draft@1.toml", "tests/referee.draft@1.toml", "tests/draft.parses@1.toml", "tests/programs/referee-draft.sh", "tests/programs/draft.sh", "tests/fixtures/draft/preface/1.json", "tests/mutations.txt"]
+asked   = "The first real draft (run 20261020T051413Z-draft-0012-1) was a good petition with a paragraph and a bullet list of the model's reasoning in front of it, which the prompt forbade.  The referee kept it, because 'referee petition' only looked for a [petition] table somewhere in the file, and the probes had tested pure prose and a clean petition but never prose in front of one.  The referee now refuses any line that is not a comment, a table header or key = value, and says which line.  The clause says so, the referee probe has a tenth spoiled copy (prose in front of a good petition), the draft probe has a saved reply of the same kind, and there is a seventh mutation.  The model's reply is not trimmed: a petition with prose in it is thrown away and the call is still recorded.  All twelve petitions in petitions/ and the fixture still pass."
+options = ["as written", "have the draft step cut everything before the first [petition] line and say how many lines it cut"]
+default = "as written"
+chose   = "as written"
+why     = "Petitions are structured TOML, never prose; cutting the preface would mean the draft step quietly edits what the model wrote.  A retry (DRAFT_TRIES=2) shows the model what was wrong."
+by      = "KEY.chris@1"
+drafted = "Claude"

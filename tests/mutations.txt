@@ -107,6 +107,7 @@ referee.draft@1 | red | pool/AGT.referee@1/referee.c | s/if (strncmp(rows\[r\].a
 referee.draft@1 | red | pool/AGT.referee@1/referee.c | s/if (!at || at\[1\] < '1' || at\[1\] > '9') die(/if (0 \&\& (!at || at[1] < '1')) die(/ | a draft may name a catalogue number with no version
 referee.draft@1 | red | pool/AGT.referee@1/referee.c | s/^\t\tdie("rule 1: missing %s", codes\[c\]);/\t\t;/ | a draft may name a number that resolves nowhere and comes with no component
 referee.draft@1 | red | pool/AGT.referee@1/referee.c | s/if (strncmp(t, "\[petition\]", 10) \&\& !strstr(t, "\\n\[petition\]")) die(/if (0 \&\& strncmp(t, "[petition]", 10)) die(/ | a reply with no petition table at all (prose) is not noticed
+referee.draft@1 | red | pool/AGT.referee@1/referee.c | s/if (name_end == q || k >= end || \*k != \x27=\x27) die(/if (0 \&\& (name_end == q || k >= end)) die(/ | prose in front of an otherwise proper petition is not noticed
 draft.parses@1 | red | jig/draft | s/elif line=$($REFEREE petition "$d\/draft.toml" 2>&1); then/elif line=$($REFEREE petition "$d\/draft.toml" 2>\&1) || true; then/ | every reply is kept as a draft, whatever the referee says
 draft.parses@1 | red | jig/draft | s/refusal=$line; feedback=$line;/mkdir -p "$DRAFT_OUT\/x"; cp "$d\/draft.toml" "$DRAFT_OUT\/x\/"; &/ | a refused reply is thrown away but a copy is left behind
 draft.parses@1 | red | jig/draft | s/sh "$repo\/jig\/runs" record "draft-$id"/true "$repo\/jig\/runs" record "draft-$id"/ | the call is not written into the run record, so its cost is never counted

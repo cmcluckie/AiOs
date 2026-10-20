@@ -41,6 +41,7 @@ throw() {	# NAME FRAGMENT
 	[ "$(ran "$1")" -eq 1 ] && [ "$(result_of "$1")" = refused ] || fail "$1: the paid-for call is not one run recorded as refused ($(ran "$1") runs, '$(result_of "$1")')"
 }
 throw prose "no \[petition\] table"
+throw preface "is not TOML"
 throw refused "the role 'chief'"
 throw empty "reply was empty"
-echo "a petition read, kept and the same both times; prose, a refused petition and an empty reply each thrown away with nothing left behind and the call recorded"
+echo "a petition read, kept and the same both times; prose, prose in front of a petition, a refused petition and an empty reply each thrown away with nothing left behind and the call recorded"
