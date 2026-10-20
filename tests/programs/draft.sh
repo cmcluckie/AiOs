@@ -5,6 +5,9 @@
 # kept, byte for byte, the same both times; a reply that is prose, one the
 # referee refuses and an empty one must each be thrown away: exit 1, the reason
 # printed, no draft file anywhere, and the call still written in the run record.
+# Mode source (TST.draft.source@1): told DRAFT_SOURCE=bsd, every question the
+# reader gets names bsd, the first message names Berkeley and not V7 and carries
+# the petition to supersede, the default is v7, and an unknown source makes no call.
 # Exit 0 is green, 1 is red, 2 means this host cannot run it (no jq).
 set -u
 cd "$(dirname "$0")/../.."
@@ -22,6 +25,26 @@ attempt() {
 }
 ran() { ls "$tmp/runs-$1" 2> /dev/null | wc -l; }
 result_of() { cat "$tmp/runs-$1"/*/run.toml 2> /dev/null | sed -n 's/^result *= *"\(.*\)".*/\1/p'; }
+
+if [ "${1:-}" = source ]; then
+	attempt good "$tmp/o0" || fail "the default source: a proper petition was not kept"
+	grep -v -- "^--source v7 " "$tmp/asked.log" | grep -q . && fail "with no source given, a question reached the reader without --source v7: $(grep -v -- '^--source v7 ' "$tmp/asked.log" | head -1)"
+	: > "$tmp/asked.log"; rm -rf "$tmp/runs-good"
+	DRAFT_SOURCE=bsd DRAFT_SUPERSEDES=0012 attempt good "$tmp/o1" || fail "told bsd, a proper petition was not kept: $(tail -1 "$tmp/err-good")"
+	[ -s "$tmp/asked.log" ] || fail "told bsd, the reader was never asked anything"
+	grep -v -- "^--source bsd " "$tmp/asked.log" | grep -q . && fail "told bsd, a question reached the reader as '$(grep -v -- '^--source bsd ' "$tmp/asked.log" | head -1)'"
+	first=$(jq -r '.[0].content[0].text' "$tmp/runs-good"/*/input.txt)
+	printf '%s' "$first" | grep -q "4.4BSD-Lite" || fail "told bsd, the model's first message does not say 4.4BSD-Lite"
+	printf '%s' "$first" | grep -q "Unix Version 7" && fail "told bsd, the model's first message still says Unix Version 7"
+	printf '%s' "$first" | grep -q 'supersedes = "0012"' || fail "the petition to supersede is not in the model's first message"
+	rm -rf "$tmp/runs-plan9"; cp -r "$fx/good" "$tmp/replies"
+	DRAFT_SOURCE=plan9 RUNS="$tmp/runs-plan9" MODEL_FAKE="$tmp/replies" DRAFT_OUT="$tmp/o9" sh jig/draft PUR.0011@1 usr/src/cmd/cat.c > /dev/null 2> "$tmp/err-plan9"; rc=$?
+	[ $rc -eq 1 ] || fail "an unknown source gave exit status $rc, not a refusal"
+	grep -q "unknown source" "$tmp/err-plan9" || fail "an unknown source was refused, but the reason says '$(tail -1 "$tmp/err-plan9")'"
+	[ "$(ran plan9)" -eq 0 ] || fail "an unknown source still made a call"
+	echo "every question named its source (v7 by default, bsd when told), the first message named 4.4BSD-Lite and not V7 and carried the petition to supersede, and an unknown source was refused before any call"
+	exit 0
+fi
 
 attempt good "$tmp/o1"; rc=$?
 [ $rc -eq 0 ] || fail "a proper petition was not kept (exit status $rc): $(tail -1 "$tmp/err-good")"

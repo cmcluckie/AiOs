@@ -223,3 +223,7 @@ reader.bsd-pin@1 | red | jig/reader | s/pinfile=bsd.pin/pinfile=v7.pin/ | Berkel
 reader.bsd-pin@1 | red | jig/reader | s/pinfile=bsd.pin/pinfile=linux.pin/ | Berkeley is read at Linux's pin
 reader.bsd-pin@1 | red | jig/reader | s/CLONE=\${BSD:-\${V7:-/CLONE=${LINUX:-${LINUX:-/ | Berkeley is read out of the Linux clone
 reader.bsd-pin@1 | red | jig/reader | s/^bsd)/bsd|plan9)/ | a source the reader does not have is taken for Berkeley
+draft.source@1 | red | jig/draft | s/\$READER --source "\$DRAFT_SOURCE" "\$cmd"/$READER "$cmd"/ | the model's questions reach the reader with no source named
+draft.source@1 | red | jig/draft | s/^\tbsd) srcname=.*/\tbsd) srcname="Unix Version 7 (1979)" ;;/ | told Berkeley, the model is told it is reading V7
+draft.source@1 | red | jig/draft | s/\*) die "unknown source/*) srcname=x; : "unknown source/ | an unknown source is not refused, and a call is made
+draft.source@1 | red | jig/draft | s/"\$DRAFT_SUPERSEDES" "\$purpose"/"" "$purpose"/ | the petition to supersede is never handed to the model

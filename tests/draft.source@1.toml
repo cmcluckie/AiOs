@@ -1,0 +1,10 @@
+code       = "TST.draft.source@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+binds      = "SPEC.draft.2@1"
+red_when   = "with saved replies standing in for the model, a question reaches the reader without the source it was told, or for another source; the model's first message does not name the source, or names Unix Version 7 when it is reading Berkeley; an unknown source makes a call or is not refused; or the petition to supersede is not in the first message"
+timeout_ms = 30000
+isolates   = "TOOL.draft@1"
+runner     = "jig/test cmd sh tests/programs/draft.sh source"
+mutations  = 4

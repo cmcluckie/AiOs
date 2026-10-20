@@ -17,12 +17,16 @@
 # number.  It is not in petitions/: a person reads it first and commits it.
 # DRAFT_TRIES (1), DRAFT_TURNS (25 model calls in one try), DRAFT_MAXTOKENS (8000
 # per reply), DRAFT_OUT (out/draft), DRAFT_ID (the petition number to use),
-# READER (the command to use, default jig/reader --source v7), REFEREE (default
+# DRAFT_SOURCE (v7, or bsd for 4.4BSD-Lite: which source the model may read; every
+# question to the reader carries it), DRAFT_SUPERSEDES (the petition this draft
+# replaces, handed to the model; default none),
+# READER (the command to use, default jig/reader), REFEREE (default
 # the referee), MODEL_NAME and MODEL_ID (see jig/model).
 # Needs jq, which the jig has: replies and requests are JSON.
 set -u
 repo=$(cd "$(dirname "$0")/.." && pwd)
-READER=${READER:-sh $repo/jig/reader --source v7}
+READER=${READER:-sh $repo/jig/reader}
+DRAFT_SOURCE=${DRAFT_SOURCE:-v7}; DRAFT_SUPERSEDES=${DRAFT_SUPERSEDES:-}
 REFEREE=${REFEREE:-sh $repo/pool/AGT.referee@1/referee}
 DRAFT_TRIES=${DRAFT_TRIES:-1}; DRAFT_TURNS=${DRAFT_TURNS:-25}; DRAFT_MAXTOKENS=${DRAFT_MAXTOKENS:-8000}
 DRAFT_OUT=${DRAFT_OUT:-$repo/out/draft}
@@ -33,6 +37,11 @@ die() { echo "draft: $*" >&2; exit 1; }
 cannot() { echo "draft: $*" >&2; exit 2; }
 command -v jq > /dev/null || cannot "jq is not installed"
 [ $# -eq 2 ] || die "needs PURPOSE SOURCE"
+case "$DRAFT_SOURCE" in
+	v7) srcname="Unix Version 7 (1979)" ;;
+	bsd) srcname="4.4BSD-Lite (Berkeley, 1994)" ;;
+	*) die "unknown source '$DRAFT_SOURCE'; the draft step knows v7 and bsd" ;;
+esac
 purpose=$1; source=$2
 pf="$repo/constitution/purposes/${purpose#PUR.}.toml"
 [ -f "$pf" ] || die "no purpose $purpose"
@@ -44,7 +53,7 @@ expires=${DRAFT_EXPIRES:-$(date -u -d "$today +6 months" +%Y-%m-%d 2> /dev/null)
 id=${DRAFT_ID:-$(ls "$repo/petitions" | sed -n 's/^\([0-9][0-9][0-9][0-9]\)\.toml$/\1/p' | sort | tail -1 | awk '{ printf "%04d", $1 + 1 }')}
 [ -n "$id" ] || die "cannot work out the next petition number"
 
-$READER pin > /dev/null 2>&1 || cannot "the reader cannot run here"
+$READER --source "$DRAFT_SOURCE" pin > /dev/null 2>&1 || cannot "the reader cannot run here"
 $REFEREE petition "$repo/tests/fixtures/draft/petition-good.toml" > /dev/null 2>&1 || cannot "the referee cannot read a petition here"
 
 scratch=$(mktemp -d); trap 'rm -rf "$scratch"' EXIT
@@ -59,7 +68,7 @@ done > "$scratch/catalogue.txt"
 sed -n '/^## Petition fields/,/^## Two phases/p' "$repo/schema/petition.md" | sed '$d' > "$scratch/layout.txt"
 
 cp='{"cachePoint":{"type":"default"}}'
-tools='{"tools":[{"toolSpec":{"name":"reader","description":"Read Unix Version 7, one fixed copy of it. command is one of list, read, check, ports; args is the list of its arguments.","inputSchema":{"json":{"type":"object","properties":{"command":{"type":"string","enum":["list","read","check","ports"]},"args":{"type":"array","items":{"type":"string"}}},"required":["command","args"]}}}},{"cachePoint":{"type":"default"}}]}'
+tools='{"tools":[{"toolSpec":{"name":"reader","description":"Read '"$srcname"', one fixed copy of it. command is one of list, read, check, ports; args is the list of its arguments.","inputSchema":{"json":{"type":"object","properties":{"command":{"type":"string","enum":["list","read","check","ports"]},"args":{"type":"array","items":{"type":"string"}}},"required":["command","args"]}}}},{"cachePoint":{"type":"default"}}]}'
 sitting=$(date -u +%Y%m%dT%H%M%SZ)
 prompt=$(git -C "$repo" hash-object "$repo/draft/prompt.txt" 2> /dev/null | cut -c1-8); [ -n "$prompt" ] || prompt=-
 feedback=""; prev=/dev/null; kept=""; refusal=""
@@ -67,7 +76,7 @@ try=1
 while [ "$try" -le "$DRAFT_TRIES" ] && [ -z "$kept" ]; do
 	d="$scratch/try$try"; mkdir -p "$d"
 	# the first message: everything the model is given, and (after a refusal) what went wrong
-	{ printf 'Purpose: %s\n\nProgram source: %s\n\nPetition id: %s\nsubmitted = %s\nexpires = %s\nstatus = "draft"\npurpose = "%s"\n' "$sentence" "$source" "$id" "$today" "$expires" "$purpose"
+	{ printf 'Purpose: %s\n\nProgram source: %s, in %s\n\nPetition id: %s\nsubmitted = %s\nexpires = %s\nsupersedes = "%s"\nstatus = "draft"\npurpose = "%s"\n' "$sentence" "$source" "$srcname" "$id" "$today" "$expires" "$DRAFT_SUPERSEDES" "$purpose"
 	  printf '\nThe layout of a petition:\n\n'; cat "$scratch/layout.txt"
 	  printf '\nA finished petition, as an example:\n\n'; cat "$repo/petitions/0001.toml"
 	  printf '\nThe catalogue:\n\n'; cat "$scratch/catalogue.txt"
@@ -92,7 +101,7 @@ while [ "$try" -le "$DRAFT_TRIES" ] && [ -z "$kept" ]; do
 				case "$cmd" in
 				list|read|check|ports)
 					set --; for a in $(printf '%s' "$tu" | jq -r '(.input.args // [])[] | tostring'); do set -- "$@" "$a"; done
-					out=$($READER "$cmd" "$@" 2>&1); rc=$?
+					out=$($READER --source "$DRAFT_SOURCE" "$cmd" "$@" 2>&1); rc=$?
 					[ $rc -eq 0 ] && st=success || st=error ;;
 				*) out="the reader has no command '$cmd'"; st=error ;;
 				esac

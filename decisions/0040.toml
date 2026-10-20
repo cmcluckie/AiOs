@@ -1,0 +1,11 @@
+id      = "0040"
+date    = 2026-10-20
+kind    = "specs and tests"
+touches = ["jig/draft", "draft/prompt.txt", "specs/draft.2@1.toml", "tests/draft.source@1.toml", "tests/programs/draft.sh", "tests/fixtures/draft/reader-stub.sh", "tests/mutations.txt", "index/tool/draft@1.as-built.md"]
+asked   = "Part 20, before the model drafts again from Berkeley's cat: the draft step said Unix Version 7 in three places (its prompt, the reader tool's description, and the reader's default source), so it could only ever read V7.  It now takes DRAFT_SOURCE (v7 by default, or bsd), adds --source to every question it passes to the reader, names the source in the model's first message and in the tool's description, and refuses a source it does not know before any call.  It also takes DRAFT_SUPERSEDES and hands it to the model with the id and dates, so petition 0013 can say it supersedes 0012 (decision 0038).  The prompt no longer names V7 or V7's path, and its rule about given fields now includes supersedes; the prompt's fingerprint in the run record changes with it.  SPEC.draft.2@1 says so; TST.draft.source@1 went red before the change and green after; four mutations, each checked by hand to turn it red.  The four mutations of draft.parses still change the file and still turn it red."
+options = ["as written", "a second draft script for Berkeley"]
+default = "as written"
+chose   = "as written"
+why     = "One draft step, told its source, is the same machine for every program after cat; a copy per source would drift."
+by      = "KEY.chris@1"
+drafted = "Claude"
