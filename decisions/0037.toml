@@ -1,0 +1,11 @@
+id      = "0037"
+date    = 2026-10-20
+kind    = "licence"
+touches = []
+asked   = "Findings 0022 item 7 left open whether V7's cat can be built into an AiOs image.  The V7 source comes with Caldera's 2002 grant, which asks that any advertising for a product built from it acknowledge Caldera.  The repo is GPL-2.0-only, and an advertising condition is an extra restriction of the kind GPL-2.0 does not allow.  Part 19 only read V7's cat and copied nothing, so it is clear either way.  Part 20 builds a cat into an image.  Claude is not a lawyer and did not decide it."
+options = ["keep V7 cat out of the repo and fetch it on the jig at build time", "lift V7 cat under its own licence as an exception", "use a cat with a GPL-compatible licence instead", "hold part 20's cat until someone who knows licences has looked"]
+default = "use a cat with a GPL-compatible licence instead"
+chose   = "use a cat with a GPL-compatible licence instead: cat from 4.4BSD-Lite (Berkeley, 1994), the same line of Unix, under the BSD licence as amended by Berkeley's letter of 22 July 1999, which deleted the advertising clause and leaves a licence compatible with GPL-2.0"
+why     = "The rule is that the whole repo is GPL-2.0-only and an incompatible source is a finding before it is a lift.  Of the compatible cats (4.4BSD-Lite, BusyBox, toybox), Berkeley's has the history and sits in the same line as V7.  Petition 0012 stays as the record of what the model wrote from V7; part 20 has the model draft again from the Berkeley source."
+by      = "KEY.chris@1"
+drafted = "Claude"
