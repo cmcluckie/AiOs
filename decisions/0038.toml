@@ -1,0 +1,11 @@
+id      = "0038"
+date    = 2026-10-20
+kind    = "plan"
+touches = []
+asked   = "Findings 0023 item 7: four things to decide before part 20 is built.  (1) Which Berkeley release to pin for cat: 4.4BSD-Lite1 (1994, cat.c 8.1, 251 lines) or Lite2 (1995, 8.2, three small fixes).  (2) Both versions declare cat's exit status and never set it, so a missing file exits 0; the model's petition asked for a test that a missing file is an error, which will go red on Berkeley's code.  (3) How much of musl goes into lifted/.  (4) How the model's new petition for Berkeley's cat relates to petition 0012, its draft from V7."
+options = ["Lite1; red then fixed in its own recorded change; only the pieces cat links; 0013 supersedes 0012", "Lite2; the test is ruled too strict and Berkeley's code is never changed; the whole library; 0013 stands beside 0012"]
+default = "Lite1; red then fixed in its own recorded change; only the pieces cat links; 0013 supersedes 0012"
+chose   = "Lite1; red then fixed in its own recorded change; only the pieces cat links; 0013 supersedes 0012"
+why     = "Lite1 is the original release and what the part 19 article says.  A test that goes red on real code is the point of writing tests to fail, and the fix is the one later BSDs made.  Nothing enters the repo without a reason, so only what cat links.  Superseding keeps the chain visible without deleting the record."
+by      = "KEY.chris@1"
+drafted = "Claude"
