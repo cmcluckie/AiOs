@@ -1,0 +1,11 @@
+id      = "0039"
+date    = 2026-10-20
+kind    = "specs and tests"
+touches = ["jig/reader", "jig/bsd.pin", "constitution/human-only.toml", "specs/reader.6@1.toml", "tests/reader.bsd-pin@1.toml", "tests/programs/reader-bsd.sh", "tests/mutations.txt", "index/tool/reader@1.as-built.md"]
+asked   = "Part 20, piece (a) of findings 0023: the reader learns Berkeley.  A third pinned source, jig/bsd.pin, the BSD-4_4_Lite1 commit of the Unix history repo (decision 0038), read with --source bsd out of the same clone as V7.  SPEC.reader.6@1 says it answers only from that commit by the same rules, and refuses find, callers and calls as Linux-only.  TST.reader.bsd-pin@1 was run against the reader before the change and went red (unknown source 'bsd'), then green after it.  Four mutations, each checked by hand to turn it red.  jig/bsd.pin joins the human-only list beside jig/v7.pin.  The reader's as-built spec had not been brought up to date when V7 was added in part 19; it now has a Sources section covering all three, and its size (124 lines)."
+options = ["as written", "a separate clone for Berkeley instead of the V7 one"]
+default = "as written"
+chose   = "as written"
+why     = "One history repo holds V7 and 4.4BSD-Lite, so one clone serves both; BSD= can still point elsewhere.  The as-built gap from part 19 is closed in the same change rather than left for later."
+by      = "KEY.chris@1"
+drafted = "Claude"

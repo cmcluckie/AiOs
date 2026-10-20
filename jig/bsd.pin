@@ -1,0 +1,7 @@
+# The one Berkeley Unix commit the shared source reader (jig/reader --source bsd)
+# answers from: the BSD-4_4_Lite1 tag of the Unix history repo (Spinellis),
+# "BSD 4_4_Lite1 release", Berkeley's 1994 release (findings 0023, decision 0038).
+# The same clone as V7's.  Nothing from it is copied into the repo by the reader;
+# what part 20 lifts goes to lifted/ with an origin record.  Moving the pin is a
+# human decision.
+commit = "36708fa95524a270678609988c1071a60c3bd96b"

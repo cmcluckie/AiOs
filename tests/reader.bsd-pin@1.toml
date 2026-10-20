@@ -1,0 +1,10 @@
+code       = "TST.reader.bsd-pin@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+binds      = "SPEC.reader.6@1"
+red_when   = "the reader, asked about Berkeley Unix, reads from anything but the commit in jig/bsd.pin, hands back a line that differs from an archive of that commit, answers for a file that is not in it (a V7 path included), or answers find, callers or calls instead of saying they are Linux-only"
+timeout_ms = 60000
+isolates   = "TOOL.reader@1"
+runner     = "jig/test cmd sh tests/programs/reader-bsd.sh"
+mutations  = 4

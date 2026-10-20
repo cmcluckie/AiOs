@@ -219,3 +219,7 @@ gate.share-ladder@1     | red      | pool/PART.gate@1/gate_user.S          | s/\
 gate.shared-port@1      | red      | pool/PART.gate@1/gate.c               | s/\*--f = 0x202;/*--f = 0x3202;/                                           | each shared program is given I/O privilege 3
 gate.partition@1        | red      | jig/aios                              | s/grep -qx "$c" \&\& echo "$c"; done; }/grep -q . \&\& echo "$c"; done; list_field "$lf" builds_with; }/ | the builder turns on every part the kernel can be built with, asked for or not: the bundle is back
 gate.partition@1        | red      | jig/aios                              | s/for id in $(list_field "$f" petitions); do petition_parts/for id in ; do petition_parts/ | the builder ignores the petitions: every kernel is the bare console, and the editor loses its disk
+reader.bsd-pin@1 | red | jig/reader | s/pinfile=bsd.pin/pinfile=v7.pin/ | Berkeley is read at V7's pin
+reader.bsd-pin@1 | red | jig/reader | s/pinfile=bsd.pin/pinfile=linux.pin/ | Berkeley is read at Linux's pin
+reader.bsd-pin@1 | red | jig/reader | s/CLONE=\${BSD:-\${V7:-/CLONE=${LINUX:-${LINUX:-/ | Berkeley is read out of the Linux clone
+reader.bsd-pin@1 | red | jig/reader | s/^bsd)/bsd|plan9)/ | a source the reader does not have is taken for Berkeley

@@ -6,7 +6,7 @@
 # quartermaster calls it; so will the historian.  A name, file or line range
 # that is not in the pinned source is refused, never guessed at.
 #
-#   reader [--source v7] QUESTION    the source is Linux unless --source v7 says Unix Version 7
+#   reader [--source v7|bsd] QUESTION   the source is Linux unless --source says Unix Version 7 or Berkeley
 #   reader pin                       the commit every answer comes from
 #   reader list DIR                  what is in a directory ("." for the top); folders end in /
 #   reader read FILE FIRST LAST      those lines, each as  FILE:LINE: text
@@ -25,6 +25,9 @@
 # jig/v7.pin, out of a clone of Spinellis's Unix history repo (V7=/path, default
 # ../unix-history-repo).  Every rule below holds for it too.  find, callers and
 # calls are Linux-only: they need cscope's index of Linux, and are refused.
+# --source bsd reads Berkeley's 4.4BSD-Lite (1994) the same way, from the one
+# commit in jig/bsd.pin, out of the same history repo (BSD=/path, default the V7
+# clone).  The same rules hold, and the same three questions are refused.
 #
 # Exit 0 answered, 1 refused (the reason is on stderr), 2 cannot run here.
 # At most READER_MAX lines (default 200) come back from any one question, so a
@@ -47,7 +50,8 @@ fi
 case "$source" in
 linux)	CLONE=${LINUX:-$repo/../linux}; name=Linux; pinfile=linux.pin; var=LINUX ;;
 v7)	CLONE=${V7:-$repo/../unix-history-repo}; name="Unix Version 7"; pinfile=v7.pin; var=V7 ;;
-*)	die "unknown source '$source'; the reader has linux and v7" ;;
+bsd)	CLONE=${BSD:-${V7:-$repo/../unix-history-repo}}; name="4.4BSD-Lite"; pinfile=bsd.pin; var=BSD ;;
+*)	die "unknown source '$source'; the reader has linux, v7 and bsd" ;;
 esac
 PIN=${READER_PIN:-$(sed -n 's/^commit *= *"\([0-9a-f]\{40\}\)".*/\1/p' "$repo/jig/$pinfile")}
 g()    { git -C "$CLONE" "$@"; }

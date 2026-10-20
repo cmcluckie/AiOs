@@ -1,0 +1,7 @@
+code       = "SPEC.reader.6@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+component  = "TOOL.reader@1"
+clause     = "Asked about Berkeley Unix (4.4BSD-Lite), the reader answers only from the commit pinned in jig/bsd.pin, by the same rules as for Linux, and turns down find, callers and calls, which only Linux has, by saying so."
+author     = "KEY.chris"
