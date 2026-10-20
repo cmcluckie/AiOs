@@ -1,0 +1,11 @@
+id      = "0042"
+date    = 2026-10-20
+kind    = "prompt"
+touches = ["draft/prompt.txt"]
+asked   = "The model wrote prose in front of its petition on every try for Berkeley's cat: four tries for petition 0013 (two on the old draft step, two on the new one, runs draft-0013), both second tries included, after being shown the referee's refusal.  For V7's cat in part 19 it did the same on every first try and once came back clean on a second.  The prompt already said the answer is the petition and nothing else.  One sentence is added: the first line of the answer is [petition], and nothing comes before it.  The referee is unchanged and still refuses any prose; the draft step still never trims a reply."
+options = ["sharpen the prompt", "only more tries (DRAFT_TRIES=3 or more)", "stop, write 0013 by hand, and say so"]
+default = "sharpen the prompt"
+chose   = "sharpen the prompt"
+why     = "The rule was stated and the model kept breaking it; saying exactly where the answer starts is the smallest change to the instruction, and the check that enforces it stays the same.  No test can cover a prompt without paying for calls; the run records before and after the change are the evidence, and the prompt's fingerprint in each record shows which one it saw."
+by      = "KEY.chris@1"
+drafted = "Claude"
