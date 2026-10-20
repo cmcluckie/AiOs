@@ -1,0 +1,11 @@
+id      = "0029"
+date    = 2026-10-18
+kind    = "specs and tests"
+touches = ["constitution/purposes/0011@1.toml", "index/tool/builder@1.toml", "index/tool/draft@1.toml", "specs/reader.5@1.toml", "specs/draft.1@1.toml", "specs/builder.1@1.toml", "specs/builder.2@1.toml", "tests/reader.v7-pin@1.toml", "tests/draft.parses@1.toml", "tests/builder.missing-list@1.toml", "tests/builder.no-guess@1.toml"]
+asked   = "The plan for part 19, as five clauses and four tests that fail today because their runners do not exist yet: the reader answers about Unix Version 7 from one pinned commit and nothing else, a drafted petition is kept only if the referee can read it, a build that cannot finish writes the list of catalogue numbers its petitions name that have no entry and exits 3, and that list holds exactly those numbers, none of its own.  Also the purpose for cat (PUR.0011, 'Print the contents of the files named, or of standard input, to the console.') and two scaffold catalogue entries, TOOL.builder@1 for jig/aios and TOOL.draft@1 for jig/draft, because the builder and the draft step had none for the specs to name."
+options = ["as written", "bind the new clauses to existing tools and add no catalogue entries"]
+default = "as written"
+chose   = "as written"
+why     = "findings/0022.md"
+by      = "KEY.chris@1"
+drafted = "Claude"

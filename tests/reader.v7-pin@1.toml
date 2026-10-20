@@ -1,0 +1,10 @@
+code       = "TST.reader.v7-pin@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+binds      = "SPEC.reader.5@1"
+red_when   = "the reader, asked about V7, reads from anything but the commit in jig/v7.pin, hands back a line that differs from an archive of that commit, answers for a file that is not in it, or answers find, callers or calls instead of saying they are Linux-only"
+timeout_ms = 60000
+isolates   = "TOOL.reader@1"
+runner     = "jig/test cmd sh tests/programs/reader-v7.sh"
+mutations  = 4

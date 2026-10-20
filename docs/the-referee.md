@@ -11,7 +11,7 @@ The one agent in AiOs with authority, and the one with no intelligence.  It read
 
 ## Where it is
 
-- pool/AGT.referee@1/referee.c: the checks, in C, 556 lines.  `check FLAVOR` (rules 1, 9, 19), `hardware CODE SRC` (rule 12), `rules` (rules 2 to 8 and 21, written to tests/referee-results.txt), `lines FILE` (rule 13).
+- pool/AGT.referee@1/referee.c: the checks, in C, 667 lines.  `check FLAVOR` (rules 1, 9, 19), `hardware CODE SRC` (rule 12), `rules` (rules 2 to 8 and 21, written to tests/referee-results.txt), `lines FILE` (rule 13), `petition FILE` (a draft petition is well-formed: rules 1, 2 and 9 and the shape).
 - pool/AGT.referee@1/referee: twelve lines of shell that build the C when the source is newer than the binary and hand over.
 - jig/ledger: the decision ledger (rules on human-only paths, rule 20), a script because it reads git history; inside AiOs that job is admission.
 - index/agent/referee@1.toml, its catalogue entry; constitution/purposes/0008@1.toml and petitions/0008.toml, its purpose and petition.

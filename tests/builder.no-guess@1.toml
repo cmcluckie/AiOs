@@ -1,0 +1,10 @@
+code       = "TST.builder.no-guess@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+binds      = "SPEC.builder.2@1"
+red_when   = "the list holds a number the petitions do not name, or a number that has a catalogue entry, or leaves one out; or a number is still listed once its entry exists; or a flavor missing nothing gets a list"
+timeout_ms = 60000
+isolates   = "TOOL.builder@1"
+runner     = "jig/test cmd sh tests/programs/builder.sh no-guess"
+mutations  = 3

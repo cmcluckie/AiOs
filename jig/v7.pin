@@ -1,0 +1,5 @@
+# The one Unix Version 7 commit the shared source reader (jig/reader --source v7)
+# answers from: the Research-V7 branch of the Unix history repo (Spinellis),
+# "Research V7 release", 1979-08-25.  Nothing from it is copied into the repo;
+# the reader reads it out of a clone.  Moving the pin is a human decision.
+commit = "5beb5e90fa2d79c2b5608af7ab5829c182a564b6"

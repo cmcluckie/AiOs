@@ -1,0 +1,11 @@
+id      = "0030"
+date    = 2026-10-19
+kind    = "rules and words"
+touches = ["jig/reader", "jig/v7.pin", "constitution/human-only.toml", "tests/programs/reader-v7.sh", "tests/mutations.txt"]
+asked   = "The reader learns Unix Version 7: 'jig/reader --source v7' answers from the one commit in the new jig/v7.pin (the Research-V7 branch of the Unix history repo, 1979-08-25), by the same rules as for Linux, and refuses find, callers and calls, which need Linux's cscope index.  Linux stays the default and its code path is the same.  jig/v7.pin joins the human-only list beside jig/linux.pin.  The probe for TST.reader.v7-pin reads usr/src/cmd/cat.c byte for byte against an archive of the pin and turns down seven kinds of bad question; four mutations, each shown red by hand against the probe.  Nothing from V7 is copied into the repo."
+options = ["as written", "a separate script for V7 (jig/reader-v7) instead of a --source flag"]
+default = "as written"
+chose   = "as written"
+why     = "One reader means one set of refusals; a second script would have to repeat every rule and the two could drift apart."
+by      = "KEY.chris@1"
+drafted = "Claude"

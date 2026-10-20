@@ -1,0 +1,7 @@
+code       = "SPEC.builder.2@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+component  = "TOOL.builder@1"
+clause     = "The missing list holds exactly the catalogue numbers the flavor's petitions name that have no catalogue entry: it adds none of its own and leaves none out, and a flavor that is missing nothing gets no list."
+author     = "KEY.chris"

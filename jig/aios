@@ -6,7 +6,10 @@
 # schema allows.
 #
 #   aios list                 flavors and petitions in this repo
-#   aios build <flavor>       builder: collect the components, compile, image
+#   aios build <flavor>       builder: collect the components, compile, image;
+#                             if the petitions name catalogue numbers that have no
+#                             entry, stop (exit 3) and write them to out/<flavor>/missing.txt
+#   aios missing <flavor>     those catalogue numbers, one to a line, and nothing else
 #   aios run <flavor>         check, build, boot on the flavor's machine
 #   aios pack <archive> <name> <file>...   programs into one cpio archive, in
 #                             order, the way build does for a flavor of several
@@ -92,7 +95,29 @@ newc() {
 	hdr TRAILER!!! 0 0
 }
 
+# every catalogue number the flavor's petitions name that has no catalogue entry, one to
+# a line with what kind of thing it is; sorted, so the same flavor gives the same list
+cmd_missing() {
+	f=$(flavor_file "$1")
+	for id in $(list_field "$f" petitions); do petition_codes "petitions/$id.toml"; done | LC_ALL=C sort -u | while read -r c; do
+		[ -e "$(code_file "$c")" ] && continue
+		case "${c%%.*}" in
+			PUR) k=purpose ;; KEY) k=key ;; CAP) k=capability ;; PART) k=part ;; MACHINE) k=machine ;;
+			TOOL) k=tool ;; AGT) k=agent ;; SPEC) k=clause ;; TST) k=test ;; SNS) k=sensor ;; FND) k=finding ;;
+			*) k=thing ;;
+		esac
+		printf '%s  %s not in the catalogue\n' "$c" "$k"
+	done
+}
+
 cmd_build() {
+	miss=$(cmd_missing "$1")
+	if [ -n "$miss" ]; then
+		mkdir -p "out/$1"; printf '%s\n' "$miss" > "out/$1/missing.txt"
+		printf 'stopped: %s catalogue numbers are missing; the list is out/%s/missing.txt\n' "$(printf '%s\n' "$miss" | wc -l | tr -d ' ')" "$1" >&2
+		exit 3
+	fi
+	rm -f "out/$1/missing.txt" 2> /dev/null || :
 	sh pool/AGT.referee@1/referee check "$1" >/dev/null
 	f=$(flavor_file "$1")
 	progs=$(for id in $(list_field "$f" petitions); do petition_primary "petitions/$id.toml"; done)
@@ -166,6 +191,7 @@ cmd_run() {
 case "${1:-}" in
 	list)  cmd_list ;;
 	check|rules|lines|ledger) exec sh pool/AGT.referee@1/referee "$@" ;;	# the referee, for old habits
+	missing) cmd_missing "${2:?flavor}" ;;
 	build) cmd_build "${2:?flavor}" ;;
 	run)   cmd_run "${2:?flavor}" ;;
 	pack)  shift; newc "$@" ;;

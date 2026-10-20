@@ -1,0 +1,10 @@
+code       = "TST.builder.missing-list@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+binds      = "SPEC.builder.1@1"
+red_when   = "a build that cannot finish writes no out/FLAVOR/missing.txt, writes a list that differs from the expected one (a number left out, a line without its kind), lists the same things in a different order on a second run, or exits with any status but 3"
+timeout_ms = 60000
+isolates   = "TOOL.builder@1"
+runner     = "jig/test cmd sh tests/programs/builder.sh missing-list"
+mutations  = 4

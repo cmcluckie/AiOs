@@ -16,6 +16,11 @@
  *                                 tests/referee-results.txt; any FAIL exits 1
  *   referee lines <file>          rule 13: a committee's or mechanic's output is
  *                                 a numbered list of verb-noun lines
+ *   referee petition <file>       a draft petition is well-formed: it has the
+ *                                 fields, every code is a catalogue number that
+ *                                 resolves or comes with a component not yet
+ *                                 admitted (rule 1), capability reasons are SPEC
+ *                                 codes (rule 2), it has not expired (rule 9)
  *
  * The ledger (decisions against the diff) stays a jig script, jig/ledger: it
  * reads git history, which the sealed system will not have; there, admission
@@ -585,6 +590,67 @@ static int cmd_lines(const char *path)
 	return 0;
 }
 
+/* ---- petition: a draft petition is well-formed (the shape, rules 1, 2 and 9) ---- */
+
+static int cmd_petition(const char *path)
+{
+	static const char *need[] = { "id", "purpose", "submitter", "status", NULL };
+	static const char *statuses[] = { "draft", "pending", "review", "approved", "rejected", "expired", "retired", NULL };
+	static const char *roles[] = { "primary", "dependency", "boot", "toolchain", "machine", NULL };
+	char *t = slurp(path), v[MAXL], id[MAXL], now[16], exp[16] = "";
+	if (!t) die("well-formed: %s cannot be read", path);
+	if (strncmp(t, "[petition]", 10) && !strstr(t, "\n[petition]")) die("well-formed: %s has no [petition] table", path);
+	for (int i = 0; need[i]; i++)
+		if (!field_in(t, need[i], v, sizeof v) || !v[0]) die("well-formed: [petition] has no %s", need[i]);
+	field_in(t, "id", id, sizeof id);
+	if (strlen(id) != 4 || strspn(id, "0123456789") != 4) die("well-formed: the id '%s' is not four digits", id);
+	field_in(t, "purpose", v, sizeof v);
+	char cf[PATHL];
+	if (strncmp(v, "PUR.", 4) || !code_file(v, cf, sizeof cf) || !exists(cf)) die("rule 1: missing %s", v);
+	field_in(t, "status", v, sizeof v);
+	int ok = 0;
+	for (int i = 0; statuses[i]; i++) if (!strcmp(v, statuses[i])) ok = 1;
+	if (!ok) die("well-formed: the status '%s' is not one the schema has", v);
+	/* expires = 2027-04-13, a bare date */
+	const char *ex = strstr(t, "\nexpires");
+	if (ex) { const char *q = strchr(ex, '='); if (q) { q++; while (*q == ' ') q++; snprintf(exp, sizeof exp, "%.10s", q); } }
+	if (strlen(exp) != 10 || exp[4] != '-' || exp[7] != '-') die("well-formed: [petition] has no expires date");
+	today(now);
+	if (strcmp(exp, now) <= 0) die("rule 9: petition %s expired %s", id, exp);
+	static struct row rows[256];
+	int nr = rows_of(t, rows, 256);
+	static struct set pend;
+	pend.n = 0;
+	for (int r = 0; r < nr; r++) {
+		if (rows[r].code[0] && !code_file(rows[r].code, cf, sizeof cf)) die("rule 1: %s is not a catalogue number", rows[r].code);
+		if (!strcmp(rows[r].kind, "component")) {
+			ok = 0;
+			for (int i = 0; roles[i]; i++) if (!strcmp(rows[r].b, roles[i])) ok = 1;
+			if (!rows[r].code[0]) die("well-formed: a [[component]] has no code");
+			if (!ok) die("well-formed: %s has the role '%s', which the schema does not have", rows[r].code, rows[r].b);
+			if (strcmp(rows[r].a, "true") && strcmp(rows[r].a, "false")) die("well-formed: %s has no admitted = true or false", rows[r].code);
+			if (!strcmp(rows[r].a, "false")) add_set(&pend, rows[r].code);
+		} else if (!strcmp(rows[r].kind, "capability")) {
+			if (strncmp(rows[r].a, "SPEC.", 5)) die("rule 2: capability %s has the reason '%s', which is not a SPEC code", rows[r].code, rows[r].a);
+		}
+	}
+	static char codes[MAXS][MAXL];
+	int nc = codes_in(t, codes, MAXS);
+	for (int c = 0; c < nc; c++) {
+		const char *at = strchr(codes[c], '@');
+		if (!code_file(codes[c], cf, sizeof cf)) die("rule 1: %s is not a catalogue number", codes[c]);
+		if (!at || at[1] < '1' || at[1] > '9') die("rule 1: %s has no version", codes[c]);
+		if (exists(cf) || in_set(&pend, codes[c])) continue;
+		/* a clause, test or sensor of a component not yet admitted comes with it */
+		if (pend.n > 0 && (!strncmp(codes[c], "SPEC.", 5) || !strncmp(codes[c], "TST.", 4) || !strncmp(codes[c], "SNS.", 4))) continue;
+		die("rule 1: missing %s", codes[c]);
+	}
+	printf("petition %s: well-formed, %d component(s) pending admission\n", id, pend.n);
+	for (int i = 0; i < pend.n; i++) printf("pending %s\n", pend.items[i]);
+	free(t);
+	return 0;
+}
+
 int main(int argc, char **argv)
 {
 	/* run from the repository root, wherever the binary sits */
@@ -595,6 +661,7 @@ int main(int argc, char **argv)
 	if (argc >= 4 && !strcmp(argv[1], "hardware")) return cmd_hardware(argv[2], argv[3]);
 	if (argc >= 2 && !strcmp(argv[1], "rules")) return cmd_rules();
 	if (argc >= 3 && !strcmp(argv[1], "lines")) return cmd_lines(argv[2]);
-	fputs("referee check <flavor> | hardware <code> <src> | rules | lines <file>\n", stderr);
+	if (argc >= 3 && !strcmp(argv[1], "petition")) return cmd_petition(argv[2]);
+	fputs("referee check <flavor> | hardware <code> <src> | rules | lines <file> | petition <file>\n", stderr);
 	return 2;
 }

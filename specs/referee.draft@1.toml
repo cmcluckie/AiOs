@@ -1,0 +1,7 @@
+code       = "SPEC.referee.draft@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+component  = "AGT.referee@1"
+clause     = "A draft petition is accepted as well-formed only if it has the petition fields, a purpose that exists, a role and an admitted flag on every component, a SPEC code as the reason for every capability, a future expiry, and only catalogue numbers that have a version and either resolve or come with a component not yet admitted; otherwise it is refused, naming the rule or the field and the number."
+author     = "KEY.chris"

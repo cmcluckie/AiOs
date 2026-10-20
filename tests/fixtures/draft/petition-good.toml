@@ -1,0 +1,31 @@
+[petition]
+id         = "0012"
+purpose    = "PUR.0011@1"
+submitted  = 2026-11-01
+submitter  = "KEY.chris@1"
+expires    = 2099-01-01
+supersedes = ""
+status     = "draft"
+
+[[capability]]
+code   = "CAP.tty.write@1"
+reason = "SPEC.cat.1@1"
+scope  = ""
+
+[[capability]]
+code   = "CAP.fs.read@1"
+reason = "SPEC.cat.1@1"
+scope  = ""
+
+[[component]]
+code     = "PART.cat@1"
+role     = "primary"
+admitted = false
+
+[[component]]
+code     = "PART.loader@9"
+role     = "boot"
+admitted = false
+
+[[test]]
+code = "TST.cat.prints-file@1"

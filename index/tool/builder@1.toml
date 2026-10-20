@@ -1,0 +1,15 @@
+code          = "TOOL.builder@1"
+sentence      = "The builder on the jig (jig/aios): turns a flavor into a kernel and its programs, calls the referee before and after, and when it cannot finish writes down everything that is missing; scaffolding, a placeholder for the builder (plan 5)."
+status        = "draft"
+admitted      = ""
+retired_by    = ""
+kind          = "program"
+source        = ""
+licence       = "GPL-2.0-only"
+depends       = []
+build_depends = []
+exposes       = []
+requires      = []
+scaffold      = true
+as_built      = ""
+reproducible  = ""

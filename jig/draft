@@ -1,0 +1,135 @@
+#!/bin/sh
+# draft: the quartermaster's draft step (plan 7.3, part 19).  One model reads a
+# program's source through the reader and writes the petition for it.  It is
+# shown the purpose, the layout of a petition, one finished petition and the
+# catalogue, may look at the program only through jig/reader, and its answer is
+# kept as a draft only if the referee can read it as a petition (`referee
+# petition`).  A reply that is not a petition, or that the referee refuses, is
+# thrown away: no draft file is written and the reason is printed.  The call
+# itself is always written into the run record (jig/runs), because it was paid
+# for, and no call is made past the cap (jig/model checks).  It decides
+# nothing: the referee does.
+#
+#   draft PURPOSE SOURCE     e.g.  draft PUR.0011@1 usr/src/cmd/cat.c
+#                            exit 0 a draft was kept, 1 refused, 2 cannot run here
+#
+# A kept draft is out/draft/<id>/petition.toml, <id> being the next free petition
+# number.  It is not in petitions/: a person reads it first and commits it.
+# DRAFT_TRIES (1), DRAFT_TURNS (25 model calls in one try), DRAFT_MAXTOKENS (8000
+# per reply), DRAFT_OUT (out/draft), DRAFT_ID (the petition number to use),
+# READER (the command to use, default jig/reader --source v7), REFEREE (default
+# the referee), MODEL_NAME and MODEL_ID (see jig/model).
+# Needs jq, which the jig has: replies and requests are JSON.
+set -u
+repo=$(cd "$(dirname "$0")/.." && pwd)
+READER=${READER:-sh $repo/jig/reader --source v7}
+REFEREE=${REFEREE:-sh $repo/pool/AGT.referee@1/referee}
+DRAFT_TRIES=${DRAFT_TRIES:-1}; DRAFT_TURNS=${DRAFT_TURNS:-25}; DRAFT_MAXTOKENS=${DRAFT_MAXTOKENS:-8000}
+DRAFT_OUT=${DRAFT_OUT:-$repo/out/draft}
+MODEL_NAME=${MODEL_NAME:-bedrock:global.anthropic.claude-sonnet-4-6}
+MODEL_MAX_COST=${MODEL_MAX_COST:-0.25}
+export MODEL_NAME MODEL_MAX_COST
+die() { echo "draft: $*" >&2; exit 1; }
+cannot() { echo "draft: $*" >&2; exit 2; }
+command -v jq > /dev/null || cannot "jq is not installed"
+[ $# -eq 2 ] || die "needs PURPOSE SOURCE"
+purpose=$1; source=$2
+pf="$repo/constitution/purposes/${purpose#PUR.}.toml"
+[ -f "$pf" ] || die "no purpose $purpose"
+sentence=$(sed -n 's/^sentence *= *"\(.*\)".*/\1/p' "$pf" | head -1)
+[ -n "$sentence" ] || die "$purpose has no sentence"
+today=${DRAFT_TODAY:-$(date -u +%Y-%m-%d)}
+expires=${DRAFT_EXPIRES:-$(date -u -d "$today +6 months" +%Y-%m-%d 2> /dev/null)}
+[ -n "$expires" ] || cannot "cannot work out a date six months on"
+id=${DRAFT_ID:-$(ls "$repo/petitions" | sed -n 's/^\([0-9][0-9][0-9][0-9]\)\.toml$/\1/p' | sort | tail -1 | awk '{ printf "%04d", $1 + 1 }')}
+[ -n "$id" ] || die "cannot work out the next petition number"
+
+$READER pin > /dev/null 2>&1 || cannot "the reader cannot run here"
+$REFEREE petition "$repo/tests/fixtures/draft/petition-good.toml" > /dev/null 2>&1 || cannot "the referee cannot read a petition here"
+
+scratch=$(mktemp -d); trap 'rm -rf "$scratch"' EXIT
+# the catalogue, one line per entry: its number and what it is
+for d in part cap machine tool agent; do
+	for f in "$repo"/index/$d/*@*.toml; do
+		[ -f "$f" ] || continue
+		printf '%s  %s\n' "$(sed -n 's/^code *= *"\(.*\)".*/\1/p' "$f" | head -1)" \
+			"$(sed -n 's/^\(sentence\|touches\) *= *"\(.*\)".*/\2/p' "$f" | head -1)"
+	done
+done > "$scratch/catalogue.txt"
+sed -n '/^## Petition fields/,/^## Two phases/p' "$repo/schema/petition.md" | sed '$d' > "$scratch/layout.txt"
+
+cp='{"cachePoint":{"type":"default"}}'
+tools='{"tools":[{"toolSpec":{"name":"reader","description":"Read Unix Version 7, one fixed copy of it. command is one of list, read, check, ports; args is the list of its arguments.","inputSchema":{"json":{"type":"object","properties":{"command":{"type":"string","enum":["list","read","check","ports"]},"args":{"type":"array","items":{"type":"string"}}},"required":["command","args"]}}}},{"cachePoint":{"type":"default"}}]}'
+sitting=$(date -u +%Y%m%dT%H%M%SZ)
+prompt=$(git -C "$repo" hash-object "$repo/draft/prompt.txt" 2> /dev/null | cut -c1-8); [ -n "$prompt" ] || prompt=-
+feedback=""; prev=/dev/null; kept=""; refusal=""
+try=1
+while [ "$try" -le "$DRAFT_TRIES" ] && [ -z "$kept" ]; do
+	d="$scratch/try$try"; mkdir -p "$d"
+	# the first message: everything the model is given, and (after a refusal) what went wrong
+	{ printf 'Purpose: %s\n\nProgram source: %s\n\nPetition id: %s\nsubmitted = %s\nexpires = %s\nstatus = "draft"\npurpose = "%s"\n' "$sentence" "$source" "$id" "$today" "$expires" "$purpose"
+	  printf '\nThe layout of a petition:\n\n'; cat "$scratch/layout.txt"
+	  printf '\nA finished petition, as an example:\n\n'; cat "$repo/petitions/0001.toml"
+	  printf '\nThe catalogue:\n\n'; cat "$scratch/catalogue.txt"
+	  if [ -n "$feedback" ]; then printf '\nYour last try was refused: %s\n\nThis is what you wrote last time:\n\n' "$feedback"; cat "$prev"; fi
+	} > "$d/first.txt"
+	jq -n --rawfile t "$d/first.txt" '[{role:"user",content:[{text:$t}]}]' > "$d/messages.json"
+	tin=0; tout=0; cread=0; cwrite=0; turn=0; final=""; why=""
+	while :; do
+		turn=$((turn + 1))
+		[ "$turn" -le "$DRAFT_TURNS" ] || { why="more than $DRAFT_TURNS calls"; break; }
+		jq -n --slurpfile m "$d/messages.json" --rawfile s "$repo/draft/prompt.txt" --argjson tc "$tools" --argjson mt "$DRAFT_MAXTOKENS" --argjson cp "$cp" \
+			'{system:[{text:$s},$cp],messages:($m[0] | .[-1].content += [$cp]),toolConfig:$tc,inferenceConfig:{maxTokens:$mt}}' > "$d/req.json"
+		sh "$repo/jig/model" converse "$d/req.json" "$d/reply.json" || { rc=$?; [ $rc -eq 2 ] && exit 2; why="the call was refused"; break; }
+		tin=$((tin + $(jq '.usage.inputTokens // 0' "$d/reply.json"))); tout=$((tout + $(jq '.usage.outputTokens // 0' "$d/reply.json")))
+		cread=$((cread + $(jq '.usage.cacheReadInputTokens // 0' "$d/reply.json"))); cwrite=$((cwrite + $(jq '.usage.cacheWriteInputTokens // 0' "$d/reply.json")))
+		jq --slurpfile r "$d/reply.json" '. + [$r[0].output.message]' "$d/messages.json" > "$d/m.new" && mv "$d/m.new" "$d/messages.json"
+		stop=$(jq -r '.stopReason // ""' "$d/reply.json")
+		if [ "$stop" = tool_use ]; then
+			results='[]'
+			while IFS= read -r tu; do
+				tid=$(printf '%s' "$tu" | jq -r .toolUseId); cmd=$(printf '%s' "$tu" | jq -r '.input.command // ""')
+				case "$cmd" in
+				list|read|check|ports)
+					set --; for a in $(printf '%s' "$tu" | jq -r '(.input.args // [])[] | tostring'); do set -- "$@" "$a"; done
+					out=$($READER "$cmd" "$@" 2>&1); rc=$?
+					[ $rc -eq 0 ] && st=success || st=error ;;
+				*) out="the reader has no command '$cmd'"; st=error ;;
+				esac
+				results=$(printf '%s' "$results" | jq --arg id "$tid" --arg t "$(printf '%s' "$out" | head -c 20000)" --arg st "$st" '. + [{toolResult:{toolUseId:$id,content:[{text:$t}],status:$st}}]')
+			done <<EOT
+$(jq -c '.output.message.content[] | select(.toolUse) | .toolUse' "$d/reply.json")
+EOT
+			printf '%s' "$results" | jq '[{role:"user",content:.}]' > "$d/res.json"
+			jq --slurpfile r "$d/res.json" '. + $r[0]' "$d/messages.json" > "$d/m.new" && mv "$d/m.new" "$d/messages.json"
+			continue
+		fi
+		[ "$stop" = end_turn ] || { why="the reply stopped with $stop"; break; }
+		final=$(jq -r '[.output.message.content[] | select(.text) | .text] | join("\n")' "$d/reply.json")
+		break
+	done
+	# the reply, without any code fence the model put round it, is the draft if the referee can read it
+	printf '%s\n' "$final" | grep -v '^```' > "$d/draft.toml"
+	lines=$(awk 'END { print NR }' "$d/draft.toml")
+	if [ -z "$(printf '%s' "$final" | tr -d ' \n\t')" ]; then
+		result=refused; line="the reply was empty${why:+ ($why)}"
+	elif line=$($REFEREE petition "$d/draft.toml" 2>&1); then
+		result=pass
+	else
+		result=refused; line=$(printf '%s' "$line" | head -1 | sed 's/^refused: //')
+	fi
+	cp "$d/messages.json" "$d/input.txt"; cp "$d/draft.toml" "$d/output.txt"
+	RUNS_SITTING=$sitting RUNS_PROMPT=$prompt RUNS_CACHE_READ=$cread RUNS_CACHE_WRITE=$cwrite sh "$repo/jig/runs" record "draft-$id" "$MODEL_NAME" "$(date -u +%Y-%m-%d)" "$try" "$tin" "$tout" "$result" "$lines" "$d/input.txt" "$d/output.txt" > /dev/null || exit 1
+	cached=""; [ $((cread + cwrite)) -eq 0 ] || cached=" ($cread read from cache, $cwrite written to it)"
+	if [ "$result" = pass ]; then
+		mkdir -p "$DRAFT_OUT/$id" && cp "$d/draft.toml" "$DRAFT_OUT/$id/petition.toml"
+		pending=$(printf '%s\n' "$line" | sed -n 's/.*, \([0-9][0-9]*\) component.*/\1/p')
+		echo "try $try: kept $DRAFT_OUT/$id/petition.toml ($lines lines, $pending components pending admission)  $tin in${cached}, $tout out"
+		kept=1
+	else
+		echo "try $try: thrown away, nothing kept ($line)  $tin in${cached}, $tout out" >&2
+		refusal=$line; feedback=$line; prev=$d/draft.toml
+	fi
+	try=$((try + 1))
+done
+[ -n "$kept" ] || { echo "draft: refused: $refusal" >&2; exit 1; }

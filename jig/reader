@@ -6,6 +6,7 @@
 # quartermaster calls it; so will the historian.  A name, file or line range
 # that is not in the pinned source is refused, never guessed at.
 #
+#   reader [--source v7] QUESTION    the source is Linux unless --source v7 says Unix Version 7
 #   reader pin                       the commit every answer comes from
 #   reader list DIR                  what is in a directory ("." for the top); folders end in /
 #   reader read FILE FIRST LAST      those lines, each as  FILE:LINE: text
@@ -20,6 +21,11 @@
 # cache folder named by the pin, the way `make cscope` writes cscope.out
 # beside the source.  READER_DIRS names what is indexed (default: all of it).
 #
+# --source v7 reads Unix Version 7 (1979) the same way, from the one commit in
+# jig/v7.pin, out of a clone of Spinellis's Unix history repo (V7=/path, default
+# ../unix-history-repo).  Every rule below holds for it too.  find, callers and
+# calls are Linux-only: they need cscope's index of Linux, and are refused.
+#
 # Exit 0 answered, 1 refused (the reason is on stderr), 2 cannot run here.
 # At most READER_MAX lines (default 200) come back from any one question, so a
 # model is never handed a whole file by accident.
@@ -27,21 +33,31 @@
 # Needs a clone of Linux: LINUX=/path/to/linux (default ../linux), as jig/upstream.
 set -eu
 repo=$(cd "$(dirname "$0")/.." && pwd)
-LINUX=${LINUX:-$repo/../linux}
 MAX=${READER_MAX:-200}
-PIN=${READER_PIN:-$(sed -n 's/^commit *= *"\([0-9a-f]\{40\}\)".*/\1/p' "$repo/jig/linux.pin")}
 DIRS=${READER_DIRS:-.}
 
 die()  { echo "reader: $*" >&2; exit 1; }
 skip() { echo "reader: $*" >&2; exit 2; }
-g()    { git -C "$LINUX" "$@"; }
 
-[ -d "$LINUX/.git" ] || skip "no Linux clone at $LINUX (set LINUX=)"
-[ -n "$PIN" ] || skip "no commit in jig/linux.pin"
-g cat-file -e "$PIN^{commit}" 2>/dev/null || skip "the clone at $LINUX lacks the pinned commit $PIN"
+source=linux
+if [ "${1:-}" = --source ]; then
+	[ $# -ge 2 ] || die "--source needs a name"
+	source=$2; shift 2
+fi
+case "$source" in
+linux)	CLONE=${LINUX:-$repo/../linux}; name=Linux; pinfile=linux.pin; var=LINUX ;;
+v7)	CLONE=${V7:-$repo/../unix-history-repo}; name="Unix Version 7"; pinfile=v7.pin; var=V7 ;;
+*)	die "unknown source '$source'; the reader has linux and v7" ;;
+esac
+PIN=${READER_PIN:-$(sed -n 's/^commit *= *"\([0-9a-f]\{40\}\)".*/\1/p' "$repo/jig/$pinfile")}
+g()    { git -C "$CLONE" "$@"; }
+
+[ -d "$CLONE/.git" ] || skip "no $name clone at $CLONE (set $var=)"
+[ -n "$PIN" ] || skip "no commit in jig/$pinfile"
+g cat-file -e "$PIN^{commit}" 2>/dev/null || skip "the clone at $CLONE lacks the pinned commit $PIN"
 
 num() { case "$2" in ''|*[!0-9]*) die "$1 must be a whole number, not '$2'" ;; esac; }
-name() { case "$1" in ''|*[!A-Za-z0-9_]*) die "'$1' is not a function, macro or variable name" ;; esac; }
+ident() { case "$1" in ''|*[!A-Za-z0-9_]*) die "'$1' is not a function, macro or variable name" ;; esac; }
 
 # range FILE FIRST LAST: refuse unless the file is in the pin and the lines are in the file
 range() {
@@ -75,7 +91,8 @@ index() {
 
 # ask N NAME: one of cscope's questions, as  FILE:LINE: FUNCTION: text
 ask() {
-	name "$2"; index
+	[ "$source" = linux ] || die "find, callers and calls are only Linux's: they need cscope's index of Linux, and there is none for $name"
+	ident "$2"; index
 	out=$(cd "$cache" && cscope -d -f cscope.out -L "-$1" "$2" |
 		awk '{ f = $1; fn = $2; l = $3; $1 = $2 = $3 = ""; sub(/^ +/, ""); printf "%s:%d: %s: %s\n", f, l, fn, $0 }' |
 		sort -t: -k1,1 -k2,2n -s)

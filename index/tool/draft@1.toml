@@ -1,0 +1,15 @@
+code          = "TOOL.draft@1"
+sentence      = "The quartermaster's draft step on the jig (jig/draft): gives a model a purpose, the petition layout, one finished petition and the reader, and keeps the reply only if the referee can read it; scaffolding, a placeholder for the quartermaster (plan 7)."
+status        = "draft"
+admitted      = ""
+retired_by    = ""
+kind          = "program"
+source        = ""
+licence       = "GPL-2.0-only"
+depends       = []
+build_depends = []
+exposes       = []
+requires      = []
+scaffold      = true
+as_built      = ""
+reproducible  = ""

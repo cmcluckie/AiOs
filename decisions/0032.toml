@@ -1,0 +1,11 @@
+id      = "0032"
+date    = 2026-10-19
+kind    = "rules and words"
+touches = ["jig/draft", "draft/prompt.txt", "constitution/human-only.toml", "tests/programs/draft.sh", "tests/fixtures/draft/reader-stub.sh", "tests/fixtures/draft/good/1.json", "tests/fixtures/draft/good/2.json", "tests/fixtures/draft/prose/1.json", "tests/fixtures/draft/refused/1.json", "tests/fixtures/draft/empty/1.json", "tests/draft.parses@1.toml", "specs/draft.1@1.toml", "tests/mutations.txt"]
+asked   = "The draft step: 'jig/draft PURPOSE SOURCE' gives one model the purpose, the program's source path, the layout of a petition, one finished petition (0001) and the catalogue (one line per entry), lets it read Unix Version 7 only through the reader, and keeps its answer as out/draft/<id>/petition.toml only if 'referee petition' accepts it.  It is built like the exam's runner (jig/sit): the same model, the same price list, the same spending cap, every call written into the run record.  One try by default (DRAFT_TRIES raises it, and a refusal is then shown to the model).  Its prompt is draft/prompt.txt.  In the test, saved replies stand in for the model, so the probe spends nothing: a good petition kept twice the same, and prose, a refused petition and an empty reply each thrown away with nothing left behind.  Two edits to draft files that were only staged: the clause now says the call is still recorded, since it was paid for.  jig/draft and draft/* join the human-only list.  Four mutations, each shown red by hand."
+options = ["as written", "give the draft step three tries, as the exam has"]
+default = "as written"
+chose   = "as written"
+why     = "A draft is one look at one program, and the post says what the model wrote first time; more tries cost money and hide the first answer.  The setting is there if one try turns out not to be enough."
+by      = "KEY.chris@1"
+drafted = "Claude"

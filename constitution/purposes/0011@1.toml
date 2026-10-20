@@ -1,0 +1,6 @@
+code       = "PUR.0011@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+sentence   = "Print the contents of the files named, or of standard input, to the console."
+holder     = "KEY.chris"

@@ -101,6 +101,23 @@ referee.2-8@1           | red      | pool/AGT.referee@1/referee.c          | s/r
 referee.verb-noun@1     | red      | pool/AGT.referee@1/referee.c          | s/if (!in_set(\&verbs, verb)) die(/if (0 \&\& !in_set(\&verbs, verb)) die(/   | any verb will do: the constitution's list is not consulted
 referee.verb-noun@1     | red      | pool/AGT.referee@1/referee.c          | s/if (!code_file(noun, cf, sizeof cf) || !exists(cf)) die(/if (0 \&\& !code_file(noun, cf, sizeof cf)) die(/   | any noun will do: the catalogue is not consulted
 referee.verb-noun@1     | red      | pool/AGT.referee@1/referee.c          | s/if (in_set(\&verbs, asked.items\[i\])) die(/if (0 \&\& in_set(\&verbs, asked.items[i])) die(/   | a seat may ask for a verb that already exists, and so use it in the same breath
+referee.draft@1 | red | pool/AGT.referee@1/referee.c | s/if (strcmp(exp, now) <= 0) die("rule 9: petition %s expired %s", id, exp);/if (0 \&\& strcmp(exp, now) <= 0) die("rule 9: petition %s expired %s", id, exp);/ | a draft petition that has expired goes through
+referee.draft@1 | red | pool/AGT.referee@1/referee.c | s/if (!ok) die("well-formed: %s has the role/if (0 \&\& !ok) die("well-formed: %s has the role/ | a draft may give a component any role
+referee.draft@1 | red | pool/AGT.referee@1/referee.c | s/if (strncmp(rows\[r\].a, "SPEC.", 5)) die("rule 2:/if (0 \&\& strncmp(rows[r].a, "SPEC.", 5)) die("rule 2:/ | a draft capability may give any reason, not only a SPEC code
+referee.draft@1 | red | pool/AGT.referee@1/referee.c | s/if (!at || at\[1\] < '1' || at\[1\] > '9') die(/if (0 \&\& (!at || at[1] < '1')) die(/ | a draft may name a catalogue number with no version
+referee.draft@1 | red | pool/AGT.referee@1/referee.c | s/^\t\tdie("rule 1: missing %s", codes\[c\]);/\t\t;/ | a draft may name a number that resolves nowhere and comes with no component
+referee.draft@1 | red | pool/AGT.referee@1/referee.c | s/if (strncmp(t, "\[petition\]", 10) \&\& !strstr(t, "\\n\[petition\]")) die(/if (0 \&\& strncmp(t, "[petition]", 10)) die(/ | a reply with no petition table at all (prose) is not noticed
+draft.parses@1 | red | jig/draft | s/elif line=$($REFEREE petition "$d\/draft.toml" 2>&1); then/elif line=$($REFEREE petition "$d\/draft.toml" 2>\&1) || true; then/ | every reply is kept as a draft, whatever the referee says
+draft.parses@1 | red | jig/draft | s/refusal=$line; feedback=$line;/mkdir -p "$DRAFT_OUT\/x"; cp "$d\/draft.toml" "$DRAFT_OUT\/x\/"; &/ | a refused reply is thrown away but a copy is left behind
+draft.parses@1 | red | jig/draft | s/sh "$repo\/jig\/runs" record "draft-$id"/true "$repo\/jig\/runs" record "draft-$id"/ | the call is not written into the run record, so its cost is never counted
+draft.parses@1 | red | jig/draft | s/^\t\t\t\tlist|read|check|ports)/\t\t\t\tlist|check|ports)/ | the model's questions to the reader are not answered
+builder.missing-list@1 | red | jig/aios | s/\t\texit 3$/\t\texit 1/ | the build that cannot finish exits like a crash (status 1)
+builder.missing-list@1 | red | jig/aios | s/printf \x27%s\\n\x27 "$miss" > "out\/$1\/missing.txt"/printf \x27%s\\n\x27 "$miss" > \/dev\/null/ | the build stops but writes no list
+builder.missing-list@1 | red | jig/aios | s/miss=$(cmd_missing "$1")/miss=$(cmd_missing "$1"|head -1)/ | only the first missing number is written
+builder.missing-list@1 | red | jig/aios | s/LC_ALL=C sort -u |/LC_ALL=C sort -ru |/ | the list comes out in the opposite order
+builder.no-guess@1 | red | jig/aios | s/\[ -e "$(code_file "$c")" \] \&\& continue/false \&\& continue/ | numbers that have an entry are listed as missing too
+builder.no-guess@1 | red | jig/aios | s/^\t\tprintf '%s  %s not in the catalogue\\n' \"$c\" \"$k\"/\t\tprintf '%s  %s not in the catalogue\\nPART.libc.musl@1  part not in the catalogue\\n' \"$c\" \"$k\"/ | the builder adds a number of its own to every line it lists
+builder.no-guess@1 | red | jig/aios | s/^\trm -f "out\/$1\/missing.txt" 2> \/dev\/null || :/\t:/ | a stale list is kept when nothing is missing any more
 loader.partition@1      | red      | jig/aios                              | s/grep -qx "$c" \&\& echo "$c"; done; }/grep -q . \&\& echo "$c"; done; list_field "$lf" builds_with; }/ | the builder turns on every part the kernel can be built with, asked for or not: the bundle is back
 loader.partition@1      | red      | jig/aios                              | s/for id in $(list_field "$f" petitions); do petition_parts/for id in ; do petition_parts/ | the builder ignores the petitions: every kernel is the bare console, and the editor loses its disk
 life.colour@1           | red      | pool/PART.life@2/life.c               | s/#define BORN\t"\\033\[1;33m"/#define BORN\t"\\033[0;33m"/              | a newborn cell is dark yellow, not bright
@@ -133,6 +150,10 @@ reader.find@1 | red | jig/reader | /nothing for \$2/d | a name nothing defines i
 reader.bounded@1 | red | jig/reader | /at a time/d | any number of lines can be asked for at once
 reader.bounded@1 | red | jig/reader | s/[|] head -n "\$MAX" ;;/;;/ | list stops at nothing
 reader.bounded@1 | red | jig/reader | s/MAX=\${READER_MAX:-200}/MAX=200/ | READER_MAX is ignored
+reader.v7-pin@1 | red | jig/reader | s/pinfile=v7.pin/pinfile=linux.pin/ | V7 is read at Linux's pin
+reader.v7-pin@1 | red | jig/reader | s/\[ "\$source" = linux \] || die/[ "$source" != nope ] || die/ | find, callers and calls are run for V7 instead of refused
+reader.v7-pin@1 | red | jig/reader | s/CLONE=\${V7:-/CLONE=${LINUX:-/ | V7 is read out of the Linux clone
+reader.v7-pin@1 | red | jig/reader | s/^v7)/v7|plan9)/ | a source the reader does not have is taken for V7
 exam.count@1 | red | jig/runs | s/if (out ~ \/\[^ \\t\\r\]\/) n++/if (1) n++/ | blank lines are counted as code
 exam.count@1 | red | jig/runs | s/if (inc) {/if (0) {/ | the inside of a block comment is counted as code
 exam.count@1 | red | jig/runs | s/if (j > 0 \&\& (i == 0 || j < i))/if (0)/ | a // comment is counted as code

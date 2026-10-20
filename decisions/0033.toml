@@ -1,0 +1,11 @@
+id      = "0033"
+date    = 2026-10-19
+kind    = "rules and words"
+touches = ["jig/aios", "tests/programs/builder.sh", "tests/expected/builder.missing-list.out", "tests/mutations.txt"]
+asked   = "The builder stops with a list.  'jig/aios build FLAVOR' first works out which catalogue numbers the flavor's petitions name that have no catalogue entry (a new 'jig/aios missing FLAVOR' prints the same list); if there are any it writes them to out/FLAVOR/missing.txt, one to a line with what kind of thing it is, sorted so it is the same every time, says so on stderr and exits 3, which no crash uses.  Before this the referee died on the first such number with exit 1.  If nothing is missing it removes a stale list and goes on as before.  The builder does not compile the program to find missing headers or library functions: the source of a program that is not in the pool is not in the repo.  The probe runs in a throwaway copy with the hand-written fixture draft as petition 0012; seven mutations, each shown red by hand."
+options = ["as written", "keep exit status 1 and tell the stop apart by the file"]
+default = "as written"
+chose   = "as written"
+why     = "A script waiting on the build needs to tell 'stopped, here is what is missing' from 'broke' without reading text; findings/0022.md item 14."
+by      = "KEY.chris@1"
+drafted = "Claude"

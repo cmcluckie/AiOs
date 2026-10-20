@@ -1,0 +1,7 @@
+code       = "SPEC.builder.1@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+component  = "TOOL.builder@1"
+clause     = "A build that cannot finish because catalogue numbers its petitions name have no catalogue entry writes every one of them to out/FLAVOR/missing.txt, one to a line with what kind of thing it is, in the same order on every run, and exits with status 3, which means stopped and not crashed."
+author     = "KEY.chris"

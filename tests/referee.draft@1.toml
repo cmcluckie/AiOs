@@ -1,0 +1,10 @@
+code       = "TST.referee.draft@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+binds      = "SPEC.referee.draft@1"
+red_when   = "a well-formed draft is refused, or a draft that is prose, has an unknown role, has expired, has a number with no version, names a number that resolves nowhere and comes with no component, gives a reason that is not a SPEC code, names a purpose that does not exist, or has a component with no admitted flag is accepted"
+timeout_ms = 60000
+isolates   = "AGT.referee@1"
+runner     = "jig/test cmd sh tests/programs/referee-draft.sh"
+mutations  = 6

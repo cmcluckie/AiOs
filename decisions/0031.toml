@@ -1,0 +1,11 @@
+id      = "0031"
+date    = 2026-10-19
+kind    = "specs and tests"
+touches = ["pool/AGT.referee@1/referee.c", "specs/referee.draft@1.toml", "tests/referee.draft@1.toml", "tests/programs/referee-draft.sh", "tests/fixtures/draft/petition-good.toml", "tests/mutations.txt"]
+asked   = "The referee reads a draft petition: 'referee petition FILE' says whether one file is well-formed, which is the first of the schema's two phases (it has the fields, a purpose that exists, a role and an admitted flag on every component, SPEC codes as reasons, a future expiry, and only numbers that have a version and resolve or come with a component not yet admitted), and lists the components still to be admitted.  It checks the shape and rules 1, 2 and 9 only; it does not decide whether a draft is buildable.  One thing is a choice: a clause, test or sensor number that does not exist yet is accepted when the draft lists any component not yet admitted, because they come with it.  One clause, one test with its probe, a hand-written good draft as the fixture, six mutations each shown red by hand."
+options = ["as written", "refuse any number that does not resolve unless it is itself a listed component"]
+default = "as written"
+chose   = "as written"
+why     = "The schema's own wording (findings 0000 #3) lets a pending petition name what does not exist yet; refusing the clauses and tests that go with a new part would make every first draft of a new program unreadable."
+by      = "KEY.chris@1"
+drafted = "Claude"
