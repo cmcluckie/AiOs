@@ -52,7 +52,9 @@ That list is the work order for the next part.  The thing I wanted from this par
 
 ## What nobody asked for
 
-[CHRIS/CLAUDE: pick one thing that came up unprompted.  Candidates, all true: the retry step shows the model its own mistake; the run record keeps every call whether it passed or not; Claude noticed the jig had pulled old code and the extra run happened by accident, which gave a second sample.]
+I ran the live calls from a second machine, the jig, and got a lesson in not trusting your own paste.  I told it to pull the new code, the pull stopped because of a leftover file from an earlier run, and the old code ran anyway.  Old code meant the old referee, the one with the hole, so it happily accepted another model reply with its reasoning stuck on the front.
+
+That cost two and a half cents I hadn't planned on.  It also gave me a second, independent sample of what the model does, which is how I know the preface wasn't a one-off.  Claude's first move was to say what had gone wrong and to give me the two commands that fix it, and then we ran it again properly.  Every one of those calls, the accidental one included, is in the run record with its cost.  Nobody asked for that.  It's the reason I can tell you the real total is 13 cents and not "about ten".
 
 ## What I'm taking away
 

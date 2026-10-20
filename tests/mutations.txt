@@ -132,7 +132,7 @@ referee.no-hardware@1   | red      | pool/AGT.referee@1/referee.c          | s/\
 reader.refuses@1 | red | jig/reader | /is past the end/d | lines past the end of a file are handed back as if they were there
 reader.refuses@1 | red | jig/reader | /is not a file at/d | a name that is not a file at the pin is read anyway
 reader.refuses@1 | red | jig/reader | /is before FIRST/d | a range written backwards is accepted
-reader.refuses@1 | red | jig/reader | s/^name() { case.*$/name() { :; }/ | any text counts as a name, semicolons and all
+reader.refuses@1 | red | jig/reader | s/^ident() { case.*$/ident() { :; }/ | any text counts as a name, semicolons and all
 reader.refuses@1 | red | jig/reader | /is not a directory at/d | a directory that is not there is listed anyway
 reader.refuses@1 | red | jig/reader | s/^num() { case.*$/num() { :; }/ | a word counts as a line number
 reader.refuses@1 | red | jig/reader | /lacks the pinned commit/d | a clone without the pinned commit is used anyway

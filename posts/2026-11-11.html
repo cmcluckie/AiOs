@@ -1,0 +1,126 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>The petition nobody wrote</title>
+<style>
+body{max-width:760px;margin:32px auto;padding:0 16px;font-family:Georgia,serif;font-size:18px;line-height:1.6;color:#222;background:#fff}
+section{border:1px solid #ddd;border-radius:10px;padding:0 20px 12px;margin:0 0 28px}
+.bar{display:flex;justify-content:space-between;align-items:center;margin:0 -20px 12px;padding:8px 20px;background:#f4f3ef;border-bottom:1px solid #ddd;border-radius:10px 10px 0 0;font:600 14px system-ui,sans-serif;color:#555;user-select:none}
+button{font:600 14px system-ui,sans-serif;padding:6px 16px;border-radius:16px;border:1px solid #0a66c2;background:#0a66c2;color:#fff;cursor:pointer}
+button.done{background:#fff;color:#0a66c2}
+.text{white-space:pre-wrap;font-family:system-ui,sans-serif;font-size:15px}
+.img{font:14px system-ui,sans-serif;color:#555}
+</style></head><body>
+<section id="post">
+<div class="bar"><span>1. Post</span><button onclick="copyText('post-body',this)">Copy</button></div>
+<div id="post-body" class="text">
+AiOs, part 19 (Kernel code: 1102 lines). "I do a hell of a lot of AI development, and about three quarters of the time I don't know what it's working on."...
+
+A model wrote a request for a program for the first time.  It read cat from Unix Version 7, 1979, 63 lines of C, and filled in the form: what the program needs, why, and which tests prove it.
+
+Its first answer was good, with a paragraph of its own thinking stuck on the front.  The referee, which has no AI in it, accepted it anyway.  It only looked for a heading somewhere in the file.  I'd tested an essay and a clean petition, never the two together.  The model did it three tries out of three, so Claude fixed the check and we wrote the test that catches it.
+
+The second try came back clean.  Then the builder tried to build it and stopped with a list of eight things the catalogue doesn't have.  The model never mentioned a C library, and three of the referee's rules fail on what it wrote.  All of it cost 13 cents.
+
+I need a record I can open any morning and read the same way, and a check that doesn't get tired when I do.
+
+#AiOs
+</div>
+</section>
+<section id="title">
+<div class="bar"><span>2. Title</span><button onclick="copyText('title-body',this)">Copy</button></div>
+<div id="title-body"><h1>The petition nobody wrote</h1></div>
+</section>
+<section id="article">
+<div class="bar"><span>3. Article</span><button onclick="copyRich('article-body',this)">Copy</button></div>
+<div id="article-body">
+<p><em>The story behind AiOs, part 19.</em></p>
+<h2>Going way back</h2>
+<p>Until now every program in this series has been a university or high school exercise.  Hanoi, a sieve, a calculator, a stopwatch.  They need almost nothing: a bit of C, and not much from the operating system.</p>
+<p>This one is different.  It's the first program that isn't ours.  It comes off the internet, from somebody else, and whatever is in it is what goes into the system.  It's <code>cat</code>, from Unix Version 7, released in 1979.  If you've ever sat at a Unix prompt you've used its great-grandchild.  It prints a file.  That's the whole job.  The source is 63 lines of old C.</p>
+<p>And here's the part I've been looking forward to.  I didn't write the request for it.  Nobody did.</p>
+<h2>What a petition is, again</h2>
+<p>Every program in AiOs starts as a petition, a form that says what the program needs and why.  Parts, capabilities, a machine, tests.  It's structured, never prose, and a referee with no AI in it checks the form.  Every petition so far, Claude and I wrote together.</p>
+<p>For <code>cat</code>, a model wrote it.  A small one, Sonnet 4.6, called through Amazon Bedrock.  It's handed the purpose in one sentence ("print the contents of the files named, or of standard input, to the console"), the layout of a petition, one finished petition as an example, and the catalogue, which is the list of everything AiOs has.  Then it's allowed to read the <code>cat</code> source, but only through the reader.  That's the tool that answers questions about one fixed copy of the old source and nothing else.  The reader already did this for Linux.  Now it can read Unix V7 as well.</p>
+<h2>What I was hoping to see</h2>
+<p>Let me say this up front, like I have since the start of the series.  I have no delusions of grandeur.  I'm not building something that builds its own Linux distribution, and I still have real doubts about whether the cost and the time would ever make sense.  Linux has thirty million lines and a mountain of drivers.  I don't know if there's a business in pulling things out of open source, and I'm not going to guess in this article.  That isn't what this part is for.</p>
+<p>For other kinds of software it could be very useful.  For something as big as Linux, I don't know yet.</p>
+<p>What I do care about is something I struggle with every day.  I do a hell of a lot of AI development, and about three quarters of the time I don't know what it's working on.  I can never go back and see in detail what actually got built.  Maybe I'm doing something wrong.  But I want the same thing every time: I ask for the problem as a numbered list, one plain sentence per point, and I want to know where to find it and how to find it.  It doesn't matter if I'm tired, or fresh, or at the end of a long day.</p>
+<p>A petition and its run record are that list.  They're the same shape every time.  The model's call is written down, a referee that has no AI in it checks the result, and I can go back later and say: this one I'll stand behind.  That's the sanity check I wanted from a program as old and as small as <code>cat</code>.</p>
+<h2>The first thing it did was talk</h2>
+<p>The model's first answer was a good petition with a paragraph and a bullet list in front of it, explaining its thinking.  The prompt said, in so many words, no prose.  The model prefaced three times out of three on its first attempt.</p>
+<p>And the referee accepted it.</p>
+<p>That's the bug I like best in this part.  The referee's check for a petition only looked for a <code>[petition]</code> heading somewhere in the file.  I'd tested a pure essay (refused) and a clean petition (accepted), and never an essay in front of one.  Claude fixed it so every line has to be a comment, a heading or a <code>key = value</code> line, and the referee now says which line broke the rule.  Then we wrote the test that catches it, a seventh way of sabotaging the check to prove the test can go red, and a note in the decisions.  The real model found it for us, for about four cents.</p>
+<p>I decided the draft step should not quietly trim the preface off.  A petition with prose in it is thrown away, the call is still written down because it was paid for, and on the next try the model is shown what was wrong.  Try two came back clean.  The whole thing is four calls and 13 cents.</p>
+<h2>What it wrote</h2>
+<p>Eighty-two lines.  A purpose, four capabilities each with a reason, the program itself, and eight more components.  Here's what I think it got right.  It used the parts AiOs already has, a serial port, a disk and a Minix file system, to read a file.  Nobody told it which ones.  It added a test for a file that isn't there.</p>
+<p>Here's what it got wrong or missed, and I'll say it plainly.</p>
+<p>It named no C library.  Claude had measured this before the draft: <code>cat</code> needs three header files and eleven things from a C library, and AiOs has none of them.  The model's petition doesn't mention that at all.  It picked an old version of the loader when a newer one exists, and it listed two versions of the same serial driver.  Three of the referee's rules fail on it: a clause it invented that doesn't exist yet, a part that needs a capability it never asked for, and a part it depends on but didn't list.</p>
+<p>So that's the number to hold on to.  It got the shape right and missed things that matter, for 13 cents.</p>
+<h2>The builder says what's missing</h2>
+<p>Then I asked the builder to build it.  It stopped, on purpose, and wrote down why.  Eight things named in the petition don't exist in the catalogue yet: the <code>cat</code> part itself, four clauses, and three tests.  The list is a file, <code>missing.txt</code>, one line each.  The builder doesn't guess and it doesn't make anything up.  It says what it would need and exits.</p>
+<p>That list is the work order for the next part.  The thing I wanted from this part was never a <code>cat</code> that runs.  Nothing runs yet.  It was a request nobody wrote, and a machine that reads it and says exactly what's missing.</p>
+<h2>What nobody asked for</h2>
+<p>I ran the live calls from a second machine, the jig, and got a lesson in not trusting your own paste.  I told it to pull the new code, the pull stopped because of a leftover file from an earlier run, and the old code ran anyway.  Old code meant the old referee, the one with the hole, so it happily accepted another model reply with its reasoning stuck on the front.</p>
+<p>That cost two and a half cents I hadn't planned on.  It also gave me a second, independent sample of what the model does, which is how I know the preface wasn't a one-off.  Claude's first move was to say what had gone wrong and to give me the two commands that fix it, and then we ran it again properly.  Every one of those calls, the accidental one included, is in the run record with its cost.  Nobody asked for that.  It's the reason I can tell you the real total is 13 cents and not "about ten".</p>
+<h2>What I'm taking away</h2>
+<p>The piece this rung added: an AI can write the request, and a check that has no AI in it decides whether the request is any good, with a record I can open the next morning and read the same way every time.  The model prefaced; the referee, after we fixed it, refused.  The model missed things; the referee named three of them.</p>
+<p>I'm not claiming this is how you'd build a distribution.  There are thirty million lines in Linux, and <code>cat</code> is 63 lines.  What I'll have after the next part is a number for how viable all this is, and I'll tell you what it is even if I don't like it.  The next part is the last one in this series: musl, the loader for Linux's program files, and <code>cat</code> printing a file.</p>
+<h2>Read along</h2>
+<ol>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/draft/prompt.txt">draft/prompt.txt</a>.  Everything the model is told.  Fifteen lines.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/jig/draft">jig/draft</a>.  The draft step.  Look for where the reply is handed to the referee before anything is kept.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/petitions/0012.toml">petitions/0012.toml</a>.  The petition no person wrote.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/pool/AGT.referee%401/referee.c">pool/AGT.referee@1/referee.c</a>.  Look for <code>cmd_petition</code> and the line that says a petition is fields and never prose.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/findings/0022.md">findings/0022.md</a>.  The plan, the measured list, and what changed while building.</li>
+</ol>
+<h2>Try this</h2>
+<p>Run <code>sh pool/AGT.referee@1/referee petition petitions/0012.toml</code>.  It says the petition is well formed and lists nine components still waiting to be admitted.  Now put one sentence of prose at the top of a copy of that file, something like "Here is the petition for cat, with my reasoning first.", and run it on the copy.  The referee refuses it and names line 1.  That's the exact mistake the model made, and the check that now catches it.</p>
+<h2>As built</h2>
+<p>This part added two components and changed two: the draft step and the builder are new, the reader learned Unix V7, and the referee learned to read a draft petition.  Each has a catalogue entry and an as-built spec, hand-written from the code (<a href="https://github.com/cmcluckie/aios/blob/main/index/tool/reader@1.as-built.md">reader@1</a>, <a href="https://github.com/cmcluckie/aios/blob/main/index/tool/draft@1.as-built.md">draft@1</a>, <a href="https://github.com/cmcluckie/aios/blob/main/index/tool/builder@1.as-built.md">builder@1</a>, <a href="https://github.com/cmcluckie/aios/blob/main/index/agent/referee@1.as-built.md">referee@1</a>).</p>
+<h2>Addendum: the tests</h2>
+<p>Every test for this post, run by <code>sh jig/test</code> and <code>sh jig/mutate</code> on the jig, under KVM at commit 5695c66.  The whole suite: 94 passed, 0 failed, 4 skipped.  This post's 5 tests: 5 passed.  Of its deliberate breakages, 0 were caught and 0 survived.  The model's own calls are not tests; they are in the run records, which the draft probe stands in for with saved replies.</p>
+<h3>TOOL.reader@1</h3>
+<ul>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/reader.v7-pin@1.toml">reader.v7-pin@1</a>.  Checks: Asked about Unix Version 7, the reader answers only from the commit pinned in jig/v7.pin, by the same rules as for Linux, and turns down find, callers and calls, which only Linux has, by saying so.  Goes red when: the reader, asked about V7, reads from anything but the commit in jig/v7.pin, hands back a line that differs from an archive of that commit, answers for a file that is not in it, or answers find, callers or calls instead of saying they are Linux-only.  Status: Passed by the runner (on the jig, under KVM): V7 at 5beb5e90fa2d: usr/src/cmd/cat.c read byte for byte (63 lines), a range from the middle, list, seven refusals and a commit the clone lacks, and find, callers and calls say Linux-only.  Mutations caught: 0.</li>
+</ul>
+<h3>TOOL.draft@1</h3>
+<ul>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/draft.parses@1.toml">draft.parses@1</a>.  Checks: A reply is kept as a draft petition only if the referee can read it as one; a reply that is not a petition, or that the referee refuses, is thrown away, no draft file is written, and the draft step says why; the call is still written into the run record, because it was paid for.  Goes red when: a saved reply that is a proper petition is not kept, or one that is not (prose, prose in front of a proper petition, a petition the referee refuses, an empty reply) is kept or leaves a file behind, or the same reply gives two different drafts, or the model's question to the reader is not answered, or a call is not written into the run record.  Status: Passed by the runner (on the jig, under KVM): a petition read, kept and the same both times; prose, a refused petition and an empty reply each thrown away with nothing left behind and the call recorded.  Mutations caught: 0.</li>
+</ul>
+<h3>TOOL.builder@1</h3>
+<ul>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/builder.missing-list@1.toml">builder.missing-list@1</a>.  Checks: A build that cannot finish because catalogue numbers its petitions name have no catalogue entry writes every one of them to out/FLAVOR/missing.txt, one to a line with what kind of thing it is, in the same order on every run, and exits with status 3, which means stopped and not crashed.  Goes red when: a build that cannot finish writes no out/FLAVOR/missing.txt, writes a list that differs from the expected one (a number left out, a line without its kind), lists the same things in a different order on a second run, or exits with any status but 3.  Status: Passed by the runner (on the jig, under KVM): the build of cat stopped with status 3 and wrote the 3 missing numbers, the same both times.  Mutations caught: 0.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/builder.no-guess@1.toml">builder.no-guess@1</a>.  Checks: The missing list holds exactly the catalogue numbers the flavor's petitions name that have no catalogue entry: it adds none of its own and leaves none out, and a flavor that is missing nothing gets no list.  Goes red when: the list holds a number the petitions do not name, or a number that has a catalogue entry, or leaves one out; or a number is still listed once its entry exists; or a flavor missing nothing gets a list.  Status: Passed by the runner (on the jig, under KVM): exactly the 3 numbers with no entry; none once they have one; a stale list removed; hello given none.  Mutations caught: 0.</li>
+</ul>
+<h3>AGT.referee@1</h3>
+<ul>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/referee.draft@1.toml">referee.draft@1</a>.  Checks: A draft petition is accepted as well-formed only if every line is a comment, a table header or a field (never prose), and it has the petition fields, a purpose that exists, a role and an admitted flag on every component, a SPEC code as the reason for every capability, a future expiry, and only catalogue numbers that have a version and either resolve or come with a component not yet admitted; otherwise it is refused, naming the rule or the field and the number.  Goes red when: a well-formed draft is refused, or a draft that is prose, has prose in front of an otherwise proper petition, has an unknown role, has expired, has a number with no version, names a number that resolves nowhere and comes with no component, gives a reason that is not a SPEC code, names a purpose that does not exist, or has a component with no admitted flag is accepted.  Status: Passed by the runner (on the jig, under KVM): a good draft accepted and listed; prose and eight spoiled copies refused, each naming its reason.  Mutations caught: 0.</li>
+</ul>
+<h2>Code on GitHub</h2>
+<p><a href="https://github.com/cmcluckie/aios/compare/226e8da...e6f1216">Every line that changed, on one page</a></p>
+<p>The commits behind this post, in order:</p>
+<ol>
+<li><a href="https://github.com/cmcluckie/aios/commit/6a9dc82">Part 18: ledger hash for the jig run, addendum notes the debt mutation caught on a jig rerun</a></li>
+<li><a href="https://github.com/cmcluckie/aios/commit/5695c66">Part 19: the plan and the pieces for cat</a></li>
+<li><a href="https://github.com/cmcluckie/aios/commit/50d7361">Part 19: the first real draft, and the referee refuses prose in front of a petition</a></li>
+<li><a href="https://github.com/cmcluckie/aios/commit/0e1dc68">The first petition no person wrote: the draft the referee accepted on its second try, installed as 0012 with the cat flavor; the builder stops on it with eight missing numbers</a></li>
+<li><a href="https://github.com/cmcluckie/aios/commit/c49e853">Ledger: hash for the accepted-draft commit</a></li>
+<li><a href="https://github.com/cmcluckie/aios/commit/3ffe037">As-built specs for the builder and the draft step, decision 0035</a></li>
+<li><a href="https://github.com/cmcluckie/aios/commit/e6f1216">Part 19: first draft of the article, Chris&#x27;s second set of notes, hash for the as-built commit</a></li>
+</ol>
+<p><a href="https://github.com/cmcluckie/aios">The whole repo</a>.</p>
+</div>
+</section>
+<p class="img">Image: 2026-11-11.png, in this folder.</p>
+<script>
+function flash(b){b.textContent='Copied';b.classList.add('done');setTimeout(function(){b.textContent='Copy';b.classList.remove('done')},1500)}
+function select(id){var r=document.createRange();r.selectNodeContents(document.getElementById(id));var s=getSelection();s.removeAllRanges();s.addRange(r);return s}
+// A pasted image doesn't survive into LinkedIn, so each one is copied as a marker naming its file.
+function copyRich(id,b){var c=document.getElementById(id).cloneNode(true);c.removeAttribute('id');
+  c.querySelectorAll('img').forEach(function(i){var p=document.createElement('p');p.innerHTML='<strong>[Upload '+i.getAttribute('src')+' here]</strong>';(i.closest('p.img')||i).replaceWith(p)});
+  c.style.position='fixed';c.style.left='-9999px';document.body.appendChild(c);
+  var r=document.createRange();r.selectNodeContents(c);var s=window.getSelection();s.removeAllRanges();s.addRange(r);
+  document.execCommand('copy');s.removeAllRanges();c.remove();flash(b)}
+function copyText(id,b){var t=document.getElementById(id).innerText.trim();
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(function(){flash(b)},function(){copyRich(id,b)})}else{copyRich(id,b)}}
+</script>
+</body></html>

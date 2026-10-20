@@ -1,0 +1,11 @@
+id      = "0036"
+date    = 2026-10-20
+kind    = "mutation list"
+touches = ["tests/mutations.txt"]
+asked   = "The full jig/mutate run after part 19 reported one NO-OP: the reader.refuses mutation 'any text counts as a name, semicolons and all' changed nothing, so the sabotage never happened and nothing was tested.  The cause is mine: in part 19 I renamed the reader's name() function to ident() (the word name is now also a variable that holds the source's name), and the mutation's sed still looked for name().  Its target is now ident(); the sabotage and the expected result (red) are unchanged.  I checked by hand that the new expression changes jig/reader; the test itself needs a Linux clone and cscope, so it only runs on the jig."
+options = ["as written", "revert the rename in jig/reader and leave the mutation alone"]
+default = "as written"
+chose   = "as written"
+why     = "The rename was needed so the variable and the function stopped sharing a word; the mutation list follows the code.  A mutation that cannot change anything is how a test goes unwatched, which is the thing jig/mutate exists to catch, and it did."
+by      = "KEY.chris@1"
+drafted = "Claude"
