@@ -1,0 +1,98 @@
+Now I have a full picture of cat.c. It:
+- Reads from named files or stdin
+- Writes to stdout (the console / tty)
+- Opens and reads files from the filesystem (fopen, fstat, fileno)
+- Writes errors to stderr
+- Exits cleanly
+
+Now I'll map the needs to catalogue entries:
+
+- **stdout/tty write** → `CAP.tty.write@1`
+- **stdin/tty read** → `CAP.tty.read@1`
+- **file read** → `CAP.fs.read@1`
+- **process exit** → `CAP.proc.exit@1`
+- **machine** → `MACHINE.serial-disk@1` (needs serial + disk for files)
+- **components**: `PART.cat@1` (primary), `TOOL.c@1`, `PART.loader@5` (has files), `PART.serial.8250@1`, `PART.serial.8250@2` (read), `PART.disk.ata-pio@1`, `PART.fs.minix@1`
+
+[petition]
+id         = "0012"
+purpose    = "PUR.0011@1"
+submitted  = 2026-10-20
+submitter  = "KEY.chris@1"
+expires    = 2027-04-20
+supersedes = ""
+status     = "draft"
+
+[[capability]]
+code   = "CAP.tty.write@1"
+reason = "SPEC.cat.1@1"
+scope  = "console0"
+
+[[capability]]
+code   = "CAP.tty.read@1"
+reason = "SPEC.cat.2@1"
+scope  = "console0"
+
+[[capability]]
+code   = "CAP.fs.read@1"
+reason = "SPEC.cat.3@1"
+scope  = ""
+
+[[capability]]
+code   = "CAP.proc.exit@1"
+reason = "SPEC.cat.4@1"
+scope  = ""
+
+[[component]]
+code     = "PART.cat@1"
+role     = "primary"
+admitted = false
+
+[[component]]
+code     = "TOOL.c@1"
+role     = "toolchain"
+admitted = false
+
+[[component]]
+code     = "PART.loader@5"
+role     = "boot"
+admitted = false
+
+[[component]]
+code     = "PART.serial.8250@1"
+role     = "dependency"
+admitted = false
+
+[[component]]
+code     = "PART.serial.8250@2"
+role     = "dependency"
+admitted = false
+
+[[component]]
+code     = "PART.disk.ata-pio@1"
+role     = "dependency"
+admitted = false
+
+[[component]]
+code     = "PART.fs.minix@1"
+role     = "dependency"
+admitted = false
+
+[[component]]
+code     = "MACHINE.serial-disk@1"
+role     = "machine"
+admitted = false
+
+[[component]]
+code     = "TOOL.qemu@1"
+role     = "machine"
+admitted = false
+
+[[test]]
+code = "TST.cat.stdin-to-stdout@1"
+
+[[test]]
+code = "TST.cat.file-to-stdout@1"
+
+[[test]]
+code = "TST.cat.missing-file-error@1"

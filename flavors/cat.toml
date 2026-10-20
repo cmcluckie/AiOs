@@ -1,0 +1,3 @@
+name      = "cat"
+machine   = "MACHINE.serial-disk@1"
+petitions = ["0012"]

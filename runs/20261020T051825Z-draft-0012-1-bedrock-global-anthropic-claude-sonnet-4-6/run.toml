@@ -1,0 +1,15 @@
+id            = "20261020T051825Z-draft-0012-1-bedrock-global-anthropic-claude-sonnet-4-6"
+date          = "2026-10-20T05:18:25Z"
+item          = "draft-0012"
+model         = "bedrock:global.anthropic.claude-sonnet-4-6"
+version       = "2026-10-20"
+sitting       = "20261020T051816Z"
+prompt        = "26e7eb61"
+try           = 1
+input_tokens  = 4
+output_tokens = 832
+cache_read_tokens  = 13476
+cache_write_tokens = 2353
+cost_usd      = 0.025359
+result        = "pass"
+lines         = 80
