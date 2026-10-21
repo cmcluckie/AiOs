@@ -1,5 +1,5 @@
 # tests/referee-results.txt, written by the referee (AGT.referee@1, rules).  Do not edit by hand.
-# run 2026-10-20T19:00Z at commit 1602ff2: rules 2 to 8 and 21 of schema/petition.md, every petition
+# run 2026-10-21T04:01Z at commit 8687dc5: rules 2 to 8 and 21 of schema/petition.md, every petition
 PASS  rule 2  petition 0000
 PASS  rule 3  petition 0000
 PASS  rule 4  petition 0000
@@ -96,12 +96,28 @@ PASS  rule 6  petition 0011
 PASS  rule 7  petition 0011
 PASS  rule 8  petition 0011
 PASS  rule 21  petition 0011
-FAIL  rule 2  petition 0012  CAP.tty.write@1 reason SPEC.cat.1@1 does not exist
+PASS  rule 2  petition 0012
 PASS  rule 3  petition 0012
-FAIL  rule 4  petition 0012  PART.serial.8250@1 requires CAP.dev.serial@1, not asked for
+FAIL  rule 4  petition 0012  PART.cat@1 requires CAP.mem.alloc@1, not asked for
 PASS  rule 5  petition 0012
-FAIL  rule 6  petition 0012  PART.timer.kvmclock@1 is depended on but not listed
+FAIL  rule 6  petition 0012  PART.libc.musl@1 is depended on but not listed
 PASS  rule 7  petition 0012
 PASS  rule 8  petition 0012
 PASS  rule 21  petition 0012
-# 3 failure(s)
+PASS  rule 2  petition 0013
+PASS  rule 3  petition 0013
+FAIL  rule 4  petition 0013  PART.serial.8250@2 requires CAP.dev.serial@1, not asked for
+PASS  rule 5  petition 0013
+FAIL  rule 6  petition 0013  PART.libc.musl@1 is depended on but not listed
+FAIL  rule 7  petition 0013  TOOL.c@1 is marked admitted and has no admission
+PASS  rule 8  petition 0013
+PASS  rule 21  petition 0013
+PASS  rule 2  petition 0014
+PASS  rule 3  petition 0014
+PASS  rule 4  petition 0014
+PASS  rule 5  petition 0014
+PASS  rule 6  petition 0014
+PASS  rule 7  petition 0014
+PASS  rule 8  petition 0014
+PASS  rule 21  petition 0014
+# 5 failure(s)

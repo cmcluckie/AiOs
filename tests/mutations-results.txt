@@ -1,5 +1,5 @@
 # tests/mutations-results.txt, written by jig/mutate.  Do not edit by hand.
-# run 2026-10-20T18:44Z at commit 1602ff2
+# run 2026-10-21T03:37Z at commit 8687dc5
 KILLED    hello.exact-bytes@1  one wrong letter in hello's message
 KILLED    hello.exact-bytes@1  the newline goes missing
 KILLED    hello.exact-bytes@1  one extra write before exit
@@ -212,4 +212,52 @@ KILLED    gate.share-ladder@1  the system call table's first two entries swapped
 KILLED    gate.shared-port@1  each shared program is given I/O privilege 3
 KILLED    gate.partition@1  the builder turns on every part the kernel can be built with, asked for or not: the bundle is back
 KILLED    gate.partition@1  the builder ignores the petitions: every kernel is the bare console, and the editor loses its disk
-# 209 killed, 0 survived unexpectedly, 3 known survivors, 0 no-ops, 0 no-builds
+KILLED    reader.bsd-pin@1  Berkeley is read at V7's pin
+KILLED    reader.bsd-pin@1  Berkeley is read at Linux's pin
+KILLED    reader.bsd-pin@1  Berkeley is read out of the Linux clone
+KILLED    reader.bsd-pin@1  a source the reader does not have is taken for Berkeley
+KILLED    draft.source@1  the model's questions reach the reader with no source named
+KILLED    draft.source@1  told Berkeley, the model is told it is reading V7
+KILLED    draft.source@1  an unknown source is not refused, and a call is made
+KILLED    draft.source@1  the petition to supersede is never handed to the model
+KILLED    builder.flags@1  the program's own flags never reach the compiler
+KILLED    builder.flags@1  any flag at all is let through
+KILLED    builder.flags@1  -include= goes to the compiler as written, which it does not understand
+KILLED    builder.flags@1  flags are checked only once compiling has begun
+KILLED    draft.submit@1  a petition handed in through submit_petition is never noticed
+KILLED    draft.submit@1  something besides the field goes into the draft
+KILLED    draft.submit@1  the run record keeps only the first message, so the model's own words are lost
+KILLED    draft.submit@1  the draft step trims prose off the front of what was handed in
+KILLED    libc.pieces@1  the build ignores the pin and takes whatever the clone is on
+KILLED    libc.pieces@1  two musl files with the same name collapse into one piece
+KILLED    libc.pieces@1  pieces lists every file in musl, not what the program took
+KILLED    libc.pieces@1  the 386's own version of a file no longer replaces the general one
+KILLED    divide64.exact@1  a remainder equal to the divisor is not taken away
+KILLED    divide64.exact@1  the quotient's bits wrap at 32, the classic 386 shift mistake
+KILLED    divide64.exact@1  only the low 32 bits of the number are divided
+KILLED    divide64.exact@1  the remainder is lost
+KILLED    musl.origin-matches@1  the record names the wrong blob for fopen.c
+KILLED    musl.origin-matches@1  one lifted file is no longer musl's, byte for byte
+KILLED    musl.origin-matches@1  the record names a commit musl does not have
+KILLED    cat.origin-matches@1  the lifted cat.c is no longer Berkeley's, byte for byte
+KILLED    cat.origin-matches@1  the record names the wrong blob for cat.c
+KILLED    cat.stdin-to-console@1  Ctrl+D no longer ends the typed input, so cat waits for ever
+KILLED    cat.stdin-to-console@1  the Ctrl+D is handed to the program as if it were typed text
+KILLED    cat.stdin-to-console@1  a Linux program's exit status is never shown
+KILLED    cat.file-to-console@1  the leading slash is not taken off a name, so /one is not found
+KILLED    cat.file-to-console@1  reading a file skips a byte each time and runs past its end
+KILLED    cat.multi-file@1  only the first argument after the program's name is handed over
+KILLED    cat.multi-file@1  the command line is not split into arguments
+KILLED    cat.big-file@1  a file is cut at 4,096 bytes when it is opened
+KILLED    cat.big-file@1  every read of a file starts again from its beginning
+KILLED    gate.linux-refuses@1  a file may be opened for writing
+KILLED    gate.linux-refuses@1  set_thread_area takes any segment entry it is given
+KILLED    gate.linux-refuses@1  statx by name answers as if it were a descriptor
+KILLED    loader.elf-refuses@1  a shared file or a 64-bit one is loaded as if it could run
+KILLED    loader.elf-refuses@1  a file that asks for a dynamic linker is loaded anyway
+KILLED    loader.elf-refuses@1  the program is started one byte past its entry point
+KILLED    gate.ladder-2@1  the system call table's first two entries swapped in gate@2
+KILLED    machine.disk2-only@1  the cat machine grows a device nobody asked for
+KILLED    cat.missing-file@1  the fix is taken out again: Berkeley's cat as it shipped, exit 0 after a missing file
+KILLED    cat.missing-file@1  cat always exits 0, whatever happened
+# 257 killed, 0 survived unexpectedly, 3 known survivors, 0 no-ops, 0 no-builds
