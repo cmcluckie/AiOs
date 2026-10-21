@@ -1,0 +1,7 @@
+code       = "SPEC.machine.6@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+component  = "MACHINE.serial-disk@2"
+clause     = "MACHINE.serial-disk@1 exactly, and when AIOS_CMDLINE is set it is the kernel's command line; the devices are the same."
+author     = "KEY.chris"

@@ -1,0 +1,15 @@
+code          = "PART.gate@2"
+sentence      = "The gate, and the system calls a normal Linux program makes: as @1, plus a program from a Linux program file at its own address, and the calls Berkeley's cat makes through musl, at Linux's numbers."
+status        = "draft"
+admitted      = ""
+retired_by    = ""
+kind          = "library"
+source        = "pool/PART.gate@2/"
+licence       = "GPL-2.0-only"
+depends       = []
+build_depends = ["TOOL.c@1"]
+exposes       = ["CAP.cpu.ring3@1"]
+requires      = []
+scaffold      = false
+as_built      = "index/part/gate@2.as-built.md"
+reproducible  = ""

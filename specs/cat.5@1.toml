@@ -1,0 +1,7 @@
+code       = "SPEC.cat.5@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+component  = "PART.cat@1"
+clause     = "cat exits with status 0 when every file named was printed, and 1 when any could not be opened."
+author     = "KEY.chris"

@@ -24,7 +24,9 @@ that program takes.  It decides nothing and copies nothing into the repo.
   their sources to out/musl/sources.txt.
 - pieces OBJ...: links those objects with the start files and libc.a, statically,
   with a link map, and prints the source file of every piece the linker pulled
-  in, one to a line, sorted.
+  in, and the three start files every program is linked with (crt/crt1.c,
+  crt/i386/crti.s, crt/i386/crtn.s), one to a line, sorted.  The start files are
+  never members of the archive, so the map cannot name them (findings 0023 item 11).
 
 ## Refusals
 Exit 1: no build yet; a file that does not compile; a program that does not link
@@ -39,4 +41,4 @@ MUSL_TREE=/dir builds from an unpacked tree instead, for testing only.
 - No network, no ports, no registers.
 
 ## Size
-99 lines in jig/libc (shell).  Needs git, tar, sed, awk, ar, a C compiler that can build -m32.
+105 lines in jig/libc (shell).  Needs git, tar, sed, awk, ar, a C compiler that can build -m32.

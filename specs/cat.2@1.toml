@@ -1,0 +1,7 @@
+code       = "SPEC.cat.2@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+component  = "PART.cat@1"
+clause     = "With no file named, cat copies what is typed on the console to the console, unchanged, until the input ends (Ctrl+D at the start of a line, as on a Unix terminal)."
+author     = "KEY.chris"

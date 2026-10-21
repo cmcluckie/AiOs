@@ -1,0 +1,10 @@
+code       = "TST.cat.multi-file@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+binds      = "SPEC.cat.1@1"
+red_when   = "cat /one /two does not print one and then two, byte for byte, then exit 0"
+timeout_ms = 120000
+isolates   = "PART.cat@1"
+runner     = "jig/test cmd sh tests/programs/cat.sh multi"
+mutations  = 2

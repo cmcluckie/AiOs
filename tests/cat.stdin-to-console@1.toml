@@ -1,0 +1,10 @@
+code       = "TST.cat.stdin-to-console@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+binds      = "SPEC.cat.2@1"
+red_when   = "cat with no file named is typed two lines and Ctrl+D, and the console does not show exactly those two lines and then exit 0"
+timeout_ms = 120000
+isolates   = "PART.cat@1"
+runner     = "jig/test cmd sh tests/programs/cat.sh stdin"
+mutations  = 3

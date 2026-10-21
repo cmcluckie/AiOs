@@ -1062,3 +1062,27 @@ file   = "tools/mkalltypes.sed"
 blob   = "fa15efc35f64e06e5a53108ca8e7c2faf5835369"
 lines  = [[1, 15]]
 what   = "the whole file"
+
+[[lift.from]]
+file   = "crt/crt1.c"
+blob   = "8fe8ab5d8c3ea005ce9e0eb07e72cadb4747b0ab"
+lines  = [[1, 19]]
+what   = "the whole file (a start file, added in findings 0023 item 11)"
+
+[[lift.from]]
+file   = "crt/i386/crti.s"
+blob   = "d2682a20b0652aa919e7eaf372e7be1fa407a834"
+lines  = [[1, 9]]
+what   = "the whole file (a start file, added in findings 0023 item 11)"
+
+[[lift.from]]
+file   = "crt/i386/crtn.s"
+blob   = "f3b61e01bb876743a7dc2c77e34217f73a87795d"
+lines  = [[1, 7]]
+what   = "the whole file (a start file, added in findings 0023 item 11)"
+
+[[lift.from]]
+file   = "arch/i386/crt_arch.h"
+blob   = "43c8477a8174311f81d3391fbe11e71ae4136007"
+lines  = [[1, 16]]
+what   = "the whole file (a start file, added in findings 0023 item 11)"

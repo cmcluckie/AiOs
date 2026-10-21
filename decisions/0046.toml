@@ -1,0 +1,11 @@
+id      = "0046"
+date    = 2026-10-20
+kind    = "plan"
+touches = []
+asked   = "Findings 0023 item 10: four choices before the kernel learns to run a normal Linux program file.  (1) Where cat runs: Linux's own address, 0x08048000, unchanged, or relinked into AiOs's window at 4 MiB.  (2) Where its arguments come from: the kernel command line, or fixed in the flavor.  (3) What musl's 16 AT_RANDOM bytes are, since AiOs has no random source: the cycle counter, labelled as not random, or zeros, labelled.  (4) Which files cat can open: read-only from the Minix disk, or files packed into the image."
+options = ["Linux's address; the kernel command line; the cycle counter, labelled; read-only from the disk", "AiOs's window; fixed in the flavor; zeros, labelled; packed into the image"]
+default = "Linux's address; the kernel command line; the cycle counter, labelled; read-only from the disk"
+chose   = "Linux's address; the kernel command line; the cycle counter, labelled; read-only from the disk"
+why     = "AiOs should run a normal Linux program file as it is, get its arguments the way Linux's first program does, never call something random that is not, and use the file system the model asked for."
+by      = "KEY.chris@1"
+drafted = "Claude"

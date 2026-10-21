@@ -1,0 +1,15 @@
+code          = "MACHINE.serial-disk@2"
+sentence      = "A virtual PC with one serial port and one IDE disk, and no network, timer, display or input device; as @1, with a kernel command line."
+status        = "draft"
+admitted      = ""
+retired_by    = ""
+kind          = "hardware"
+source        = "pool/MACHINE.serial-disk@2/"
+licence       = "GPL-2.0-only"
+depends       = ["TOOL.qemu@1"]
+build_depends = []
+exposes       = ["CAP.dev.serial@1", "CAP.dev.disk@1", "CAP.hv.kvmclock@1"]
+requires      = []
+scaffold      = false
+as_built      = "index/machine/serial-disk@2.as-built.md"
+reproducible  = ""

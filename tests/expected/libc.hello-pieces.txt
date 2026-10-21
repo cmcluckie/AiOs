@@ -1,3 +1,6 @@
+crt/crt1.c
+crt/i386/crti.s
+crt/i386/crtn.s
 src/env/__environ.c
 src/env/__init_tls.c
 src/env/__libc_start_main.c

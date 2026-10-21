@@ -1,0 +1,10 @@
+code       = "TST.loader.elf-refuses@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+binds      = "SPEC.loader.14@1"
+red_when   = "Berkeley's cat, with its file changed to say it is a shared object, or for another machine, or that it needs a dynamic linker, is not refused with the reason on the console, or runs; or unchanged it does not run"
+timeout_ms = 120000
+isolates   = "PART.loader@10"
+runner     = "jig/test cmd sh tests/programs/elfrefuse.sh"
+mutations  = 3

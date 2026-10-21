@@ -1,0 +1,7 @@
+code       = "SPEC.cat.3@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+component  = "PART.cat@1"
+clause     = "cat reads each file named from the disk's root directory, read-only, and prints it whole; a name that is not there is reported on the console and skipped."
+author     = "KEY.chris"

@@ -1,0 +1,7 @@
+code       = "SPEC.loader.14@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+component  = "PART.loader@10"
+clause     = "A program file that is a static 32-bit x86 ELF executable is loaded where its program headers say, the rest of its window zeroed, and started with the stack Linux lays out (its arguments from the kernel command line, no environment, AT_PHDR, AT_PHENT, AT_PHNUM, AT_PAGESZ, AT_ENTRY, AT_RANDOM); any other ELF file (another machine, a shared or position-independent one, one that asks for a dynamic linker) is refused with a line on the console saying why, and nothing runs."
+author     = "KEY.chris"

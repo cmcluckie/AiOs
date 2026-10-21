@@ -1,3 +1,4 @@
+# Berkeley's cat (petition 0014, part 20): the first normal Linux program file AiOs runs.
 name      = "cat"
-machine   = "MACHINE.serial-disk@1"
-petitions = ["0013"]
+machine   = "MACHINE.serial-disk@2"
+petitions = ["0014"]

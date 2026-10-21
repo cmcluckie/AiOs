@@ -1,0 +1,10 @@
+code       = "TST.gate.ladder-2@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+binds      = "SPEC.gate.9@1"
+red_when   = "hello, hanoi, life or calc, built for its own loader and booted under the cat flavor's PART.loader@10 and PART.gate@2, does not print exactly what it always has"
+timeout_ms = 60000
+isolates   = "PART.gate@2"
+runner     = "jig/test ladder cat"
+mutations  = 1

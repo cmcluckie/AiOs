@@ -1,0 +1,10 @@
+code       = "TST.machine.disk2-only@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+binds      = "SPEC.machine.6@1"
+red_when   = "the paused cat machine holds anything but one serial port, one IDE disk and what SPEC.machine.3@1 lists as forced by microvm"
+timeout_ms = 60000
+isolates   = "MACHINE.serial-disk@2"
+runner     = "jig/test qtree cat"
+mutations  = 1

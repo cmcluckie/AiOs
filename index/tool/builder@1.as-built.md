@@ -35,6 +35,16 @@ program and the flag.  The referee's look at the program's own instructions
 (rule 12) is compiled with the same flags, each in quotes, since the referee hands
 them to a shell.
 
+## A normal Linux program
+A program whose catalogue entry depends on PART.libc.musl@1 is built the way a Linux
+toolchain builds a static program (part 20): musl is built once per flavor from
+lifted/PART.libc.musl@1 (the two generated headers from their lifted inputs, every
+lifted source with musl's own flags for i386, into a library; its three start files;
+the headers a program sees), with PART.divide64@1; the program is compiled against
+those headers with its own flags, looked at by the referee (rule 12) with the same,
+and linked statically, not position-independent, at the address the linker
+chooses (0x08048000 and up): an ELF file, out/FLAVOR/NAME.bin.
+
 ## Refusals
 Exit 1 with "refused:" and the rule or reason.  Exit 3 only for the missing list.
 Exit 2 for an unknown command.
@@ -48,4 +58,4 @@ Exit 2 for an unknown command.
 - No network, no ports, no registers.
 
 ## Size
-219 lines in jig/aios (shell).  Needs a C compiler, sed, sort, sha256sum.
+261 lines in jig/aios (shell).  Needs a C compiler, sed, sort, sha256sum.

@@ -125,6 +125,34 @@ prog_flags() {
 	done
 }
 
+# libc_musl DIR: musl from lifted/PART.libc.musl@1, built the way jig/libc builds
+# the pinned one: the two generated headers from their lifted inputs, every
+# lifted source compiled with musl's own flags for i386, the library, the start
+# files, the headers a program sees, and the divide helper musl needs
+# (PART.divide64@1).  Only what was lifted is there to build.
+libc_musl() {
+	m=lifted/PART.libc.musl@1; d=$1
+	[ -f "$d/libc.a" ] && return 0
+	mkdir -p "$d/obj/include/bits" "$d/include/bits"
+	sed -f "$m/tools/mkalltypes.sed" "$m/arch/i386/bits/alltypes.h.in" "$m/include/alltypes.h.in" > "$d/obj/include/bits/alltypes.h"
+	cp "$m/arch/i386/bits/syscall.h.in" "$d/obj/include/bits/syscall.h"
+	sed -n -e s/__NR_/SYS_/p < "$m/arch/i386/bits/syscall.h.in" >> "$d/obj/include/bits/syscall.h"
+	mf="-m32 -std=c99 -nostdinc -ffreestanding -fexcess-precision=standard -frounding-math -fno-strict-aliasing -Wa,--noexecstack -D_XOPEN_SOURCE=700 -I$m/arch/i386 -I$m/arch/generic -I$d/obj/src/internal -I$m/src/include -I$m/src/internal -I$d/obj/include -I$m/include -Os -fomit-frame-pointer -fno-unwind-tables -fno-asynchronous-unwind-tables -ffunction-sections -fdata-sections -march=i486 -mtune=generic -fno-pie -w"
+	( cd "$m" && find src -type f \( -name '*.c' -o -name '*.s' \) ) | LC_ALL=C sort | while read -r f; do
+		o="$d/obj/$(echo "$f" | tr / @).o"
+		x=""; case "$f" in */__libc_start_main.c|*/__init_tls.c|*/__set_thread_area.s|*/memset.s|*/memcpy.s) x="-fno-stack-protector" ;; esac
+		$CC $mf $x -c -o "$o" "$m/$f" || exit 1
+	done || die "musl from lifted/ did not compile"
+	( cd "$d/obj" && ls *.o | LC_ALL=C sort | xargs ar rcs ../libc.a )
+	$CC $mf -DCRT -fno-stack-protector -c -o "$d/crt1.o" "$m/crt/crt1.c"
+	$CC $mf -c -o "$d/crti.o" "$m/crt/i386/crti.s"
+	$CC $mf -c -o "$d/crtn.o" "$m/crt/i386/crtn.s"
+	$CC -m32 -O2 -ffreestanding -fno-pie -c -o "$d/divide64.o" pool/PART.divide64@1/divide64.c
+	( cd "$m/include" && find . -type f ! -name '*.in' ) | while read -r h; do mkdir -p "$d/include/$(dirname "$h")"; cp "$m/include/$h" "$d/include/$h"; done
+	cp "$m"/arch/generic/bits/*.h "$d/include/bits/"; cp "$m"/arch/i386/bits/*.h "$d/include/bits/"
+	cp "$d/obj/include/bits/alltypes.h" "$d/obj/include/bits/syscall.h" "$d/include/bits/"
+}
+
 cmd_build() {
 	miss=$(cmd_missing "$1")
 	if [ -n "$miss" ]; then
@@ -181,6 +209,20 @@ cmd_build() {
 	for prog in $progs; do
 		pdir=$(field "$(code_file "$prog")" source)
 		[ -d "$pdir" ] || die "rule 18: source $pdir is not in the pool"
+		if list_field "$(code_file "$prog")" depends | grep -qx 'PART.libc.musl@1'; then
+			# a normal Linux program: built against musl from lifted/, linked the
+			# way a Linux toolchain links a static program, an ELF file (part 20)
+			pname=$(basename "${prog#PART.}"); pname=${pname%@*}
+			libc_musl "$out/musl"
+			pf=$(prog_flags "$prog" | tr '\n' ' '); pq=$(prog_flags "$prog" | sed "s/.*/'&'/" | tr '\n' ' ')
+			mflags="-m32 -O2 -nostdinc -fno-pie -fno-stack-protector -I $out/musl/include"
+			$CC $mflags $pf -c -o "$out/$pname.o" "$pdir$pname.c"
+			CC="$CC" CFLAGS="$mflags $pq" sh pool/AGT.referee@1/referee hardware "$prog" "$pdir$pname.c"
+			$CC -m32 -static -nostdlib -no-pie -Wl,--build-id=none -Wl,-z,noexecstack -o "$out/$pname.bin" \
+				"$out/musl/crt1.o" "$out/musl/crti.o" "$out/$pname.o" "$out/musl/libc.a" "$out/musl/divide64.o" "$out/musl/crtn.o"
+			members="$members $pname $out/$pname.bin"; summary="$summary + $prog (ELF, $(wc -c < "$out/$pname.bin") bytes)"
+			continue
+		fi
 		pl=$(list_field "$(code_file "$prog")" depends | head -1)
 		pldir=$(field "$(code_file "$pl")" source)
 		pname=$(basename "${prog#PART.}"); pname=${pname%@*}

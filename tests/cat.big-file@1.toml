@@ -1,0 +1,10 @@
+code       = "TST.cat.big-file@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+binds      = "SPEC.cat.4@1"
+red_when   = "cat /big, a file of 5,000 bytes, more than cat's buffer, does not print it whole and in order, then exit 0"
+timeout_ms = 120000
+isolates   = "PART.cat@1"
+runner     = "jig/test cmd sh tests/programs/cat.sh big"
+mutations  = 2

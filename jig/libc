@@ -7,7 +7,9 @@
 #   libc build             out/musl/: include/, lib/libc.a, lib/crt1.o, crti.o, crtn.o
 #   libc pieces OBJ...     link those objects against the build, statically, and
 #                          print the musl source files the program takes, one to a
-#                          line, sorted (the list a lift starts from)
+#                          line, sorted (the list a lift starts from): every piece
+#                          the linker pulled out of libc.a, and the three start
+#                          files every program is linked with (crt1, crti, crtn)
 #
 # The source comes out of a clone of musl (MUSL=/path, default ../musl) at the
 # pin, through git archive, so the clone's working tree never matters.
@@ -88,7 +90,11 @@ pieces() {
 	# the archive members the linker pulled in, each back to its source file
 	sed -n 's/^.*libc\.a(\([^)]*\.o\)).*/\1/p' "$t/map" | LC_ALL=C sort -u | while read -r m; do
 		awk -v m="$m" '$1 == m { print $2; f = 1 } END { exit !f }' "$out/sources.txt" || { echo "libc: no source known for $m" >&2; exit 1; }
-	done | LC_ALL=C sort -u
+	done > "$t/list" || { rm -rf "$t"; exit 1; }
+	# the start files are linked beside the archive, never pulled from it, so the map
+	# does not name them as members: they are added by name (findings 0023 item 11)
+	printf '%s\n' crt/crt1.c crt/i386/crti.s crt/i386/crtn.s >> "$t/list"
+	LC_ALL=C sort -u "$t/list"
 	rm -rf "$t"
 }
 

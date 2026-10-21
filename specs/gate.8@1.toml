@@ -1,0 +1,7 @@
+code       = "SPEC.gate.8@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+component  = "PART.gate@2"
+clause     = "A program started from a Linux program file is answered at Linux's 386 numbers for open (read-only, the disk's root directory), close, read, write, writev, brk, mmap2 (fresh private memory only), munmap, set_thread_area (one segment, entry 6), set_tid_address, statx (an open descriptor only), ioctl and exit_group; each refuses what it does not do with Linux's error number and touches nothing it was not given; any other number answers ENOSYS."
+author     = "KEY.chris"

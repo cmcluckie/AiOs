@@ -1,0 +1,7 @@
+code       = "SPEC.gate.9@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+component  = "PART.gate@2"
+clause     = "Every program PART.gate@1 ran runs under PART.gate@2 exactly as it did: in ring 3, through the same seven-entry table, with the same output."
+author     = "KEY.chris"

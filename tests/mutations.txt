@@ -248,3 +248,20 @@ musl.origin-matches@1 | red | lifted/PART.libc.musl@1/src/stdio/fopen.c | s/^#in
 musl.origin-matches@1 | red | lifted/PART.libc.musl@1/origin.toml | s/^commit     = "f5f55d65/commit     = "f5f55d64/ | the record names a commit musl does not have
 cat.origin-matches@1 | red | lifted/PART.cat@1/cat.c | s/^ \* Kevin Fall\.$/ * Kevin Fall!/ | the lifted cat.c is no longer Berkeley's, byte for byte
 cat.origin-matches@1 | red | lifted/PART.cat@1/origin.toml | s/30e5bfce77792948fe8c49515ab773c06b871a3d/30e5bfce77792948fe8c49515ab773c06b871a3e/ | the record names the wrong blob for cat.c
+cat.stdin-to-console@1 | red | pool/PART.gate@2/gate.c | s/if (b\[i\] == 0x04) {/if (b[i] == 0x7f) {/ | Ctrl+D no longer ends the typed input, so cat waits for ever
+cat.stdin-to-console@1 | red | pool/PART.gate@2/gate.c | s/console_eof = i > 0;/console_eof = i > 0; i++;/ | the Ctrl+D is handed to the program as if it were typed text
+cat.stdin-to-console@1 | red | pool/PART.gate@2/gate.c | s/calls->write(m, k);/calls->write(m, 0);/ | a Linux program's exit status is never shown
+cat.file-to-console@1 | red | pool/PART.gate@2/gate.c | s/if (\*name == '\/')/if (0)/ | the leading slash is not taken off a name, so /one is not found
+cat.file-to-console@1 | red | pool/PART.gate@2/gate.c | s/files\[fd - 3\].pos += n;/files[fd - 3].pos += n + 1;/ | reading a file skips a byte each time and runs past its end
+cat.multi-file@1 | red | pool/PART.loader@10/loader.c | s/while (\*c \&\& argc < 15) {/while (*c \&\& argc < 2) {/ | only the first argument after the program's name is handed over
+cat.multi-file@1 | red | pool/PART.loader@10/loader.c | s/while (\*c \&\& \*c != ' ')/while (*c)/ | the command line is not split into arguments
+cat.big-file@1 | red | pool/PART.gate@2/gate.c | s/#define FILE_MAX\t8192/#define FILE_MAX\t4096/ | a file is cut at 4,096 bytes when it is opened
+cat.big-file@1 | red | pool/PART.gate@2/gate.c | s/files\[fd - 3\].data\[files\[fd - 3\].pos + k\]/files[fd - 3].data[k]/ | every read of a file starts again from its beginning
+gate.linux-refuses@1 | red | pool/PART.gate@2/gate.c | s/if ((flags \& 3) != 0 || (flags \& 0100))/if (flags \& 0x40000000)/ | a file may be opened for writing
+gate.linux-refuses@1 | red | pool/PART.gate@2/gate.c | s/if (d\[0\] != (unsigned long)-1 \&\& d\[0\] != TLS_ENTRY)/if (0)/ | set_thread_area takes any segment entry it is given
+gate.linux-refuses@1 | red | pool/PART.gate@2/gate.c | s/if (!(flags \& AT_EMPTY_PATH) || ((const char \*)path)\[0\])/if (flags \& 0x40000000)/ | statx by name answers as if it were a descriptor
+loader.elf-refuses@1 | red | pool/PART.loader@10/loader.c | s/h->machine != 3 || h->type != 2/0/ | a shared file or a 64-bit one is loaded as if it could run
+loader.elf-refuses@1 | red | pool/PART.loader@10/loader.c | s/if (ph\[i\].type == PT_INTERP)/if (0)/ | a file that asks for a dynamic linker is loaded anyway
+loader.elf-refuses@1 | red | pool/PART.loader@10/loader.c | s/gate_exec(h->entry, ELF_PHYS/gate_exec(h->entry + 1, ELF_PHYS/ | the program is started one byte past its entry point
+gate.ladder-2@1 | red | pool/PART.gate@2/gate_user.S | s/\.long\td_write, d_exit,/.long\td_exit, d_write,/ | the system call table's first two entries swapped in gate@2
+machine.disk2-only@1 | red | pool/MACHINE.serial-disk@2/machine.sh | s/-nic none/-nic none -device isa-debug-exit/ | the cat machine grows a device nobody asked for

@@ -24,6 +24,13 @@ which says everything worked.  Later BSDs set it to 1.  Findings 0023 item 3 and
 decision 0038: it stays as lifted until its test shows it red, then it is fixed in
 its own change, recorded here and in the origin record.
 
+## On AiOs
+Built by the builder against PART.libc.musl@1 and run by PART.loader@10 and
+PART.gate@2 as a normal Linux program file (findings 0023 item 12): in Claude's
+workspace, under software emulation, it copies what is typed, prints one file,
+two, and one of 5,000 bytes, exactly; asked for a file that is not there, it says
+so and still exits 0 (the bug below), so TST.cat.missing-file@1 is red.
+
 ## What it asks of the system (through musl)
 Measured under strace on a normal Linux computer (findings 0023 item 4), with the
 1995 version three lines apart: printing a file asks for set_thread_area,

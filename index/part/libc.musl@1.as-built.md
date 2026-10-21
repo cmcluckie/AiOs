@@ -19,10 +19,13 @@ COPYRIGHT.  Nothing else of musl is here.
   and what they share), memory (lite_malloc, mallocng's malloc and free, mmap,
   munmap, mprotect), files (open, read, write, close, lseek, fstat, fstatat),
   getopt, err and warn, strerror, exit, the system call wrapper and its errno.
-- 87 headers: musl's public ones under include/, its internal ones under
+- 87 headers (88 with crt_arch.h below): musl's public ones under include/, its internal ones under
   src/internal/ and src/include/, and the 386's under arch/i386/ and arch/generic/.
 - The generators: arch/i386/bits/alltypes.h.in, include/alltypes.h.in,
   tools/mkalltypes.sed and arch/i386/bits/syscall.h.in.
+- The start files every program is linked with: crt/crt1.c, crt/i386/crti.s,
+  crt/i386/crtn.s, and the header crt1.c takes its _start from,
+  arch/i386/crt_arch.h (added in findings 0023 item 11; the first list missed them).
 
 ## What it needs
 A 64-bit divide helper the compiler would normally supply: PART.divide64@1.  The
@@ -30,6 +33,6 @@ system calls listed in PART.cat@1's as-built spec, at Linux's 386 numbers, which
 AiOs does not all answer yet.
 
 ## Size
-174 files, 15,253 lines: 4,245 in the 82 source files and the 4 generators and
-COPYRIGHT, 11,008 in the 87 headers.  11,869 code lines in the .c and .h files
-(no blanks, no comments).  MIT licence.
+178 files, 15,304 lines: 11,024 in the 88 headers, the rest in the 82 source files,
+the 3 start files, the 4 generators and COPYRIGHT.  11,900 code lines in the .c and
+.h files (no blanks, no comments).  MIT licence.

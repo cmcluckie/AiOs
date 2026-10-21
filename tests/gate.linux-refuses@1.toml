@@ -1,0 +1,10 @@
+code       = "TST.gate.linux-refuses@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+binds      = "SPEC.gate.8@1"
+red_when   = "a probe Linux program file, asking each call for something it does not do (a file to write, a path below the root, a descriptor that is not open, shared memory, a segment that is not entry 6, statx by name, a heap past the window, a call AiOs does not have, a buffer in the kernel), is not refused with the right Linux error, or fresh memory from mmap2 is not zeroed and inside the window"
+timeout_ms = 120000
+isolates   = "PART.gate@2"
+runner     = "jig/test cmd sh tests/programs/linuxcalls.sh"
+mutations  = 3

@@ -1,0 +1,10 @@
+code       = "TST.cat.missing-file@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+binds      = "SPEC.cat.5@1"
+red_when   = "cat /none /one does not report /none on the console, print one, and exit 1"
+timeout_ms = 120000
+isolates   = "PART.cat@1"
+runner     = "jig/test cmd sh tests/programs/cat.sh missing"
+mutations  = 2

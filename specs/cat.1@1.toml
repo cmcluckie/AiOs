@@ -1,0 +1,7 @@
+code       = "SPEC.cat.1@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+component  = "PART.cat@1"
+clause     = "cat writes the bytes it reads to standard output, the console, in the order it reads them and unchanged; with several files named it prints them one after another, in the order named."
+author     = "KEY.chris"

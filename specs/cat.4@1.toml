@@ -1,0 +1,7 @@
+code       = "SPEC.cat.4@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+component  = "PART.cat@1"
+clause     = "cat gets the memory it copies through from the system, and a file bigger than that memory is printed whole, in order."
+author     = "KEY.chris"
