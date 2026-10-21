@@ -128,6 +128,7 @@ part again from upstream, and to prove the record against upstream.
     [cut]
     removed = ["..."]                                      # what the lifted lines held onto
     changed = ["..."]                                      # optional: lifted lines kept but altered, each with why
+    local_blob = "..."                                     # optional, a one-file lift taken whole then changed: the blob of the file as it is here
 
 `name` says which clone to read: linux, musl or unix-history (V7 and Berkeley).
 A part lifted as whole files at their own upstream paths says `into = "."`, and

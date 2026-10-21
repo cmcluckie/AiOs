@@ -265,3 +265,5 @@ loader.elf-refuses@1 | red | pool/PART.loader@10/loader.c | s/if (ph\[i\].type =
 loader.elf-refuses@1 | red | pool/PART.loader@10/loader.c | s/gate_exec(h->entry, ELF_PHYS/gate_exec(h->entry + 1, ELF_PHYS/ | the program is started one byte past its entry point
 gate.ladder-2@1 | red | pool/PART.gate@2/gate_user.S | s/\.long\td_write, d_exit,/.long\td_exit, d_write,/ | the system call table's first two entries swapped in gate@2
 machine.disk2-only@1 | red | pool/MACHINE.serial-disk@2/machine.sh | s/-nic none/-nic none -device isa-debug-exit/ | the cat machine grows a device nobody asked for
+cat.missing-file@1 | red | lifted/PART.cat@1/cat.c | s/^\t\t\t\trval = 1;$// | the fix is taken out again: Berkeley's cat as it shipped, exit 0 after a missing file
+cat.missing-file@1 | red | lifted/PART.cat@1/cat.c | s/exit(rval);/exit(0);/ | cat always exits 0, whatever happened

@@ -24,3 +24,8 @@ file   = "usr/src/bin/cat/cat.c"
 blob   = "30e5bfce77792948fe8c49515ab773c06b871a3d"
 lines  = [[1, 251]]
 what   = "the whole file"
+
+[cut]
+removed = []
+changed = ["Lines 129 and 218 (after the fix): rval = 1, after each warn() for a file that cannot be opened, so cat exits 1 when a file named was not printed.  As lifted it never set rval and always exited 0 (findings 0023 item 3); later BSDs made the same fix.  Decision 0038: red first, then fixed in its own change (decision 0049)."]
+local_blob = "1dd31bc79efe5dae38fd923b1baac14bf650ed10"

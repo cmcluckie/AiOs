@@ -16,7 +16,9 @@
 # A part whose clone is not here is reported as not checked, exit 2 unless
 # something was WRONG.  Where a file was lifted whole and untouched (into = ".",
 # every file at its own path; or one file whose one range is all of it), verify
-# also checks the file in lifted/ is that blob, byte for byte.
+# also checks the file in lifted/ is that blob, byte for byte; where such a one
+# file was then changed, its [cut] names the changed file's blob (local_blob), and
+# verify checks the file is that one instead.
 # A re-lift, if one is warranted, is a new version of the part through the door.
 set -eu
 repo=$(cd "$(dirname "$0")/.." && pwd); cd "$repo"
@@ -42,11 +44,12 @@ each_range() {  # $1 origin.toml; emits: file blob start end
 commit_of() { sed -n 's/^commit *= *"\([0-9a-f]*\)".*/\1/p' "$1"; }
 name_of()   { sed -n 's/^name *= *"\([^"]*\)".*/\1/p' "$1" | head -1; }
 into_of()   { sed -n 's/^into *= *"\([^"]*\)".*/\1/p' "$1" | head -1; }
+local_of()  { sed -n 's/^local_blob *= *"\([0-9a-f]*\)".*/\1/p' "$1" | head -1; }
 
 CMD=${1:-watch}; shift 2>/dev/null || true
 rc=0; unchecked=0
 for o in lifted/${1:-*}/origin.toml; do
-	part=$(basename "$(dirname "$o")"); c=$(commit_of "$o"); up=$(name_of "$o"); into=$(into_of "$o")
+	part=$(basename "$(dirname "$o")"); c=$(commit_of "$o"); up=$(name_of "$o"); into=$(into_of "$o"); lb=$(local_of "$o")
 	G=$(clone_for "$up")
 	[ -n "$G" ] || { echo "$part: not checked, no clone of $up here"; unchecked=1; continue; }
 	if [ "${CMD:-}" = verify ]; then
@@ -59,7 +62,12 @@ for o in lifted/${1:-*}/origin.toml; do
 			local=""
 			if [ "$into" = . ]; then local="lifted/$part/$f"
 			elif [ "$nfrom" -eq 1 ] && [ "$s" -eq 1 ] && [ "$e" -eq "$(git -C "$G" show "$c:$f" | awk 'END { print NR }')" ]; then local="lifted/$part/$into"; fi
-			if [ -n "$local" ]; then
+			if [ -n "$local" ] && [ -n "$lb" ] && [ "$into" != . ]; then
+				# lifted whole, then changed as its [cut] records: the file here must be that recorded blob
+				[ -f "$local" ] || { echo "$part: WRONG $local is missing"; exit 1; }
+				[ "$(git hash-object "$local")" = "$lb" ] || { echo "$part: WRONG $local is neither upstream's $f nor the change its record names"; exit 1; }
+				echo "$part: ok   $f whole, changed as recorded"
+			elif [ -n "$local" ]; then
 				[ -f "$local" ] || { echo "$part: WRONG $local is missing"; exit 1; }
 				[ "$(git hash-object "$local")" = "$b" ] || { echo "$part: WRONG $local is not upstream's $f, byte for byte"; exit 1; }
 				echo "$part: ok   $f whole, untouched"

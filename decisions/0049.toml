@@ -1,0 +1,11 @@
+id      = "0049"
+date    = 2026-10-20
+kind    = "lift"
+touches = ["lifted/PART.cat@1/origin.toml", "jig/upstream", "schema/entries.md", "tests/mutations.txt"]
+asked   = "Decision 0038: the missing-file test goes red on Berkeley's cat as lifted, and then it is fixed in its own change.  It went red on the jig at 1edadab and again at 31dbf88: cat reported /none and exited 0.  The fix is the one later BSDs made: rval = 1 after each warn() for a file that cannot be opened, in raw_args and cook_args, two lines.  The origin record gains [cut] changed (where and why) and local_blob (the changed file's blob); the schema documents local_blob; jig/upstream verify checks a one-file lift that was changed against local_blob instead of upstream's blob, and still checks the recorded upstream blob.  Two mutations for TST.cat.missing-file@1, each turning it red in Claude's workspace; green there with the fix."
+options = ["as written", "keep Berkeley's code untouched and rule that the test asks too much"]
+default = "as written"
+chose   = "as written"
+why     = "Chris ruled red then fix (decision 0038).  A cat that says it worked when a file was not printed is wrong, and the fix is small, documented and the one its own descendants made."
+by      = "KEY.chris@1"
+drafted = "Claude"

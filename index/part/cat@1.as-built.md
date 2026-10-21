@@ -17,19 +17,21 @@ likes (fstat), takes a buffer of at least 1,024 bytes (malloc), and loops read a
 write until each file ends.  With any option it goes through stdio instead (fopen,
 getc, putchar).
 
-## A bug it was lifted with
-It declares rval, the exit status, and never sets it.  A file it cannot open is
-reported on standard error ("cat: NAME: ..."), skipped, and cat still exits 0,
-which says everything worked.  Later BSDs set it to 1.  Findings 0023 item 3 and
-decision 0038: it stays as lifted until its test shows it red, then it is fixed in
-its own change, recorded here and in the origin record.
+## A bug it was lifted with, and the fix
+As lifted it declared rval, the exit status, and never set it: a file it could not
+open was reported on standard error ("cat: NAME: ..."), skipped, and cat still
+exited 0, which says everything worked.  TST.cat.missing-file@1 showed it red on
+the jig (findings 0023 item 12).  Fixed in its own change (decision 0049), the way
+later BSDs fixed it: rval = 1 after each such warning, two lines, in the plain path
+(raw_args) and the one with options (cook_args).  The origin record's [cut] says
+so and names the changed file's blob; jig/upstream checks the file against it.
 
 ## On AiOs
 Built by the builder against PART.libc.musl@1 and run by PART.loader@10 and
 PART.gate@2 as a normal Linux program file (findings 0023 item 12): in Claude's
 workspace, under software emulation, it copies what is typed, prints one file,
 two, and one of 5,000 bytes, exactly; asked for a file that is not there, it says
-so and still exits 0 (the bug below), so TST.cat.missing-file@1 is red.
+so and exits 1 (after the fix below; before it, 0).
 
 ## What it asks of the system (through musl)
 Measured under strace on a normal Linux computer (findings 0023 item 4), with the
@@ -43,5 +45,5 @@ cflags in its catalogue entry: -std=gnu89, -D_BSD_SOURCE, -D__P(x)=x and
 -include=sys/types.h (SPEC.builder.3@1).  It links against PART.libc.musl@1.
 
 ## Size
-251 lines in cat.c, 199 of them code.  BSD licence, its advertising clause
+253 lines in cat.c, 201 of them code: Berkeley's 251 and 199, and the two of the fix.  BSD licence, its advertising clause
 deleted by the University of California's letter of 1999-07-22.

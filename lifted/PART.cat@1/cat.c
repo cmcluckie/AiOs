@@ -126,6 +126,7 @@ cook_args(argv)
 				fp = stdin;
 			else if ((fp = fopen(*argv, "r")) == NULL) {
 				warn("%s", *argv);
+				rval = 1;
 				++argv;
 				continue;
 			}
@@ -214,6 +215,7 @@ raw_args(argv)
 				fd = fileno(stdin);
 			else if ((fd = open(*argv, O_RDONLY, 0)) < 0) {
 				warn("%s", *argv);
+				rval = 1;
 				++argv;
 				continue;
 			}
