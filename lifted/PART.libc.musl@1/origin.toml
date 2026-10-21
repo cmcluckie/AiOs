@@ -10,7 +10,7 @@ name       = "musl"
 repo       = "https://git.musl-libc.org/git/musl"
 canonical  = ""
 commit     = "f5f55d6589940fd2c2188d76686efe3a530e64e0"
-committed  = ""
+committed  = 2023-05-01T23:39:41-04:00
 subject    = "release 1.2.4"
 licence    = "MIT"
 
