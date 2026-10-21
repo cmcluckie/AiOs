@@ -20,7 +20,12 @@ mode=${1:-}
 want=tests/expected/builder.missing-list.out
 t=$(mktemp -d); trap 'rm -rf "$t"' EXIT
 tar --exclude=./out --exclude=./.git -cf - . | tar -xf - -C "$t"
-cp tests/fixtures/draft/petition-good.toml "$t/petitions/0012.toml"
+# The fixture names cat's own numbers, which part 20 gave entries.  The probe needs
+# numbers that never will, so the copy names them nosuch (decision 0050).
+for n in index/part/nosuch@1.toml specs/nosuch.1@1.toml tests/nosuch.prints-file@1.toml; do
+	[ ! -e "$n" ] || { echo "the probe's made-up number $n is in the catalogue; pick another name"; exit 1; }
+done
+sed 's/PART\.cat@1/PART.nosuch@1/; s/SPEC\.cat\.1@1/SPEC.nosuch.1@1/; s/TST\.cat\.prints-file@1/TST.nosuch.prints-file@1/' tests/fixtures/draft/petition-good.toml > "$t/petitions/0012.toml"
 printf 'name      = "cat"\nmachine   = "MACHINE.serial-only@1"\npetitions = ["0012"]\n' > "$t/flavors/cat.toml"
 fail() { echo "$*"; exit 1; }
 build() { (cd "$t" && sh jig/aios build cat > "$t/stdout" 2> "$t/stderr"); }
@@ -42,8 +47,8 @@ no-guess)
 		! grep -q "^$have " "$t/list" || fail "$have has an entry and is listed as missing"
 	done
 	[ "$(wc -l < "$t/list")" -eq 3 ] || fail "the list has $(wc -l < "$t/list") lines, not the 3 numbers the petition names that have no entry"
-	: > "$t/index/part/cat@1.toml"; : > "$t/specs/cat.1@1.toml"; : > "$t/tests/cat.prints-file@1.toml"
-	mkdir -p "$t/out/cat"; echo "PART.cat@1  part not in the catalogue" > "$t/out/cat/missing.txt"
+	: > "$t/index/part/nosuch@1.toml"; : > "$t/specs/nosuch.1@1.toml"; : > "$t/tests/nosuch.prints-file@1.toml"
+	mkdir -p "$t/out/cat"; echo "PART.nosuch@1  part not in the catalogue" > "$t/out/cat/missing.txt"
 	(cd "$t" && sh jig/aios missing cat) > "$t/list" 2> /dev/null
 	[ ! -s "$t/list" ] || fail "numbers are still listed once their entries exist: $(tr '\n' '|' < "$t/list")"
 	build; rc=$?

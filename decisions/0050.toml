@@ -1,0 +1,11 @@
+id      = "0050"
+date    = 2026-10-20
+kind    = "test"
+touches = ["tests/programs/builder.sh", "tests/expected/builder.missing-list.out"]
+asked   = "The full run on the jig at 8687dc5 showed TST.builder.missing-list@1 and TST.builder.no-guess@1 red, both listing only TST.cat.prints-file@1.  The builder is not wrong: the probe's fixture petition names PART.cat@1, SPEC.cat.1@1 and TST.cat.prints-file@1 as numbers with no entry, and part 20 gave the first two real entries at 1edadab.  The runs since then on the jig were partial and never ran builder., so it was not seen.  The probe now renames those three numbers to nosuch in its throwaway copy, numbers the catalogue will never get, and goes red if one ever appears in it; the expected list says nosuch.  The fixture itself, the builder and the mutations are unchanged.  In Claude's workspace the old probe gives the jig's exact failure, the new one is green, and all seven builder mutations kill."
+options = ["as written", "remove cat's real entries in the probe's copy", "give the probe a fixture petition of its own"]
+default = "as written"
+chose   = "as written"
+why     = "A probe for missing numbers has to name numbers that stay missing.  Removing real entries ties the probe to whatever the catalogue holds next; a made-up name, checked, does not."
+by      = "KEY.chris@1"
+drafted = "Claude"
