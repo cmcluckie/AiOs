@@ -1,0 +1,16 @@
+code          = "PART.cat@1"
+sentence      = "cat from 4.4BSD-Lite (Berkeley, 1994): copies the files named, or standard input, to standard output; lifted whole and untouched."
+status        = "draft"
+admitted      = ""
+retired_by    = ""
+kind          = "program"
+source        = "lifted/PART.cat@1/"
+licence       = "BSD-3-Clause"
+depends       = ["PART.libc.musl@1"]
+build_depends = ["TOOL.c@1"]
+exposes       = []
+requires      = ["CAP.tty.write@1", "CAP.tty.read@1", "CAP.fs.read@1", "CAP.mem.alloc@1", "CAP.proc.exit@1"]
+scaffold      = false
+as_built      = "index/part/cat@1.as-built.md"
+reproducible  = ""
+cflags        = ["-std=gnu89", "-D_BSD_SOURCE", "-D__P(x)=x", "-include=sys/types.h"]

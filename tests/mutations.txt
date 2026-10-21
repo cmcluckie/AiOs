@@ -243,3 +243,8 @@ divide64.exact@1 | red | pool/PART.divide64@1/divide64.c | s/if (r >= d) {/if (r
 divide64.exact@1 | red | pool/PART.divide64@1/divide64.c | s/q |= (u64)1 << i;/q |= (u64)1 << (i \& 31);/ | the quotient's bits wrap at 32, the classic 386 shift mistake
 divide64.exact@1 | red | pool/PART.divide64@1/divide64.c | s/for (i = 63; i >= 0; i--)/for (i = 31; i >= 0; i--)/ | only the low 32 bits of the number are divided
 divide64.exact@1 | red | pool/PART.divide64@1/divide64.c | s/\*rem = r;/*rem = 0;/ | the remainder is lost
+musl.origin-matches@1 | red | lifted/PART.libc.musl@1/origin.toml | s/80bc341e669b4cde4a509f4a116bfa57f5350172/80bc341e669b4cde4a509f4a116bfa57f5350173/ | the record names the wrong blob for fopen.c
+musl.origin-matches@1 | red | lifted/PART.libc.musl@1/src/stdio/fopen.c | s/^#include "stdio_impl.h"$/#include "stdio_impl.h" \/* touched *\// | one lifted file is no longer musl's, byte for byte
+musl.origin-matches@1 | red | lifted/PART.libc.musl@1/origin.toml | s/^commit     = "f5f55d65/commit     = "f5f55d64/ | the record names a commit musl does not have
+cat.origin-matches@1 | red | lifted/PART.cat@1/cat.c | s/^ \* Kevin Fall\.$/ * Kevin Fall!/ | the lifted cat.c is no longer Berkeley's, byte for byte
+cat.origin-matches@1 | red | lifted/PART.cat@1/origin.toml | s/30e5bfce77792948fe8c49515ab773c06b871a3d/30e5bfce77792948fe8c49515ab773c06b871a3e/ | the record names the wrong blob for cat.c

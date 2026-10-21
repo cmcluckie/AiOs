@@ -1,0 +1,1064 @@
+# Where this part came from, exactly enough to lift it again.  Read by jig/upstream.
+# Format: schema/entries.md, "Origin".  Every file is whole and untouched, kept at
+# its own path in musl's tree (into = "."): the 82 source files Berkeley's cat
+# takes from musl (findings/0023-pieces.txt, measured on the jig), every header
+# they and cat need, the four inputs musl's build turns into its two generated
+# headers, and musl's licence (COPYRIGHT).
+
+[upstream]
+name       = "musl"
+repo       = "https://git.musl-libc.org/git/musl"
+canonical  = ""
+commit     = "f5f55d6589940fd2c2188d76686efe3a530e64e0"
+committed  = ""
+subject    = "release 1.2.4"
+licence    = "MIT"
+
+[lift]
+by         = "KEY.chris@1"
+on         = 2026-10-20T18:30:00-07:00
+into       = "."
+
+[[lift.from]]
+file   = "COPYRIGHT"
+blob   = "c1628e9ac84f927fe791124ec172fb61c760bb9b"
+lines  = [[1, 193]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "arch/generic/bits/errno.h"
+blob   = "d2e1eeee0541b99adec95d2950772e9f911d852e"
+lines  = [[1, 134]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "arch/generic/bits/fcntl.h"
+blob   = "730a98cfe65a822965acc1e903df7d56046859d0"
+lines  = [[1, 46]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "arch/generic/bits/ioctl.h"
+blob   = "60ae8b850b17b7ad5a658967e6d595188f63eba2"
+lines  = [[1, 115]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "arch/generic/bits/ioctl_fix.h"
+blob   = "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+lines  = [[1, 0]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "arch/generic/bits/poll.h"
+blob   = "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+lines  = [[1, 0]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "arch/generic/bits/resource.h"
+blob   = "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+lines  = [[1, 0]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "arch/generic/fp_arch.h"
+blob   = "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+lines  = [[1, 0]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "arch/i386/atomic_arch.h"
+blob   = "047fb68dd5dfb2e41e492fda147066daad5561db"
+lines  = [[1, 108]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "arch/i386/bits/alltypes.h.in"
+blob   = "6feb03a6c3f5ebef82100a2295911e25766c1583"
+lines  = [[1, 31]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "arch/i386/bits/float.h"
+blob   = "dd6e40298f0a93b4a26a2a4827766e5517a53e58"
+lines  = [[1, 20]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "arch/i386/bits/limits.h"
+blob   = "07743b6fd61fe0c71d78ba15dca10f2488c1061f"
+lines  = [[1, 1]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "arch/i386/bits/mman.h"
+blob   = "ba2d6f7a834649921636800343d1e0bf24be3b28"
+lines  = [[1, 1]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "arch/i386/bits/posix.h"
+blob   = "30a38714f36ddf95e02faf61e072fe9b3320e652"
+lines  = [[1, 2]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "arch/i386/bits/signal.h"
+blob   = "9931ee93ede6272f04574961ff3daa5e6a6e2d29"
+lines  = [[1, 142]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "arch/i386/bits/stat.h"
+blob   = "5d7828cf792baa9109d9868e2939ea9a5508f25c"
+lines  = [[1, 25]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "arch/i386/bits/stdint.h"
+blob   = "d1b2712199acabb2e597bfeb1850f3e0216705d0"
+lines  = [[1, 20]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "arch/i386/bits/syscall.h.in"
+blob   = "46ffe1d99a926df30f1795c02a15477b565bfc1a"
+lines  = [[1, 439]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "arch/i386/kstat.h"
+blob   = "af449c9509f7e2ebe8fe76355e2524f111a9549c"
+lines  = [[1, 21]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "arch/i386/pthread_arch.h"
+blob   = "a639c382ac2af5b351adfb2f728264e7ea4f932d"
+lines  = [[1, 8]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "arch/i386/reloc.h"
+blob   = "032f454bda5f2898f841f9bcb925976dd602166c"
+lines  = [[1, 23]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "arch/i386/syscall_arch.h"
+blob   = "f92b7aa9f448894ee25849c4b98f9ee9aea09f38"
+lines  = [[1, 89]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "include/alloca.h"
+blob   = "b8d183d144efad9bbe6aa94516bfe6ee6c5aa098"
+lines  = [[1, 19]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "include/alltypes.h.in"
+blob   = "d47aeea9aa8b8cf06a8eb64055d6d4a48cda2557"
+lines  = [[1, 95]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "include/ctype.h"
+blob   = "32bcef4dabcce1b37d3ed009937abf5b48a074f9"
+lines  = [[1, 77]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "include/elf.h"
+blob   = "23f2c4bc1b51e77fa443b030e416b6e81fe4c911"
+lines  = [[1, 3301]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "include/endian.h"
+blob   = "172c43203af12bde8a5cbb6f300fe2a11d2d6663"
+lines  = [[1, 80]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "include/err.h"
+blob   = "9f5cb6b9e9fad0ff255f2dd1b505cfcec4658d26"
+lines  = [[1, 25]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "include/errno.h"
+blob   = "0361b33ad348a2ab1d3422a2399cb2e3ccf0217b"
+lines  = [[1, 27]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "include/fcntl.h"
+blob   = "515f255d4154f269f33c9f832dc5f40c871224b8"
+lines  = [[1, 216]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "include/features.h"
+blob   = "85cfb72a0d427de18f5732c7fd320310cbe8843d"
+lines  = [[1, 40]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "include/float.h"
+blob   = "713aadb906d9565f9a9d6bb408dd506b8a98e74c"
+lines  = [[1, 52]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "include/inttypes.h"
+blob   = "61dcb72731f0d81e54ec8e8e2262ba32e2481e22"
+lines  = [[1, 229]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "include/limits.h"
+blob   = "53a27b9de43fa0caada15899a5849d717df572ac"
+lines  = [[1, 166]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "include/locale.h"
+blob   = "11106fea878a698dff0b0595dcb16dc2b97571a4"
+lines  = [[1, 88]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "include/math.h"
+blob   = "14f28ec8c646596aee2d78c662a65584def559a1"
+lines  = [[1, 442]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "include/poll.h"
+blob   = "472e4b8470bae3904100963200ac3dcfb7e34879"
+lines  = [[1, 57]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "include/pthread.h"
+blob   = "89fd9ff7c12fb9e8db4c6b163932cf552f112ca4"
+lines  = [[1, 244]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "include/sched.h"
+blob   = "204c34f5679f3bd3af973a22c3b30fe7dc869f76"
+lines  = [[1, 148]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "include/signal.h"
+blob   = "c347f8610a3f2b7956399fb660bdce2042192cda"
+lines  = [[1, 304]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "include/stdarg.h"
+blob   = "3256f805001912e46a0cfdc23a8513bc6388de01"
+lines  = [[1, 21]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "include/stddef.h"
+blob   = "f25b86396e80a015490a6aec521cb38ab36ab118"
+lines  = [[1, 27]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "include/stdint.h"
+blob   = "a2968197dbe2312c46de0d41f09675b56846984c"
+lines  = [[1, 117]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "include/stdio.h"
+blob   = "cb858618512d8ac4f764698177356337494ece56"
+lines  = [[1, 224]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "include/stdlib.h"
+blob   = "475190bfa2c9fee8b2d482fb492f28af35e05a8e"
+lines  = [[1, 179]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "include/string.h"
+blob   = "db73d2a92056200090fac44ed3898dc4c9a29128"
+lines  = [[1, 107]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "include/strings.h"
+blob   = "b7a5ea08932749df56bb0e92c07946d2eccc1a4f"
+lines  = [[1, 40]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "include/sys/ioctl.h"
+blob   = "a9a2346ee753a7b00f297fb89295c529e2009364"
+lines  = [[1, 120]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "include/sys/mman.h"
+blob   = "3d5d0f9c23383f5511257950fcf52a051c166d22"
+lines  = [[1, 152]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "include/sys/param.h"
+blob   = "ce6b801980c10bdd1a104a7250d13e59d809942d"
+lines  = [[1, 35]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "include/sys/resource.h"
+blob   = "e8bfbe1f08dc12347c0db10feadef86f6e10710f"
+lines  = [[1, 116]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "include/sys/select.h"
+blob   = "b3bab1d57b492700b27ed27eba96407baa1bdf74"
+lines  = [[1, 46]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "include/sys/stat.h"
+blob   = "e6d0049c3d901fe1d4bf02782b8eb8d22d553ea2"
+lines  = [[1, 127]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "include/sys/syscall.h"
+blob   = "24987ddf25bc90995dceeb345d18dc8b4b8f0bbc"
+lines  = [[1, 6]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "include/sys/sysmacros.h"
+blob   = "07a3ef183cb63eaa3b4bd62671a8a0e010ca89da"
+lines  = [[1, 15]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "include/sys/time.h"
+blob   = "cdc67ef650fe3cd758b579052df907f8b56baab6"
+lines  = [[1, 76]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "include/sys/types.h"
+blob   = "3363374fd3d6f258b6de881f565ad9e941427120"
+lines  = [[1, 85]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "include/sys/uio.h"
+blob   = "90e5939ed0b92b1f858590e6d477dd3802ef97df"
+lines  = [[1, 48]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "include/time.h"
+blob   = "3d94837205ad55d0f5a8b3ee63d3e622ea154fab"
+lines  = [[1, 168]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "include/unistd.h"
+blob   = "5bc7f7982f5ed436cabd2cc153e794e31d26b7f9"
+lines  = [[1, 479]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "include/wchar.h"
+blob   = "ed5d774dfa96870f46749be827dea12513d45f9f"
+lines  = [[1, 207]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "src/ctype/iscntrl.c"
+blob   = "f27837ea53c8cc732fd1478764e351c5569b4888"
+lines  = [[1, 13]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "src/env/__environ.c"
+blob   = "fe8abcf9906a101077802aa6752518c5513b797a"
+lines  = [[1, 6]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "src/env/__init_tls.c"
+blob   = "a93141ed36a8d7d06d73100304a068f94a8011bc"
+lines  = [[1, 153]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "src/env/__libc_start_main.c"
+blob   = "c5b277bdcf2e6b927dd93090137ea66dcb1c76a4"
+lines  = [[1, 97]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "src/errno/__errno_location.c"
+blob   = "7f9d6027a276a0b5574362f0e9aa547fed213523"
+lines  = [[1, 9]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "src/errno/__strerror.h"
+blob   = "14925907b55d32f66ddab4b2382c27689a9ac0e1"
+lines  = [[1, 108]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "src/errno/strerror.c"
+blob   = "7f926432b3090190f0288ecd2caa27c75daf80a9"
+lines  = [[1, 47]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "src/exit/_Exit.c"
+blob   = "7a6115c7bbc71265929b20c8817d8476ee184b39"
+lines  = [[1, 8]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "src/exit/exit.c"
+blob   = "a6869b37594ea06585bdbffd5bb4e0e52c956234"
+lines  = [[1, 33]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "src/fcntl/open.c"
+blob   = "4c3c82759c1b20bb6366c31657edbfbe418d3644"
+lines  = [[1, 21]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "src/include/errno.h"
+blob   = "8ec493777da94725d93e6706bd73daff7eb9fef9"
+lines  = [[1, 14]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "src/include/features.h"
+blob   = "f17bd1516ca00879f84516005cbf334bf4b043ef"
+lines  = [[1, 11]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "src/include/pthread.h"
+blob   = "7167d3e11a11eff076d6fa8066f03df64c616ffc"
+lines  = [[1, 29]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "src/include/signal.h"
+blob   = "bb5667841a66009715b7c3687ca73cf28b49616b"
+lines  = [[1, 14]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "src/include/stdio.h"
+blob   = "fae3755b4a15bfdf1fcca4bb0c2dac9356456d19"
+lines  = [[1, 20]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "src/include/stdlib.h"
+blob   = "812b04de2fd6b6efb1576a72eea4fa16007fc2ad"
+lines  = [[1, 19]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "src/include/string.h"
+blob   = "2133b5c1eead4f94b5cb7f9a70c21788678cd3be"
+lines  = [[1, 11]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "src/include/sys/mman.h"
+blob   = "57c5bd3d9621daf1c9d40fde24c0d05f464489b6"
+lines  = [[1, 20]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "src/include/sys/stat.h"
+blob   = "59339beecb17e2dc4bf7793ce8ed984c138b2f33"
+lines  = [[1, 9]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "src/include/time.h"
+blob   = "cbabde476790e755cb85210b0194c320256ed027"
+lines  = [[1, 15]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "src/include/unistd.h"
+blob   = "7b52a9249e424356621d83d183d284e0fd3ca5cb"
+lines  = [[1, 13]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "src/include/wchar.h"
+blob   = "79f5d0e711f24307a585c662a67bee44290366a8"
+lines  = [[1, 9]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "src/internal/aio_impl.h"
+blob   = "a8657665441a99fa68471c5043c33c1b7299367a"
+lines  = [[1, 9]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "src/internal/atomic.h"
+blob   = "96c1552d6eda666b126ee01e5c767f0aab619758"
+lines  = [[1, 333]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "src/internal/dynlink.h"
+blob   = "06f41d09857f178d5056bf41de1a2a9bf5fa69bb"
+lines  = [[1, 117]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "src/internal/fork_impl.h"
+blob   = "354e733b91bdd07c26292e0b8292bdeddc6297e5"
+lines  = [[1, 19]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "src/internal/futex.h"
+blob   = "dafbc24dbdb9c80d82ce1c18604602835e43fab9"
+lines  = [[1, 19]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "src/internal/i386/defsysinfo.s"
+blob   = "f1b5b0f2f83643199c0675173ac431225f6a7794"
+lines  = [[1, 9]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "src/internal/libc.c"
+blob   = "cb05181084a57ab5cc8772b31edb75ffd0279d1c"
+lines  = [[1, 9]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "src/internal/libc.h"
+blob   = "619bba8613e8d20cc00c69eec83dd054348b5005"
+lines  = [[1, 58]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "src/internal/libm.h"
+blob   = "72ad17d8ebe802e4c48e3fea3187063f9a650cfc"
+lines  = [[1, 274]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "src/internal/locale_impl.h"
+blob   = "4431a92eb7112b63fab99a15601a7a56cbcdfab4"
+lines  = [[1, 47]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "src/internal/lock.h"
+blob   = "c77db6f7be813f94acfa1695b7882fa4b9e1dd78"
+lines  = [[1, 9]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "src/internal/procfdname.c"
+blob   = "fd7306ab69a821746cfa58a376c7344bea6a8c39"
+lines  = [[1, 15]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "src/internal/pthread_impl.h"
+blob   = "de2b9d8b477e68d44191851048bd6fdfba91b0a2"
+lines  = [[1, 205]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "src/internal/stdio_impl.h"
+blob   = "0b2438d613fe9d65c9f124358cbc7a8ca4a3cbc6"
+lines  = [[1, 112]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "src/internal/syscall.h"
+blob   = "4a446157063b5523fb7d7972becad6c062a038c3"
+lines  = [[1, 398]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "src/internal/syscall_ret.c"
+blob   = "a3f471368fc36ec6ebadbfe37f81ace83aaa4c7b"
+lines  = [[1, 11]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "src/legacy/err.c"
+blob   = "0d6ab5242d9b769b31ced7fcc1a62fd5273a402c"
+lines  = [[1, 67]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "src/locale/__lctrans.c"
+blob   = "9fbe762ad020f4b4186547919b622fb129856673"
+lines  = [[1, 19]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "src/malloc/free.c"
+blob   = "3944f7b28f3c3265cb092cf984c69e89f62f435a"
+lines  = [[1, 6]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "src/malloc/lite_malloc.c"
+blob   = "43a988fbb8adcc3c6469c21b9a4ad13018f2758b"
+lines  = [[1, 118]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "src/malloc/mallocng/free.c"
+blob   = "43f32aade86b62b99baac87435ee5fb5ef43080c"
+lines  = [[1, 151]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "src/malloc/mallocng/glue.h"
+blob   = "77f4c812b20a77bea56596d0b0bb82626cc34853"
+lines  = [[1, 95]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "src/malloc/mallocng/malloc.c"
+blob   = "d695ab8ec98216d3420e41b820f951c9474adca4"
+lines  = [[1, 387]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "src/malloc/mallocng/meta.h"
+blob   = "61ec53f9a589941c5edb29da0f6fa9342faf42ab"
+lines  = [[1, 288]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "src/math/__fpclassifyl.c"
+blob   = "e41781b689af7f7db420fc437cc4a72e4dd00c33"
+lines  = [[1, 42]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "src/math/__signbitl.c"
+blob   = "63b3dc5a08f3d89a3dd39a3ce74d7974317a0aa9"
+lines  = [[1, 14]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "src/math/frexpl.c"
+blob   = "3c1b553748eec19a18804362acd508d3877d7fb6"
+lines  = [[1, 29]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "src/misc/getopt.c"
+blob   = "b02b81c34329b3622c8d0eb60c5a4151dc7cb2d2"
+lines  = [[1, 106]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "src/mman/mmap.c"
+blob   = "43e5e02941dc7205df6f8932a052e2d318400ea4"
+lines  = [[1, 39]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "src/mman/mprotect.c"
+blob   = "535787b9ec527bb12acbb80a53aadc4ab760c7b3"
+lines  = [[1, 13]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "src/mman/munmap.c"
+blob   = "2bf83bbe9b702144b8268fdf91a50f1154899367"
+lines  = [[1, 13]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "src/multibyte/internal.c"
+blob   = "2f5aaa914a1e19e694e5372442533c9cb09ef377"
+lines  = [[1, 26]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "src/multibyte/internal.h"
+blob   = "45bbc6d06289747b728fb26e416de0156a6eed74"
+lines  = [[1, 24]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "src/multibyte/mbtowc.c"
+blob   = "c191bb038bbfdb05a81daf64c732de3b43b40424"
+lines  = [[1, 47]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "src/multibyte/wcrtomb.c"
+blob   = "8e34926ed8c5fe7ece77546ea7ae0601098398d8"
+lines  = [[1, 37]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "src/multibyte/wctomb.c"
+blob   = "bad41c5edf9633941db03c8cfad68d1ec1c3ad03"
+lines  = [[1, 8]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "src/stat/fstat.c"
+blob   = "fd28b8ac405a5601bbfa6cdf5bb562f2f918053b"
+lines  = [[1, 13]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "src/stat/fstatat.c"
+blob   = "04506375d897af5bd132bdd6e332997b5df789bc"
+lines  = [[1, 153]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "src/stdio/__fdopen.c"
+blob   = "116e78e56d2a1b3907c66a643d932b1b3a5c8545"
+lines  = [[1, 61]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "src/stdio/__fmodeflags.c"
+blob   = "da9f23b633a0828a07cad171318d5d05132c2827"
+lines  = [[1, 16]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "src/stdio/__lockfile.c"
+blob   = "0f60a14990943605b12038178c595c7210cc0f73"
+lines  = [[1, 23]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "src/stdio/__overflow.c"
+blob   = "e65a594dd7bf190a5481fc707a8f902812fe0ca3"
+lines  = [[1, 10]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "src/stdio/__stdio_close.c"
+blob   = "30291328518783e7d46284da4546863adfb9efeb"
+lines  = [[1, 14]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "src/stdio/__stdio_exit.c"
+blob   = "a5e42c675fa90c4edc2ebde2576aaa543ed91a14"
+lines  = [[1, 25]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "src/stdio/__stdio_read.c"
+blob   = "ea675da34abbfd4f34edcd042314b8fb93cf9426"
+lines  = [[1, 24]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "src/stdio/__stdio_seek.c"
+blob   = "326ab9bce48ed38f5f56e059b9312efb0328acbe"
+lines  = [[1, 7]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "src/stdio/__stdio_write.c"
+blob   = "d2d89475b0f9429dca8b538b689f97c27bbe5fee"
+lines  = [[1, 34]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "src/stdio/__stdout_write.c"
+blob   = "dd1ec60ff703475120251bf9a005874aafa9ae74"
+lines  = [[1, 11]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "src/stdio/__toread.c"
+blob   = "f142ff09c087ef5459a29acd004fd005ddfc8a0c"
+lines  = [[1, 19]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "src/stdio/__towrite.c"
+blob   = "4c9c66ae79c9e8c5abe8750df8ebfce149b1e061"
+lines  = [[1, 23]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "src/stdio/__uflow.c"
+blob   = "2a88bca6b123cc2143911783a09a9cac0ce53773"
+lines  = [[1, 11]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "src/stdio/clearerr.c"
+blob   = "3bf94d30795d76d9d408000ac3f911f16090437f"
+lines  = [[1, 10]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "src/stdio/fclose.c"
+blob   = "d594532bd64fdb5695544d67ee4dababd4c9a214"
+lines  = [[1, 38]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "src/stdio/ferror.c"
+blob   = "d692eed9418ea1f0cf36c948bacad20d6afc526c"
+lines  = [[1, 14]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "src/stdio/fflush.c"
+blob   = "b00943764189901ba6f938714561de7466a5dc38"
+lines  = [[1, 47]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "src/stdio/fileno.c"
+blob   = "0bd0e9889eb02b013eb31feea112dd1031bdbc15"
+lines  = [[1, 16]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "src/stdio/fopen.c"
+blob   = "80bc341e669b4cde4a509f4a116bfa57f5350172"
+lines  = [[1, 31]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "src/stdio/fprintf.c"
+blob   = "948743f7c8b78821645f5eecb7a45f2285d3b78d"
+lines  = [[1, 12]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "src/stdio/fputc.c"
+blob   = "f364ed38ba7471d3ca80f2d21560737eca642042"
+lines  = [[1, 7]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "src/stdio/fputs.c"
+blob   = "1cf344f28c6fe88a9394ef64ebe25ea0fbdcf74a"
+lines  = [[1, 10]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "src/stdio/fwrite.c"
+blob   = "7a567b2c55a94b30288444bd93f6fc48fff7e433"
+lines  = [[1, 38]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "src/stdio/getc.c"
+blob   = "8409fc2343fc9060da320ccefe93b394b7801a2b"
+lines  = [[1, 9]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "src/stdio/getc.h"
+blob   = "e24f9905c1f8c1c360e1a51da7ec515a5a596ae3"
+lines  = [[1, 22]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "src/stdio/ofl.c"
+blob   = "aad3d171dff35e865bab6cf57b27f91e16d03f57"
+lines  = [[1, 18]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "src/stdio/ofl_add.c"
+blob   = "d7de9f15a13ee3fc5f7118ce35dea64bb65cbd5d"
+lines  = [[1, 11]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "src/stdio/perror.c"
+blob   = "d0943f26a938bd9dad153c1d64dd88f643c31097"
+lines  = [[1, 30]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "src/stdio/putc.c"
+blob   = "4744d978725deb765850b7922b7b7d2aa02772f1"
+lines  = [[1, 9]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "src/stdio/putc.h"
+blob   = "2014c4ec4af9c68c283d5e8cb7b2a094eab436fa"
+lines  = [[1, 22]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "src/stdio/putchar.c"
+blob   = "f044f16973b5748077b1536704cf322c94711ad8"
+lines  = [[1, 7]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "src/stdio/setbuf.c"
+blob   = "74ad7834ae59f20b8a9c4e25ff471313e6776e24"
+lines  = [[1, 6]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "src/stdio/setvbuf.c"
+blob   = "523dddc8ba28f53a7b3fcc4e3e5323de092acc22"
+lines  = [[1, 29]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "src/stdio/stderr.c"
+blob   = "f2bc4648d6f0af2f0e8c2ced2531fcef940ad56f"
+lines  = [[1, 18]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "src/stdio/stdin.c"
+blob   = "5aa5262c2a5c8822f9006431898887789421c6e1"
+lines  = [[1, 17]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "src/stdio/stdout.c"
+blob   = "4985a417bdda733de44f88defcc849eeac9fb427"
+lines  = [[1, 18]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "src/stdio/vfprintf.c"
+blob   = "a712d80fb476c9dfdfec8a2f3043705f7bfb9ec5"
+lines  = [[1, 701]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "src/string/i386/memcpy.s"
+blob   = "0608dd83c761ef40e76fb1ad9b32afbf399b0c53"
+lines  = [[1, 32]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "src/string/i386/memset.s"
+blob   = "d00422c4ac15d90f133fabdc79d231702c228f6f"
+lines  = [[1, 76]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "src/string/memchr.c"
+blob   = "65f0d789b2c9a4e2bf8fbd89e9cbc704dd7a538f"
+lines  = [[1, 27]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "src/string/strchr.c"
+blob   = "3cbc828bebf705ae570e1bfd0c2b518f929c054c"
+lines  = [[1, 7]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "src/string/strchrnul.c"
+blob   = "39e2635b3064df1e2b15cb45d60c654238ad8f79"
+lines  = [[1, 28]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "src/string/strlen.c"
+blob   = "309990f029f0c09b4c7c0405258b92ac8f93310d"
+lines  = [[1, 22]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "src/string/strnlen.c"
+blob   = "6442eb793fbeeda51a3f19b9e1c1269a030444e9"
+lines  = [[1, 7]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "src/thread/__lock.c"
+blob   = "60eece49a28888dc3dd1a4498c0c6d9dd85effd4"
+lines  = [[1, 62]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "src/thread/__syscall_cp.c"
+blob   = "42a01674bf40d7b3888e0af65cdf3de5a85e5db4"
+lines  = [[1, 20]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "src/thread/default_attr.c"
+blob   = "dce9640964c23ffc0e14da4ae7a56f7a2a418515"
+lines  = [[1, 4]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "src/thread/i386/__set_thread_area.s"
+blob   = "aa6852beb66bb7ccdfedff36ec110d6498328a2a"
+lines  = [[1, 47]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "src/unistd/close.c"
+blob   = "a2105f5060e235733a739bf6155ca25192210ef4"
+lines  = [[1, 19]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "src/unistd/lseek.c"
+blob   = "f5b66682abc46b76d97b70eb8b9ae0a790be315b"
+lines  = [[1, 14]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "src/unistd/read.c"
+blob   = "f3589c05c3e3b30cf2991988af739e54161fcd08"
+lines  = [[1, 7]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "src/unistd/write.c"
+blob   = "8fd5bc5c261ced94e02e7fcb8bb5d26698055fc5"
+lines  = [[1, 7]]
+what   = "the whole file"
+
+[[lift.from]]
+file   = "tools/mkalltypes.sed"
+blob   = "fa15efc35f64e06e5a53108ca8e7c2faf5835369"
+lines  = [[1, 15]]
+what   = "the whole file"

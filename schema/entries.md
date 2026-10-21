@@ -129,8 +129,15 @@ part again from upstream, and to prove the record against upstream.
     removed = ["..."]                                      # what the lifted lines held onto
     changed = ["..."]                                      # optional: lifted lines kept but altered, each with why
 
-`jig/upstream verify` checks each blob id against the commit; `jig/upstream
-watch` lists upstream commits that touched each range since.
+`name` says which clone to read: linux, musl or unix-history (V7 and Berkeley).
+A part lifted as whole files at their own upstream paths says `into = "."`, and
+each `[[lift.from]]` names one whole file (`lines = [[1, N]]`); this is for a
+library lifted as many untouched files (part 20, musl).
+
+`jig/upstream verify` checks each blob id against the commit, and where a file was
+lifted whole (into = ".", or one file whose one range is all of it) that the file
+in lifted/ is that blob, byte for byte.  `jig/upstream watch` lists upstream
+commits that touched each range since.
 
 ## As-built spec  (index/<table>/<code>.as-built.md)
 

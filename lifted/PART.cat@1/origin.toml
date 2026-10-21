@@ -1,0 +1,26 @@
+# Where this part came from, exactly enough to lift it again.  Read by jig/upstream.
+# Format: schema/entries.md, "Origin".  Berkeley's cat from 4.4BSD-Lite (1994),
+# whole and untouched (findings 0023, decisions 0037 and 0038).  Its header still
+# prints clause 3, the advertising clause; the University of California deleted
+# that clause from its BSD files by letter on 1999-07-22 (William Hoskins, Office
+# of Technology Licensing), which leaves the BSD licence compatible with GPL-2.0.
+
+[upstream]
+name       = "unix-history"
+repo       = "https://github.com/dspinellis/unix-history-repo.git"
+canonical  = ""
+commit     = "36708fa95524a270678609988c1071a60c3bd96b"
+committed  = 1995-08-04T22:30:57-08:00
+subject    = "BSD 4_4_Lite1 release Snapshot of the completed development branch"
+licence    = "BSD-3-Clause"
+
+[lift]
+by         = "KEY.chris@1"
+on         = 2026-10-20T18:30:00-07:00
+into       = "cat.c"
+
+[[lift.from]]
+file   = "usr/src/bin/cat/cat.c"
+blob   = "30e5bfce77792948fe8c49515ab773c06b871a3d"
+lines  = [[1, 251]]
+what   = "the whole file"

@@ -1,0 +1,7 @@
+code       = "SPEC.cat.6@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+component  = "PART.cat@1"
+clause     = "lifted/PART.cat@1/cat.c is usr/src/bin/cat/cat.c of 4.4BSD-Lite at the commit its origin record names, byte for byte, until a change to it is recorded in its origin record and its as-built spec."
+author     = "KEY.chris"

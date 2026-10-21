@@ -1,0 +1,11 @@
+id      = "0045"
+date    = 2026-10-20
+kind    = "lift"
+touches = ["lifted/PART.libc.musl@1/origin.toml", "lifted/PART.cat@1/origin.toml", "jig/upstream", "schema/entries.md", "specs/musl.1@1.toml", "specs/cat.6@1.toml", "tests/musl.origin-matches@1.toml", "tests/cat.origin-matches@1.toml", "tests/mutations.txt"]
+asked   = "Part 20, piece (c) of findings 0023, second half: the lift.  Berkeley's cat.c from 4.4BSD-Lite1, whole and untouched, into lifted/PART.cat@1 (BSD licence, its advertising clause deleted by Berkeley's letter of 1999-07-22).  From musl 1.2.4, whole and untouched at their own paths, into lifted/PART.libc.musl@1: the 82 source files cat takes (findings/0023-pieces.txt, measured on the jig), the 87 headers they and cat include, the four inputs to musl's two generated headers, and COPYRIGHT; 174 files, 15,253 lines, 11,008 of them headers.  Chris ruled only what cat links (decision 0038); the headers are part of that, because the pieces do not compile without them, and they are most of it.  Origin records for both.  The schema's origin gains into = \".\" (every file at its own upstream path) and names the clone each upstream is read from; jig/upstream verify reads linux, musl and unix-history from their own clones, and where a file was lifted whole also checks the file in lifted/ is that blob, byte for byte.  A part whose clone is not here is reported as not checked (exit 2).  Two specs, two tests, five mutations, each checked by hand to turn its test red against a local git repo made from the musl 1.2.4 release and against the V7 and Berkeley clone.  The musl record's committed field is empty and its subject is a guess until the jig reads them from the clone."
+options = ["as written", "lift only the 82 source files and build them against headers read from the pinned clone"]
+default = "as written"
+chose   = "as written"
+why     = "The rule is that what is lifted lives in lifted/ with an origin record, and what is built must be in the repo; headers read from a clone at build time would be code in the image that is not in the repo."
+by      = "KEY.chris@1"
+drafted = "Claude"

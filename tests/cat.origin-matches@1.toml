@@ -1,0 +1,10 @@
+code       = "TST.cat.origin-matches@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+binds      = "SPEC.cat.6@1"
+red_when   = "jig/upstream verify, run against a clone of the Unix history repo with the recorded commit, reports cat.c as WRONG: its recorded blob is not Berkeley's, or the file in lifted/ is not that blob, byte for byte"
+timeout_ms = 60000
+isolates   = "PART.cat@1"
+runner     = "jig/test cmd sh jig/upstream verify PART.cat@1"
+mutations  = 2

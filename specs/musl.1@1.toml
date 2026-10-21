@@ -1,0 +1,7 @@
+code       = "SPEC.musl.1@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+component  = "PART.libc.musl@1"
+clause     = "Every file in lifted/PART.libc.musl@1 is the file at the same path in musl at the commit its origin record names, byte for byte, and the record names every one with its blob."
+author     = "KEY.chris"

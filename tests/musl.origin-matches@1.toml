@@ -1,0 +1,10 @@
+code       = "TST.musl.origin-matches@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+binds      = "SPEC.musl.1@1"
+red_when   = "jig/upstream verify, run against a clone of musl with the recorded commit, reports any file of this part as WRONG: a recorded blob that is not upstream's, or a file in lifted/ that is not that blob, byte for byte; or the clone lacks the commit"
+timeout_ms = 120000
+isolates   = "PART.libc.musl@1"
+runner     = "jig/test cmd sh jig/upstream verify PART.libc.musl@1"
+mutations  = 3
