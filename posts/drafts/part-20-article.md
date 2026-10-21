@@ -190,11 +190,13 @@ Bell Labs shipped a fixed menu, a hidden kitchen and a memo asking for a second 
 
 I think we lost some of that with Agile, chasing the immediate need.  I don't want waterfall back.  But with AI doing more of the building, I think the North Star and the product's mission statement are going to matter a lot more than they have.
 
-[TO COME: Chris, your verdict on viability, in your words.]
+So, is it viable?  The model's part cost 58 cents, and it was worth more than that.  It found a thirty-year-old bug.  But the model asked; it didn't build.  The real cost was everything around it: the kernel work, twelve thousand lines of other people's code, and my calls.  For something the size of Linux, I still have my doubts, and this part didn't erase them.  What it did prove is the part I care about: every gap got caught by something dumb and reliable, and I can open the record tomorrow and stand behind it.
 
 ## What I'm taking away
 
-[TO COME: the piece this rung adds, and the end of the series.]
+An AI can ask for what a program needs, a check with no AI in it can catch what it forgot, and a human still decides what gets built.  And that last part has to be enforced, not assumed: I found that out by reading my own draft.  Twenty parts in, and I'm about halfway.  Next up, the model stops asking and starts building, on a graphics card under my desk.
+
+Come along!
 
 ## Read along
 

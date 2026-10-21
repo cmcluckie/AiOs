@@ -86,8 +86,8 @@ check_html() {
 	# By part, not date: the dates moved (decision 0010), the order did not.
 	if [ "$n" -ge 12 ]; then
 		# a retired word in quotes is being talked about, not used
-		sed -E 's/(["“]|&quot;)[Ss]egments?(["”]|&quot;)//g; s/segment register//g' "$h" | grep -qiE '\bsegments?\b' && bad "$h" "retired word 'segment': it is a part now (findings 0014)"
-		[ "$N" = AiOs ] && sed -E 's/formerly the index//g; s/("|&quot;)the index("|&quot;)//g' "$h" | grep -qE '[Tt]he index\b|index (entr|code)' && bad "$h" "retired word 'index': it is the catalogue now; the folder is still index/ (findings 0014)"
+		sed -E 's/(["“]|&quot;)[Ss]egments?(["”]|&quot;)//g; s/segment register//g; s/one segment, entry 6//g; s/a segment that is not entry 6//g' "$h" | grep -qiE '\bsegments?\b' && bad "$h" "retired word 'segment': it is a part now (findings 0014)"
+		[ "$N" = AiOs ] && sed -E 's/formerly the index//g; s/("|&quot;)the index("|&quot;)//g; s/a name the index does not know//g' "$h" | grep -qE '[Tt]he index\b|index (entr|code)' && bad "$h" "retired word 'index': it is the catalogue now; the folder is still index/ (findings 0014)"
 		[ "$N" = AiOs ] && grep -q 'AiOS' "$h" && bad "$h" "the name is AiOs, lower-case s (findings 0014)"
 		grep -qE 'CMP\.|index/cmp' "$h" && bad "$h" "retired table CMP: it is PART, MACHINE or TOOL now (findings 0014)"
 	fi

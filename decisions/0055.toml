@@ -1,0 +1,11 @@
+id      = "0055"
+date    = 2026-10-21
+kind    = "rules and words"
+touches = ["jig/postcheck"]
+asked   = "jig/postcheck refused the part 20 page for two retired words, both in spec and test text the addendum quotes word for word: 'one segment, entry 6' and 'a segment that is not entry 6' (SPEC.gate.8 and TST.gate.linux-refuses: set_thread_area takes a processor segment, GDT entry 6) and 'a name the index does not know' (TOOL.reader's tests: cscope's index).  Neither is the retired meaning, a part (segment) or the catalogue (index).  postcheck already lets 'segment register' through for the same reason."
+options = ["let these three phrases through, by name", "reword the specs and tests", "let every use of the words through from part 20"]
+default = "let these three phrases through, by name"
+chose   = "let these three phrases through, by name"
+why     = "The addendum quotes the specs as written, the processor and cscope own those words, and naming the phrases keeps the check on everywhere else."
+by      = "KEY.chris@1"
+drafted = "Claude"
