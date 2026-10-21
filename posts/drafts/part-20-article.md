@@ -160,7 +160,7 @@ I said at the end of part 19 that I'd have a number.  Here's what the repo says.
 
 The model's calls, for both of `cat`'s petitions, came to 58 cents: 13 in part 19 and 45 in this part.  For that I got two petitions with the right shape, the test that caught Berkeley's bug, and a C library it forgot to ask for.
 
-Everything else was Claude and me: 370 new lines of kernel code, a petition fixed six ways, and about 12,000 lines of other people's code taken in, musl and Berkeley's `cat`, each file checked against its source.  On the jig that's 111 tests passing, and 257 deliberate breakages, every one caught except three that are known and written down.
+Everything else was Claude and me: 370 new lines of kernel code, a petition fixed six ways, and about 12,000 lines of other people's code taken in, musl and Berkeley's `cat`, each file checked against its source.  On the jig that's 112 tests passing, and 264 deliberate breakages: 261 caught, and the three that weren't are known and written down.
 
 ## 1969: one machine
 
