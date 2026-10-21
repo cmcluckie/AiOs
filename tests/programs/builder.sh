@@ -13,6 +13,11 @@
 #                  those, after the builder's own, -include= becomes -include and the
 #                  header, and the loader gets none; a flag outside the allowed forms
 #                  is refused before anything is compiled
+#   decided        hello builds only while a decision under a key in
+#                  constitution/keys/ names petitions/0000.toml by its exact file;
+#                  with none, or only one by a key that is not there, one naming
+#                  another petition or one naming petitions/*, it is refused,
+#                  naming petition 0000, before anything is compiled (decision 0051)
 # Exit 0 is green, 1 is red.
 set -u
 cd "$(dirname "$0")/../.."
@@ -79,5 +84,26 @@ flags)
 		cp "$t/keep" "$e"
 	done
 	echo "hello compiled with exactly its four flags after the builder's own, -include= handed over as -include and the header, nothing else given them, and four flags outside the allowed forms each refused before anything was compiled" ;;
+decided)
+	command -v gcc > /dev/null || { echo "no gcc"; exit 2; }
+	(cd "$t" && sh jig/aios build hello > /dev/null 2> "$t/stderr") || fail "hello did not build with its petition decided: $(tail -1 "$t/stderr")"
+	for d in $(grep -l '"petitions/0000.toml"' "$t"/decisions/*.toml); do rm "$d"; done
+	dec() {	# FILE BY TOUCHES: a decision of kind petition
+		printf 'id      = "9999"\ndate    = 2026-10-20\nkind    = "petition"\ntouches = ["%s"]\nasked   = "probe"\noptions = ["as written"]\ndefault = "as written"\nchose   = "as written"\nwhy     = "probe"\nby      = "%s"\ndrafted = "probe"\n' "$3" "$2" > "$t/decisions/$1"
+	}
+	refused() {	# WHY: hello must be refused, naming petition 0000, nothing compiled
+		rm -rf "$t/out/hello"
+		(cd "$t" && sh jig/aios build hello > /dev/null 2> "$t/stderr"); rc=$?
+		[ $rc -eq 1 ] || fail "hello built ($rc) with $1"
+		grep -q "petition 0000" "$t/stderr" || fail "with $1 the refusal does not name petition 0000: $(tail -1 "$t/stderr")"
+		[ ! -e "$t/out/hello" ] || fail "with $1 the refusal came after something was compiled"
+	}
+	refused "no decision naming petitions/0000.toml"
+	dec 9999.toml KEY.nobody@1 petitions/0000.toml; refused "a decision by a key nobody holds"
+	dec 9999.toml KEY.chris@1 petitions/0001.toml; refused "a decision naming another petition"
+	dec 9999.toml KEY.chris@1 'petitions/*'; refused "a decision naming petitions/*"
+	dec 9999.toml KEY.chris@1 petitions/0000.toml
+	(cd "$t" && sh jig/aios build hello > /dev/null 2> "$t/stderr") || fail "hello did not build once a decision under Chris's key named it: $(tail -1 "$t/stderr")"
+	echo "hello built only while a decision under Chris's key named petitions/0000.toml; with none, a key nobody holds, another petition or petitions/*, refused naming petition 0000 before anything was compiled" ;;
 *)	fail "unknown mode '$mode'" ;;
 esac

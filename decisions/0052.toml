@@ -1,0 +1,12 @@
+id      = "0052"
+date    = 2026-10-20
+kind    = "petition"
+touches = ["petitions/0000.toml", "petitions/0001.toml", "petitions/0002.toml", "petitions/0003.toml", "petitions/0004.toml", "petitions/0005.toml", "petitions/0006.toml", "petitions/0007.toml", "petitions/0008.toml", "petitions/0009.toml", "petitions/0010.toml", "petitions/0011.toml"]
+asked   = "Decision 0051: a petition is built only when a decision under a key names it.  Petitions 0000 to 0011 came in during parts 1 to 18, before petitions were human-only, each in a commit Chris signed.  Does Chris decide them as they stand?"
+options = ["decide them as they stand", "leave them undecided, so their flavors no longer build"]
+default = "decide them as they stand"
+chose   = "decide them as they stand"
+why     = "Chris and Claude wrote them together, Chris committed each one, and every flavor built from them is tested on the jig.  Decided on 2026-10-20, after the fact, and said so here."
+by      = "KEY.chris@1"
+drafted = "Claude"
+petition_drafted = "Chris and Claude"

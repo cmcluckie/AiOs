@@ -1,6 +1,6 @@
 # TOOL.builder@1 as built
 
-Hand-derived from jig/aios on 2026-10-20, brought up to date the same day (a program's own compile flags), pending the generator (plan 7.1).
+Hand-derived from jig/aios on 2026-10-20, brought up to date the same day (a program's own compile flags; who decided each petition), pending the generator (plan 7.1).
 A scaffold: a shell script standing in for the builder.  Only the part that
 part 19 changed is gone through closely; the rest is said in a line.
 
@@ -14,7 +14,8 @@ numbers that have no entry, it stops and writes those numbers down.
 - missing FLAVOR: the catalogue numbers named by the flavor's petitions that have
   no entry, one to a line, sorted, as "NUMBER  KIND not in the catalogue", and
   nothing else.  Nothing printed when nothing is missing.
-- build FLAVOR: first the same list.  If it is not empty: it is written to
+- build FLAVOR: first, every petition the flavor names must be decided (below);
+  if one is not, exit 1, naming it, before anything else.  Then the same list.  If it is not empty: it is written to
   out/FLAVOR/missing.txt, a line saying how many are missing goes to stderr, and
   the exit is 3; nothing is compiled.  If it is empty: any old missing.txt is
   removed, every program's extra compile flags are checked (below), the
@@ -23,6 +24,15 @@ numbers that have no entry, it stops and writes those numbers down.
   referee's hardware check (rule 12) runs on each program after it is built.
 - run FLAVOR: build, then boot on the flavor's machine.
 - pack ARCHIVE NAME FILE...: programs into one cpio archive, in order.
+
+## Who decided each petition
+A flavor is built only when every petition it names appears, by its exact file
+(petitions/NNNN.toml), in the touches of a decision in decisions/ whose by is a
+key in constitution/keys/ (SPEC.builder.4, decision 0051).  A decision by a key
+that is not there, one naming another petition, or one naming petitions/*
+decides nothing; touches are read with globbing off, so petitions/* is not turned
+into the files that exist.  Petitions 0000 to 0014 are decided by decisions 0052
+to 0054.
 
 ## A program's own compile flags
 A program's catalogue entry may list `cflags`: extra flags for that program's
@@ -50,7 +60,7 @@ Exit 1 with "refused:" and the rule or reason.  Exit 3 only for the missing list
 Exit 2 for an unknown command.
 
 ## Everything it touches
-- Reads: flavors/, petitions/, index/ (every catalogue number named is looked up
+- Reads: flavors/, petitions/, decisions/ and constitution/keys/ (who decided each petition), index/ (every catalogue number named is looked up
   for a file), the pool sources the flavor's loader and programs name.
 - Writes: out/FLAVOR/ (missing.txt, or the loader, objects, programs and the
   program name).
@@ -58,4 +68,4 @@ Exit 2 for an unknown command.
 - No network, no ports, no registers.
 
 ## Size
-261 lines in jig/aios (shell).  Needs a C compiler, sed, sort, sha256sum.
+281 lines in jig/aios (shell).  Needs a C compiler, sed, sort, sha256sum.

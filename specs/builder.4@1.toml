@@ -1,0 +1,7 @@
+code       = "SPEC.builder.4@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+component  = "TOOL.builder@1"
+clause     = "A flavor is built only when every petition it names is named, by its exact file (petitions/NNNN.toml), in the touches of a decision in decisions/ whose by is a key in constitution/keys/; otherwise the build is refused, naming the petition, before anything is compiled.  A decision by a key that is not there, one that names another petition, or one that names petitions/* decides nothing."
+author     = "KEY.chris"

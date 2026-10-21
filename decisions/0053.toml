@@ -1,0 +1,12 @@
+id      = "0053"
+date    = 2026-10-20
+kind    = "petition"
+touches = ["petitions/0012.toml", "petitions/0013.toml"]
+asked   = "Decision 0051: a petition is built only when a decision under a key names it.  Petitions 0012 and 0013 were written by a model (Claude Sonnet 4.6 on Amazon Bedrock) through jig/draft and installed as it wrote them: 0012 for V7's cat (runs/20261020T051929Z-draft-0012-2-bedrock-global-anthropic-claude-sonnet-4-6), 0013 for Berkeley's (runs/20261021T002322Z-draft-0013-1-bedrock-global-anthropic-claude-sonnet-4-6).  0013 superseded 0012 and 0014 superseded 0013.  What does Chris decide about them?"
+options = ["keep them as the record of what the model wrote, never built", "remove them"]
+default = "keep them as the record of what the model wrote, never built"
+chose   = "keep them as the record of what the model wrote, never built"
+why     = "They are the series' evidence: the shape right, the C library missing, three of the referee's rules failing.  Petitions add, never swap, and the model's words are not edited.  No flavor names either; this decision lets the builder's own tests use 0012's number."
+by      = "KEY.chris@1"
+drafted = "Claude"
+petition_drafted = "a model: Claude Sonnet 4.6 on Amazon Bedrock, through jig/draft"

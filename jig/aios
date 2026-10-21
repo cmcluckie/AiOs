@@ -153,7 +153,27 @@ libc_musl() {
 	cp "$d/obj/include/bits/alltypes.h" "$d/obj/include/bits/syscall.h" "$d/include/bits/"
 }
 
+# a petition is built only when a human decided it: a decision in decisions/, by a
+# key in constitution/keys/, that names the petition's own file in its touches.
+# Exact names only, so no decision decides petitions not yet written (decision 0051).
+decided() {	# PETITION_FILE
+	for d in decisions/*.toml; do
+		by=$(field "$d" by)
+		[ -f "constitution/keys/${by#KEY.}.toml" ] || continue
+		set -f	# a touches entry is a pattern, not file names: with globbing on,
+			# petitions/* became every petition there is (findings 0017 #7)
+		for g in $(list_field "$d" touches); do
+			[ "$g" = "$1" ] && { set +f; return 0; }
+		done
+		set +f
+	done
+	return 1
+}
+
 cmd_build() {
+	for id in $(list_field "$(flavor_file "$1")" petitions); do
+		decided "petitions/$id.toml" || die "SPEC.builder.4: petition $id is named by no decision under a key in constitution/keys/; a human has not decided it"
+	done
 	miss=$(cmd_missing "$1")
 	if [ -n "$miss" ]; then
 		mkdir -p "out/$1"; printf '%s\n' "$miss" > "out/$1/missing.txt"

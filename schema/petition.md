@@ -87,6 +87,19 @@ against the artifact.
 rejected | expired | retired`.  The referee sets `pending`; a human sets
 `review`; the seats' votes set `approved` or `rejected`; time sets `expired`.
 
+## Who decides a petition (decision 0051)
+
+A petition is a human decision, whoever drafted it.  `petitions/` is on the
+human-only list (constitution/human-only.toml), so a change to a petition is
+refused unless a decision in the same change names it.  The builder refuses to
+build a flavor unless every petition it names is named, by its exact file, in
+the `touches` of a decision whose `by` is a key in constitution/keys/
+(SPEC.builder.4); a decision naming `petitions/*` decides nothing.  The
+`submitter` line is not proof of who wrote a petition: a decision that decides
+one says who drafted it, in `petition_drafted` (a person, Claude, or a model and
+how it was called).  Until seats exist this is the root key reviewing alone, as
+schema/signing.md says; rule 10's votes come later and add to it.
+
 ## Relation rules the referee enforces
 
 A petition that breaks any of these cannot be built.  The referee reports the

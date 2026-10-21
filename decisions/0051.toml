@@ -1,0 +1,11 @@
+id      = "0051"
+date    = 2026-10-20
+kind    = "rules and words"
+touches = ["constitution/human-only.toml", "CLAUDE.md", "schema/petition.md", "jig/aios", "specs/builder.4@1.toml", "tests/builder.decided@1.toml", "tests/programs/builder.sh", "tests/mutations.txt", "index/tool/builder@1.as-built.md"]
+asked   = "Chris, reading the part 20 article (2026-10-20): petition 0014 was added by hand, and nothing in the constitution says he has to decide a petition, or even make one.  Claude checked: petitions/ was not on the human-only list, so a petition could be added or changed with no decision; the submitter line is text, and the model's drafts 0012 and 0013 carry KEY.chris@1 like 0014; the builder never looks at a petition's status, and 0014, pending and never approved, was built.  What held it was that only Chris's key can commit, which signs a commit, not a petition.  The fix: petitions/* goes on the human-only list (the ledger refuses a change to a petition no decision under a key names); the builder refuses to build a flavor whose petitions are not each named, by exact file, in a decision under a key in constitution/keys/, so a decision naming petitions/* decides nothing; a decision that decides a petition says who drafted it, in petition_drafted.  This is the root key reviewing alone, as schema/signing.md says it does until seats exist; rule 10's votes are later.  SPEC.builder.4, TST.builder.decided with four mutations; in Claude's workspace the test is red on the builder as it was.  Decisions 0052 to 0054 decide the fifteen petitions that came in before this."
+options = ["as written", "the human-only list only, the builder unchanged", "the builder requires status approved, which needs rule 10's votes"]
+default = "as written"
+chose   = "as written"
+why     = "A petition is the reason anything is built.  If a human never has to decide one, the referee checks the model's request and nothing checks the request that gets built."
+by      = "KEY.chris@1"
+drafted = "Claude"

@@ -251,8 +251,9 @@ exactly; when a new one is needed, add it here in the same commit.
   down: the options, the default, what was chosen, the reason and who chose.
   The referee checks it against what actually changed, so a change with no
   matching decision is a silent decision and a fault.  A short list of
-  decision kinds (licence, purpose, capabilities, dependencies, tests, these
-  rules and the words in them) is human-only.  Built small (part 15): the
+  decision kinds (licence, purpose, petitions, capabilities, dependencies,
+  tests, these rules and the words in them) is human-only.  A petition is
+  built only when a decision under a key names it (decision 0051).  Built small (part 15): the
   list is constitution/human-only.toml, by path; a decision is one TOML file in
   decisions/ (what was asked, the options, what was chosen, who decided, which
   paths it covers, and who drafted it); `jig/ledger` refuses any change to

@@ -4,6 +4,7 @@
 # constitution/keys/.  An agent may draft that decision; only a human's key makes
 # it one.  Globs are the shell's.  This file is on its own list.
 [human-only]
+petitions    = ["petitions/*"]
 tests        = ["tests/*.toml", "tests/expected/*", "tests/fixtures/*", "tests/programs/*", "tests/mutations.txt"]
 specs        = ["specs/*"]
 purposes     = ["constitution/purposes/*"]

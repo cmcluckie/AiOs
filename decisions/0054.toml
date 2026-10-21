@@ -1,0 +1,12 @@
+id      = "0054"
+date    = 2026-10-20
+kind    = "petition"
+touches = ["petitions/0014.toml"]
+asked   = "Decision 0051: a petition is built only when a decision under a key names it.  Petition 0014, for Berkeley's cat, supersedes the model's 0013: it keeps 0013's purpose, its five capabilities and their reasons and its three tests, and changes six things (findings 0023 item 12).  Claude drafted it in Claude's workspace; it came in at 1edadab, before petitions were human-only, and the cat flavor has been built from it since.  Does Chris decide it as it stands?"
+options = ["decide it as it stands", "send it back"]
+default = "decide it as it stands"
+chose   = "decide it as it stands"
+why     = "Every rule of the referee passes on it, and cat built from it prints a file on the jig with every test green.  Decided on 2026-10-20, after the fact, and said so here."
+by      = "KEY.chris@1"
+drafted = "Claude"
+petition_drafted = "Claude, on top of the model's 0013"
