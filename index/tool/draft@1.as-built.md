@@ -21,7 +21,13 @@ nothing: the referee does.
 Exit 0 a draft was kept, 1 refused, 2 cannot run here.
 
 ## What it does with the reply
-Lines that are code fences are dropped; the rest is given to `referee petition`.
+The model hands in its petition with a second tool, submit_petition, whose one
+field is the petition.  When it does, what is in that field, exactly as written,
+is the draft, and nothing the model wrote outside it is (part 20: the model kept
+writing a line of its own thinking in front of the petition).  If the model
+never uses it, its text reply is the draft instead, with any code fence lines
+dropped.  Either way the draft is given to `referee petition`, and everything the
+model wrote stays in the run record.
 If the referee accepts it, it is kept as out/draft/ID/petition.toml (ID is the
 next free number in petitions/, or DRAFT_ID).  It is not put in petitions/: a
 person reads it and commits it.  If the reply is empty, or the referee refuses
@@ -51,4 +57,4 @@ reached, no credentials; see jig/model).
 - Network: only through jig/model.  No ports, no registers.
 
 ## Size
-144 lines in jig/draft (shell), 15 in draft/prompt.txt.  Needs jq, git, sed, awk.
+150 lines in jig/draft (shell), 15 in draft/prompt.txt.  Needs jq, git, sed, awk.

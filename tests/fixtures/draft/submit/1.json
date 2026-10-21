@@ -1,0 +1,30 @@
+{
+  "output": {
+    "message": {
+      "role": "assistant",
+      "content": [
+        {
+          "toolUse": {
+            "toolUseId": "t1",
+            "name": "reader",
+            "input": {
+              "command": "read",
+              "args": [
+                "usr/src/cmd/cat.c",
+                "1",
+                "10"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  },
+  "stopReason": "tool_use",
+  "usage": {
+    "inputTokens": 1000,
+    "outputTokens": 60,
+    "cacheReadInputTokens": 0,
+    "cacheWriteInputTokens": 0
+  }
+}

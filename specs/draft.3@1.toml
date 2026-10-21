@@ -1,0 +1,7 @@
+code       = "SPEC.draft.3@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+component  = "TOOL.draft@1"
+clause     = "The model hands in its petition with a tool, submit_petition, whose one field is the petition: when it uses it, what is in that field, exactly as written, is the draft given to the referee and nothing it wrote outside the field is, and everything it wrote, inside the field and out, is kept in the run record; prose inside the field is refused like prose anywhere else."
+author     = "KEY.chris"

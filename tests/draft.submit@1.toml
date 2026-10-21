@@ -1,0 +1,10 @@
+code       = "TST.draft.submit@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+binds      = "SPEC.draft.3@1"
+red_when   = "with saved replies standing in for the model, a petition handed in through submit_petition, with a sentence of chat beside it, is not kept byte for byte, or the chat is in the kept draft, or the chat is missing from the run record; or a petition handed in with prose inside the field is kept, or leaves a file behind, or is not recorded as refused"
+timeout_ms = 30000
+isolates   = "TOOL.draft@1"
+runner     = "jig/test cmd sh tests/programs/draft.sh submit"
+mutations  = 4

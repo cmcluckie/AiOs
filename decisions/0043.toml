@@ -1,0 +1,11 @@
+id      = "0043"
+date    = 2026-10-20
+kind    = "specs and tests"
+touches = ["jig/draft", "draft/prompt.txt", "specs/draft.3@1.toml", "tests/draft.submit@1.toml", "tests/programs/draft.sh", "tests/fixtures/draft/submit/1.json", "tests/fixtures/draft/submit/2.json", "tests/fixtures/draft/submit-prose/1.json", "tests/mutations.txt", "index/tool/draft@1.as-built.md"]
+asked   = "After decision 0042 the model still wrote a line of its own thinking in front of the petition, on both tries (six for Berkeley's cat in all): it reads the source, says what it found, then writes the petition, in one reply.  Chris chose a form over an email: the model now has a second tool, submit_petition, with one field, the petition.  What it puts in that field, as written, is the draft; nothing it writes outside the field is; everything it writes is kept in the run record; prose inside the field is refused like prose anywhere.  The draft step still never trims or edits what the model hands in, and the referee is unchanged.  If the model never uses the tool, its text reply is the draft, as before, so the old probe still holds.  The prompt says to hand the petition in with the tool.  SPEC.draft.3@1; TST.draft.submit@1 went red before the change and green after; four mutations, each checked by hand to turn it red for the reason it names; the eight mutations of draft.parses and draft.source still turn theirs red."
+options = ["a submit_petition tool", "keep the text reply and pay for more tries", "write 0013 by hand"]
+default = "a submit_petition tool"
+chose   = "a submit_petition tool"
+why     = "The rule was stated three ways and the habit held; the model's narration is how it talks, not part of its answer.  A field it fills itself separates the two without the draft step touching its words, which is what decision 0034 ruled out."
+by      = "KEY.chris@1"
+drafted = "Claude"

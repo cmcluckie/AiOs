@@ -110,6 +110,21 @@ cmd_missing() {
 	done
 }
 
+# prog_flags CODE: the extra compile flags a program's catalogue entry lists in
+# cflags (SPEC.builder.3@1), one to a line, -include=H as -include and H; any
+# flag outside the allowed forms stops the build, naming the program and the flag
+prog_flags() {
+	for x in $(list_field "$(code_file "$1")" cflags); do
+		if printf '%s' "$x" | grep -Eqx -- '-std=[a-z0-9]+|-D[A-Za-z_][A-Za-z0-9_]*(\([A-Za-z_]+\))?(=[A-Za-z0-9_]*)?'; then
+			printf '%s\n' "$x"
+		elif printf '%s' "$x" | grep -Eqx -- '-include=[A-Za-z0-9_][A-Za-z0-9_/.@-]*\.h' && ! printf '%s' "$x" | grep -q '\.\.'; then
+			printf -- '-include\n%s\n' "${x#-include=}"
+		else
+			die "SPEC.builder.3: $1 lists the compile flag '$x', which is not -std=, -D or -include= of a header"
+		fi
+	done
+}
+
 cmd_build() {
 	miss=$(cmd_missing "$1")
 	if [ -n "$miss" ]; then
@@ -118,6 +133,8 @@ cmd_build() {
 		exit 3
 	fi
 	rm -f "out/$1/missing.txt" 2> /dev/null || :
+	# every program's own flags are checked before anything is compiled
+	for id in $(list_field "$(flavor_file "$1")" petitions); do p=$(petition_primary "petitions/$id.toml"); prog_flags "$p" > /dev/null || exit 1; done
 	sh pool/AGT.referee@1/referee check "$1" >/dev/null
 	f=$(flavor_file "$1")
 	progs=$(for id in $(list_field "$f" petitions); do petition_primary "petitions/$id.toml"; done)
@@ -167,9 +184,12 @@ cmd_build() {
 		pl=$(list_field "$(code_file "$prog")" depends | head -1)
 		pldir=$(field "$(code_file "$pl")" source)
 		pname=$(basename "${prog#PART.}"); pname=${pname%@*}
-		$CC $CFLAGS -c -o "$out/$pname.o" "$pdir$pname.c"
+		pf=$(prog_flags "$prog" | tr '\n' ' ')
+		# the referee hands CFLAGS to a shell, so there each flag goes in quotes (none can hold one)
+		pq=$(prog_flags "$prog" | sed "s/.*/'&'/" | tr '\n' ' ')
+		$CC $CFLAGS $pf -c -o "$out/$pname.o" "$pdir$pname.c"
 		# the referee, after: rule 12, a program touches no hardware
-		CC="$CC" CFLAGS="$CFLAGS" sh pool/AGT.referee@1/referee hardware "$prog" "$pdir$pname.c"
+		CC="$CC" CFLAGS="$CFLAGS $pq" sh pool/AGT.referee@1/referee hardware "$prog" "$pdir$pname.c"
 		$CC $CFLAGS $LDFLAGS -T "$pldir/program.ld" -o "$out/$pname.bin" "$out/$pname.o"
 		members="$members $pname $out/$pname.bin"; summary="$summary + $prog ($(wc -c < "$out/$pname.bin") bytes)"
 	done

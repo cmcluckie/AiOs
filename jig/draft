@@ -68,7 +68,7 @@ done > "$scratch/catalogue.txt"
 sed -n '/^## Petition fields/,/^## Two phases/p' "$repo/schema/petition.md" | sed '$d' > "$scratch/layout.txt"
 
 cp='{"cachePoint":{"type":"default"}}'
-tools='{"tools":[{"toolSpec":{"name":"reader","description":"Read '"$srcname"', one fixed copy of it. command is one of list, read, check, ports; args is the list of its arguments.","inputSchema":{"json":{"type":"object","properties":{"command":{"type":"string","enum":["list","read","check","ports"]},"args":{"type":"array","items":{"type":"string"}}},"required":["command","args"]}}}},{"cachePoint":{"type":"default"}}]}'
+tools='{"tools":[{"toolSpec":{"name":"reader","description":"Read '"$srcname"', one fixed copy of it. command is one of list, read, check, ports; args is the list of its arguments.","inputSchema":{"json":{"type":"object","properties":{"command":{"type":"string","enum":["list","read","check","ports"]},"args":{"type":"array","items":{"type":"string"}}},"required":["command","args"]}}}},{"toolSpec":{"name":"submit_petition","description":"Hand in the finished petition. Its one field is the petition, exactly as it should be read: nothing else goes in it.","inputSchema":{"json":{"type":"object","properties":{"petition":{"type":"string"}},"required":["petition"]}}}},{"cachePoint":{"type":"default"}}]}'
 sitting=$(date -u +%Y%m%dT%H%M%SZ)
 prompt=$(git -C "$repo" hash-object "$repo/draft/prompt.txt" 2> /dev/null | cut -c1-8); [ -n "$prompt" ] || prompt=-
 feedback=""; prev=/dev/null; kept=""; refusal=""
@@ -83,7 +83,7 @@ while [ "$try" -le "$DRAFT_TRIES" ] && [ -z "$kept" ]; do
 	  if [ -n "$feedback" ]; then printf '\nYour last try was refused: %s\n\nThis is what you wrote last time:\n\n' "$feedback"; cat "$prev"; fi
 	} > "$d/first.txt"
 	jq -n --rawfile t "$d/first.txt" '[{role:"user",content:[{text:$t}]}]' > "$d/messages.json"
-	tin=0; tout=0; cread=0; cwrite=0; turn=0; final=""; why=""
+	tin=0; tout=0; cread=0; cwrite=0; turn=0; final=""; why=""; submitted=""
 	while :; do
 		turn=$((turn + 1))
 		[ "$turn" -le "$DRAFT_TURNS" ] || { why="more than $DRAFT_TURNS calls"; break; }
@@ -94,6 +94,11 @@ while [ "$try" -le "$DRAFT_TRIES" ] && [ -z "$kept" ]; do
 		cread=$((cread + $(jq '.usage.cacheReadInputTokens // 0' "$d/reply.json"))); cwrite=$((cwrite + $(jq '.usage.cacheWriteInputTokens // 0' "$d/reply.json")))
 		jq --slurpfile r "$d/reply.json" '. + [$r[0].output.message]' "$d/messages.json" > "$d/m.new" && mv "$d/m.new" "$d/messages.json"
 		stop=$(jq -r '.stopReason // ""' "$d/reply.json")
+		# a petition handed in through submit_petition is the draft: what is in its field, as written
+		if jq -e '[.output.message.content[] | select(.toolUse.name == "submit_petition")] | length > 0' "$d/reply.json" > /dev/null; then
+			final=$(jq -r '[.output.message.content[] | select(.toolUse.name == "submit_petition") | .toolUse.input.petition // ""][0]' "$d/reply.json")
+			submitted=1; break
+		fi
 		if [ "$stop" = tool_use ]; then
 			results='[]'
 			while IFS= read -r tu; do
@@ -117,8 +122,9 @@ EOT
 		final=$(jq -r '[.output.message.content[] | select(.text) | .text] | join("\n")' "$d/reply.json")
 		break
 	done
-	# the reply, without any code fence the model put round it, is the draft if the referee can read it
-	printf '%s\n' "$final" | grep -v '^```' > "$d/draft.toml"
+	# the draft: what was handed in through submit_petition, as written; or else the
+	# reply, without any code fence the model put round it.  The referee decides.
+	if [ -n "$submitted" ]; then printf '%s\n' "$final" > "$d/draft.toml"; else printf '%s\n' "$final" | grep -v '^```' > "$d/draft.toml"; fi
 	lines=$(awk 'END { print NR }' "$d/draft.toml")
 	if [ -z "$(printf '%s' "$final" | tr -d ' \n\t')" ]; then
 		result=refused; line="the reply was empty${why:+ ($why)}"

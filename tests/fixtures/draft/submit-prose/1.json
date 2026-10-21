@@ -1,0 +1,25 @@
+{
+  "output": {
+    "message": {
+      "role": "assistant",
+      "content": [
+        {
+          "toolUse": {
+            "toolUseId": "t1",
+            "name": "submit_petition",
+            "input": {
+              "petition": "Here is my reasoning first.\n[petition]\nid         = \"0012\"\npurpose    = \"PUR.0011@1\"\nsubmitted  = 2026-11-01\nsubmitter  = \"KEY.chris@1\"\nexpires    = 2099-01-01\nsupersedes = \"\"\nstatus     = \"draft\"\n\n[[capability]]\ncode   = \"CAP.tty.write@1\"\nreason = \"SPEC.cat.1@1\"\nscope  = \"\"\n\n[[capability]]\ncode   = \"CAP.fs.read@1\"\nreason = \"SPEC.cat.1@1\"\nscope  = \"\"\n\n[[component]]\ncode     = \"PART.cat@1\"\nrole     = \"primary\"\nadmitted = false\n\n[[component]]\ncode     = \"PART.loader@9\"\nrole     = \"boot\"\nadmitted = false\n\n[[test]]\ncode = \"TST.cat.prints-file@1\""
+            }
+          }
+        }
+      ]
+    }
+  },
+  "stopReason": "tool_use",
+  "usage": {
+    "inputTokens": 1000,
+    "outputTokens": 60,
+    "cacheReadInputTokens": 0,
+    "cacheWriteInputTokens": 0
+  }
+}

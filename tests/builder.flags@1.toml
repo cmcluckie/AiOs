@@ -1,0 +1,10 @@
+code       = "TST.builder.flags@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+binds      = "SPEC.builder.3@1"
+red_when   = "in a throwaway copy where hello's catalogue entry lists cflags, the compile of hello does not end with exactly those flags in that order, -include= is not handed to the compiler as -include and the header, the loader or another program gets them, or a flag outside the allowed forms is not refused before anything is compiled, naming the program and the flag"
+timeout_ms = 60000
+isolates   = "TOOL.builder@1"
+runner     = "jig/test cmd sh tests/programs/builder.sh flags"
+mutations  = 4

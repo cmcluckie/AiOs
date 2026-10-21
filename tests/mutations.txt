@@ -227,3 +227,11 @@ draft.source@1 | red | jig/draft | s/\$READER --source "\$DRAFT_SOURCE" "\$cmd"/
 draft.source@1 | red | jig/draft | s/^\tbsd) srcname=.*/\tbsd) srcname="Unix Version 7 (1979)" ;;/ | told Berkeley, the model is told it is reading V7
 draft.source@1 | red | jig/draft | s/\*) die "unknown source/*) srcname=x; : "unknown source/ | an unknown source is not refused, and a call is made
 draft.source@1 | red | jig/draft | s/"\$DRAFT_SUPERSEDES" "\$purpose"/"" "$purpose"/ | the petition to supersede is never handed to the model
+builder.flags@1 | red | jig/aios | s/\$CC \$CFLAGS \$pf -c -o/$CC $CFLAGS -c -o/ | the program's own flags never reach the compiler
+builder.flags@1 | red | jig/aios | s/^\t\t\tdie "SPEC.builder.3/\t\t\tprintf '%s\\n' "$x"; : "SPEC.builder.3/ | any flag at all is let through
+builder.flags@1 | red | jig/aios | s/printf -- '-include\\n%s\\n' "\${x#-include=}"/printf '%s\\n' "$x"/ | -include= goes to the compiler as written, which it does not understand
+builder.flags@1 | red | jig/aios | s/prog_flags "\$p" > \/dev\/null || exit 1; done/:; done/ | flags are checked only once compiling has begun
+draft.submit@1 | red | jig/draft | s/"submit_petition")\] /"submit_petitionX")] / | a petition handed in through submit_petition is never noticed
+draft.submit@1 | red | jig/draft | s/submitted=1; break/submitted=1; final="chat: $final"; break/ | something besides the field goes into the draft
+draft.submit@1 | red | jig/draft | s/cp "\$d\/messages.json" "\$d\/input.txt"/cp "$d\/first.txt" "$d\/input.txt"/ | the run record keeps only the first message, so the model's own words are lost
+draft.submit@1 | red | jig/draft | s/submitted=1; break/submitted=1; final=${final#*\\[petition\\]}; final="[petition]$final"; break/ | the draft step trims prose off the front of what was handed in

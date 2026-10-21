@@ -8,6 +8,9 @@
 # Mode source (TST.draft.source@1): told DRAFT_SOURCE=bsd, every question the
 # reader gets names bsd, the first message names Berkeley and not V7 and carries
 # the petition to supersede, the default is v7, and an unknown source makes no call.
+# Mode submit (TST.draft.submit@1): a petition handed in through submit_petition
+# with a line of chat beside it is kept byte for byte, without the chat, and the chat
+# is in the run record; prose inside the field is refused and recorded.
 # Exit 0 is green, 1 is red, 2 means this host cannot run it (no jq).
 set -u
 cd "$(dirname "$0")/../.."
@@ -26,6 +29,21 @@ attempt() {
 ran() { ls "$tmp/runs-$1" 2> /dev/null | wc -l; }
 result_of() { cat "$tmp/runs-$1"/*/run.toml 2> /dev/null | sed -n 's/^result *= *"\(.*\)".*/\1/p'; }
 
+if [ "${1:-}" = submit ]; then
+	attempt submit "$tmp/o1"; rc=$?
+	[ $rc -eq 0 ] || fail "a petition handed in through submit_petition was not kept (exit status $rc): $(tail -1 "$tmp/err-submit")"
+	cmp -s "$tmp/o1/0012/petition.toml" "$fx/petition-good.toml" || fail "the kept draft is not what was in the field, byte for byte"
+	grep -q "I have the full source" "$tmp/o1/0012/petition.toml" && fail "the chat beside the field is in the kept draft"
+	grep -q "I have the full source" "$tmp/runs-submit"/*/input.txt || fail "the chat beside the field is not in the run record"
+	[ "$(ran submit)" -eq 1 ] && [ "$(result_of submit)" = pass ] || fail "the handed-in draft is not one run recorded as pass ($(ran submit) runs, '$(result_of submit)')"
+	attempt submit-prose "$tmp/o2"; rc=$?
+	[ $rc -eq 1 ] || fail "prose inside the field gave exit status $rc, not a refusal"
+	grep -q "is not TOML" "$tmp/err-submit-prose" || fail "prose inside the field was refused, but the reason says '$(tail -1 "$tmp/err-submit-prose")'"
+	[ "$(find "$tmp/o2" -type f 2> /dev/null | wc -l)" -eq 0 ] || fail "prose inside the field was thrown away, but a file was left behind"
+	[ "$(ran submit-prose)" -eq 1 ] && [ "$(result_of submit-prose)" = refused ] || fail "prose inside the field is not one run recorded as refused"
+	echo "a petition handed in through submit_petition was kept byte for byte without the chat beside it, the chat kept in the run record; prose inside the field refused and recorded"
+	exit 0
+fi
 if [ "${1:-}" = source ]; then
 	attempt good "$tmp/o0" || fail "the default source: a proper petition was not kept"
 	grep -v -- "^--source v7 " "$tmp/asked.log" | grep -q . && fail "with no source given, a question reached the reader without --source v7: $(grep -v -- '^--source v7 ' "$tmp/asked.log" | head -1)"

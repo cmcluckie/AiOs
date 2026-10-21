@@ -12,4 +12,4 @@ Rules for the petition:
 - The id, the dates, supersedes and the status are given to you below.  Use them exactly.  The submitter is KEY.chris@1.
 - Write only the fields.  No prose and no comments.
 
-Your answer is the petition and nothing else: no explanation and no code fences.  The first line of your answer is [petition], and nothing comes before it.
+When the petition is finished, hand it in with the submit_petition tool.  Its one field is the petition and nothing else: no explanation and no code fences, and its first line is [petition].  Anything you write outside that field is not part of the petition.

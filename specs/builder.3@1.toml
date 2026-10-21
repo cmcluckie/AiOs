@@ -1,0 +1,7 @@
+code       = "SPEC.builder.3@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+component  = "TOOL.builder@1"
+clause     = "A program is compiled with the extra flags its catalogue entry lists in cflags, after the builder's own and in the order listed, and nothing else gets them; a flag that is not -std= with a dialect name, -D with a macro name (with or without one argument and a value) or -include= with a header name is refused, naming the program and the flag, before anything is compiled."
+author     = "KEY.chris"

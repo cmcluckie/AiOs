@@ -1,0 +1,11 @@
+id      = "0041"
+date    = 2026-10-20
+kind    = "specs and tests"
+touches = ["jig/aios", "specs/builder.3@1.toml", "tests/builder.flags@1.toml", "tests/programs/builder.sh", "tests/mutations.txt", "index/tool/builder@1.as-built.md"]
+asked   = "Part 20, piece (d) of findings 0023: Berkeley's cat does not compile without four extra switches (-std=gnu89, -D_BSD_SOURCE, -D__P(x)=x, and sys/types.h included first), and the builder compiled every program with one fixed set.  A program's catalogue entry may now list cflags, added after the builder's own for that program's compile only.  Three forms are allowed (-std= with a dialect, -D with a macro, -include= with a header path); anything else stops the build before anything is compiled, naming the program and the flag, because a catalogue entry should not be able to hand the compiler a plugin or a shell command.  The referee's rule 12 compile of the program gets the same flags, each quoted, because it hands them to a shell.  SPEC.builder.3@1; TST.builder.flags@1 went red before the change and green after; four mutations, each checked by hand to turn it red.  hello still builds to the same loader and the same 43 bytes, and the missing-list and no-guess probes stay green."
+options = ["as written", "any flag a catalogue entry lists", "a compatibility header for cat in the pool instead of flags"]
+default = "as written"
+chose   = "as written"
+why     = "The flags are a fact about the program, so they live in its entry, and the builder only lets through the forms old C needs.  Built while Chris was out; he reads it before it is staged."
+by      = "KEY.chris@1"
+drafted = "Claude"
