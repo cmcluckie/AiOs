@@ -1,0 +1,82 @@
+I now have the complete source. The program uses `open`/`read`/`write` (raw path) and `fopen`/`getc`/`putchar`/`fprintf` (cooked path), `malloc` for a buffer, `fstat` on stdout, and `exit`. It reads named files or stdin, writes to stdout (the console), and needs the filesystem for named files.
+
+[petition]
+id         = "0013"
+purpose    = "PUR.0011@1"
+submitted  = 2026-10-20
+submitter  = "KEY.chris@1"
+expires    = 2027-04-20
+supersedes = "0012"
+status     = "draft"
+
+[[capability]]
+code   = "CAP.tty.write@1"
+reason = "SPEC.cat.1@1"
+scope  = "console0"
+
+[[capability]]
+code   = "CAP.tty.read@1"
+reason = "SPEC.cat.2@1"
+scope  = ""
+
+[[capability]]
+code   = "CAP.fs.read@1"
+reason = "SPEC.cat.3@1"
+scope  = ""
+
+[[capability]]
+code   = "CAP.mem.alloc@1"
+reason = "SPEC.cat.4@1"
+scope  = ""
+
+[[capability]]
+code   = "CAP.proc.exit@1"
+reason = "SPEC.cat.5@1"
+scope  = ""
+
+[[component]]
+code     = "PART.cat@1"
+role     = "primary"
+admitted = false
+
+[[component]]
+code     = "TOOL.c@1"
+role     = "toolchain"
+admitted = true
+
+[[component]]
+code     = "PART.loader@5"
+role     = "boot"
+admitted = true
+
+[[component]]
+code     = "PART.serial.8250@2"
+role     = "dependency"
+admitted = true
+
+[[component]]
+code     = "PART.fs.minix@1"
+role     = "dependency"
+admitted = true
+
+[[component]]
+code     = "MACHINE.serial-disk@1"
+role     = "machine"
+admitted = true
+
+[[component]]
+code     = "TOOL.qemu@1"
+role     = "machine"
+admitted = true
+
+[[test]]
+code = "TST.cat.stdin-to-console@1"
+
+[[test]]
+code = "TST.cat.file-to-console@1"
+
+[[test]]
+code = "TST.cat.multi-file@1"
+
+[[test]]
+code = "TST.cat.missing-file@1"

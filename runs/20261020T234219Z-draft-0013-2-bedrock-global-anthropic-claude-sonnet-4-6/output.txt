@@ -1,0 +1,79 @@
+I have read the full source. Now I can write the petition.
+
+[petition]
+id         = "0013"
+purpose    = "PUR.0011@1"
+submitted  = 2026-10-20
+submitter  = "KEY.chris@1"
+expires    = 2027-04-20
+supersedes = "0012"
+status     = "draft"
+
+[[capability]]
+code   = "CAP.tty.write@1"
+reason = "SPEC.cat.1@1"
+scope  = "console0"
+
+[[capability]]
+code   = "CAP.tty.read@1"
+reason = "SPEC.cat.2@1"
+scope  = "console0"
+
+[[capability]]
+code   = "CAP.fs.read@1"
+reason = "SPEC.cat.3@1"
+scope  = ""
+
+[[capability]]
+code   = "CAP.mem.alloc@1"
+reason = "SPEC.cat.4@1"
+scope  = ""
+
+[[capability]]
+code   = "CAP.proc.exit@1"
+reason = "SPEC.cat.5@1"
+scope  = ""
+
+[[component]]
+code     = "PART.cat@1"
+role     = "primary"
+admitted = false
+
+[[component]]
+code     = "TOOL.c@1"
+role     = "toolchain"
+admitted = false
+
+[[component]]
+code     = "PART.loader@5"
+role     = "boot"
+admitted = false
+
+[[component]]
+code     = "PART.fs.minix@1"
+role     = "dependency"
+admitted = false
+
+[[component]]
+code     = "PART.serial.8250@2"
+role     = "dependency"
+admitted = false
+
+[[component]]
+code     = "MACHINE.serial-disk@1"
+role     = "machine"
+admitted = false
+
+[[component]]
+code     = "TOOL.qemu@1"
+role     = "machine"
+admitted = false
+
+[[test]]
+code = "TST.cat.stdin-to-stdout@1"
+
+[[test]]
+code = "TST.cat.file-to-stdout@1"
+
+[[test]]
+code = "TST.cat.multi-file@1"

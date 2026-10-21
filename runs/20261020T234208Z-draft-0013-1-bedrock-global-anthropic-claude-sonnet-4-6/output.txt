@@ -1,0 +1,87 @@
+Now I have a complete picture of cat.c. Let me analyze what it needs:
+
+1. **Writes to stdout (console)** → `CAP.tty.write@1`
+2. **Reads from stdin** → `CAP.tty.read@1`
+3. **Opens and reads files by name** → `CAP.fs.read@1`
+4. **Allocates memory (malloc)** → `CAP.mem.alloc@1`
+5. **Exits** → `CAP.proc.exit@1`
+
+The program needs a filesystem with read capability, stdin read, stdout write, memory allocation, and exit. It uses `fstat` on stdout to determine block size for the raw path — that's part of the file/console abstraction. It does not write files, does not need VGA, serial device directly, disk device directly, or time.
+
+[petition]
+id         = "0013"
+purpose    = "PUR.0011@1"
+submitted  = 2026-10-20
+submitter  = "KEY.chris@1"
+expires    = 2027-04-20
+supersedes = "0012"
+status     = "draft"
+
+[[capability]]
+code   = "CAP.tty.write@1"
+reason = "SPEC.cat.1@1"
+scope  = "console0"
+
+[[capability]]
+code   = "CAP.tty.read@1"
+reason = "SPEC.cat.2@1"
+scope  = "console0"
+
+[[capability]]
+code   = "CAP.fs.read@1"
+reason = "SPEC.cat.3@1"
+scope  = ""
+
+[[capability]]
+code   = "CAP.mem.alloc@1"
+reason = "SPEC.cat.4@1"
+scope  = ""
+
+[[capability]]
+code   = "CAP.proc.exit@1"
+reason = "SPEC.cat.5@1"
+scope  = ""
+
+[[component]]
+code     = "PART.cat@1"
+role     = "primary"
+admitted = false
+
+[[component]]
+code     = "TOOL.c@1"
+role     = "toolchain"
+admitted = false
+
+[[component]]
+code     = "PART.loader@5"
+role     = "boot"
+admitted = false
+
+[[component]]
+code     = "PART.fs.minix@1"
+role     = "dependency"
+admitted = false
+
+[[component]]
+code     = "PART.serial.8250@2"
+role     = "dependency"
+admitted = false
+
+[[component]]
+code     = "MACHINE.serial-disk@1"
+role     = "machine"
+admitted = false
+
+[[component]]
+code     = "TOOL.qemu@1"
+role     = "machine"
+admitted = false
+
+[[test]]
+code = "TST.cat.stdin-to-stdout@1"
+
+[[test]]
+code = "TST.cat.file-to-stdout@1"
+
+[[test]]
+code = "TST.cat.multi-file@1"
