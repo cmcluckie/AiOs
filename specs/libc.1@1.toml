@@ -1,0 +1,7 @@
+code       = "SPEC.libc.1@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+component  = "TOOL.libc@1"
+clause     = "jig/libc builds musl only from the commit in jig/musl.pin, and refuses to build when the clone lacks it; asked what a program takes, it lists exactly the musl source files the linker pulled in for that program, each by its whole path, so two files with the same name stay two, the same list on every run."
+author     = "KEY.chris"

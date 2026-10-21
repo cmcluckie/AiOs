@@ -1,0 +1,11 @@
+id      = "0044"
+date    = 2026-10-20
+kind    = "specs and tests"
+touches = ["jig/libc", "jig/musl.pin", "constitution/human-only.toml", "specs/libc.1@1.toml", "specs/divide64.1@1.toml", "tests/libc.pieces@1.toml", "tests/divide64.exact@1.toml", "tests/programs/libc.sh", "tests/programs/divide64.sh", "tests/fixtures/libc/hello.c", "tests/fixtures/divide64/check.c", "tests/fixtures/divide64/cases.h", "tests/expected/libc.hello-pieces.txt", "tests/mutations.txt", "index/tool/libc@1.toml", "index/tool/libc@1.as-built.md", "index/part/divide64@1.toml", "index/part/divide64@1.as-built.md"]
+asked   = "Part 20, piece (c) of findings 0023, first half: musl pinned and measured from a file in the repo.  jig/musl.pin is v1.2.4 (f5f55d6589940fd2c2188d76686efe3a530e64e0), the version both earlier measurements used.  jig/libc builds it with plain sh (the jig has no make) and lists the musl source files a program takes, each by its whole path: the first version named pieces by file name only, and src/malloc/free.c and src/malloc/mallocng/free.c hid each other.  musl's printf needs a 64-bit divide helper the jig's compiler does not supply for these programs; PART.divide64@1 is ours, 16 lines of long division in base 2.  Two specs, two tests, four mutations each.  What was and was not run where it was written: Claude's machine cannot reach musl's server and cannot run 32-bit programs, so TST.libc.pieces@1 was run against a local git repo made from the v1.2.4 release tarball, with the pin pointed at it, green, and its four mutations each turned it red there; TST.divide64.exact@1 cannot build a 32-bit program there (exit 2), so the helper and its four mutations were checked against the same forty divisions as a 64-bit program, by hand.  Only the jig shows either test on the real pin and the real 386 code.  The lift itself (the pieces into lifted/) comes next, from the jig's list."
+options = ["as written", "pin v1.2.5, the newest release"]
+default = "as written"
+chose   = "as written"
+why     = "1.2.4 is what every number so far was measured on.  The divide helper is small enough to check by eye and is tested against answers worked out beforehand."
+by      = "KEY.chris@1"
+drafted = "Claude"

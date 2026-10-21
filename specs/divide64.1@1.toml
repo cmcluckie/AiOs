@@ -1,0 +1,7 @@
+code       = "SPEC.divide64.1@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+component  = "PART.divide64@1"
+clause     = "__udivmoddi4(n, d, rem) gives the quotient of two 64-bit numbers and stores the remainder in rem, exactly, for every n and every d that is not zero, on a 32-bit processor."
+author     = "KEY.chris"

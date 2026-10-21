@@ -1,0 +1,10 @@
+code       = "TST.libc.pieces@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+binds      = "SPEC.libc.1@1"
+red_when   = "the build is not the pin's version, src/malloc/free.c and src/malloc/mallocng/free.c do not stay two pieces, the list for tests/fixtures/libc/hello.c differs from tests/expected/libc.hello-pieces.txt or between two runs, or a pin the clone lacks does not stop the build with nothing built"
+timeout_ms = 300000
+isolates   = "TOOL.libc@1"
+runner     = "jig/test cmd sh tests/programs/libc.sh"
+mutations  = 4

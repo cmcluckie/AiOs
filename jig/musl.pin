@@ -1,0 +1,6 @@
+# The one musl commit jig/libc builds from: tag v1.2.4 of musl's own repository
+# (git.musl-libc.org), the version every measurement in findings 0022 and 0023
+# used.  MIT licence.  Nothing from it is copied into the repo by jig/libc; what
+# part 20 lifts goes to lifted/ with an origin record.  Moving the pin is a human
+# decision.
+commit = "f5f55d6589940fd2c2188d76686efe3a530e64e0"

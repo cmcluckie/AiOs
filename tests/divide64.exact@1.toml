@@ -1,0 +1,10 @@
+code       = "TST.divide64.exact@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+binds      = "SPEC.divide64.1@1"
+red_when   = "built for 32-bit x86 and run on the jig, any of forty divisions worked out beforehand (by one, by itself, the largest number, across the 32-bit line, random) gives a different quotient or remainder, or the checker did not use the pool's helper"
+timeout_ms = 60000
+isolates   = "PART.divide64@1"
+runner     = "jig/test cmd sh tests/programs/divide64.sh"
+mutations  = 4

@@ -1,0 +1,15 @@
+code          = "TOOL.libc@1"
+sentence      = "The C library builder on the jig (jig/libc): builds musl for 32-bit x86 from one pinned commit with plain sh, and lists the musl source files a program takes; scaffolding, a placeholder for the builder."
+status        = "draft"
+admitted      = ""
+retired_by    = ""
+kind          = "program"
+source        = ""
+licence       = "GPL-2.0-only"
+depends       = []
+build_depends = []
+exposes       = []
+requires      = []
+scaffold      = true
+as_built      = "index/tool/libc@1.as-built.md"
+reproducible  = ""

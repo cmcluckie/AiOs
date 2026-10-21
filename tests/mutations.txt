@@ -235,3 +235,11 @@ draft.submit@1 | red | jig/draft | s/"submit_petition")\] /"submit_petitionX")] 
 draft.submit@1 | red | jig/draft | s/submitted=1; break/submitted=1; final="chat: $final"; break/ | something besides the field goes into the draft
 draft.submit@1 | red | jig/draft | s/cp "\$d\/messages.json" "\$d\/input.txt"/cp "$d\/first.txt" "$d\/input.txt"/ | the run record keeps only the first message, so the model's own words are lost
 draft.submit@1 | red | jig/draft | s/submitted=1; break/submitted=1; final=${final#*\\[petition\\]}; final="[petition]$final"; break/ | the draft step trims prose off the front of what was handed in
+libc.pieces@1 | red | jig/libc | s/git -C "\$MUSL" archive "\$pin"/git -C "$MUSL" archive HEAD/ | the build ignores the pin and takes whatever the clone is on
+libc.pieces@1 | red | jig/libc | s/m=\${m%%\/\*}@\${m#\*\/}/m=${m##*\/}/ | two musl files with the same name collapse into one piece
+libc.pieces@1 | red | jig/libc | s/\$1 == m { print \$2; f = 1 }/{ print $2; f = 1 }/ | pieces lists every file in musl, not what the program took
+libc.pieces@1 | red | jig/libc | s/for x in c s S; do \[ -f "\$d\/i386\/\$b.\$x" \] \&\& continue 2; done/:/ | the 386's own version of a file no longer replaces the general one
+divide64.exact@1 | red | pool/PART.divide64@1/divide64.c | s/if (r >= d) {/if (r > d) {/ | a remainder equal to the divisor is not taken away
+divide64.exact@1 | red | pool/PART.divide64@1/divide64.c | s/q |= (u64)1 << i;/q |= (u64)1 << (i \& 31);/ | the quotient's bits wrap at 32, the classic 386 shift mistake
+divide64.exact@1 | red | pool/PART.divide64@1/divide64.c | s/for (i = 63; i >= 0; i--)/for (i = 31; i >= 0; i--)/ | only the low 32 bits of the number are divided
+divide64.exact@1 | red | pool/PART.divide64@1/divide64.c | s/\*rem = r;/*rem = 0;/ | the remainder is lost

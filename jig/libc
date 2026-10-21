@@ -1,0 +1,99 @@
+#!/bin/sh
+# libc: musl, the C library (findings 0023, part 20), built for 32-bit x86 from
+# the one commit in jig/musl.pin, with plain sh and no make: the rules of musl's
+# own Makefile, written out.  It decides nothing; it builds, and says what a
+# program takes from what it built.
+#
+#   libc build             out/musl/: include/, lib/libc.a, lib/crt1.o, crti.o, crtn.o
+#   libc pieces OBJ...     link those objects against the build, statically, and
+#                          print the musl source files the program takes, one to a
+#                          line, sorted (the list a lift starts from)
+#
+# The source comes out of a clone of musl (MUSL=/path, default ../musl) at the
+# pin, through git archive, so the clone's working tree never matters.
+# MUSL_TREE=/dir uses an unpacked tree instead, for tests only.
+# Exit 0 done, 1 refused, 2 cannot run here.
+set -eu
+repo=$(cd "$(dirname "$0")/.." && pwd)
+CC=${CC:-gcc}
+out=${LIBC_OUT:-$repo/out/musl}
+die()  { echo "libc: $*" >&2; exit 1; }
+skip() { echo "libc: $*" >&2; exit 2; }
+
+tree() {	# the source tree at the pin, in $1
+	if [ -n "${MUSL_TREE:-}" ]; then cp -R "$MUSL_TREE"/. "$1"; return; fi
+	MUSL=${MUSL:-$repo/../musl}
+	pin=$(sed -n 's/^commit *= *"\([0-9a-f]\{40\}\)".*/\1/p' "$repo/jig/musl.pin")
+	[ -n "$pin" ] || skip "no commit in jig/musl.pin"
+	[ -d "$MUSL/.git" ] || skip "no clone of musl at $MUSL (set MUSL=)"
+	git -C "$MUSL" cat-file -e "$pin^{commit}" 2> /dev/null || skip "the clone at $MUSL lacks the pinned commit $pin"
+	git -C "$MUSL" archive "$pin" | tar -xf - -C "$1"
+}
+
+# member PATH: the name a piece has in the archive, its whole path with / as @
+member() { m=$1; while case $m in */*) true ;; *) false ;; esac; do m=${m%%/*}@${m#*/}; done; printf '%s' "$m"; }
+
+build() {
+	command -v ar > /dev/null || skip "ar is not installed"
+	src=$(mktemp -d); trap 'rm -rf "$src"' EXIT
+	tree "$src"
+	[ -f "$src/arch/i386/bits/syscall.h.in" ] || die "the tree at the pin has no arch/i386"
+	rm -rf "$out"; mkdir -p "$out/obj/include/bits" "$out/obj/src/internal" "$out/lib"
+	# the generated headers, as the Makefile makes them
+	sed -f "$src/tools/mkalltypes.sed" "$src/arch/i386/bits/alltypes.h.in" "$src/include/alltypes.h.in" > "$out/obj/include/bits/alltypes.h"
+	cp "$src/arch/i386/bits/syscall.h.in" "$out/obj/include/bits/syscall.h"
+	sed -n -e s/__NR_/SYS_/p < "$src/arch/i386/bits/syscall.h.in" >> "$out/obj/include/bits/syscall.h"
+	printf '#define VERSION "%s"\n' "$(cat "$src/VERSION")" > "$out/obj/src/internal/version.h"
+	flags="-m32 -std=c99 -nostdinc -ffreestanding -fexcess-precision=standard -frounding-math -fno-strict-aliasing -Wa,--noexecstack -D_XOPEN_SOURCE=700 -I$src/arch/i386 -I$src/arch/generic -I$out/obj/src/internal -I$src/src/include -I$src/src/internal -I$out/obj/include -I$src/include -Os -pipe -fomit-frame-pointer -fno-unwind-tables -fno-asynchronous-unwind-tables -ffunction-sections -fdata-sections -march=i486 -mtune=generic -Wno-pointer-to-int-cast -w"
+	# every source: src/*/X.c, src/malloc/mallocng/X.c and crt/X.c, unless arch i386 has its own X
+	n=0
+	for d in "$src"/src/* "$src/src/malloc/mallocng" "$src/crt"; do
+		[ -d "$d" ] || continue
+		for f in "$d"/*.c "$d"/i386/*.c "$d"/i386/*.s "$d"/i386/*.S; do
+			[ -f "$f" ] || continue
+			b=$(basename "${f%.*}")
+			case "$f" in */i386/*) ;; *) for x in c s S; do [ -f "$d/i386/$b.$x" ] && continue 2; done ;; esac
+			rel=${f#"$src"/}; o="$out/obj/${rel%.*}.o"; mkdir -p "$(dirname "$o")"
+			extra=""
+			case "$rel" in crt/rcrt1.*|crt/Scrt1.*) continue ;; crt/*) extra="-DCRT -fno-stack-protector" ;; esac
+			case "$b" in __libc_start_main|__init_tls|__stack_chk_fail|__set_thread_area|memset|memcpy) extra="$extra -fno-stack-protector" ;; esac
+			case "$b" in memcpy|memmove|memcmp|memset) extra="$extra -fno-tree-loop-distribute-patterns" ;; esac
+			$CC $flags $extra -c -o "$o" "$f" || die "musl's $rel did not compile"
+			n=$((n + 1))
+		done
+	done
+	# the library: everything under src/, each object named by its whole path (src/stdio/fopen.o is
+	# src@stdio@fopen.o), so two files with the same name (src/malloc/free.c and
+	# src/malloc/mallocng/free.c) stay two members and each can be traced back to its source
+	mkdir -p "$out/ar"
+	( cd "$out/obj" && find src -name '*.o' | LC_ALL=C sort ) | while read -r o; do cp "$out/obj/$o" "$out/ar/$(member "$o")"; done
+	( cd "$out/ar" && ls | LC_ALL=C sort | xargs ar rcs "$out/lib/libc.a" )
+	for c in crt1 crti crtn; do cp "$out/obj/crt/i386/$c.o" "$out/lib/$c.o" 2> /dev/null || cp "$out/obj/crt/$c.o" "$out/lib/$c.o"; done
+	# the headers a program sees: include/, the generated ones, arch's bits
+	mkdir -p "$out/include/bits"
+	cp -R "$src/include"/. "$out/include/"; rm -f "$out/include/alltypes.h.in"
+	cp "$src"/arch/generic/bits/*.h "$out/include/bits/"; cp "$src"/arch/i386/bits/*.h "$out/include/bits/" 2> /dev/null || :
+	cp "$out/obj/include/bits/alltypes.h" "$out/obj/include/bits/syscall.h" "$out/include/bits/"
+	# where each object came from, for pieces: its path, and the source it was compiled from
+	( cd "$out/obj" && find src -name '*.o' | LC_ALL=C sort ) | while read -r o; do
+		for x in c s S; do [ -f "$src/${o%.o}.$x" ] && { printf '%s %s\n' "$(member "$o")" "${o%.o}.$x"; break; }; done
+	done > "$out/sources.txt"
+	echo "built musl $(cat "$src/VERSION") for i386: $n files compiled -> $out"
+}
+
+pieces() {
+	[ -f "$out/lib/libc.a" ] || die "no build in $out; run libc build first"
+	t=$(mktemp -d)
+	$CC -m32 -static -nostdlib -no-pie -o "$t/a.out" "$out/lib/crt1.o" "$out/lib/crti.o" "$@" "$out/lib/libc.a" "$out/lib/crtn.o" -Wl,-Map,"$t/map" > "$t/err" 2>&1 || { sed 's/^/libc: /' "$t/err" >&2; rm -rf "$t"; die "the program did not link against musl"; }
+	# the archive members the linker pulled in, each back to its source file
+	sed -n 's/^.*libc\.a(\([^)]*\.o\)).*/\1/p' "$t/map" | LC_ALL=C sort -u | while read -r m; do
+		awk -v m="$m" '$1 == m { print $2; f = 1 } END { exit !f }' "$out/sources.txt" || { echo "libc: no source known for $m" >&2; exit 1; }
+	done | LC_ALL=C sort -u
+	rm -rf "$t"
+}
+
+case "${1:-}" in
+	build) build ;;
+	pieces) shift; [ $# -ge 1 ] || die "pieces needs at least one object"; pieces "$@" ;;
+	*) sed -n '2,15p' "$0"; exit 2 ;;
+esac
