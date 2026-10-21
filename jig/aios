@@ -215,7 +215,7 @@ cmd_build() {
 			pname=$(basename "${prog#PART.}"); pname=${pname%@*}
 			libc_musl "$out/musl"
 			pf=$(prog_flags "$prog" | tr '\n' ' '); pq=$(prog_flags "$prog" | sed "s/.*/'&'/" | tr '\n' ' ')
-			mflags="-m32 -O2 -nostdinc -fno-pie -fno-stack-protector -I $out/musl/include"
+			mflags="-m32 -march=i486 -O2 -nostdinc -fno-pie -fno-stack-protector -I $out/musl/include"
 			$CC $mflags $pf -c -o "$out/$pname.o" "$pdir$pname.c"
 			CC="$CC" CFLAGS="$mflags $pq" sh pool/AGT.referee@1/referee hardware "$prog" "$pdir$pname.c"
 			$CC -m32 -static -nostdlib -no-pie -Wl,--build-id=none -Wl,-z,noexecstack -o "$out/$pname.bin" \

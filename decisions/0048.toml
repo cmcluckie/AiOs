@@ -1,0 +1,11 @@
+id      = "0048"
+date    = 2026-10-20
+kind    = "specs and tests"
+touches = ["jig/aios", "tests/programs/linuxcalls.sh", "index/tool/builder@1.as-built.md"]
+asked   = "The jig's run of 1edadab: every new test green and every mutation killed, but TST.gate.linux-refuses@1 red where it was green in Claude's workspace (findings 0023 item 13).  The jig's gcc built the probe with SSE instructions, which AiOs has never turned on, and the processor stopped the program with an invalid-instruction fault; software emulation had let them through.  The probe, and every program the builder builds against musl, are now built for the 486 (-march=i486), as musl itself is.  Nothing in the kernel changes: refusing an instruction it never turned on is the gate doing its job."
+options = ["build for the 486", "turn SSE on in the kernel and save its registers on every switch"]
+default = "build for the 486"
+chose   = "build for the 486"
+why     = "It matches how musl is built here and keeps the series' last part on cat; saving vector registers for every program is kernel work of its own, after the series."
+by      = "KEY.chris@1"
+drafted = "Claude"

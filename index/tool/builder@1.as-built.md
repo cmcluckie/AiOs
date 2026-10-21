@@ -40,8 +40,8 @@ A program whose catalogue entry depends on PART.libc.musl@1 is built the way a L
 toolchain builds a static program (part 20): musl is built once per flavor from
 lifted/PART.libc.musl@1 (the two generated headers from their lifted inputs, every
 lifted source with musl's own flags for i386, into a library; its three start files;
-the headers a program sees), with PART.divide64@1; the program is compiled against
-those headers with its own flags, looked at by the referee (rule 12) with the same,
+the headers a program sees), with PART.divide64@1; the program is compiled for the 486 (-march=i486, as musl is; findings 0023
+item 13) against those headers with its own flags, looked at by the referee (rule 12) with the same,
 and linked statically, not position-independent, at the address the linker
 chooses (0x08048000 and up): an ELF file, out/FLAVOR/NAME.bin.
 

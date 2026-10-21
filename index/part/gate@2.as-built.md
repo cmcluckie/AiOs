@@ -32,6 +32,11 @@ findings 0023 item 10):
   the kernel's exit.  Any other number, ENOSYS.  Every buffer and name is checked to
   lie inside the window, else EFAULT, and the kernel does not touch it.
 
+## What it does not turn on
+The processor's vector instructions (SSE): AiOs never sets CR4.OSFXSR, so a program
+that uses them is stopped with an invalid-instruction fault (vector 6), as the jig
+showed (findings 0023 item 13).  Programs built against musl are built for the 486.
+
 ## Every syscall or hardware access
 As @1, and it loads %gs's descriptor only through the table: a program sets %gs
 itself after set_thread_area.
