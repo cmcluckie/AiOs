@@ -30,6 +30,10 @@ skip the quartermaster).
    (pass, fail or refused), and the lines changed: lines removed plus lines added,
    by diff.  The conversation is input.txt; the diff is output.txt.
 
+The suite in each copy is told where the upstream clones are (LINUX, MUSL, V7, BSD,
+beside the repo unless set), so the tests that read them run there as they do in the
+repo, instead of skipping.
+
 ## What it never does
 Changes the repo: the model's look and the judge each work in their own copy, and
 a green fix is a proposal Chris decides on, like any other change.
@@ -42,4 +46,4 @@ a green fix is a proposal Chris decides on, like any other change.
   cap are jig/model's); jig/runs to record.
 
 ## Size
-jig/fix 162 lines (shell); fix/prompt.txt 7 lines.
+jig/fix 166 lines (shell); fix/prompt.txt 7 lines.

@@ -26,6 +26,10 @@ FIX_SUITE=${FIX_SUITE:-}; FIX_OUT=${FIX_OUT:-$repo/out/fix}
 MODEL_NAME=${MODEL_NAME:-bedrock:global.anthropic.claude-sonnet-4-6}
 MODEL_MAX_COST=${MODEL_MAX_COST:-0.50}
 export MODEL_NAME MODEL_MAX_COST
+# the upstream clones live beside the repo, and the copies the suite runs in do not,
+# so the tests are told where the clones are; otherwise ten of them skip (try 3)
+LINUX=${LINUX:-$repo/../linux}; MUSL=${MUSL:-$repo/../musl}; V7=${V7:-$repo/../unix-history-repo}; BSD=${BSD:-$V7}
+export LINUX MUSL V7 BSD
 die() { echo "fix: $*" >&2; exit 1; }
 cannot() { echo "fix: $*" >&2; exit 2; }
 command -v jq > /dev/null || cannot "jq is not installed"

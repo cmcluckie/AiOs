@@ -289,3 +289,4 @@ fix.judged@1 | red | jig/fix | s/grep -rnF -- "\$1" "\$2"/grep -rnF -- "$1" pool
 fix.judged@1 | red | jig/fix | s/\$cread read from the cache, // | the summary line leaves out the tokens read from the cache, as on try 1
 fix.judged@1 | red | jig/fix | s/(if .input.start_line then \[.input.start_line, (.input.end_line \/\/ empty)\] else \[\] end)/[]/ | start_line and end_line are ignored, as on try 2
 fix.judged@1 | red | jig/fix | s/echo "\$1, lines \$a to \$b of \$n"/:/ | a read no longer says which lines it shows, so a model cannot tell it got the wrong ones
+fix.judged@1 | red | jig/fix | s/^export LINUX MUSL V7 BSD$/:/ | the judge's copy is not told where the upstream clones are, so the tests that need them skip, as on try 3

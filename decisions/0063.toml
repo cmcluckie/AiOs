@@ -1,0 +1,11 @@
+id      = "0063"
+date    = 2026-10-22
+kind    = "specs and tests"
+touches = ["tests/programs/debt.sh", "tests/gate.linux-only@1.toml", "jig/fix", "tests/programs/fix.sh", "tests/fix.judged@1.toml", "tests/mutations.txt", "index/tool/fix@1.as-built.md"]
+asked   = "Try 3 (findings 0024 item 16) passed the judge and did not meet SPEC.gate.10: the AiOs-only numbers are still answered for old programs.  Take it as a partial step, or tighten the test and run again?  And the judge's copies skipped ten tests that need the upstream clones."
+options = ["tighten the test and run again; do not take try 3", "take try 3 as a partial step"]
+default = "tighten the test and run again; do not take try 3"
+chose   = "tighten the test and run again; do not take try 3"
+why     = "Chris, 2026-10-22: do it.  Taking it would put a comment in the kernel that says fixed when it is not, the kind of quiet decision the project exists to stop.  TST.gate.linux-only now also holds the source to the spec; the judge's copies are told where the clones are, with one more mutation."
+by      = "KEY.chris@1"
+drafted = "Claude"

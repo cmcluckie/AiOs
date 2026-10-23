@@ -3,8 +3,9 @@
 # tests/programs/debt.c, a static Linux program file with no C library, booted
 # under the cat flavor's kernel (PART.loader@10, PART.gate@2), as linuxcalls.sh
 # does.  One mode per test:
-#   numbers  TECH-DEBT 1: at 1000 to 1003, the AiOs-only numbers, the kernel
-#            answers what Linux does, -38 (ENOSYS), and nothing else
+#   numbers  TECH-DEBT 1: no AiOs-only number is left in PART.gate@2, in its
+#            table of calls or in the stubs old programs go through, and at 1000
+#            to 1003 a Linux program is answered what Linux answers, -38 (ENOSYS)
 #   random   TECH-DEBT 4: three boots give three AT_RANDOMs, each pair differing
 #            in at least 12 of its 16 bytes; a counter read twice cannot do that
 #   sse      findings 0023 item 13: a program built with SSE runs, its sums right
@@ -23,10 +24,14 @@ truncate -s 1M "$t/disk"; mkfs.minix -1 -n 14 "$t/disk" > /dev/null 2>&1 || { ec
 boot() { AIOS_DISK="$t/disk" AIOS_CMDLINE="debt $mode" timeout 60 sh pool/MACHINE.serial-disk@2/machine.sh out/cat/loader.elf "$t/debt" < /dev/null > "$1" 2> /dev/null; }
 case "$mode" in
 numbers)
+	# no number of AiOs's own left in the gate: not in its table of calls, not in the
+	# stubs old programs reach the kernel through (findings 0024 item 16)
+	left=$(grep -nE '^#define[[:space:]]+NR_[A-Z_]+[[:space:]]+1[0-9][0-9][0-9]([^0-9]|$)' pool/PART.gate@2/gate.c; grep -nE 'movl[[:space:]]+\$1[0-9][0-9][0-9],[[:space:]]*%eax' pool/PART.gate@2/gate_user.S)
+	[ -z "$left" ] || { echo "AiOs-only numbers are still in PART.gate@2: $(printf '%s\n' "$left" | head -4 | tr '\t' ' ' | tr -s ' ' | tr '\n' '|')"; exit 1; }
 	boot "$t/got"
 	printf 'nr-1000 -38\nnr-1001 -38\nnr-1002 -38\nnr-1003 -38\nexit 0\n' > "$t/want"
 	cmp -s "$t/got" "$t/want" || { echo "an AiOs-only number is still answered: $(diff "$t/want" "$t/got" | grep '^>' | head -4 | tr '\n' ' ')"; exit 1; }
-	echo "1000 to 1003 each answered -38, as Linux answers them: no AiOs-only numbers left" ;;
+	echo "no AiOs-only number left in the gate's table or its stubs, and 1000 to 1003 each answered -38, as Linux answers them" ;;
 random)
 	for i in 1 2 3; do boot "$t/r$i"; grep -qx '[0-9a-f]\{32\}' "$t/r$i" || { echo "boot $i gave no AT_RANDOM: $(head -1 "$t/r$i")"; exit 1; }; done
 	for pair in "1 2" "1 3" "2 3"; do
