@@ -275,3 +275,10 @@ exam.ollama@1 | red | jig/model | s/{num_ctx: \$ctx}/{}/ | the context size is l
 exam.ollama@1 | red | jig/model | s/tool_name: \$names\[.toolResult.toolUseId\],// | the reader's answer goes back with no name, so the model cannot tell which tool spoke
 exam.ollama@1 | red | jig/model | s/inputTokens: (.prompt_eval_count \/\/ 0), outputTokens: (.eval_count \/\/ 0)/inputTokens: (.eval_count \/\/ 0), outputTokens: (.prompt_eval_count \/\/ 0)/ | Ollama's input and output tokens are swapped, so every count is wrong
 exam.ollama@1 | red | jig/model | s/case "\$MODEL_NAME" in ollama:\*) call_ollama "\$1" "\$2"; return ;; esac/:/ | a local model is sent to Bedrock instead, with the AWS key
+fix.judged@1 | red | jig/fix | s/^grep -q "\^FAIL  \$code " "\$d\/red.txt" || {/true || {/ | a test that is already green is handed to the model anyway, and paid for
+fix.judged@1 | red | jig/fix | s/echo "refused: \$a is outside the repo"; return 1/:/ | the look tool answers for any path, outside the repo included
+fix.judged@1 | red | jig/fix | s/sh jig\/test \$FIX_SUITE/sh jig\/test $test/ | the judge runs only the test that was red, so a fix that breaks another one passes
+fix.judged@1 | red | jig/fix | s/\*) bad=1 ;;/*) bad="" ;;/ | a fix for a file outside pool/ is judged like any other
+fix.judged@1 | red | jig/fix | s/tin=\$((tin + /tin=$((0 + / | only the last call's input tokens are counted
+fix.judged@1 | red | jig/fix | s/cp "\$d\/fixed" "\$d\/judge\/\$path"/cp "$d\/fixed" "$d\/judge\/$path"; cp "$d\/fixed" "$repo\/$path"/ | the fix is written into the repo itself, not only into the judge's copy
+fix.judged@1 | red | jig/fix | s/grep -c '\^\[<>\]'/grep -c '^>'/ | only added lines are counted as changed

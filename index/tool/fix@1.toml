@@ -1,0 +1,15 @@
+code          = "TOOL.fix@1"
+sentence      = "The mechanic's bench on the jig (jig/fix and fix/prompt.txt): hands one red test to one model, lets it look at a copy of the repo, takes one whole file under pool/ as its fix, judges it by every test in its own copy, and records the tokens, the result and the lines changed; scaffolding, a placeholder for the mechanic."
+status        = "draft"
+admitted      = ""
+retired_by    = ""
+kind          = "program"
+source        = ""
+licence       = "GPL-2.0-only"
+depends       = ["TOOL.exam@1"]
+build_depends = []
+exposes       = []
+requires      = []
+scaffold      = true
+as_built      = "index/tool/fix@1.as-built.md"
+reproducible  = ""

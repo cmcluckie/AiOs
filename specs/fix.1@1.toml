@@ -1,0 +1,7 @@
+code       = "SPEC.fix.1@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+component  = "TOOL.fix@1"
+clause     = "jig/fix hands one red test to one model: the test, its spec clause and what it printed.  The model may look at the repo through a tool that answers only from a copy of it and refuses any path outside it, and hands in its fix through another, as one whole file under pool/.  The fix is judged in its own copy: it is a pass only if every test passes there, the red one included.  Every call is written into the run record with its tokens, and the run with its result and the code lines the fix changed.  A test that is already green is refused before any call; a fix outside pool/ is refused unjudged; nothing the model does changes the repo."
+author     = "KEY.chris"

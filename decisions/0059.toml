@@ -1,0 +1,11 @@
+id      = "0059"
+date    = 2026-10-22
+kind    = "rules and words"
+touches = ["jig/fix", "fix/prompt.txt", "constitution/human-only.toml", "specs/fix.1@1.toml", "tests/fix.judged@1.toml", "tests/programs/fix.sh", "tests/mutations.txt", "index/tool/fix@1.toml", "index/tool/fix@1.as-built.md"]
+asked   = "Part 21 needs a bench where a model fixes a red test (findings 0024 items 5 and 6).  jig/fix, built on jig/sit's shape: the model gets the red test, its spec clause and what it printed; it looks at a copy of the repo through a look tool that refuses anything outside it; it hands in one whole file under pool/ through submit_fix; the fix is judged by every test in its own copy (a pass only if all pass); every call's tokens, the result and the lines changed (removed plus added, by diff) go into the run record.  fix/prompt.txt is the first prompt, written by Claude; each version is fingerprinted, so each is its own line on the scorecard.  jig/fix and fix/* join the human-only list, as jig/sit and exam/* are on it.  TST.fix.judged with a made-up part and two made-up tests that exist only in its copy, so it boots nothing: red before jig/fix existed, green after, seven mutations killed, in Claude's workspace."
+options = ["as written", "fold the fix into jig/sit as a mode"]
+default = "as written"
+chose   = "as written"
+why     = "Lifting a part and fixing one are different jobs with different judges; a script of its own keeps each one plain, and the run record and the cap are shared."
+by      = "KEY.chris@1"
+drafted = "Claude"

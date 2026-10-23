@@ -1,0 +1,136 @@
+#!/bin/sh
+# fix: the mechanic's bench (part 21, findings 0024).  One model is handed one red
+# test: the test's file, the spec clause it checks and what it printed.  It may look
+# at the repo through the look tool, which answers only from a copy and refuses any
+# path outside it, and hands in its fix through submit_fix: one existing file under
+# pool/, whole.  The fix is judged in its own copy by running the suite there; it is
+# a pass only if every test passes, the red one included.  Every call is counted, and
+# the run is written into the run record (jig/runs) with its tokens, its result and
+# the code lines the fix changed.  Nothing the model does touches the repo.
+#
+#   fix TEST       TEST is the test's file name without .toml, e.g. gate.sse@1
+#                  exit 0 a pass, 1 a fail or a refusal, 2 cannot run here
+#
+# FIX_PROMPT (fix/prompt.txt; its fingerprint is recorded, so each version of the
+# prompt is its own line on the scorecard), FIX_TRY (1: which try this is), FIX_TURNS
+# (40 calls), FIX_MAXTOKENS (16000 per reply), FIX_SUITE (the tests the judge runs,
+# as jig/test's prefixes; empty, the default, is every test), FIX_OUT (out/fix),
+# MODEL_NAME and MODEL_ID (see jig/model).  Needs jq.
+set -u
+repo=$(cd "$(dirname "$0")/.." && pwd)
+FIX_PROMPT=${FIX_PROMPT:-$repo/fix/prompt.txt}
+FIX_TRY=${FIX_TRY:-1}; FIX_TURNS=${FIX_TURNS:-40}; FIX_MAXTOKENS=${FIX_MAXTOKENS:-16000}
+FIX_SUITE=${FIX_SUITE:-}; FIX_OUT=${FIX_OUT:-$repo/out/fix}
+MODEL_NAME=${MODEL_NAME:-bedrock:global.anthropic.claude-sonnet-4-6}
+MODEL_MAX_COST=${MODEL_MAX_COST:-0.50}
+export MODEL_NAME MODEL_MAX_COST
+die() { echo "fix: $*" >&2; exit 1; }
+cannot() { echo "fix: $*" >&2; exit 2; }
+command -v jq > /dev/null || cannot "jq is not installed"
+[ $# -eq 1 ] || die "needs TEST, e.g. gate.sse@1"
+test=$1
+tf="$repo/tests/$test.toml"
+[ -f "$tf" ] || die "no test $test (no tests/$test.toml)"
+[ -f "$FIX_PROMPT" ] || die "no prompt at $FIX_PROMPT"
+field() { sed -n "s/^$2 *= *\"\(.*\)\".*/\1/p" "$1" | head -1; }
+code=$(field "$tf" code); binds=$(field "$tf" binds)
+clause=$(field "$repo/specs/${binds#SPEC.}.toml" clause)
+
+d="$FIX_OUT/$test-try$FIX_TRY"; rm -rf "$d"; mkdir -p "$d"
+copy() { mkdir -p "$1" && (cd "$repo" && tar --exclude=./.git --exclude=./out --exclude=./runs -cf - .) | tar -xf - -C "$1"; }
+copy "$d/base" || die "could not copy the repo"
+
+# before spending anything: the test must be red here, now
+(cd "$d/base" && sh jig/test "$test") > "$d/red.txt" 2>&1
+grep -q "^\(PASS\|FAIL\|SKIP\)  $code " "$d/red.txt" || cannot "the test did not run here: $(tail -1 "$d/red.txt")"
+grep -q "^FAIL  $code " "$d/red.txt" || { grep -q "^SKIP  $code " "$d/red.txt" && cannot "the test cannot run here: $(grep "^SKIP" "$d/red.txt" | head -1)"; die "$test is not red: nothing to fix"; }
+redline=$(grep "^FAIL  $code " "$d/red.txt" | head -1)
+
+# the look tool: list, read and find, answered from the copy, nothing outside it
+look() {	# look COMMAND ARG...
+	c=$1; shift
+	for a in "$@"; do
+		case "$a" in /*|..|../*|*/..|*/../*|.git|.git/*) echo "refused: $a is outside the repo"; return 1 ;; esac
+	done
+	case "$c" in
+	list)	p=${1:-.}; [ -d "$d/base/$p" ] || { echo "no folder $p"; return 1; }
+		(cd "$d/base/$p" && ls -p) | head -200 ;;
+	read)	[ $# -ge 1 ] && [ -f "$d/base/$1" ] || { echo "no file ${1:-}"; return 1; }
+		a=1; b=200; case "${2:-}" in *-*) a=${2%-*}; b=${2#*-} ;; esac
+		case "$a$b" in *[!0-9]*) echo "lines are FIRST-LAST, numbers"; return 1 ;; esac
+		[ $((b - a)) -lt 400 ] || b=$((a + 399))
+		awk -v a="$a" -v b="$b" 'NR >= a && NR <= b { printf "%d\t%s\n", NR, $0 }' "$d/base/$1" ;;
+	find)	[ $# -ge 1 ] || { echo "find needs a word"; return 1; }
+		(cd "$d/base" && grep -rnF -- "$1" pool specs tests index findings jig 2> /dev/null) | head -100 ;;
+	*)	echo "the look tool has list, read and find"; return 1 ;;
+	esac
+}
+
+cp='{"cachePoint":{"type":"default"}}'
+tools='{"tools":[{"toolSpec":{"name":"look","description":"Look at the repo, as it stands with the test red. command is list (a folder), read (a file, optionally FIRST-LAST lines, at most 400) or find (a word, in pool, specs, tests, index, findings and jig); args is the list of its arguments.","inputSchema":{"json":{"type":"object","properties":{"command":{"type":"string","enum":["list","read","find"]},"args":{"type":"array","items":{"type":"string"}}},"required":["command","args"]}}}},{"toolSpec":{"name":"submit_fix","description":"Hand in the fix: the path of one existing file under pool/ and its whole new content. This ends your turn; the fix is then judged by every test.","inputSchema":{"json":{"type":"object","properties":{"path":{"type":"string"},"content":{"type":"string"}},"required":["path","content"]}}}},{"cachePoint":{"type":"default"}}]}'
+{ printf 'The red test, tests/%s.toml:\n\n' "$test"; cat "$tf"
+  printf '\nThe spec clause it checks, %s:\n\n%s\n\nWhat it printed when it ran:\n\n%s\n' "$binds" "$clause" "$redline"
+} > "$d/first.txt"
+jq -n --rawfile t "$d/first.txt" '[{role:"user",content:[{text:$t}]}]' > "$d/messages.json"
+prompt=$(git -C "$repo" hash-object "$FIX_PROMPT" 2> /dev/null | cut -c1-8); [ -n "$prompt" ] || prompt=$(cksum < "$FIX_PROMPT" | cut -d' ' -f1)
+tin=0; tout=0; cread=0; cwrite=0; turn=0; path=""; why=""
+while :; do
+	turn=$((turn + 1))
+	[ "$turn" -le "$FIX_TURNS" ] || { why="more than $FIX_TURNS calls"; break; }
+	jq -n --slurpfile m "$d/messages.json" --rawfile s "$FIX_PROMPT" --argjson tc "$tools" --argjson mt "$FIX_MAXTOKENS" --argjson cp "$cp" \
+		'{system:[{text:$s},$cp],messages:($m[0] | .[-1].content += [$cp]),toolConfig:$tc,inferenceConfig:{maxTokens:$mt}}' > "$d/req.json"
+	sh "$repo/jig/model" converse "$d/req.json" "$d/reply.json" || { rc=$?; [ $rc -eq 2 ] && exit 2; why="the call was refused"; break; }
+	tin=$((tin + $(jq '.usage.inputTokens // 0' "$d/reply.json"))); tout=$((tout + $(jq '.usage.outputTokens // 0' "$d/reply.json")))
+	cread=$((cread + $(jq '.usage.cacheReadInputTokens // 0' "$d/reply.json"))); cwrite=$((cwrite + $(jq '.usage.cacheWriteInputTokens // 0' "$d/reply.json")))
+	jq --slurpfile r "$d/reply.json" '. + [$r[0].output.message]' "$d/messages.json" > "$d/m.new" && mv "$d/m.new" "$d/messages.json"
+	if jq -e '[.output.message.content[] | select(.toolUse.name == "submit_fix")] | length > 0' "$d/reply.json" > /dev/null; then
+		jq -r '[.output.message.content[] | select(.toolUse.name == "submit_fix") | .toolUse.input][0].path // ""' "$d/reply.json" > "$d/path"
+		jq -j '[.output.message.content[] | select(.toolUse.name == "submit_fix") | .toolUse.input][0].content // ""' "$d/reply.json" > "$d/fixed"
+		path=$(cat "$d/path"); break
+	fi
+	[ "$(jq -r '.stopReason // ""' "$d/reply.json")" = tool_use ] || { why="it stopped without handing in a fix"; break; }
+	results='[]'
+	while IFS= read -r tu; do
+		id=$(printf '%s' "$tu" | jq -r .toolUseId); cmd=$(printf '%s' "$tu" | jq -r '.input.command // ""')
+		set --; while IFS= read -r a; do set -- "$@" "$a"; done <<ARGS
+$(printf '%s' "$tu" | jq -r '(.input.args // [])[] | tostring')
+ARGS
+		out=$(look "$cmd" "$@" 2>&1) && st=success || st=error
+		results=$(printf '%s' "$results" | jq --arg id "$id" --arg t "$(printf '%s' "$out" | head -c 30000)" --arg st "$st" '. + [{toolResult:{toolUseId:$id,content:[{text:$t}],status:$st}}]')
+	done <<EOT
+$(jq -c '.output.message.content[] | select(.toolUse) | .toolUse' "$d/reply.json")
+EOT
+	printf '%s' "$results" | jq '[{role:"user",content:.}]' > "$d/res.json"
+	jq --slurpfile r "$d/res.json" '. + $r[0]' "$d/messages.json" > "$d/m.new" && mv "$d/m.new" "$d/messages.json"
+done
+
+lines=0; : > "$d/output.txt"
+if [ -z "$path" ]; then
+	result=refused; line="no fix handed in${why:+ ($why)}"
+else
+	case "$path" in
+	pool/*/*) case "$path" in *..*) bad=1 ;; *) bad="" ;; esac ;;
+	*) bad=1 ;;
+	esac
+	if [ -n "$bad" ] || [ ! -f "$d/base/$path" ]; then
+		result=refused; line="only a file under pool/ that already exists may be fixed, not $path"
+	else
+		copy "$d/judge" || die "could not copy the repo to judge"
+		cp "$d/fixed" "$d/judge/$path"
+		diff "$d/base/$path" "$d/judge/$path" > "$d/output.txt"
+		lines=$(grep -c '^[<>]' "$d/output.txt")
+		# shellcheck disable=SC2086
+		(cd "$d/judge" && sh jig/test $FIX_SUITE) > "$d/suite.txt" 2>&1
+		summary=$(tail -1 "$d/suite.txt")
+		if grep -q "^PASS  $code " "$d/suite.txt" && ! grep -q '^FAIL ' "$d/suite.txt" && grep -q '^# [0-9]* passed, 0 failed' "$d/suite.txt"; then
+			result=pass; line="every test passed: ${summary#\# }"
+		else
+			result=fail; line="$(grep -c '^FAIL ' "$d/suite.txt") red: $(grep '^FAIL ' "$d/suite.txt" | head -3 | cut -c1-160 | tr '\n' ' ')"
+		fi
+	fi
+fi
+cp "$d/messages.json" "$d/input.txt"
+RUNS_SITTING=$(date -u +%Y%m%dT%H%M%SZ) RUNS_PROMPT=$prompt RUNS_CACHE_READ=$cread RUNS_CACHE_WRITE=$cwrite \
+	sh "$repo/jig/runs" record "fix-$(printf %s "${test%@*}" | tr . -)" "$MODEL_NAME" "$(date -u +%Y-%m-%d)" "$FIX_TRY" "$tin" "$tout" "$result" "$lines" "$d/input.txt" "$d/output.txt" > /dev/null || exit 1
+echo "$test, try $FIX_TRY, prompt $prompt: $result ($line); $lines lines changed; $tin in, $tout out over $turn calls"
+[ "$result" = pass ]
