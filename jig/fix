@@ -58,19 +58,29 @@ look() {	# look COMMAND ARG...
 	case "$c" in
 	list)	p=${1:-.}; [ -d "$d/base/$p" ] || { echo "no folder $p"; return 1; }
 		(cd "$d/base/$p" && ls -p) | head -200 ;;
-	read)	[ $# -ge 1 ] && [ -f "$d/base/$1" ] || { echo "no file ${1:-}"; return 1; }
-		a=1; b=200; case "${2:-}" in *-*) a=${2%-*}; b=${2#*-} ;; esac
-		case "$a$b" in *[!0-9]*) echo "lines are FIRST-LAST, numbers"; return 1 ;; esac
+	read)	# FILE, FILE FIRST, FILE FIRST LAST or FILE FIRST-LAST; at most 400 lines at a time
+		[ $# -ge 1 ] && [ -f "$d/base/$1" ] || { echo "no file ${1:-}"; return 1; }
+		a=1; b=""
+		case "${2:-}" in *-*) a=${2%-*}; b=${2#*-} ;; ?*) a=$2; b=${3:-} ;; esac
+		[ -n "$b" ] || b=$((a + 399))
+		case "$a$b" in *[!0-9]*) echo "lines are numbers: FILE FIRST LAST"; return 1 ;; esac
+		[ "$b" -ge "$a" ] || { echo "the last line comes before the first"; return 1; }
 		[ $((b - a)) -lt 400 ] || b=$((a + 399))
-		awk -v a="$a" -v b="$b" 'NR >= a && NR <= b { printf "%d\t%s\n", NR, $0 }' "$d/base/$1" ;;
-	find)	[ $# -ge 1 ] || { echo "find needs a word"; return 1; }
-		(cd "$d/base" && grep -rnF -- "$1" pool specs tests index findings jig 2> /dev/null) | head -100 ;;
+		awk -v a="$a" -v b="$b" 'NR >= a && NR <= b { printf "%d\t%s\n", NR, $0 } END { if (NR < a) printf "the file has %d lines\n", NR }' "$d/base/$1" ;;
+	find)	# WORD, or WORD FOLDER-OR-FILE
+		[ $# -ge 1 ] || { echo "find needs a word"; return 1; }
+		if [ -n "${2:-}" ]; then
+			[ -e "$d/base/$2" ] || { echo "no folder or file $2"; return 1; }
+			(cd "$d/base" && grep -rnF -- "$1" "$2" 2> /dev/null) | head -100
+		else
+			(cd "$d/base" && grep -rnF -- "$1" pool specs tests index findings jig 2> /dev/null) | head -100
+		fi ;;
 	*)	echo "the look tool has list, read and find"; return 1 ;;
 	esac
 }
 
 cp='{"cachePoint":{"type":"default"}}'
-tools='{"tools":[{"toolSpec":{"name":"look","description":"Look at the repo, as it stands with the test red. command is list (a folder), read (a file, optionally FIRST-LAST lines, at most 400) or find (a word, in pool, specs, tests, index, findings and jig); args is the list of its arguments.","inputSchema":{"json":{"type":"object","properties":{"command":{"type":"string","enum":["list","read","find"]},"args":{"type":"array","items":{"type":"string"}}},"required":["command","args"]}}}},{"toolSpec":{"name":"submit_fix","description":"Hand in the fix: the path of one existing file under pool/ and its whole new content. This ends your turn; the fix is then judged by every test.","inputSchema":{"json":{"type":"object","properties":{"path":{"type":"string"},"content":{"type":"string"}},"required":["path","content"]}}}},{"cachePoint":{"type":"default"}}]}'
+tools='{"tools":[{"toolSpec":{"name":"look","description":"Look at the repo, as it stands with the test red. command is list (args: a folder), read (args: a file, then optionally the first and last line to show, at most 400 lines at a time; each line comes back with its number) or find (args: a word, then optionally a folder or file to look in; otherwise pool, specs, tests, index, findings and jig).","inputSchema":{"json":{"type":"object","properties":{"command":{"type":"string","enum":["list","read","find"]},"args":{"type":"array","items":{"type":"string"}}},"required":["command","args"]}}}},{"toolSpec":{"name":"submit_fix","description":"Hand in the fix: the path of one existing file under pool/ and its whole new content. This ends your turn; the fix is then judged by every test.","inputSchema":{"json":{"type":"object","properties":{"path":{"type":"string"},"content":{"type":"string"}},"required":["path","content"]}}}},{"cachePoint":{"type":"default"}}]}'
 { printf 'The red test, tests/%s.toml:\n\n' "$test"; cat "$tf"
   printf '\nThe spec clause it checks, %s:\n\n%s\n\nWhat it printed when it ran:\n\n%s\n' "$binds" "$clause" "$redline"
 } > "$d/first.txt"
@@ -143,5 +153,5 @@ fi
 cp "$d/messages.json" "$d/input.txt"
 RUNS_SITTING=$(date -u +%Y%m%dT%H%M%SZ) RUNS_PROMPT=$prompt RUNS_CACHE_READ=$cread RUNS_CACHE_WRITE=$cwrite \
 	sh "$repo/jig/runs" record "fix-$(printf %s "${test%@*}" | tr . -)" "$MODEL_NAME" "$(date -u +%Y-%m-%d)" "$FIX_TRY" "$tin" "$tout" "$result" "$lines" "$d/input.txt" "$d/output.txt" > /dev/null || exit 1
-echo "$test, try $FIX_TRY, prompt $prompt: $result ($line); $lines lines changed; $tin in, $tout out over $turn calls"
+echo "$test, try $FIX_TRY, prompt $prompt: $result ($line); $lines lines changed; $tin in, $cread read from the cache, $cwrite written to it, $tout out, over $turn calls"
 [ "$result" = pass ]

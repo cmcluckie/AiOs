@@ -1,0 +1,11 @@
+id      = "0061"
+date    = 2026-10-22
+kind    = "rules and words"
+touches = ["jig/fix", "tests/fix.judged@1.toml", "tests/programs/fix.sh", "tests/mutations.txt", "index/tool/fix@1.as-built.md"]
+asked   = "Try 1 (findings 0024 item 14): the look tool sent files from line 1 when a range came as two numbers, find ignored the folder it was given, and the summary line left out the cached tokens.  read now takes FILE, FILE FIRST, FILE FIRST LAST or FILE FIRST-LAST; find takes WORD and an optional folder or file; the summary line names the tokens read from and written to the cache.  The tool's description says so.  TST.fix.judged red on the old tool at the read Sonnet was given, green after, three more mutations killed.  Try 1 stays recorded as it happened."
+options = ["as written", "keep the tool and tell the model the range format in the prompt"]
+default = "as written"
+chose   = "as written"
+why     = "Chris, 2026-10-22: yes.  The model asked the natural way; the tool was wrong, not the question."
+by      = "KEY.chris@1"
+drafted = "Claude"

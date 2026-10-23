@@ -284,3 +284,6 @@ fix.judged@1 | red | jig/fix | s/cp "\$d\/fixed" "\$d\/judge\/\$path"/cp "$d\/fi
 fix.judged@1 | red | jig/fix | s/grep -c '\^\[<>\]'/grep -c '^>'/ | only added lines are counted as changed
 fix.judged@1 | red | jig/fix | s/grep -qx "\$c" "\$d\/red-before" || printf/printf/ | a test already red before the fix is held against it, so no fix can pass while another job is open
 fix.judged@1 | red | jig/fix | s/\[ ! -s "\$d\/red-new" \]/true/ | a test that was green and went red is not held against the fix
+fix.judged@1 | red | jig/fix | s/?\*) a=\$2; b=\${3:-} ;;// | a range given as two numbers is ignored and the file comes back from line 1, as on try 1
+fix.judged@1 | red | jig/fix | s/grep -rnF -- "\$1" "\$2"/grep -rnF -- "$1" pool specs tests index findings jig/ | a find told where to look searches everywhere anyway
+fix.judged@1 | red | jig/fix | s/\$cread read from the cache, // | the summary line leaves out the tokens read from the cache, as on try 1

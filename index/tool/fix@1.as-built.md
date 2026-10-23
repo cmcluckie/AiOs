@@ -13,9 +13,10 @@ skip the quartermaster).
    ("nothing to fix"); one that cannot run on this host is exit 2.
 2. Sends the model the prompt (fix/prompt.txt, or FIX_PROMPT), then the test's
    file, the spec clause it checks, and the FAIL line it printed.
-3. Answers the model's look calls from the copy only: list a folder, read a file
-   (numbered, at most 400 lines at a time), find a word in pool, specs, tests,
-   index, findings and jig.  A path that starts with /, holds .., or reaches .git
+3. Answers the model's look calls from the copy only: list a folder; read a file,
+   numbered, from a first line to a last given as two numbers or as FIRST-LAST, at
+   most 400 lines at a time; find a word in a folder or file it names, or in pool,
+   specs, tests, index, findings and jig.  A path that starts with /, holds .., or reaches .git
    is refused.
 4. Stops at submit_fix (a path and a whole file), at FIX_TURNS calls (40), or when
    the model ends its turn without one.
@@ -40,4 +41,4 @@ a green fix is a proposal Chris decides on, like any other change.
   cap are jig/model's); jig/runs to record.
 
 ## Size
-jig/fix 147 lines (shell); fix/prompt.txt 7 lines.
+jig/fix 157 lines (shell); fix/prompt.txt 7 lines.
