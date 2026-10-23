@@ -1,0 +1,7 @@
+code       = "SPEC.gate.11@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+component  = "PART.gate@2"
+clause     = "A program may use the SSE instructions: the kernel tells the processor it saves their registers, and keeps each program's own (findings 0023 item 13)."
+author     = "KEY.chris"

@@ -1,0 +1,11 @@
+id      = "0058"
+date    = 2026-10-22
+kind    = "specs and tests"
+touches = ["specs/gate.10@1.toml", "specs/gate.11@1.toml", "specs/gate.12@1.toml", "specs/loader.15@1.toml", "specs/loader.16@1.toml", "tests/gate.linux-only@1.toml", "tests/loader.random@1.toml", "tests/gate.sse@1.toml", "tests/gate.window-end@1.toml", "tests/share.waits@1.toml", "tests/programs/debt.c", "tests/programs/debt.sh", "tests/programs/pastend.c", "tests/programs/pastend.sh", "tests/programs/waiter.c", "tests/programs/waiter.sh"]
+asked   = "Findings 0024 item 4: before either model touches anything, each thing left broken on purpose gets a test that goes red on AiOs as it is, since for most of them no test could see the problem and a model could change nothing and pass everything.  Five specs and five tests, drafted by Claude, red in Claude's workspace for the reasons in findings 0024 item 11.  They go in red, and stay red until a fix is chosen; they have no mutations until there is a fix to break."
+options = ["as written", "send some back"]
+default = "as written"
+chose   = "as written"
+why     = "A fix is real only when the whole suite passes; these are what make 'the whole suite' include the five things being fixed."
+by      = "KEY.chris@1"
+drafted = "Claude"

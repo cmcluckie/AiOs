@@ -1,0 +1,10 @@
+code       = "TST.loader.random@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+binds      = "SPEC.loader.15@1"
+red_when   = "three boots of the cat flavor's kernel hand a Linux program AT_RANDOMs of which any two agree in more than 4 of their 16 bytes, which bytes read from a counter do"
+timeout_ms = 120000
+isolates   = "PART.loader@10"
+runner     = "jig/test cmd sh tests/programs/debt.sh random"
+mutations  = 0

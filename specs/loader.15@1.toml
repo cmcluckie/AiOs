@@ -1,0 +1,7 @@
+code       = "SPEC.loader.15@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+component  = "PART.loader@10"
+clause     = "The 16 bytes a Linux program is handed as AT_RANDOM are random: from the processor's random-number instruction where it has one, and the as-built spec says where they come from otherwise (TECH-DEBT 4, decision 0046)."
+author     = "KEY.chris"

@@ -1,0 +1,7 @@
+code       = "SPEC.gate.12@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+component  = "PART.gate@2"
+clause     = "A program's window is exactly the memory it was given: an address past its end is closed to it even when the end is not on a 4 MiB line, and the program is stopped there with a page fault (TECH-DEBT 3)."
+author     = "KEY.chris"

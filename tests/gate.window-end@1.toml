@@ -1,0 +1,10 @@
+code       = "TST.gate.window-end@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+binds      = "SPEC.gate.12@1"
+red_when   = "on the cat flavor's machine given 62 MiB, a plain program cannot read the last byte of its window, or reads the first byte past it and carries on, or is stopped anywhere but 03E00000"
+timeout_ms = 60000
+isolates   = "PART.gate@2"
+runner     = "jig/test cmd sh tests/programs/pastend.sh"
+mutations  = 0

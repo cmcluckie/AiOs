@@ -1,0 +1,10 @@
+code       = "TST.gate.linux-only@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+binds      = "SPEC.gate.10@1"
+red_when   = "under the cat flavor's kernel, a Linux program that calls 1000, 1001, 1002 or 1003 gets anything but -38"
+timeout_ms = 60000
+isolates   = "PART.gate@2"
+runner     = "jig/test cmd sh tests/programs/debt.sh numbers"
+mutations  = 0

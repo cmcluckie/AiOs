@@ -1,0 +1,7 @@
+code       = "SPEC.gate.10@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+component  = "PART.gate@2"
+clause     = "Every system call the gate answers is at Linux's 32-bit x86 number, and at a number Linux has no call for it answers what Linux does, -38 (ENOSYS); no number is AiOs's own (TECH-DEBT 1, findings 0021 item 5).  Programs written for the old table keep working through it."
+author     = "KEY.chris"

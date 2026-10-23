@@ -1,0 +1,7 @@
+code       = "SPEC.loader.16@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+component  = "PART.loader@9"
+clause     = "While a program waits in read for a byte, the timer still ticks and the other programs still get their turns (TECH-DEBT 2)."
+author     = "KEY.chris"
