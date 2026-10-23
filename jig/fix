@@ -3,8 +3,10 @@
 # test: the test's file, the spec clause it checks and what it printed.  It may look
 # at the repo through the look tool, which answers only from a copy and refuses any
 # path outside it, and hands in its fix through submit_fix: one existing file under
-# pool/, whole.  The fix is judged in its own copy by running the suite there; it is
-# a pass only if every test passes, the red one included.  Every call is counted, and
+# pool/, whole.  The suite runs once on the repo as it is, to know which tests are
+# already red, and once in the fix's own copy: the fix is a pass only if the red test
+# turns green and no test that was green turns red (decision 0060).  Other tests
+# already red are other jobs, and do not count against it.  Every call is counted, and
 # the run is written into the run record (jig/runs) with its tokens, its result and
 # the code lines the fix changed.  Nothing the model does touches the repo.
 #
@@ -40,8 +42,9 @@ d="$FIX_OUT/$test-try$FIX_TRY"; rm -rf "$d"; mkdir -p "$d"
 copy() { mkdir -p "$1" && (cd "$repo" && tar --exclude=./.git --exclude=./out --exclude=./runs -cf - .) | tar -xf - -C "$1"; }
 copy "$d/base" || die "could not copy the repo"
 
-# before spending anything: the test must be red here, now
-(cd "$d/base" && sh jig/test "$test") > "$d/red.txt" 2>&1
+# before spending anything: the suite as it is, and the test must be red in it
+# shellcheck disable=SC2086
+(cd "$d/base" && sh jig/test $FIX_SUITE) > "$d/red.txt" 2>&1
 grep -q "^\(PASS\|FAIL\|SKIP\)  $code " "$d/red.txt" || cannot "the test did not run here: $(tail -1 "$d/red.txt")"
 grep -q "^FAIL  $code " "$d/red.txt" || { grep -q "^SKIP  $code " "$d/red.txt" && cannot "the test cannot run here: $(grep "^SKIP" "$d/red.txt" | head -1)"; die "$test is not red: nothing to fix"; }
 redline=$(grep "^FAIL  $code " "$d/red.txt" | head -1)
@@ -104,7 +107,7 @@ EOT
 	jq --slurpfile r "$d/res.json" '. + $r[0]' "$d/messages.json" > "$d/m.new" && mv "$d/m.new" "$d/messages.json"
 done
 
-lines=0; : > "$d/output.txt"
+lines=0; line=""; : > "$d/output.txt"
 if [ -z "$path" ]; then
 	result=refused; line="no fix handed in${why:+ ($why)}"
 else
@@ -122,10 +125,18 @@ else
 		# shellcheck disable=SC2086
 		(cd "$d/judge" && sh jig/test $FIX_SUITE) > "$d/suite.txt" 2>&1
 		summary=$(tail -1 "$d/suite.txt")
-		if grep -q "^PASS  $code " "$d/suite.txt" && ! grep -q '^FAIL ' "$d/suite.txt" && grep -q '^# [0-9]* passed, 0 failed' "$d/suite.txt"; then
-			result=pass; line="every test passed: ${summary#\# }"
+		# the tests red before, and the tests red now that were not
+		sed -n 's/^FAIL  \([^ ]*\) .*/\1/p' "$d/red.txt" | sort > "$d/red-before"
+		grep '^FAIL ' "$d/suite.txt" | while IFS= read -r l; do
+			c=$(printf '%s\n' "$l" | sed 's/^FAIL  \([^ ]*\) .*/\1/')
+			grep -qx "$c" "$d/red-before" || printf '%s\n' "$l"
+		done > "$d/red-new"
+		if grep -q "^PASS  $code " "$d/suite.txt" && [ ! -s "$d/red-new" ]; then
+			still=$(($(grep -c '^FAIL ' "$d/suite.txt")))
+			result=pass; line="the red test passed and nothing that was green went red: ${summary#\# }${still:+, $still already red before}"
 		else
-			result=fail; line="$(grep -c '^FAIL ' "$d/suite.txt") red: $(grep '^FAIL ' "$d/suite.txt" | head -3 | cut -c1-160 | tr '\n' ' ')"
+			grep -q "^PASS  $code " "$d/suite.txt" || line="the test it was given is still red; "
+			result=fail; line="${line:-}$(grep -c . "$d/red-new") newly red: $(head -3 "$d/red-new" | cut -c1-160 | tr '\n' ' ')"
 		fi
 	fi
 fi

@@ -11,6 +11,8 @@
 #   a fix that turns the red test green with the rest still green is recorded as
 #     pass, with its two changed lines and the tokens of every call
 #   a fix that turns the red test green but another test red is a fail
+#   a test that was red before the fix and is still red after (fixprobe.always,
+#     another job) does not count against it
 #   a fix handed in for a file outside pool/ is refused, and nothing is judged
 #   the copy the model worked from never changes: f.c still says "broken"
 # Exit 0 green, 1 red, 2 where jig/test cannot run (no QEMU) or there is no jq.
@@ -24,7 +26,8 @@ mkdir "$t/r"; tar --exclude=./.git --exclude=./out --exclude=./runs -cf - . | ta
 r="$t/r"; mkdir -p "$r/pool/PART.fixprobe@1"; printf 'broken\n' > "$r/pool/PART.fixprobe@1/f.c"
 printf '#!/bin/sh\ngrep -qx fixed pool/PART.fixprobe@1/f.c && { echo fixed; exit 0; }\necho "f.c says $(head -1 pool/PART.fixprobe@1/f.c)"; exit 1\n' > "$r/tests/programs/fixprobe-red.sh"
 printf '#!/bin/sh\ngrep -q breaks-other pool/PART.fixprobe@1/f.c && { echo "broken by the fix"; exit 1; }\necho fine; exit 0\n' > "$r/tests/programs/fixprobe-other.sh"
-for n in red other; do
+printf '#!/bin/sh\necho "red before any fix, and after"; exit 1\n' > "$r/tests/programs/fixprobe-always.sh"
+for n in red other always; do
 	printf 'code       = "TST.fixprobe.%s@1"\nstatus     = "draft"\nadmitted   = ""\nretired_by = ""\nbinds      = "SPEC.fixprobe.1@1"\nred_when   = "f.c is not fixed"\ntimeout_ms = 10000\nisolates   = "PART.fixprobe@1"\nrunner     = "jig/test cmd sh tests/programs/fixprobe-%s.sh"\nmutations  = 0\n' "$n" "$n" > "$r/tests/fixprobe.$n@1.toml"
 done
 printf 'code       = "SPEC.fixprobe.1@1"\nstatus     = "draft"\nadmitted   = ""\nretired_by = ""\ncomponent  = "PART.fixprobe@1"\nclause     = "f.c says fixed."\nauthor     = "KEY.chris"\n' > "$r/specs/fixprobe.1@1.toml"
@@ -64,4 +67,4 @@ rm -rf "$t/runs"; fakes "$t/f-out" "fixed
 " tests/programs/fixprobe-red.sh
 MODEL_FAKE="$t/f-out" run fixprobe.red@1 && fail "a fix outside pool/ was judged"
 grep -q '^result *= "refused"' "$t/runs"/*/run.toml && grep -q "only a file under pool/" "$t/said" || fail "a fix outside pool/ was not refused: $(tail -1 "$t/said")"
-echo "a green test refused before any call; the look answered from the repo and refused outside it; a good fix a pass with its 2 lines and 300 in, 60 out; a fix that broke another test a fail; a fix outside pool/ refused unjudged; the model's copy untouched"
+echo "a green test refused before any call; a test already red before the fix not held against it; the look answered from the repo and refused outside it; a good fix a pass with its 2 lines and 300 in, 60 out; a fix that broke another test a fail; a fix outside pool/ refused unjudged; the model's copy untouched"

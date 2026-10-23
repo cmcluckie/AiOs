@@ -8,7 +8,8 @@ skip the quartermaster).
 ## What it does
 `sh jig/fix TEST` hands one red test to one model and judges what comes back.
 1. Copies the repo (without .git, out/ and runs/) to out/fix/TEST-tryN/base and
-   runs the test there.  A test that is not red is refused before any call
+   runs the suite there (every test, or the prefixes in FIX_SUITE), to know which
+   tests are red before any fix.  A test that is not red is refused before any call
    ("nothing to fix"); one that cannot run on this host is exit 2.
 2. Sends the model the prompt (fix/prompt.txt, or FIX_PROMPT), then the test's
    file, the spec clause it checks, and the FAIL line it printed.
@@ -20,8 +21,8 @@ skip the quartermaster).
    the model ends its turn without one.
 5. Refuses a fix for anything but an existing file under pool/, unjudged.
    Otherwise copies the repo again, puts the fix in that copy, and runs jig/test
-   there: every test, or the prefixes in FIX_SUITE.  A pass needs the red test
-   PASS, no FAIL anywhere, and a summary of 0 failed.
+   there, the same tests.  A pass needs the red test PASS and no test FAIL that
+   was not already FAIL before (decision 0060): tests already red are other jobs.
 6. Records the run with jig/runs: item fix-TEST, the model, the try (FIX_TRY), the
    prompt's fingerprint, every call's input and output tokens added up, the result
    (pass, fail or refused), and the lines changed: lines removed plus lines added,
@@ -39,4 +40,4 @@ a green fix is a proposal Chris decides on, like any other change.
   cap are jig/model's); jig/runs to record.
 
 ## Size
-jig/fix 136 lines (shell); fix/prompt.txt 7 lines.
+jig/fix 147 lines (shell); fix/prompt.txt 7 lines.

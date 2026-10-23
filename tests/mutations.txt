@@ -282,3 +282,5 @@ fix.judged@1 | red | jig/fix | s/\*) bad=1 ;;/*) bad="" ;;/ | a fix for a file o
 fix.judged@1 | red | jig/fix | s/tin=\$((tin + /tin=$((0 + / | only the last call's input tokens are counted
 fix.judged@1 | red | jig/fix | s/cp "\$d\/fixed" "\$d\/judge\/\$path"/cp "$d\/fixed" "$d\/judge\/$path"; cp "$d\/fixed" "$repo\/$path"/ | the fix is written into the repo itself, not only into the judge's copy
 fix.judged@1 | red | jig/fix | s/grep -c '\^\[<>\]'/grep -c '^>'/ | only added lines are counted as changed
+fix.judged@1 | red | jig/fix | s/grep -qx "\$c" "\$d\/red-before" || printf/printf/ | a test already red before the fix is held against it, so no fix can pass while another job is open
+fix.judged@1 | red | jig/fix | s/\[ ! -s "\$d\/red-new" \]/true/ | a test that was green and went red is not held against the fix

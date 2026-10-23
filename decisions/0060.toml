@@ -1,0 +1,11 @@
+id      = "0060"
+date    = 2026-10-22
+kind    = "rules and words"
+touches = ["jig/fix", "specs/fix.1@1.toml", "tests/fix.judged@1.toml", "tests/programs/fix.sh", "tests/mutations.txt", "index/tool/fix@1.as-built.md"]
+asked   = "Findings 0024 item 2(e) said a fix is real only when every test passes.  But part 21 has five tests red on purpose, one per fix (decision 0058), so a fix of one would fail on the other four, however good it was, and nothing could pass until all five were fixed at once.  The rule becomes: the suite runs once on the repo as it is and once with the fix; a fix passes when its own red test turns green and no test that was green turns red.  Tests already red before are other jobs and do not count against it.  Each run takes two suite runs, about ten minutes on the jig.  TST.fix.judged gains a made-up test that is always red: red before the change, green after, two more mutations killed."
+options = ["as written", "every test green, as first written"]
+default = "as written"
+chose   = "as written"
+why     = "Chris, 2026-10-22: yes.  Nothing that worked may break, and a fix is not blamed for the jobs it was not given."
+by      = "KEY.chris@1"
+drafted = "Claude"
