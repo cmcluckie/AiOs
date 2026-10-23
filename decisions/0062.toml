@@ -1,0 +1,11 @@
+id      = "0062"
+date    = 2026-10-22
+kind    = "rules and words"
+touches = ["jig/fix", "tests/fix.judged@1.toml", "tests/programs/fix.sh", "tests/mutations.txt", "index/tool/fix@1.as-built.md"]
+asked   = "Try 2 (findings 0024 item 15): Sonnet asked for ranges as start_line and end_line, fields of its own naming, and the look tool ignored them.  The tool takes them and its description names them; every read is headed with the file, the lines shown and how many it has.  TST.fix.judged red on try 2's read before, green after, two more mutations killed.  Try 2 stays recorded as it happened; try 3 uses the same prompt."
+options = ["as written", "refuse unknown fields with a message instead"]
+default = "as written"
+chose   = "as written"
+why     = "Chris, 2026-10-22, on try 1: fix the bench when the bench is what failed.  start_line and end_line are the names a model reaches for; the heading tells it what it got either way."
+by      = "KEY.chris@1"
+drafted = "Claude"

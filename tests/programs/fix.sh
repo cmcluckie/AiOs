@@ -41,7 +41,8 @@ fakes() {	# fakes DIR CONTENT [PATH]: look at f.c, look outside, read lines 2 to
 	reply "$1/2.json" look '{"command":"read","args":["../../etc/passwd"]}'
 	reply "$1/3.json" look '{"command":"read","args":["tests/programs/fixprobe-red.sh","2","2"]}'
 	reply "$1/4.json" look '{"command":"find","args":["broken","pool/PART.fixprobe@1"]}'
-	reply "$1/5.json" submit_fix "$(jq -cn --arg p "${3:-pool/PART.fixprobe@1/f.c}" --arg c "$2" '{path:$p,content:$c}')"
+	reply "$1/5.json" look '{"command":"read","args":["tests/programs/fixprobe-red.sh"],"start_line":3,"end_line":3}'
+	reply "$1/6.json" submit_fix "$(jq -cn --arg p "${3:-pool/PART.fixprobe@1/f.c}" --arg c "$2" '{path:$p,content:$c}')"
 }
 export PRICES="$r/tests/fixtures/model/prices.toml" MODEL_NAME=test:model RUNS="$t/runs" BUDGET="$r/tests/fixtures/exam/budget.toml" FIX_SUITE="fixprobe." FIX_OUT="$t/out"
 run() { (cd "$r" && sh jig/fix "$@") > "$t/said" 2>&1; }
@@ -55,12 +56,13 @@ MODEL_FAKE="$t/f-green" run fixprobe.other@1; rc=$?
 MODEL_FAKE="$t/f-green" run fixprobe.red@1 || fail "a good fix was not judged a pass: $(tail -2 "$t/said" | tr '\n' ' ')"
 in=$(ls -d "$t/runs"/*/ | head -1)
 grep -q '^result *= "pass"' "$in/run.toml" && grep -q '^lines *= 2$' "$in/run.toml" || fail "the pass was not recorded with its 2 changed lines: $(grep -E '^(result|lines)' "$in/run.toml" | tr '\n' ' ')"
-grep -q '^input_tokens *= 500$' "$in/run.toml" && grep -q '^output_tokens *= 100$' "$in/run.toml" && grep -q '^cache_read_tokens *= 5000$' "$in/run.toml" || fail "the tokens of every call were not counted: $(grep '_tokens' "$in/run.toml" | tr '\n' ' ')"
-grep -q '"text": *"1\\tbroken' "$in/input.txt" || fail "the model's look at f.c was not answered with what f.c says"
+grep -q '^input_tokens *= 600$' "$in/run.toml" && grep -q '^output_tokens *= 120$' "$in/run.toml" && grep -q '^cache_read_tokens *= 6000$' "$in/run.toml" || fail "the tokens of every call were not counted: $(grep '_tokens' "$in/run.toml" | tr '\n' ' ')"
+grep -q '"text": *"pool/PART.fixprobe@1/f.c, lines 1 to 1 of 1\\n1\\tbroken' "$in/input.txt" || fail "the model's look at f.c was not answered with what f.c says"
 grep -q 'outside the repo' "$in/input.txt" || fail "a look outside the repo was not refused"
-grep -q '"text": *"2\\tgrep -qx fixed' "$in/input.txt" && ! grep -q '"text": *"1\\t#!/bin/sh\\n2' "$in/input.txt" || fail "a read of lines 2 to 2, given as two numbers, did not give line 2 alone"
+grep -q '"text": *"tests/programs/fixprobe-red.sh, lines 2 to 2 of 3\\n2\\tgrep -qx fixed' "$in/input.txt" || fail "a read of lines 2 to 2, given as two numbers, did not give line 2 alone"
+grep -q '"text": *"tests/programs/fixprobe-red.sh, lines 3 to 3 of 3\\n3\\techo' "$in/input.txt" || fail "a read given start_line and end_line, as Sonnet asked on try 2, did not give that line, headed with where it is in the file"
 grep -q 'pool/PART.fixprobe@1/f.c:1:broken' "$in/input.txt" && ! grep -q 'tests/programs/fix.sh:[0-9]*:' "$in/input.txt" || fail "a find in one folder was not kept to that folder"
-grep -q '5000 read from the cache' "$t/said" || fail "the summary line leaves out the tokens read from the cache: $(tail -1 "$t/said")"
+grep -q '6000 read from the cache' "$t/said" || fail "the summary line leaves out the tokens read from the cache: $(tail -1 "$t/said")"
 grep -qx broken "$r/pool/PART.fixprobe@1/f.c" || fail "the copy the model worked from was changed"
 
 rm -rf "$t/runs"; fakes "$t/f-other" "fixed breaks-other
@@ -73,4 +75,4 @@ rm -rf "$t/runs"; fakes "$t/f-out" "fixed
 " tests/programs/fixprobe-red.sh
 MODEL_FAKE="$t/f-out" run fixprobe.red@1 && fail "a fix outside pool/ was judged"
 grep -q '^result *= "refused"' "$t/runs"/*/run.toml && grep -q "only a file under pool/" "$t/said" || fail "a fix outside pool/ was not refused: $(tail -1 "$t/said")"
-echo "a green test refused before any call; a test already red before the fix not held against it; the look answered from the repo and refused outside it; a read given as two numbers and a find kept to one folder; a good fix a pass with its 2 lines and 500 in, 100 out, 5000 from the cache, on its summary line; a fix that broke another test a fail; a fix outside pool/ refused unjudged; the model's copy untouched"
+echo "a green test refused before any call; a test already red before the fix not held against it; the look answered from the repo and refused outside it; a read given as two numbers, or as start_line and end_line, headed with where it is; a find kept to one folder; a good fix a pass with its 2 lines and 600 in, 120 out, 6000 from the cache, on its summary line; a fix that broke another test a fail; a fix outside pool/ refused unjudged; the model's copy untouched"

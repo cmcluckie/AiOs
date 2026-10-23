@@ -66,7 +66,11 @@ look() {	# look COMMAND ARG...
 		case "$a$b" in *[!0-9]*) echo "lines are numbers: FILE FIRST LAST"; return 1 ;; esac
 		[ "$b" -ge "$a" ] || { echo "the last line comes before the first"; return 1; }
 		[ $((b - a)) -lt 400 ] || b=$((a + 399))
-		awk -v a="$a" -v b="$b" 'NR >= a && NR <= b { printf "%d\t%s\n", NR, $0 } END { if (NR < a) printf "the file has %d lines\n", NR }' "$d/base/$1" ;;
+		n=$(awk 'END { print NR }' "$d/base/$1")
+		[ "$a" -le "$n" ] || { echo "$1 has $n lines"; return 1; }
+		[ "$b" -le "$n" ] || b=$n
+		echo "$1, lines $a to $b of $n"
+		awk -v a="$a" -v b="$b" 'NR >= a && NR <= b { printf "%d\t%s\n", NR, $0 }' "$d/base/$1" ;;
 	find)	# WORD, or WORD FOLDER-OR-FILE
 		[ $# -ge 1 ] || { echo "find needs a word"; return 1; }
 		if [ -n "${2:-}" ]; then
@@ -80,7 +84,7 @@ look() {	# look COMMAND ARG...
 }
 
 cp='{"cachePoint":{"type":"default"}}'
-tools='{"tools":[{"toolSpec":{"name":"look","description":"Look at the repo, as it stands with the test red. command is list (args: a folder), read (args: a file, then optionally the first and last line to show, at most 400 lines at a time; each line comes back with its number) or find (args: a word, then optionally a folder or file to look in; otherwise pool, specs, tests, index, findings and jig).","inputSchema":{"json":{"type":"object","properties":{"command":{"type":"string","enum":["list","read","find"]},"args":{"type":"array","items":{"type":"string"}}},"required":["command","args"]}}}},{"toolSpec":{"name":"submit_fix","description":"Hand in the fix: the path of one existing file under pool/ and its whole new content. This ends your turn; the fix is then judged by every test.","inputSchema":{"json":{"type":"object","properties":{"path":{"type":"string"},"content":{"type":"string"}},"required":["path","content"]}}}},{"cachePoint":{"type":"default"}}]}'
+tools='{"tools":[{"toolSpec":{"name":"look","description":"Look at the repo, as it stands with the test red. command is list (args: a folder), read (args: a file, then optionally the first and last line to show, or give them as start_line and end_line; at most 400 lines at a time; it answers with the file, the lines shown and how many it has, then each line with its number) or find (args: a word, then optionally a folder or file to look in; otherwise pool, specs, tests, index, findings and jig).","inputSchema":{"json":{"type":"object","properties":{"command":{"type":"string","enum":["list","read","find"]},"args":{"type":"array","items":{"type":"string"}},"start_line":{"type":"integer"},"end_line":{"type":"integer"}},"required":["command","args"]}}}},{"toolSpec":{"name":"submit_fix","description":"Hand in the fix: the path of one existing file under pool/ and its whole new content. This ends your turn; the fix is then judged by every test.","inputSchema":{"json":{"type":"object","properties":{"path":{"type":"string"},"content":{"type":"string"}},"required":["path","content"]}}}},{"cachePoint":{"type":"default"}}]}'
 { printf 'The red test, tests/%s.toml:\n\n' "$test"; cat "$tf"
   printf '\nThe spec clause it checks, %s:\n\n%s\n\nWhat it printed when it ran:\n\n%s\n' "$binds" "$clause" "$redline"
 } > "$d/first.txt"
@@ -105,8 +109,9 @@ while :; do
 	results='[]'
 	while IFS= read -r tu; do
 		id=$(printf '%s' "$tu" | jq -r .toolUseId); cmd=$(printf '%s' "$tu" | jq -r '.input.command // ""')
-		set --; while IFS= read -r a; do set -- "$@" "$a"; done <<ARGS
-$(printf '%s' "$tu" | jq -r '(.input.args // [])[] | tostring')
+		# the arguments, then start_line and end_line if the model gave them as fields
+		set --; while IFS= read -r a; do [ -n "$a" ] && set -- "$@" "$a"; done <<ARGS
+$(printf '%s' "$tu" | jq -r '((.input.args // []) + (if .input.start_line then [.input.start_line, (.input.end_line // empty)] else [] end))[] | tostring')
 ARGS
 		out=$(look "$cmd" "$@" 2>&1) && st=success || st=error
 		results=$(printf '%s' "$results" | jq --arg id "$id" --arg t "$(printf '%s' "$out" | head -c 30000)" --arg st "$st" '. + [{toolResult:{toolUseId:$id,content:[{text:$t}],status:$st}}]')

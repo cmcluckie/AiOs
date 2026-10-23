@@ -287,3 +287,5 @@ fix.judged@1 | red | jig/fix | s/\[ ! -s "\$d\/red-new" \]/true/ | a test that w
 fix.judged@1 | red | jig/fix | s/?\*) a=\$2; b=\${3:-} ;;// | a range given as two numbers is ignored and the file comes back from line 1, as on try 1
 fix.judged@1 | red | jig/fix | s/grep -rnF -- "\$1" "\$2"/grep -rnF -- "$1" pool specs tests index findings jig/ | a find told where to look searches everywhere anyway
 fix.judged@1 | red | jig/fix | s/\$cread read from the cache, // | the summary line leaves out the tokens read from the cache, as on try 1
+fix.judged@1 | red | jig/fix | s/(if .input.start_line then \[.input.start_line, (.input.end_line \/\/ empty)\] else \[\] end)/[]/ | start_line and end_line are ignored, as on try 2
+fix.judged@1 | red | jig/fix | s/echo "\$1, lines \$a to \$b of \$n"/:/ | a read no longer says which lines it shows, so a model cannot tell it got the wrong ones
