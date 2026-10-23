@@ -6,3 +6,9 @@ per_million_output = 10.00
 priced_from = "fixture"
 per_million_cache_read  = 0.20
 per_million_cache_write = 2.50
+
+[[model]]
+name = "ollama:qwen-test"
+per_million_input  = 0
+per_million_output = 0
+priced_from = "fixture: a local model, not costed in money"

@@ -1,0 +1,11 @@
+id      = "0056"
+date    = 2026-10-21
+kind    = "rules and words"
+touches = ["jig/model", "jig/prices.toml", "specs/exam.9@1.toml", "tests/exam.ollama@1.toml", "tests/programs/exam.sh", "tests/fixtures/model/*", "tests/mutations.txt"]
+asked   = "Part 21, the mechanic, runs on a local model: Qwen 3.8 27B (qwen3.8:27b, about 17 GB at Q4) on Ollama 0.40.8 in WSL on Chris's machine, measured warm at about 105 tokens a second with 20.8 of 24 GB in use, all on the GPU.  The jig reaches it through an ssh tunnel Chris opens from Windows (ssh -N -R 11434:localhost:11434 chris@172.21.234.110); nothing is installed on the jig and Ollama's own settings are not touched.  jig/model gains an Ollama path for any model named ollama:NAME: the Converse request the exam already builds is handed to Ollama as one chat, the reply handed back in Converse's shape, the context size and the reply's limit set on each request.  The price row is 0.  Chris, 2026-10-21: the local model is measured the way everything is, in tokens; hours mean nothing next to a farm of cloud GPUs; the number that matters is tokens per line of working code, and a line counts only when every test passes.  The score counts the prompt version that worked; how many prompt versions it took, the prompt's length, the time and the card's power are recorded for information, not scored.  SPEC.exam.9, TST.exam.ollama with four mutations, red in Claude's workspace before the Ollama path and green after."
+options = ["as written", "a separate script for local models", "Ollama's OpenAI-shaped endpoint instead of its own"]
+default = "as written"
+chose   = "as written"
+why     = "One door to every model keeps the cap, the price check and the run record the same for the cloud and the card; Ollama's own chat endpoint is the one its documentation leads with."
+by      = "KEY.chris@1"
+drafted = "Claude"

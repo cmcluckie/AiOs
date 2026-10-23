@@ -17,6 +17,14 @@
 # MODEL_ID (the Bedrock id to call, default its global profile).
 # MODEL_FAKE=file reads a saved reply from that file and calls nothing (tests); a folder
 # of 1.json, 2.json, ... hands them out in order.
+# A model named ollama:NAME is called on a local Ollama instead (OLLAMA_URL, default
+# http://localhost:11434; on the jig, the ssh tunnel from the machine with the card).
+# The Converse request is handed over as one Ollama chat and the reply handed back in
+# Converse's shape, so nothing else in the exam changes.  The context size
+# (MODEL_NUM_CTX, default 32768) and the reply's limit are set on each request, never
+# in Ollama's own settings.  No key: Ollama on the machine it runs on asks for none.
+# OLLAMA_FAKE=file stands in for Ollama's reply and OLLAMA_SENT=file keeps what would
+# have been sent (tests).
 # Exit 0 answered, 1 refused (reason on stderr), 2 cannot run here.
 set -u
 repo=$(cd "$(dirname "$0")/.." && pwd)
@@ -36,7 +44,61 @@ guard() {	# nothing is called for a model with no price, or past the cap
 	sh "$repo/jig/runs" budget "$MODEL_MAX_COST" > /dev/null || exit 1
 }
 
+# the Converse request IN as one Ollama chat: the system prompt first, every earlier
+# tool call and its answer handed back as such, the tools offered, the context size and
+# the reply's limit on the request
+to_ollama() {
+	jq --arg model "${MODEL_NAME#ollama:}" --argjson ctx "${MODEL_NUM_CTX:-32768}" '
+		([.messages[].content[]? | select(.toolUse) | .toolUse | {key: .toolUseId, value: .name}] | from_entries) as $names
+		| {model: $model, stream: false, keep_alive: "10m",
+		   options: ({num_ctx: $ctx} + (if .inferenceConfig.maxTokens then {num_predict: .inferenceConfig.maxTokens} else {} end)),
+		   messages: (
+			([(.system // [])[] | select(.text) | .text] | if length > 0 then [{role: "system", content: join("\n")}] else [] end)
+			+ ([.messages[] as $m |
+				if $m.role == "assistant" then
+					[{role: "assistant", content: ([$m.content[] | select(.text) | .text] | join("\n"))}
+					 + ([$m.content[] | select(.toolUse) | {function: {name: .toolUse.name, arguments: .toolUse.input}}]
+					    | if length > 0 then {tool_calls: .} else {} end)]
+				else
+					[$m.content[] | select(.toolResult) | {role: "tool", tool_name: $names[.toolResult.toolUseId],
+						content: ([.toolResult.content[]? | .text // ""] | join("\n"))}]
+					+ ([$m.content[] | select(.text) | .text] | if length > 0 then [{role: "user", content: join("\n")}] else [] end)
+				end] | add // []))}
+		+ (if .toolConfig then {tools: [.toolConfig.tools[].toolSpec | {type: "function",
+			function: {name, description, parameters: .inputSchema.json}}]} else {} end)' "$1"
+}
+
+# Ollama's reply IN in Converse's shape: its text, its tool calls (each given an id
+# from the reply's time and its place, since Ollama gives none), its own token counts
+from_ollama() {
+	jq '(.message.tool_calls // []) as $tc
+		| (.created_at // "0" | gsub("[^0-9]"; "")) as $t
+		| {output: {message: {role: "assistant", content: (
+			(if (.message.content // "") != "" then [{text: .message.content}] else [] end)
+			+ [$tc | to_entries[] | {toolUse: {toolUseId: ("ollama-" + $t + "-" + (.key | tostring)), name: .value.function.name,
+				input: (.value.function.arguments | if type == "string" then (fromjson? // {}) else . end)}}])}},
+		   stopReason: (if ($tc | length) > 0 then "tool_use" else "end_turn" end),
+		   usage: {inputTokens: (.prompt_eval_count // 0), outputTokens: (.eval_count // 0),
+			   totalTokens: ((.prompt_eval_count // 0) + (.eval_count // 0))}}' "$1"
+}
+
+call_ollama() {	# call_ollama IN OUT
+	command -v jq > /dev/null || cannot "jq is not installed"
+	to_ollama "$1" > "$2.sent" || die "the request could not be handed over as an Ollama chat"
+	[ -n "${OLLAMA_SENT:-}" ] && cp "$2.sent" "$OLLAMA_SENT"
+	if [ -n "${OLLAMA_FAKE:-}" ]; then cp "$OLLAMA_FAKE" "$2.raw" || cannot "no fake Ollama reply at $OLLAMA_FAKE"
+	else
+		command -v curl > /dev/null || cannot "curl is not installed"
+		code=$(curl -sS -o "$2.raw" -w '%{http_code}' --max-time 1800 -H 'content-type: application/json' \
+			--data-binary "@$2.sent" "${OLLAMA_URL:-http://localhost:11434}/api/chat" 2> /dev/null) || { rm -f "$2.sent" "$2.raw"; cannot "could not reach Ollama at ${OLLAMA_URL:-http://localhost:11434}"; }
+		[ "$code" = 200 ] || die "Ollama said $code: $(head -c 300 "$2.raw")"
+	fi
+	from_ollama "$2.raw" > "$2" || die "Ollama's reply could not be read: $(head -c 200 "$2.raw")"
+	rm -f "$2.sent" "$2.raw"
+}
+
 call() {	# call IN OUT: IN is the request body, OUT gets the reply
+	case "$MODEL_NAME" in ollama:*) call_ollama "$1" "$2"; return ;; esac
 	if [ -d "${MODEL_FAKE:-}" ]; then	# a folder of saved replies, 1.json, 2.json, ... handed out in order
 		n=$(cat "$MODEL_FAKE/.n" 2> /dev/null || echo 0); n=$((n + 1)); echo "$n" > "$MODEL_FAKE/.n"
 		cp "$MODEL_FAKE/$n.json" "$2" 2> /dev/null || cannot "no saved reply number $n in $MODEL_FAKE"; return 0

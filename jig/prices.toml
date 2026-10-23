@@ -19,3 +19,9 @@ per_million_output = 15.00
 per_million_cache_read  = 0.30
 per_million_cache_write = 3.75
 priced_from = "Amazon Bedrock pricing page, Anthropic models, Global Cross-region Inference, US West (Oregon), read 2026-10-17; cache write is the 5 minute price"
+
+[[model]]
+name = "ollama:qwen3.8:27b"
+per_million_input  = 0
+per_million_output = 0
+priced_from = "a local model: Qwen 3.8 27B (Q4, about 17 GB) on Ollama on an RTX 3090 in Chris's machine, reached from the jig through an ssh tunnel.  Not costed in money: it is scored in tokens per working line, like every model (decision 0056); the card's power is recorded separately, for information"

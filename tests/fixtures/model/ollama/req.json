@@ -1,0 +1,8 @@
+{"system":[{"text":"You are the mechanic."},{"cachePoint":{"type":"default"}}],
+ "messages":[
+  {"role":"user","content":[{"text":"TST.gate.int80@1 is red."}]},
+  {"role":"assistant","content":[{"text":"I will read the gate."},{"toolUse":{"toolUseId":"t-1","name":"reader","input":{"command":"read pool/PART.gate@2/gate.c 1-20"}}}]},
+  {"role":"user","content":[{"toolResult":{"toolUseId":"t-1","content":[{"text":"/* gate.c */"}],"status":"success"}},{"cachePoint":{"type":"default"}}]}
+ ],
+ "toolConfig":{"tools":[{"toolSpec":{"name":"reader","description":"Ask the reader.","inputSchema":{"json":{"type":"object","properties":{"command":{"type":"string"}},"required":["command"]}}}}]},
+ "inferenceConfig":{"maxTokens":2000}}

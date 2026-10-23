@@ -1,0 +1,11 @@
+id      = "0057"
+date    = 2026-10-21
+kind    = "rules and words"
+touches = ["design.md"]
+asked   = "design.md's table of agents put 'share a model or prompt with the quartermaster or the tester' in the mechanic's May not column, and 'share a model or prompt with the mechanic' in the tester's.  Chris, 2026-10-21: that is not what was meant.  The mechanic may or may not share a model with the quartermaster; it does not matter, and the best model available is the one to use.  For part 21, Claude on Bedrock is number one and writes the prompts for the RTX 3090, number two."
+options = ["take both out", "keep them, and use a different model for each agent"]
+default = "take both out"
+chose   = "take both out"
+why     = "A rule nobody meant is worse than none: it would have the repo saying one thing and the runs doing another."
+by      = "KEY.chris@1"
+drafted = "Claude"

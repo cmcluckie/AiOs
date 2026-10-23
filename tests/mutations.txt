@@ -271,3 +271,7 @@ builder.decided@1 | red | jig/aios | s/decided "petitions\/$id.toml" || die/: ||
 builder.decided@1 | red | jig/aios | s/\[ -f "constitution\/keys\/${by#KEY.}.toml" \] || continue/:/ | a decision by a key nobody holds counts
 builder.decided@1 | red | jig/aios | s/\[ "$g" = "$1" \] \&\& { set +f; return 0; }/case "$1" in $g) set +f; return 0 ;; esac/ | a decision naming petitions/* decides every petition, those still to come included
 builder.decided@1 | red | jig/aios | s/\[ "$g" = "$1" \] \&\& { set +f; return 0; }/case "$g" in petitions\/*) set +f; return 0 ;; esac/ | a decision naming any petition decides them all
+exam.ollama@1 | red | jig/model | s/{num_ctx: \$ctx}/{}/ | the context size is left to Ollama's own settings, so a long sitting is quietly cut short
+exam.ollama@1 | red | jig/model | s/tool_name: \$names\[.toolResult.toolUseId\],// | the reader's answer goes back with no name, so the model cannot tell which tool spoke
+exam.ollama@1 | red | jig/model | s/inputTokens: (.prompt_eval_count \/\/ 0), outputTokens: (.eval_count \/\/ 0)/inputTokens: (.eval_count \/\/ 0), outputTokens: (.prompt_eval_count \/\/ 0)/ | Ollama's input and output tokens are swapped, so every count is wrong
+exam.ollama@1 | red | jig/model | s/case "\$MODEL_NAME" in ollama:\*) call_ollama "\$1" "\$2"; return ;; esac/:/ | a local model is sent to Bedrock instead, with the AWS key

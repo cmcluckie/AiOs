@@ -180,5 +180,24 @@ ping)
 	printf 'AWS_ACCESS_KEY_ID=x\n' > "$tmp/open"; chmod 644 "$tmp/open"
 	refuse "a key file others can read" "can be read by others" env -u MODEL_FAKE AIOS_AWS="$tmp/open" sh jig/model ping
 	echo "a saved reply gives its word, 14 in and 6 out and a cost of 0.000088 and is recorded once as ping; a model with no price, a call that could pass the cap, a missing key file and a key file others can read each stop it before any call" ;;
-*)	fail "tests/programs/exam.sh needs a mode: count, record, budget, scorecard, judge, sit, cache or ping" ;;
+ollama)
+	mfx=tests/fixtures/model
+	export PRICES="$mfx/prices.toml" MODEL_NAME=ollama:qwen-test OLLAMA_FAKE="$mfx/ollama/reply.json" OLLAMA_SENT="$tmp/sent.json"
+	sh jig/model converse "$mfx/ollama/req.json" "$tmp/reply.json" > "$tmp/out" 2>&1 || fail "a local model's saved reply was refused: $(head -1 "$tmp/out")"
+	s="$tmp/sent.json"; r="$tmp/reply.json"
+	[ -s "$s" ] || fail "nothing was sent to Ollama"
+	jq -e '.model == "qwen-test" and .stream == false and .options.num_ctx == 32768 and .options.num_predict == 2000' "$s" > /dev/null || fail "the request does not name the model by its Ollama name, ask for one whole reply, or set num_ctx and the reply's limit per request: $(jq -c '{model,stream,options}' "$s")"
+	jq -e '.messages[0] == {role:"system",content:"You are the mechanic."}' "$s" > /dev/null || fail "the system prompt is not the first message: $(jq -c '.messages[0]' "$s")"
+	jq -e '.messages[2].role == "assistant" and .messages[2].tool_calls[0].function == {name:"reader",arguments:{command:"read pool/PART.gate@2/gate.c 1-20"}}' "$s" > /dev/null || fail "the model's earlier tool call is not handed back as one: $(jq -c '.messages[2]' "$s")"
+	jq -e '.messages[3] == {role:"tool",tool_name:"reader",content:"/* gate.c */"}' "$s" > /dev/null || fail "the tool's answer is not handed back as the reader's: $(jq -c '.messages[3]' "$s")"
+	jq -e '[.messages[] | select(.role == "user" and .content == "")] | length == 0' "$s" > /dev/null || fail "an empty user message was sent"
+	jq -e '.tools == [{type:"function",function:{name:"reader",description:"Ask the reader.",parameters:{type:"object",properties:{command:{type:"string"}},required:["command"]}}}]' "$s" > /dev/null || fail "the reader is not offered as a tool: $(jq -c '.tools' "$s")"
+	jq -e '.usage.inputTokens == 321 and .usage.outputTokens == 45' "$r" > /dev/null || fail "the tokens are not Ollama's own counts: $(jq -c '.usage' "$r")"
+	jq -e '.output.message.content[0].text == "The number is wrong." and .output.message.content[1].toolUse.name == "reader" and .output.message.content[1].toolUse.input.command == "read pool/PART.gate@2/gate.c 40-60" and (.output.message.content[1].toolUse.toolUseId | length > 0) and .stopReason == "tool_use"' "$r" > /dev/null || fail "the reply is not handed on in the shape the exam reads: $(jq -c '.output' "$r")"
+	rm -f "$s"; refuse "a local model with no price" "no price for ollama:none" env MODEL_NAME=ollama:none sh jig/model converse "$mfx/ollama/req.json" "$tmp/x.json"
+	[ ! -e "$s" ] || fail "a local model with no price was called anyway"
+	env -u OLLAMA_FAKE OLLAMA_URL=http://127.0.0.1:9 sh jig/model converse "$mfx/ollama/req.json" "$tmp/x.json" > "$tmp/out" 2>&1; rc=$?
+	[ $rc -eq 2 ] && grep -q "could not reach Ollama" "$tmp/out" || fail "an Ollama nobody is listening for gave exit $rc, not 'cannot run here': $(head -1 "$tmp/out")"
+	echo "a Bedrock-shaped request reached Ollama as one: its model, num_ctx 32768 and the reply's limit set per request, the system prompt first, the earlier tool call and the reader's answer handed back, the reader offered as a tool; the reply came back in the shape the exam reads, with Ollama's own 321 in and 45 out; a model with no price was refused before any call, and an Ollama nobody listens for is 'cannot run here'" ;;
+*)	fail "tests/programs/exam.sh needs a mode: count, record, budget, scorecard, judge, sit, cache, ping or ollama" ;;
 esac

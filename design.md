@@ -109,9 +109,9 @@ Agents are components too.  Each enters by petition with a stated purpose and a 
 
 | Order | Agent | Purpose | May | May not |
 | --- | --- | --- | --- | --- |
-| 1 | Tester | Manufacture failures before the world does | Run anything in the shadow; fuzz; mutate; write tests | Touch the live copy; share a model or prompt with the mechanic |
+| 1 | Tester | Manufacture failures before the world does | Run anything in the shadow; fuzz; mutate; write tests | Touch the live copy |
 | 2 | Quartermaster | Decide what enters the ecosystem | Read source; build the dependency map and catalogue; classify needed / not / tangled; draft petitions | Change source |
-| 3 | Mechanic | Fix and refactor | Propose patches and untangling refactors, handed to the quartermaster as new code | Install anything; skip the quartermaster; share a model or prompt with the quartermaster or the tester |
+| 3 | Mechanic | Fix and refactor | Propose patches and untangling refactors, handed to the quartermaster as new code | Install anything; skip the quartermaster |
 | 4 | Gateway | The only component that talks to the outside | Reach the repo and the model provider, signature-checked | Reach anything else; exist after seal |
 | 5 | Cartographer | Map the hardware on arrival | Probe CPU, memory, devices | Trial-and-error on unknown silicon (bricks and cooks things; needs datasheets and a sacrificial board) |
 | 6 | Builder | Turn approved petitions into the system | Run Nix, deterministically | Decide anything |
