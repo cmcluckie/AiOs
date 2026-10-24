@@ -1,0 +1,11 @@
+id      = "0067"
+date    = 2026-10-24
+kind    = "rules and words"
+touches = ["jig/fix", "fix/prompt.txt", "tests/programs/fix.sh", "tests/fix.judged@1.toml", "tests/mutations.txt"]
+asked   = "Try 7 (findings 0024 item 20) knew the fix by its 14th look and spent the rest checking, until the bench stopped it at 40 calls; nothing told it how many it had left.  Every answer from the bench now ends with the calls used and left; with ten or fewer it is asked to hand in its fix now; the prompt says calls are counted and not to spend them making sure of what it already knows; the cap goes from 40 to 60, the job being bigger with the shortcuts closed.  A better prompt, not a better test.  TST.fix.judged checks both messages, two more mutations."
+options = ["as written", "the count only, cap kept at 40", "the cap raised, nothing told"]
+default = "as written"
+chose   = "as written"
+why     = "Chris, 2026-10-24: yes please.  A failure means a better prompt; a mechanic who does not know the clock is running cannot be blamed for running out of it."
+by      = "KEY.chris@1"
+drafted = "Claude"

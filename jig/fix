@@ -15,13 +15,13 @@
 #
 # FIX_PROMPT (fix/prompt.txt; its fingerprint is recorded, so each version of the
 # prompt is its own line on the scorecard), FIX_TRY (1: which try this is), FIX_TURNS
-# (40 calls), FIX_MAXTOKENS (16000 per reply), FIX_SUITE (the tests the judge runs,
+# (60 calls; every answer tells the model how many it has left, decision 0067), FIX_MAXTOKENS (16000 per reply), FIX_SUITE (the tests the judge runs,
 # as jig/test's prefixes; empty, the default, is every test), FIX_OUT (out/fix),
 # MODEL_NAME and MODEL_ID (see jig/model).  Needs jq.
 set -u
 repo=$(cd "$(dirname "$0")/.." && pwd)
 FIX_PROMPT=${FIX_PROMPT:-$repo/fix/prompt.txt}
-FIX_TRY=${FIX_TRY:-1}; FIX_TURNS=${FIX_TURNS:-40}; FIX_MAXTOKENS=${FIX_MAXTOKENS:-16000}
+FIX_TRY=${FIX_TRY:-1}; FIX_TURNS=${FIX_TURNS:-60}; FIX_MAXTOKENS=${FIX_MAXTOKENS:-16000}
 FIX_SUITE=${FIX_SUITE:-}; FIX_OUT=${FIX_OUT:-$repo/out/fix}
 MODEL_NAME=${MODEL_NAME:-bedrock:global.anthropic.claude-sonnet-4-6}
 MODEL_MAX_COST=${MODEL_MAX_COST:-0.50}
@@ -129,6 +129,13 @@ ARGS
 	done <<EOT
 $(jq -c '.output.message.content[] | select(.toolUse) | .toolUse' "$d/reply.json")
 EOT
+	# how many calls are left, after every answer; with ten or fewer, hand in now.
+	# Try 7 knew what to do by its 14th call and spent the rest checking, never told
+	# it was running out (findings 0024 item 20, decision 0067)
+	left=$((FIX_TURNS - turn))
+	note="Call $turn of $FIX_TURNS done; $left left."
+	[ "$left" -le 10 ] && note="$note  Ten or fewer left: hand in your fix with submit_fix now.  A run that ends without one hands in nothing."
+	results=$(printf '%s' "$results" | jq --arg n "$note" '. + [{text:$n}]')
 	printf '%s' "$results" | jq '[{role:"user",content:.}]' > "$d/res.json"
 	jq --slurpfile r "$d/res.json" '. + $r[0]' "$d/messages.json" > "$d/m.new" && mv "$d/m.new" "$d/messages.json"
 done

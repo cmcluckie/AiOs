@@ -72,6 +72,15 @@ grep -q 'pool/PART.fixprobe@1/f.c:1:broken' "$in/input.txt" && ! grep -q 'tests/
 grep -q ', 0 skipped' "$t/said" || fail "a test that needs a clone beside the repo was skipped in the judge's copy: $(tail -1 "$t/said")"
 grep -q '6000 read from the cache' "$t/said" || fail "the summary line leaves out the tokens read from the cache: $(tail -1 "$t/said")"
 grep -qx broken "$r/pool/PART.fixprobe@1/f.c" || fail "the copy the model worked from was changed"
+grep -q '"text": *"Call 1 of 60 done; 59 left."' "$in/input.txt" || fail "the model was not told after its first call how many of its 60 it has left"
+# with a cap of 12, the second answer says ten are left and asks for the fix now
+rm -rf "$t/runs"; fakes "$t/f-budget" "fixed
+"
+FIX_TURNS=12 MODEL_FAKE="$t/f-budget" run fixprobe.red@1 || fail "the run with 12 calls did not pass: $(tail -1 "$t/said")"
+in=$(ls -d "$t/runs"/*/ | head -1)
+grep -q '"text": *"Call 1 of 12 done; 11 left."' "$in/input.txt" || fail "with 11 left the model was not told so, or was hurried"
+grep -q '"text": *"Call 2 of 12 done; 10 left.  Ten or fewer left: hand in your fix with submit_fix now.' "$in/input.txt" || fail "with ten left the model was not asked to hand in its fix now"
+rm -rf "$t/runs"
 
 rm -rf "$t/runs"; fakes "$t/f-other" "fixed breaks-other
 "
@@ -94,4 +103,4 @@ rm -rf "$t/runs"; mkdir -p "$t/f-split"
 reply "$t/f-split/1.json" submit_fix '{"files":[{"path":"pool/PART.fixprobe@1/f.c","content":"fixed\n"},{"path":"pool/PART.fixprobe@2/f.c","content":"x\n"}]}'
 MODEL_FAKE="$t/f-split" run fixprobe.red@1 && fail "a fix across two parts was judged"
 grep -q '^result *= "refused"' "$t/runs"/*/run.toml && grep -q "one part" "$t/said" || fail "a fix across two parts was not refused: $(tail -1 "$t/said")"
-echo "a green test refused before any call; a fix in two files of one part a pass with both files' 4 lines, one across two parts refused; a test already red before the fix not held against it; the look answered from the repo and refused outside it; a read given as two numbers, or as start_line and end_line, headed with where it is; a find kept to one folder; a good fix a pass with its 2 lines and 600 in, 120 out, 6000 from the cache, on its summary line; nothing skipped in the judge's copy that runs beside the clones; a fix that broke another test a fail; a fix outside pool/ refused unjudged; the model's copy untouched"
+echo "a green test refused before any call; a fix in two files of one part a pass with both files' 4 lines, one across two parts refused; a test already red before the fix not held against it; the look answered from the repo and refused outside it; a read given as two numbers, or as start_line and end_line, headed with where it is; a find kept to one folder; a good fix a pass with its 2 lines and 600 in, 120 out, 6000 from the cache, on its summary line; nothing skipped in the judge's copy that runs beside the clones; a fix that broke another test a fail; a fix outside pool/ refused unjudged; the model's copy untouched; after every call the model told how many it has left, and with ten left asked for its fix"
