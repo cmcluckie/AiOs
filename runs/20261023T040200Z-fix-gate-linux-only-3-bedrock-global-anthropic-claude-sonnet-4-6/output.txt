@@ -1,0 +1,33 @@
+37,40c37,41
+<  * TECH-DEBT 1: alloc, ms, load and save have no Linux number yet, so they use
+<  * AiOs-only numbers from 1000 (findings 0021 #5).  They go when Linux's program
+<  * files can be loaded (part 20): alloc becomes brk, ms becomes clock_gettime,
+<  * load and save become open, read, write and close.
+---
+>  * TECH-DEBT 1 (fixed here for Linux programs, findings 0021 item 5): alloc,
+>  * ms, load and save used AiOs-only numbers from 1000.  A Linux program that
+>  * asks for one of those four now gets -ENOSYS, as Linux does.  Programs written
+>  * for the old table (gate_run, brk_lo == 0) still reach alloc, ms, load and
+>  * save through those numbers, so they keep working unchanged.
+54,57c55,58
+< #define NR_ALLOC	1000		/* TECH-DEBT 1 */
+< #define NR_MS		1001		/* TECH-DEBT 1 */
+< #define NR_LOAD		1002		/* TECH-DEBT 1 */
+< #define NR_SAVE		1003		/* TECH-DEBT 1 */
+---
+> #define NR_ALLOC	1000		/* old AiOs-only number; Linux programs get -ENOSYS (see TECH-DEBT 1 above) */
+> #define NR_MS		1001		/* old AiOs-only number; Linux programs get -ENOSYS */
+> #define NR_LOAD		1002		/* old AiOs-only number; Linux programs get -ENOSYS */
+> #define NR_SAVE		1003		/* old AiOs-only number; Linux programs get -ENOSYS */
+378a380,381
+> 		if (brk_lo)
+> 			return -ENOSYS;		/* Linux programs get -ENOSYS at 1000; old-table programs keep alloc */
+380a384,385
+> 		if (brk_lo)
+> 			return -ENOSYS;		/* Linux programs get -ENOSYS at 1001; old-table programs keep ms */
+382a388,389
+> 		if (brk_lo)
+> 			return -ENOSYS;		/* Linux programs get -ENOSYS at 1002; old-table programs keep load */
+386a394,395
+> 		if (brk_lo)
+> 			return -ENOSYS;		/* Linux programs get -ENOSYS at 1003; old-table programs keep save */

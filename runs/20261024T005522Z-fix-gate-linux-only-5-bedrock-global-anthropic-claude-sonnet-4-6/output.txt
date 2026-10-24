@@ -1,0 +1,179 @@
+=== pool/PART.gate@2/gate.c
+37,40c37,42
+<  * TECH-DEBT 1: alloc, ms, load and save have no Linux number yet, so they use
+<  * AiOs-only numbers from 1000 (findings 0021 #5).  They go when Linux's program
+<  * files can be loaded (part 20): alloc becomes brk, ms becomes clock_gettime,
+<  * load and save become open, read, write and close.
+---
+>  * Part 21 (findings 0024): alloc, ms, load and save now use Linux's numbers:
+>  * alloc is brk (45), ms is clock_gettime (265), load is open+read+close and
+>  * save is open+write+close.  Old programs through the stub page still work.
+>  * A call from an old-style program (brk_lo == 0) is told apart from a Linux
+>  * program's by brk_lo; brk and clock_gettime are each routed to calls->alloc
+>  * or calls->ms in that case.
+54,57d55
+< #define NR_ALLOC	1000		/* TECH-DEBT 1 */
+< #define NR_MS		1001		/* TECH-DEBT 1 */
+< #define NR_LOAD		1002		/* TECH-DEBT 1 */
+< #define NR_SAVE		1003		/* TECH-DEBT 1 */
+67a66
+> #define NR_CLOCK_GETTIME 265		/* old-style ms() goes here when brk_lo == 0 */
+82c81
+< #define NFILES		4		/* files a Linux program may have open at once, from descriptor 3 */
+---
+> #define NFILES		4		/* files a program may have open at once, from descriptor 3 */
+146c145
+< /* A Linux program's open files: the disk's root directory, read-only.  Each is
+---
+> /* A program's open files: the disk's root directory, read-only.  Each is
+161,162d159
+< 	if (!brk_lo)
+< 		return -ENOSYS;
+166c163
+< 		return -EROFS;		/* written to, or made: the disk is read-only to a Linux program */
+---
+> 		return -EROFS;		/* written to, or made: the disk is read-only */
+366c363
+< 		if (brk_lo && file_ok(a)) {
+---
+> 		if (file_ok(a)) {
+378,389c375,382
+< 	case NR_ALLOC:
+< 		return (long)calls->alloc(a);
+< 	case NR_MS:
+< 		return (long)calls->ms();
+< 	case NR_LOAD:
+< 		if (!user_name_ok((const char *)a) || !user_ok(b, c))
+< 			return -EFAULT;
+< 		return calls->load((const char *)a, (void *)b, c);
+< 	case NR_SAVE:
+< 		if (!user_name_ok((const char *)a) || !user_ok(b, c))
+< 			return -EFAULT;
+< 		return calls->save((const char *)a, (const void *)b, c);
+---
+> 	case NR_BRK:
+> 		if (!brk_lo)
+> 			return (long)calls->alloc(a);	/* old-style program: alloc bytes */
+> 		return (long)brk(a);
+> 	case NR_CLOCK_GETTIME:
+> 		if (!brk_lo)
+> 			return (long)calls->ms();	/* old-style program: milliseconds */
+> 		return -ENOSYS;
+393c386
+< 		if (brk_lo && file_ok(a)) {
+---
+> 		if (file_ok(a)) {
+399c392
+< 		return a <= 2 || (brk_lo && file_ok(a)) ? -ENOTTY : -EBADF;	/* neither the console nor a file is a terminal the program may steer */
+---
+> 		return a <= 2 || file_ok(a) ? -ENOTTY : -EBADF;	/* neither the console nor a file is a terminal the program may steer */
+402,403d394
+< 	case NR_BRK:
+< 		return (long)brk(a);
+=== pool/PART.gate@2/gate_user.S
+3c3
+<  * PART.gate@1: the only code and data of the kernel a program can see, one page
+---
+>  * PART.gate@2: the only code and data of the kernel a program can see, one page
+8c8
+<  * 32-bit cdecl: the stub keeps ebx for its caller.  Ours.
+---
+>  * 32-bit cdecl: the stub keeps ebx, esi and edi for its caller.  Ours.
+10,11c10,11
+<  * TECH-DEBT 1: alloc (1000), ms (1001), load (1002) and save (1003) use
+<  * AiOs-only numbers (findings 0021 #5).
+---
+>  * Part 21 (findings 0024): alloc uses brk (45), ms uses clock_gettime (265),
+>  * load uses open+read+close (5+3+6), save uses open+write+close (5+4+6).
+39c39
+< 	movl	$1000, %eax
+---
+> 	movl	$45, %eax		/* NR_BRK: old-style alloc goes here; gate routes it to calls->alloc */
+56c56
+< 	movl	$1001, %eax
+---
+> 	movl	$265, %eax		/* NR_CLOCK_GETTIME: old-style ms goes here; gate routes it to calls->ms */
+59a60,61
+> /* d_load(name, buf, max): open(name, O_RDONLY) + read(fd, buf, max) + close(fd).
+>  * Returns bytes read, or -1 on error.  Preserves ebx, esi, edi (cdecl). */
+60a63,64
+> 	pushl	%esi
+> 	pushl	%edi
+62,66c66,91
+< 	movl	$1002, %eax
+< 	movl	8(%esp), %ebx
+< 	movl	12(%esp), %ecx
+< 	movl	16(%esp), %edx
+< 	int	$0x80
+---
+> 	/* Stack layout from esp: +0 saved_ebx, +4 saved_edi, +8 saved_esi,
+> 	 *   +12 return_addr, +16 name, +20 buf, +24 max */
+> 	movl	$5, %eax		/* NR_OPEN */
+> 	movl	16(%esp), %ebx		/* name */
+> 	xorl	%ecx, %ecx		/* O_RDONLY = 0 */
+> 	xorl	%edx, %edx
+> 	int	$0x80
+> 	testl	%eax, %eax
+> 	js	.d_load_fail
+> 	movl	%eax, %edi		/* edi = fd */
+> 	movl	$3, %eax		/* NR_READ */
+> 	movl	%edi, %ebx		/* fd */
+> 	movl	20(%esp), %ecx		/* buf */
+> 	movl	24(%esp), %edx		/* max */
+> 	int	$0x80
+> 	movl	%eax, %esi		/* esi = bytes read (or error) */
+> 	movl	$6, %eax		/* NR_CLOSE */
+> 	movl	%edi, %ebx		/* fd */
+> 	int	$0x80
+> 	testl	%esi, %esi
+> 	js	.d_load_fail
+> 	movl	%esi, %eax		/* return bytes read */
+> 	jmp	.d_load_done
+> .d_load_fail:
+> 	movl	$-1, %eax
+> .d_load_done:
+67a93,94
+> 	popl	%edi
+> 	popl	%esi
+69a97,98
+> /* d_save(name, buf, n): open(name, O_WRONLY|O_CREAT|O_TRUNC) + write(fd, buf, n) + close(fd).
+>  * Returns 0 on success, -1 on error.  Preserves ebx, esi, edi (cdecl). */
+70a100,101
+> 	pushl	%esi
+> 	pushl	%edi
+72,76c103,128
+< 	movl	$1003, %eax
+< 	movl	8(%esp), %ebx
+< 	movl	12(%esp), %ecx
+< 	movl	16(%esp), %edx
+< 	int	$0x80
+---
+> 	/* Stack layout from esp: +0 saved_ebx, +4 saved_edi, +8 saved_esi,
+> 	 *   +12 return_addr, +16 name, +20 buf, +24 n */
+> 	movl	$5, %eax		/* NR_OPEN */
+> 	movl	16(%esp), %ebx		/* name */
+> 	movl	$0x241, %ecx		/* O_WRONLY|O_CREAT|O_TRUNC */
+> 	xorl	%edx, %edx
+> 	int	$0x80
+> 	testl	%eax, %eax
+> 	js	.d_save_fail
+> 	movl	%eax, %edi		/* edi = fd */
+> 	movl	$4, %eax		/* NR_WRITE */
+> 	movl	%edi, %ebx		/* fd */
+> 	movl	20(%esp), %ecx		/* buf */
+> 	movl	24(%esp), %edx		/* n */
+> 	int	$0x80
+> 	movl	%eax, %esi		/* esi = result */
+> 	movl	$6, %eax		/* NR_CLOSE */
+> 	movl	%edi, %ebx		/* fd */
+> 	int	$0x80
+> 	testl	%esi, %esi
+> 	js	.d_save_fail
+> 	xorl	%eax, %eax		/* return 0 on success */
+> 	jmp	.d_save_done
+> .d_save_fail:
+> 	movl	$-1, %eax
+> .d_save_done:
+77a130,131
+> 	popl	%edi
+> 	popl	%esi

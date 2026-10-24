@@ -1,0 +1,11 @@
+id      = "0066"
+date    = 2026-10-24
+kind    = "specs and tests"
+touches = ["tests/gate.linux-only@1.toml", "tests/programs/debt.sh", "tests/programs/oldnums.c"]
+asked   = "Try 6 (findings 0024 item 19) passed the judge by moving the four AiOs-only calls to Linux numbers that mean other calls: load at readlink (85), save at listxattr (232), ms at clock_gettime (265), alloc at brk (45), for old programs only.  SPEC.gate.10 says every call is at Linux's number for it.  Take it, or tighten the test and run try 7?  The test gains the old programs' side: an old program asking those four numbers with the old calls' arguments must get Linux's answer or -38, on a disk holding the file it would load.  Try 6's change applied fails all four; the repo as it is passes them.  The six tries' run records come into runs/ with it."
+options = ["as written", "take try 6"]
+default = "as written"
+chose   = "as written"
+why     = "Chris, 2026-10-24: ok, let's go.  A call renamed is the same call; the spec asks for Linux's, and the test now looks from both sides."
+by      = "KEY.chris@1"
+drafted = "Claude"

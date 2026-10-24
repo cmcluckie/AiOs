@@ -5,7 +5,9 @@
 # does.  One mode per test:
 #   numbers  TECH-DEBT 1: no AiOs-only number is left in PART.gate@2, in its
 #            table of calls or in the stubs old programs go through, and at 1000
-#            to 1003 a Linux program is answered what Linux answers, -38 (ENOSYS)
+#            to 1003 a Linux program is answered what Linux answers, -38 (ENOSYS);
+#            and an old program (tests/programs/oldnums.c) asking 85, 232, 265 and
+#            45 is answered as Linux answers, not by load, save, ms or alloc
 #   random   TECH-DEBT 4: three boots give three AT_RANDOMs, each pair differing
 #            in at least 12 of its 16 bytes; a counter read twice cannot do that
 #   sse      findings 0023 item 13: a program built with SSE runs, its sums right
@@ -31,7 +33,27 @@ numbers)
 	boot "$t/got"
 	printf 'nr-1000 -38\nnr-1001 -38\nnr-1002 -38\nnr-1003 -38\nexit 0\n' > "$t/want"
 	cmp -s "$t/got" "$t/want" || { echo "an AiOs-only number is still answered: $(diff "$t/want" "$t/got" | grep '^>' | head -4 | tr '\n' ' ')"; exit 1; }
-	echo "no AiOs-only number left in the gate's table or its stubs, and 1000 to 1003 each answered -38, as Linux answers them" ;;
+	# the old programs' side (findings 0024 item 19): a number means Linux's call
+	# whoever asks, so an old program asking 85, 232, 265 or 45 with the old
+	# calls' arguments gets Linux's answer or -38, never load, save, ms or alloc.
+	# The disk holds a file named one, put there on the editor's kernel, which
+	# may write (rule 22), so a load hidden at 85 would find it
+	sh jig/aios build editor > "$t/build" 2>&1 || { echo "the editor flavor does not build: $(tail -1 "$t/build")"; exit 1; }
+	pc="-m32 -std=c11 -ffreestanding -fno-pic -fno-pie -fno-stack-protector -fno-builtin -fno-asynchronous-unwind-tables -mno-sse -mno-mmx -mno-red-zone -mgeneral-regs-only -nostdlib -nostdinc -O2 -Wall -Wextra -Werror"
+	pl="-static -no-pie -nostartfiles -Wl,--build-id=none -Wl,-z,noexecstack"
+	gcc $pc -I pool/PART.loader@8 -c -o "$t/files.o" tests/programs/catfiles.c && gcc $pc $pl -T pool/PART.loader@8/program.ld -o "$t/files.bin" "$t/files.o" || { echo "the file writer does not build"; exit 1; }
+	gcc $pc -I pool/PART.loader@10 -c -o "$t/old.o" tests/programs/oldnums.c && gcc $pc $pl -T pool/PART.loader@10/program.ld -o "$t/old.bin" "$t/old.o" || { echo "the old programs' probe does not build"; exit 1; }
+	AIOS_DISK="$t/disk" timeout 60 sh pool/MACHINE.serial-disk@1/machine.sh out/editor/loader.elf "$t/files.bin" < /dev/null > "$t/files.out" 2> /dev/null
+	grep -q "^files written" "$t/files.out" || { echo "the file one was not put on the disk: $(head -1 "$t/files.out")"; exit 1; }
+	AIOS_DISK="$t/disk" timeout 60 sh pool/MACHINE.serial-disk@2/machine.sh out/cat/loader.elf "$t/old.bin" < /dev/null 2> /dev/null | tr -d '\r' > "$t/old"
+	ans() { sed -n "s/^nr-$1 \(-*[0-9]*\).*/\1/p" "$t/old"; }
+	bad=""
+	case "$(ans 85)" in -38|-22|-2) grep -q '^nr-85 .* untouched$' "$t/old" || bad="$bad 85 wrote into the buffer;" ;; *) bad="$bad 85 answered '$(ans 85)', not readlink's answer;" ;; esac
+	case "$(ans 232)" in -38|-2|-61|-95) ;; *) bad="$bad 232 answered '$(ans 232)', not listxattr's answer;" ;; esac
+	case "$(ans 265)" in -38|-14) ;; *) bad="$bad 265 answered '$(ans 265)', not clock_gettime's answer;" ;; esac
+	grep -q '^nr-45 0 same$' "$t/old" || bad="$bad 45 asked twice for 16 gave $(sed -n 's/^nr-45 0 //p' "$t/old") answers, not brk's;"
+	[ -z "$bad" ] || { echo "an old program is still answered by an AiOs call behind a Linux number:$bad"; exit 1; }
+	echo "no AiOs-only number left in the gate's table or its stubs; 1000 to 1003 each answered -38, as Linux answers them; and an old program asking 85, 232, 265 and 45 gets Linux's answers" ;;
 random)
 	for i in 1 2 3; do boot "$t/r$i"; grep -qx '[0-9a-f]\{32\}' "$t/r$i" || { echo "boot $i gave no AT_RANDOM: $(head -1 "$t/r$i")"; exit 1; }; done
 	for pair in "1 2" "1 3" "2 3"; do
