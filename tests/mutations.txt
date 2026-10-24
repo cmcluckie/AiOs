@@ -302,3 +302,4 @@ referee.probes-granted@1 | red | pool/AGT.referee@1/referee.c | s/if (nseen != 1
 referee.artifact@1 | red | jig/aios | s/list_field "$lf" switches [|] grep -qx "$o" [|][|] die/true || die/ | a part is switched off in a kernel that cannot build it that way, and the compiler is left to say so
 fix.judged@1 | red | jig/fix | s/jq --arg n "$note" '. + \[{text:$n}\]'/jq '.'/ | the model is never told how many calls it has left, as on try 7
 fix.judged@1 | red | jig/fix | s/\[ "$left" -le 10 \] \&\& note=/[ "$left" -le 0 ] \&\& note=/ | the model is told it must hand in only when it has none left to do it with
+fix.judged@1 | red | jig/fix | s/^\t\t\[ "$result" = pass \] \&\& break$/\t\tbreak/ | a fix that is not a pass ends the run, as on try 8: never shown what broke, never another hand-in

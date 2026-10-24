@@ -1,0 +1,59 @@
+=== pool/PART.gate@2/gate.c
+37,40c37,41
+<  * TECH-DEBT 1: alloc, ms, load and save have no Linux number yet, so they use
+<  * AiOs-only numbers from 1000 (findings 0021 #5).  They go when Linux's program
+<  * files can be loaded (part 20): alloc becomes brk, ms becomes clock_gettime,
+<  * load and save become open, read, write and close.
+---
+>  * TECH-DEBT 1 fixed (findings 0024): alloc, ms, load and save used AiOs-only
+>  * numbers from 1000 (findings 0021 #5).  They are gone: every system call is
+>  * now at Linux's 32-bit x86 number, and at a number Linux has no call for the
+>  * gate answers -38 (ENOSYS).  Programs written for the old table reach the
+>  * kernel through stubs in gate_user.S that now use Linux's numbers.
+54,57d54
+< #define NR_ALLOC	1000		/* TECH-DEBT 1 */
+< #define NR_MS		1001		/* TECH-DEBT 1 */
+< #define NR_LOAD		1002		/* TECH-DEBT 1 */
+< #define NR_SAVE		1003		/* TECH-DEBT 1 */
+378,389d374
+< 	case NR_ALLOC:
+< 		return (long)calls->alloc(a);
+< 	case NR_MS:
+< 		return (long)calls->ms();
+< 	case NR_LOAD:
+< 		if (!user_name_ok((const char *)a) || !user_ok(b, c))
+< 			return -EFAULT;
+< 		return calls->load((const char *)a, (void *)b, c);
+< 	case NR_SAVE:
+< 		if (!user_name_ok((const char *)a) || !user_ok(b, c))
+< 			return -EFAULT;
+< 		return calls->save((const char *)a, (const void *)b, c);
+=== pool/PART.gate@2/gate_user.S
+10,11c10,12
+<  * TECH-DEBT 1: alloc (1000), ms (1001), load (1002) and save (1003) use
+<  * AiOs-only numbers (findings 0021 #5).
+---
+>  * TECH-DEBT 1 fixed (findings 0024): alloc, ms, load and save now use Linux's
+>  * 32-bit x86 numbers: brk (45), clock_gettime (265), readlink (85) and
+>  * listxattr (232).  Old programs calling these stubs get Linux's answers.
+39c40
+< 	movl	$1000, %eax
+---
+> 	movl	$45, %eax
+56c57,60
+< 	movl	$1001, %eax
+---
+> 	pushl	%ebx
+> 	movl	$265, %eax
+> 	xorl	%ebx, %ebx
+> 	xorl	%ecx, %ecx
+57a62
+> 	popl	%ebx
+62c67
+< 	movl	$1002, %eax
+---
+> 	movl	$85, %eax
+72c77
+< 	movl	$1003, %eax
+---
+> 	movl	$232, %eax

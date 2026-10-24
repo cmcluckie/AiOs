@@ -13,7 +13,14 @@
  *   45  brk(16), twice: below the program's break, so Linux leaves the break
  *       where it is and answers the same both times; never 16 bytes handed out
  * Any of them may instead be -38, a call the gate does not do.  One line each.
+ * Then the other half of SPEC.gate.10, programs written for the old table keep
+ * working through it (try 8, findings 0024 item 21): through the table it was
+ * handed, load gets the file one, 33 bytes, exactly; alloc gives two blocks,
+ * 16-aligned, apart, that hold what is written in them; ms answers 0, as the
+ * table says it does on a kernel with no clock; save answers -1, cat's petition
+ * not asking to write.
  * Boots on: cat.
+ * Expects refusal: CAP.time.read, CAP.fs.write.
  */
 #include "door.h"
 
@@ -66,6 +73,30 @@ void __attribute__((section(".text.start"))) _start(const struct door *d)
 	r = sys(45, 16, 0, 0);
 	r2 = sys(45, 16, 0, 0);
 	line("nr-45", 0, r == r2 ? "same" : "moved");
+	{
+		static const char one[] = "the first file\nsecond line of it\n";
+		static char got[64];
+		unsigned char *a, *b;
+		long n = d->load("one", got, sizeof got);
+		int ok = n == (long)(sizeof one - 1);
+
+		for (i = 0; ok && i < n; i++)
+			if (got[i] != one[i])
+				ok = 0;
+		line("old-load", n, ok ? "exact" : "wrong");
+		a = d->alloc(16);
+		b = d->alloc(16);
+		ok = a && b && a != b && !((unsigned long)a & 15) && !((unsigned long)b & 15);
+		if (ok) {
+			for (i = 0; i < 16; i++) { a[i] = (unsigned char)i; b[i] = (unsigned char)(100 + i); }
+			for (i = 0; i < 16; i++)
+				if (a[i] != (unsigned char)i || b[i] != (unsigned char)(100 + i))
+					ok = 0;
+		}
+		line("old-alloc", 0, ok ? "two blocks" : "wrong");
+		line("old-ms", (long)d->ms(), "");
+		line("old-save", d->save("x", one, 3), "");
+	}
 	sys(1, 0, 0, 0);
 	for (;;)
 		;

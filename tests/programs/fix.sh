@@ -41,6 +41,9 @@ printf 'code       = "SPEC.fixprobe.1@1"\nstatus     = "draft"\nadmitted   = ""\
 reply() {	# reply FILE TOOL INPUT_JSON: a saved Converse reply that calls one tool
 	printf '{"output":{"message":{"role":"assistant","content":[{"toolUse":{"toolUseId":"u-%s","name":"%s","input":%s}}]}},"stopReason":"tool_use","usage":{"inputTokens":100,"outputTokens":20,"cacheReadInputTokens":1000}}\n' "$(basename "$1" .json)" "$2" "$3" > "$1"
 }
+stop() {	# stop FILE: a saved reply that says something and hands in nothing
+	printf '{"output":{"message":{"role":"assistant","content":[{"text":"I stop here."}]}},"stopReason":"end_turn","usage":{"inputTokens":100,"outputTokens":20}}\n' > "$1"
+}
 fakes() {	# fakes DIR CONTENT [PATH]: look at f.c, look outside, read lines 2 to 2 given as
 	# two numbers, find a word in one folder, then hand in CONTENT
 	mkdir -p "$1"
@@ -50,6 +53,7 @@ fakes() {	# fakes DIR CONTENT [PATH]: look at f.c, look outside, read lines 2 to
 	reply "$1/4.json" look '{"command":"find","args":["broken","pool/PART.fixprobe@1"]}'
 	reply "$1/5.json" look '{"command":"read","args":["tests/programs/fixprobe-red.sh"],"start_line":3,"end_line":3}'
 	reply "$1/6.json" submit_fix "$(jq -cn --arg p "${3:-pool/PART.fixprobe@1/f.c}" --arg c "$2" '{path:$p,content:$c}')"
+	stop "$1/7.json"	# if the hand-in is sent back, it stops there
 }
 export PRICES="$r/tests/fixtures/model/prices.toml" MODEL_NAME=test:model RUNS="$t/runs" BUDGET="$r/tests/fixtures/exam/budget.toml" FIX_SUITE="fixprobe." FIX_OUT="$t/out"
 run() { (cd "$r" && sh jig/fix "$@") > "$t/said" 2>&1; }
@@ -87,6 +91,14 @@ rm -rf "$t/runs"; fakes "$t/f-other" "fixed breaks-other
 printf '#!/bin/sh\ngrep -q fixed pool/PART.fixprobe@1/f.c && { echo fixed; exit 0; }\nexit 1\n' > "$r/tests/programs/fixprobe-red.sh"
 MODEL_FAKE="$t/f-other" run fixprobe.red@1 && fail "a fix that broke another test was judged a pass"
 grep -q '^result *= "fail"' "$t/runs"/*/run.toml || fail "a fix that broke another test was not recorded as a fail"
+grep -q 'Hand-in 1 judged: fail' "$t/runs"/*/input.txt && grep -q 'What the tests that went red printed:' "$t/runs"/*/input.txt || fail "a fix that broke another test was not sent back with what the test printed"
+# sent back, it hands in again, and the second is judged on its own: a pass
+rm -rf "$t/runs"; mkdir -p "$t/f-again"
+reply "$t/f-again/1.json" submit_fix '{"path":"pool/PART.fixprobe@1/f.c","content":"fixed breaks-other\n"}'
+reply "$t/f-again/2.json" submit_fix '{"path":"pool/PART.fixprobe@1/f.c","content":"fixed\n"}'
+MODEL_FAKE="$t/f-again" run fixprobe.red@1 || fail "a second hand-in, after the first broke a test, was not judged a pass: $(tail -1 "$t/said")"
+grep -q '2 hand-in(s)' "$t/said" && grep -q '^lines *= 2$' "$t/runs"/*/run.toml || fail "the second hand-in was not counted, or its own lines were not the ones recorded: $(tail -1 "$t/said")"
+grep -q 'fixprobe.other' "$t/runs"/*/input.txt || fail "the first hand-in was not answered with the test that went red"
 
 rm -rf "$t/runs"; fakes "$t/f-out" "fixed
 " tests/programs/fixprobe-red.sh
@@ -101,6 +113,7 @@ grep -q 'g.S' "$t/runs"/*/output.txt || fail "the second file's change is not in
 # two files in two different parts is refused, nothing judged
 rm -rf "$t/runs"; mkdir -p "$t/f-split"
 reply "$t/f-split/1.json" submit_fix '{"files":[{"path":"pool/PART.fixprobe@1/f.c","content":"fixed\n"},{"path":"pool/PART.fixprobe@2/f.c","content":"x\n"}]}'
+stop "$t/f-split/2.json"
 MODEL_FAKE="$t/f-split" run fixprobe.red@1 && fail "a fix across two parts was judged"
 grep -q '^result *= "refused"' "$t/runs"/*/run.toml && grep -q "one part" "$t/said" || fail "a fix across two parts was not refused: $(tail -1 "$t/said")"
-echo "a green test refused before any call; a fix in two files of one part a pass with both files' 4 lines, one across two parts refused; a test already red before the fix not held against it; the look answered from the repo and refused outside it; a read given as two numbers, or as start_line and end_line, headed with where it is; a find kept to one folder; a good fix a pass with its 2 lines and 600 in, 120 out, 6000 from the cache, on its summary line; nothing skipped in the judge's copy that runs beside the clones; a fix that broke another test a fail; a fix outside pool/ refused unjudged; the model's copy untouched; after every call the model told how many it has left, and with ten left asked for its fix"
+echo "a green test refused before any call; a fix in two files of one part a pass with both files' 4 lines, one across two parts refused; a test already red before the fix not held against it; the look answered from the repo and refused outside it; a read given as two numbers, or as start_line and end_line, headed with where it is; a find kept to one folder; a good fix a pass with its 2 lines and 600 in, 120 out, 6000 from the cache, on its summary line; nothing skipped in the judge's copy that runs beside the clones; a fix that broke another test a fail; a fix outside pool/ refused unjudged; a fix that broke a test sent back with what it printed, and a second hand-in judged a pass; the model's copy untouched; after every call the model told how many it has left, and with ten left asked for its fix"

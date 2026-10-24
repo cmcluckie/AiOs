@@ -3,7 +3,8 @@
 # test: the test's file, the spec clause it checks and what it printed.  It may look
 # at the repo through the look tool, which answers only from a copy and refuses any
 # path outside it, and hands in its fix through submit_fix: one or more existing files
-# of one part under pool/, each whole.  The suite runs once on the repo as it is, to know which tests are
+# of one part under pool/, each whole.  A fix that is not a pass is answered with
+# what broke, and the model may hand in again while it has calls left (decision 0068).  The suite runs once on the repo as it is, to know which tests are
 # already red, and once in the fix's own copy: the fix is a pass only if the red test
 # turns green and no test that was green turns red (decision 0060).  Other tests
 # already red are other jobs, and do not count against it.  Every call is counted, and
@@ -88,13 +89,57 @@ look() {	# look COMMAND ARG...
 }
 
 cp='{"cachePoint":{"type":"default"}}'
-tools='{"tools":[{"toolSpec":{"name":"look","description":"Look at the repo, as it stands with the test red. command is list (args: a folder), read (args: a file, then optionally the first and last line to show, or give them as start_line and end_line; at most 400 lines at a time; it answers with the file, the lines shown and how many it has, then each line with its number) or find (args: a word, then optionally a folder or file to look in; otherwise pool, specs, tests, index, findings and jig).","inputSchema":{"json":{"type":"object","properties":{"command":{"type":"string","enum":["list","read","find"]},"args":{"type":"array","items":{"type":"string"}},"start_line":{"type":"integer"},"end_line":{"type":"integer"}},"required":["command","args"]}}}},{"toolSpec":{"name":"submit_fix","description":"Hand in the fix: files, a list of the files you changed, each its path (an existing file under pool/, all in the same part, e.g. pool/PART.gate@2/) and its whole new content. This ends your turn; the fix is then judged by every test.","inputSchema":{"json":{"type":"object","properties":{"files":{"type":"array","items":{"type":"object","properties":{"path":{"type":"string"},"content":{"type":"string"}},"required":["path","content"]}}},"required":["files"]}}}},{"cachePoint":{"type":"default"}}]}'
+tools='{"tools":[{"toolSpec":{"name":"look","description":"Look at the repo, as it stands with the test red. command is list (args: a folder), read (args: a file, then optionally the first and last line to show, or give them as start_line and end_line; at most 400 lines at a time; it answers with the file, the lines shown and how many it has, then each line with its number) or find (args: a word, then optionally a folder or file to look in; otherwise pool, specs, tests, index, findings and jig).","inputSchema":{"json":{"type":"object","properties":{"command":{"type":"string","enum":["list","read","find"]},"args":{"type":"array","items":{"type":"string"}},"start_line":{"type":"integer"},"end_line":{"type":"integer"}},"required":["command","args"]}}}},{"toolSpec":{"name":"submit_fix","description":"Hand in the fix: files, a list of the files you changed, each its path (an existing file under pool/, all in the same part, e.g. pool/PART.gate@2/) and its whole new content. The fix is then judged by every test: a pass ends the run; otherwise you are told what the tests printed, and may hand in again while you have calls left.","inputSchema":{"json":{"type":"object","properties":{"files":{"type":"array","items":{"type":"object","properties":{"path":{"type":"string"},"content":{"type":"string"}},"required":["path","content"]}}},"required":["files"]}}}},{"cachePoint":{"type":"default"}}]}'
 { printf 'The red test, tests/%s.toml:\n\n' "$test"; cat "$tf"
   printf '\nThe spec clause it checks, %s:\n\n%s\n\nWhat it printed when it ran:\n\n%s\n' "$binds" "$clause" "$redline"
 } > "$d/first.txt"
 jq -n --rawfile t "$d/first.txt" '[{role:"user",content:[{text:$t}]}]' > "$d/messages.json"
 prompt=$(git -C "$repo" hash-object "$FIX_PROMPT" 2> /dev/null | cut -c1-8); [ -n "$prompt" ] || prompt=$(cksum < "$FIX_PROMPT" | cut -d' ' -f1)
-tin=0; tout=0; cread=0; cwrite=0; turn=0; path=""; why=""
+# judge: the files handed in ($d/paths, $d/fixed/N) against the suite.  Sets result
+# (pass, fail or refused), line and lines; $d/output.txt holds the change, $d/red-new
+# the tests it turned red
+judge() {
+	lines=0; line=""; : > "$d/output.txt"; : > "$d/red-new"; rm -f "$d/suite.txt"
+	# every file an existing one under pool/, and all of them in one part
+	bad=""; part=$(head -1 "$d/paths" | cut -d/ -f1-2)
+	while IFS= read -r p; do
+		case "$p" in
+		pool/*/*) case "$p" in *..*) bad="only a file under pool/ that already exists may be fixed, not $p" ;; esac ;;
+		*) bad="only a file under pool/ that already exists may be fixed, not $p" ;;
+		esac
+		[ -n "$bad" ] || [ -f "$d/base/$p" ] || bad="only a file under pool/ that already exists may be fixed, not $p"
+		[ -n "$bad" ] || [ "$(printf '%s\n' "$p" | cut -d/ -f1-2)" = "$part" ] || bad="a fix is the files of one part; $p is not in $part"
+		[ -z "$bad" ] || break
+	done < "$d/paths"
+	if [ -n "$bad" ]; then
+		result=refused; line=$bad; return
+	fi
+	rm -rf "$d/judge"; copy "$d/judge" || die "could not copy the repo to judge"
+	n=0
+	while IFS= read -r p; do
+		n=$((n + 1)); cp "$d/fixed/$n" "$d/judge/$p"
+		{ echo "=== $p"; diff "$d/base/$p" "$d/judge/$p"; } >> "$d/output.txt"
+	done < "$d/paths"
+	lines=$(grep -c '^[<>]' "$d/output.txt")
+	# shellcheck disable=SC2086
+	(cd "$d/judge" && sh jig/test $FIX_SUITE) > "$d/suite.txt" 2>&1
+	summary=$(tail -1 "$d/suite.txt")
+	# the tests red before, and the tests red now that were not
+	sed -n 's/^FAIL  \([^ ]*\) .*/\1/p' "$d/red.txt" | sort > "$d/red-before"
+	grep '^FAIL ' "$d/suite.txt" | while IFS= read -r l; do
+		c=$(printf '%s\n' "$l" | sed 's/^FAIL  \([^ ]*\) .*/\1/')
+		grep -qx "$c" "$d/red-before" || printf '%s\n' "$l"
+	done > "$d/red-new"
+	if grep -q "^PASS  $code " "$d/suite.txt" && [ ! -s "$d/red-new" ]; then
+		still=$(($(grep -c '^FAIL ' "$d/suite.txt")))
+		result=pass; line="the red test passed and nothing that was green went red: ${summary#\# }${still:+, $still already red before}"
+	else
+		grep -q "^PASS  $code " "$d/suite.txt" || line="the test it was given is still red; "
+		result=fail; line="${line:-}$(grep -c . "$d/red-new") newly red: $(head -3 "$d/red-new" | cut -c1-160 | tr '\n' ' ')"
+	fi
+}
+
+tin=0; tout=0; cread=0; cwrite=0; turn=0; path=""; why=""; hand=0
 while :; do
 	turn=$((turn + 1))
 	[ "$turn" -le "$FIX_TURNS" ] || { why="more than $FIX_TURNS calls"; break; }
@@ -114,7 +159,36 @@ while :; do
 			printf '%s' "$fl" | jq -r '.path // ""' >> "$d/paths"
 			printf '%s' "$fl" | jq -j '.content // ""' > "$d/fixed/$n"
 		done < "$d/handed"
-		path=$(head -1 "$d/paths"); break
+		path=$(head -1 "$d/paths"); hand=$((hand + 1))
+		judge
+		[ "$result" = pass ] && break
+		# not a pass: shown what broke, it may hand in again while it has calls
+		# left, the way a mechanic runs the tests and looks (try 8, findings 0024
+		# item 21, decision 0068).  Nothing it handed in is kept.
+		left=$((FIX_TURNS - turn))
+		[ "$left" -gt 0 ] || { why="no calls left after hand-in $hand"; break; }
+		fb="Hand-in $hand judged: $result.  $line"
+		if [ "$result" = fail ]; then
+			[ -s "$d/red-new" ] && fb="$fb
+What the tests that went red printed:
+$(cut -c1-400 "$d/red-new")"
+			grep -q "^PASS  $code " "$d/suite.txt" || fb="$fb
+The test you were given, still red:
+$(grep "^FAIL  $code " "$d/suite.txt" | cut -c1-400)"
+		fi
+		fb="$fb
+Nothing was kept.  Change the fix and hand it in again with submit_fix.  Call $turn of $FIX_TURNS done; $left left."
+		results='[]'
+		while IFS= read -r tu; do
+			id=$(printf '%s' "$tu" | jq -r .toolUseId)
+			if [ "$(printf '%s' "$tu" | jq -r .name)" = submit_fix ]; then t=$fb; else t="not run: a fix was handed in with it"; fi
+			results=$(printf '%s' "$results" | jq --arg id "$id" --arg t "$t" '. + [{toolResult:{toolUseId:$id,content:[{text:$t}],status:"error"}}]')
+		done <<EOT
+$(jq -c '.output.message.content[] | select(.toolUse) | .toolUse' "$d/reply.json")
+EOT
+		printf '%s' "$results" | jq '[{role:"user",content:.}]' > "$d/res.json"
+		jq --slurpfile r "$d/res.json" '. + $r[0]' "$d/messages.json" > "$d/m.new" && mv "$d/m.new" "$d/messages.json"
+		continue
 	fi
 	[ "$(jq -r '.stopReason // ""' "$d/reply.json")" = tool_use ] || { why="it stopped without handing in a fix"; break; }
 	results='[]'
@@ -140,51 +214,12 @@ EOT
 	jq --slurpfile r "$d/res.json" '. + $r[0]' "$d/messages.json" > "$d/m.new" && mv "$d/m.new" "$d/messages.json"
 done
 
-lines=0; line=""; : > "$d/output.txt"
-if [ -z "$path" ]; then
+if [ "$hand" -eq 0 ]; then
+	lines=0; : > "$d/output.txt"
 	result=refused; line="no fix handed in${why:+ ($why)}"
-else
-	# every file an existing one under pool/, and all of them in one part
-	bad=""; part=$(printf '%s\n' "$path" | cut -d/ -f1-2)
-	while IFS= read -r p; do
-		case "$p" in
-		pool/*/*) case "$p" in *..*) bad="only a file under pool/ that already exists may be fixed, not $p" ;; esac ;;
-		*) bad="only a file under pool/ that already exists may be fixed, not $p" ;;
-		esac
-		[ -n "$bad" ] || [ -f "$d/base/$p" ] || bad="only a file under pool/ that already exists may be fixed, not $p"
-		[ -n "$bad" ] || [ "$(printf '%s\n' "$p" | cut -d/ -f1-2)" = "$part" ] || bad="a fix is the files of one part; $p is not in $part"
-		[ -z "$bad" ] || break
-	done < "$d/paths"
-	if [ -n "$bad" ]; then
-		result=refused; line=$bad
-	else
-		copy "$d/judge" || die "could not copy the repo to judge"
-		n=0
-		while IFS= read -r p; do
-			n=$((n + 1)); cp "$d/fixed/$n" "$d/judge/$p"
-			{ echo "=== $p"; diff "$d/base/$p" "$d/judge/$p"; } >> "$d/output.txt"
-		done < "$d/paths"
-		lines=$(grep -c '^[<>]' "$d/output.txt")
-		# shellcheck disable=SC2086
-		(cd "$d/judge" && sh jig/test $FIX_SUITE) > "$d/suite.txt" 2>&1
-		summary=$(tail -1 "$d/suite.txt")
-		# the tests red before, and the tests red now that were not
-		sed -n 's/^FAIL  \([^ ]*\) .*/\1/p' "$d/red.txt" | sort > "$d/red-before"
-		grep '^FAIL ' "$d/suite.txt" | while IFS= read -r l; do
-			c=$(printf '%s\n' "$l" | sed 's/^FAIL  \([^ ]*\) .*/\1/')
-			grep -qx "$c" "$d/red-before" || printf '%s\n' "$l"
-		done > "$d/red-new"
-		if grep -q "^PASS  $code " "$d/suite.txt" && [ ! -s "$d/red-new" ]; then
-			still=$(($(grep -c '^FAIL ' "$d/suite.txt")))
-			result=pass; line="the red test passed and nothing that was green went red: ${summary#\# }${still:+, $still already red before}"
-		else
-			grep -q "^PASS  $code " "$d/suite.txt" || line="the test it was given is still red; "
-			result=fail; line="${line:-}$(grep -c . "$d/red-new") newly red: $(head -3 "$d/red-new" | cut -c1-160 | tr '\n' ' ')"
-		fi
-	fi
 fi
 cp "$d/messages.json" "$d/input.txt"
 RUNS_SITTING=$(date -u +%Y%m%dT%H%M%SZ) RUNS_PROMPT=$prompt RUNS_CACHE_READ=$cread RUNS_CACHE_WRITE=$cwrite \
 	sh "$repo/jig/runs" record "fix-$(printf %s "${test%@*}" | tr . -)" "$MODEL_NAME" "$(date -u +%Y-%m-%d)" "$FIX_TRY" "$tin" "$tout" "$result" "$lines" "$d/input.txt" "$d/output.txt" > /dev/null || exit 1
-echo "$test, try $FIX_TRY, prompt $prompt: $result ($line); $lines lines changed; $tin in, $cread read from the cache, $cwrite written to it, $tout out, over $turn calls"
+echo "$test, try $FIX_TRY, prompt $prompt: $result ($line); $hand hand-in(s); $lines lines changed; $tin in, $cread read from the cache, $cwrite written to it, $tout out, over $turn calls"
 [ "$result" = pass ]

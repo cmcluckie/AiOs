@@ -1,0 +1,11 @@
+id      = "0068"
+date    = 2026-10-24
+kind    = "rules and words"
+touches = ["jig/fix", "fix/prompt.txt", "tests/programs/fix.sh", "tests/fix.judged@1.toml", "tests/mutations.txt", "tests/gate.linux-only@1.toml", "tests/programs/debt.sh", "tests/programs/oldnums.c"]
+asked   = "Try 8 (findings 0024 item 21) handed in after six calls and broke life: the old calls taken out of the kernel and the old stubs pointed at Linux numbers with nothing behind them, so alloc, load and save stopped working for old programs, and only alloc was tested.  Two changes.  The test: the old programs' probe also works through its own table, load exactly, alloc two good blocks, ms 0 with no clock, save -1 where writing is not asked; try 8 applied fails all four, the repo as it is passes.  The bench: a fix that is not a pass is answered with what the tests printed, and the model may hand in again while it has calls left, each hand-in judged on its own, the way the exam gives a second try; the prompt says so and loses the line telling it not to make sure.  TST.fix.judged: a fix sent back with what broke, a second hand-in a pass, one more mutation."
+options = ["as written", "the test only", "the bench only"]
+default = "as written"
+chose   = "as written"
+why     = "Chris, 2026-10-24: yup, let's do it.  A mechanic runs the tests and looks at what broke; and a promise in the spec with no test behind it is the hole the mechanic will find."
+by      = "KEY.chris@1"
+drafted = "Claude"
