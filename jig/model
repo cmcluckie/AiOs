@@ -110,7 +110,7 @@ call() {	# call IN OUT: IN is the request body, OUT gets the reply
 	# shellcheck disable=SC1090
 	. "$AIOS_AWS"
 	: "${AWS_ACCESS_KEY_ID:?}" "${AWS_SECRET_ACCESS_KEY:?}" "${AWS_REGION:?}"
-	code=$(curl -sS -o "$2" -w '%{http_code}' --max-time 120 \
+	code=$(curl -sS -o "$2" -w '%{http_code}' --max-time 600 \
 		--aws-sigv4 "aws:amz:$AWS_REGION:bedrock" --user "$AWS_ACCESS_KEY_ID:$AWS_SECRET_ACCESS_KEY" \
 		-H 'content-type: application/json' --data-binary "@$1" \
 		"https://bedrock-runtime.$AWS_REGION.amazonaws.com/model/$MODEL_ID/converse") || cannot "curl could not reach Bedrock"

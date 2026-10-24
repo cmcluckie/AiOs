@@ -47,9 +47,14 @@ d="$FIX_OUT/$test-try$FIX_TRY"; rm -rf "$d"; mkdir -p "$d"
 copy() { mkdir -p "$1" && (cd "$repo" && tar --exclude=./.git --exclude=./out --exclude=./runs -cf - .) | tar -xf - -C "$1"; }
 copy "$d/base" || die "could not copy the repo"
 
+# a line on stderr for each step, so a person watching sees it move (decision 0069);
+# the summary stays the last line on stdout
+say() { printf '  %s\n' "$*" >&2; }
 # before spending anything: the suite as it is, and the test must be red in it
+say "running the suite on the repo as it is, to see what is red before (a few minutes)"
 # shellcheck disable=SC2086
 (cd "$d/base" && sh jig/test $FIX_SUITE) > "$d/red.txt" 2>&1
+say "$(tail -1 "$d/red.txt" | sed 's/^# //'); handing $test to $MODEL_NAME, $FIX_TURNS calls"
 grep -q "^\(PASS\|FAIL\|SKIP\)  $code " "$d/red.txt" || cannot "the test did not run here: $(tail -1 "$d/red.txt")"
 grep -q "^FAIL  $code " "$d/red.txt" || { grep -q "^SKIP  $code " "$d/red.txt" && cannot "the test cannot run here: $(grep "^SKIP" "$d/red.txt" | head -1)"; die "$test is not red: nothing to fix"; }
 redline=$(grep "^FAIL  $code " "$d/red.txt" | head -1)
@@ -145,7 +150,11 @@ while :; do
 	[ "$turn" -le "$FIX_TURNS" ] || { why="more than $FIX_TURNS calls"; break; }
 	jq -n --slurpfile m "$d/messages.json" --rawfile s "$FIX_PROMPT" --argjson tc "$tools" --argjson mt "$FIX_MAXTOKENS" --argjson cp "$cp" \
 		'{system:[{text:$s},$cp],messages:($m[0] | .[-1].content += [$cp]),toolConfig:$tc,inferenceConfig:{maxTokens:$mt}}' > "$d/req.json"
-	sh "$repo/jig/model" converse "$d/req.json" "$d/reply.json" || { rc=$?; [ $rc -eq 2 ] && exit 2; why="the call was refused"; break; }
+	# a model that cannot be reached on the first call cost nothing: cannot run here.
+	# Later, the calls before it were paid for, so the run is recorded, not lost (try 9)
+	sh "$repo/jig/model" converse "$d/req.json" "$d/reply.json" || { rc=$?
+		if [ $rc -eq 2 ]; then [ "$turn" -gt 1 ] || exit 2; why="the model could not be reached on call $turn"; else why="the call was refused"; fi
+		say "call $turn of $FIX_TURNS: $why"; break; }
 	tin=$((tin + $(jq '.usage.inputTokens // 0' "$d/reply.json"))); tout=$((tout + $(jq '.usage.outputTokens // 0' "$d/reply.json")))
 	cread=$((cread + $(jq '.usage.cacheReadInputTokens // 0' "$d/reply.json"))); cwrite=$((cwrite + $(jq '.usage.cacheWriteInputTokens // 0' "$d/reply.json")))
 	jq --slurpfile r "$d/reply.json" '. + [$r[0].output.message]' "$d/messages.json" > "$d/m.new" && mv "$d/m.new" "$d/messages.json"
@@ -160,7 +169,9 @@ while :; do
 			printf '%s' "$fl" | jq -j '.content // ""' > "$d/fixed/$n"
 		done < "$d/handed"
 		path=$(head -1 "$d/paths"); hand=$((hand + 1))
+		say "call $turn of $FIX_TURNS: hand-in $hand, $(grep -c . "$d/paths") file(s) in $(head -1 "$d/paths" | cut -d/ -f2); running the suite on it (a few minutes)"
 		judge
+		say "hand-in $hand: $result: $(printf '%s' "$line" | cut -c1-140)"
 		[ "$result" = pass ] && break
 		# not a pass: shown what broke, it may hand in again while it has calls
 		# left, the way a mechanic runs the tests and looks (try 8, findings 0024
@@ -198,6 +209,7 @@ EOT
 		set --; while IFS= read -r a; do [ -n "$a" ] && set -- "$@" "$a"; done <<ARGS
 $(printf '%s' "$tu" | jq -r '((.input.args // []) + (if .input.start_line then [.input.start_line, (.input.end_line // empty)] else [] end))[] | tostring')
 ARGS
+		say "call $turn of $FIX_TURNS: $cmd $(printf '%s ' "$@" | cut -c1-100)"
 		out=$(look "$cmd" "$@" 2>&1) && st=success || st=error
 		results=$(printf '%s' "$results" | jq --arg id "$id" --arg t "$(printf '%s' "$out" | head -c 30000)" --arg st "$st" '. + [{toolResult:{toolUseId:$id,content:[{text:$t}],status:$st}}]')
 	done <<EOT

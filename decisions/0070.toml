@@ -1,0 +1,11 @@
+id      = "0070"
+date    = 2026-10-24
+kind    = "rules and words"
+touches = ["jig/fix", "jig/model", "tests/programs/fix.sh", "tests/fix.judged@1.toml", "tests/mutations.txt"]
+asked   = "Try 9 stopped when one call to Bedrock gave nothing back in 120 seconds, and the bench exited as if it could not run, recording nothing: the calls before it were paid for and are not in runs/.  A reply that writes whole files again after a failed hand-in can take longer than two minutes.  jig/model waits up to 600 seconds for Bedrock (Ollama already had 1800).  jig/fix records a run whose model is lost after its first call, refused, with what the calls cost; lost on the first call it is still cannot run here, nothing spent.  TST.fix.judged checks it, one more mutation."
+options = ["as written", "the wait only", "the record only"]
+default = "as written"
+chose   = "as written"
+why     = "Chris, 2026-10-24: yes.  Every number comes from a file; a paid call with no file is a number lost."
+by      = "KEY.chris@1"
+drafted = "Claude"

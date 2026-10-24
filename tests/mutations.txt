@@ -303,3 +303,5 @@ referee.artifact@1 | red | jig/aios | s/list_field "$lf" switches [|] grep -qx "
 fix.judged@1 | red | jig/fix | s/jq --arg n "$note" '. + \[{text:$n}\]'/jq '.'/ | the model is never told how many calls it has left, as on try 7
 fix.judged@1 | red | jig/fix | s/\[ "$left" -le 10 \] \&\& note=/[ "$left" -le 0 ] \&\& note=/ | the model is told it must hand in only when it has none left to do it with
 fix.judged@1 | red | jig/fix | s/^\t\t\[ "$result" = pass \] \&\& break$/\t\tbreak/ | a fix that is not a pass ends the run, as on try 8: never shown what broke, never another hand-in
+fix.judged@1 | red | jig/fix | s/^say() { printf '  %s\\n' "$\*" >\&2; }/say() { :; }/ | the run is silent until its summary, as on tries 1 to 8
+fix.judged@1 | red | jig/fix | s/then \[ "$turn" -gt 1 \] || exit 2;/then exit 2;/ | a model lost halfway leaves no record, and what the calls before it cost is lost, as on try 9

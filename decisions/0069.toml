@@ -1,0 +1,11 @@
+id      = "0069"
+date    = 2026-10-24
+kind    = "rules and words"
+touches = ["jig/fix", "tests/programs/fix.sh", "tests/fix.judged@1.toml", "tests/mutations.txt"]
+asked   = "The bench was silent for its first suite run and every call after, so a run looked stalled (tries 6 to 9).  It now says one short line on stderr for each step: the suite before and what it found, each call to the look tool, each hand-in and its verdict.  The summary stays the last line on stdout, as before.  TST.fix.judged checks the lines, one more mutation."
+options = ["as written", "silent, as before"]
+default = "as written"
+chose   = "as written"
+why     = "Chris, 2026-10-24: I don't need verbose, but something would be nice."
+by      = "KEY.chris@1"
+drafted = "Claude"
