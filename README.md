@@ -53,35 +53,30 @@ was decided is in [findings/](findings/).
 
 ## State
 
-Petition 0000, hello world, boots: 170 lines across three parts, fourteen
-bytes on the serial port and nothing else, the machine exits by itself.  57 of
-those lines are lifted from Linux's serial driver; the rest are a loader that
-runs one program and a program that only talks through the loader's system calls.
-[findings/0002.md](findings/0002.md) lists every line no petition justifies.
+Fourteen petitions build, and every one of the ladder's programs still runs
+under the latest kernel it was built for.  Petition 0000, hello world, is 170
+lines across three parts, fourteen bytes on the serial port and nothing else.
+The ladder after it: Towers of Hanoi (nothing new), Life (memory), a
+reverse-Polish calculator (input), a stopwatch (time), sort saved to a Minix
+disk (a disk and a filesystem lifted from Linux), two programs at once (the
+loader becomes a kernel), a console editor (saving over a file), the referee
+as the first agent in the pool, Life in colour on a VGA screen, programs in
+ring 3 behind a gate (`int 0x80`, Linux's numbers), and Berkeley's cat from
+4.4BSD-Lite, linked against musl and run as a normal Linux program file, its
+petition drafted by a model and decided by a human.  Each kernel holds only
+the parts its flavor's petitions name; what older kernels expose that nobody
+asked for is listed in [constitution/extras.toml](constitution/extras.toml)
+and only shrinks.
 
-Petition 0001, Towers of Hanoi, runs under the same loader binary with no
-change to it.  Petition 0002, Conway's Game of Life, asks the loader for
-memory: the loader grew by 35 lines and one system call, and the two earlier
-programs run under it unchanged.  Petition 0003, a reverse-Polish calculator,
-reads from the keyboard: the serial part we took from Linux gained its receive
-side, the loader a read system call, and the three earlier programs run unchanged.  Petition 0004, a stopwatch,
-counts seconds: the loader measures how fast the processor's counter ticks
-against the old PC timer chip at boot, the way Linux does when nothing will
-just tell it, and every earlier program runs unchanged under it.  Petition
-0005 sorts twenty numbers and saves them: an IDE disk and the original Minix
-filesystem, the one Linux started on in 1991, both lifted from Linux; the next
-boot finds the file, and Linux's own fsck.minix finds the disk clean.
-Petition 0006 runs two programs at once: the loader becomes a kernel, takes
-the processor back a hundred times a second the way the Amiga did, and gives
-each program its own memory; the stopwatch keeps time next to a program that
-never lets go, and one that writes past its own memory is stopped alone.  The
-ladder of petitions after that is in the plan: each one a program every CS
-student wrote once, chosen because it needs exactly one new thing from the
-machine.
-
-Built and run so far under software emulation.  The jig (the build host) is
-declared in [jig/](jig/) and not yet installed.  Nothing has been formally
-admitted; every entry is still `draft`.
+The jig is a NixOS VM on Hyper-V and runs every test under KVM;
+[tests/results.txt](tests/results.txt) and
+[tests/mutations-results.txt](tests/mutations-results.txt) are its last run,
+written by the runner, never by hand.  The referee (`pool/AGT.referee@1`, C)
+checks rules 1 to 9, 11, 12, 13, 19, 21 and 22 of
+[schema/petition.md](schema/petition.md); the rest are written and not yet
+enforced ([findings/0025.md](findings/0025.md)).  Nothing has been formally
+admitted; every entry is still `draft`, and commit signatures are checked by
+Chris's shell, not yet by the referee.
 
 ## Layout
 
@@ -106,11 +101,11 @@ admitted; every entry is still `draft`.
     sh jig/aios list
     sh jig/aios run hello
 
-`aios` is the referee and the builder as one shell script until they are real
-components: `check` resolves every catalogue number in the flavor's petitions and refuses
-by rule number and code; `build` collects the components and compiles them;
-`run` boots the result on the flavor's machine.  Needs gcc with 32-bit support
-and qemu-system-x86_64.  In VS Code, Terminal > Run Task > "AiOS: run flavor".
+`jig/aios` is the builder: `build` runs the referee on the flavor's petitions,
+compiles only the parts they name, links the kernel, and runs the referee on
+the image; `run` boots it on the flavor's machine.  The referee itself is
+`pool/AGT.referee@1/referee`.  Needs gcc with 32-bit support and
+qemu-system-x86_64.  In VS Code, Terminal > Run Task > "AiOS: run flavor".
 
 ## How this is made
 
