@@ -1,0 +1,15 @@
+id            = "20261024T231338Z-fix-gate-linux-only-12-bedrock-global-anthropic-claude-sonnet-4-6"
+date          = "2026-10-24T23:13:38Z"
+item          = "fix-gate-linux-only"
+model         = "bedrock:global.anthropic.claude-sonnet-4-6"
+version       = "2026-10-24"
+sitting       = "20261024T231338Z"
+prompt        = "7abe7603"
+try           = 12
+input_tokens  = 32
+output_tokens = 24356
+cache_read_tokens  = 202266
+cache_write_tokens = 47843
+cost_usd      = 0.605527
+result        = "pass"
+lines         = 87

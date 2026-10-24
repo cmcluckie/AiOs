@@ -3,9 +3,9 @@
 # tests/programs/debt.c, a static Linux program file with no C library, booted
 # under the cat flavor's kernel (PART.loader@10, PART.gate@2), as linuxcalls.sh
 # does.  One mode per test:
-#   numbers  TECH-DEBT 1: no AiOs-only number is left in PART.gate@2, in its
-#            table of calls or in the stubs old programs go through, and at 1000
-#            to 1003 a Linux program is answered what Linux answers, -38 (ENOSYS);
+#   numbers  TECH-DEBT 1, as decision 0074 reads it: at 1000 to 1003, the old
+#            table's own numbers, a Linux program is answered what Linux answers,
+#            -38 (ENOSYS);
 #            and an old program (tests/programs/oldnums.c) asking 85, 232, 265 and
 #            45 is answered as Linux answers, not by load, save, ms or alloc, and
 #            still loads, allocates, reads the clock and is refused a save
@@ -28,10 +28,9 @@ truncate -s 1M "$t/disk"; mkfs.minix -1 -n 14 "$t/disk" > /dev/null 2>&1 || { ec
 boot() { AIOS_DISK="$t/disk" AIOS_CMDLINE="debt $mode" timeout 60 sh pool/MACHINE.serial-disk@2/machine.sh out/cat/loader.elf "$t/debt" < /dev/null > "$1" 2> /dev/null; }
 case "$mode" in
 numbers)
-	# no number of AiOs's own left in the gate: not in its table of calls, not in the
-	# stubs old programs reach the kernel through (findings 0024 item 16)
-	left=$(grep -nE '^#define[[:space:]]+NR_[A-Z_]+[[:space:]]+1[0-9][0-9][0-9]([^0-9]|$)' pool/PART.gate@2/gate.c; grep -nE 'movl[[:space:]]+\$1[0-9][0-9][0-9],[[:space:]]*%eax' pool/PART.gate@2/gate_user.S)
-	[ -z "$left" ] || { echo "AiOs-only numbers are still in PART.gate@2: $(printf '%s\n' "$left" | head -4 | tr '\t' ' ' | tr -s ' ' | tr '\n' '|')"; exit 1; }
+	# the old table keeps its own numbers, 1000 to 1003, as a second table, the way
+	# Linux keeps one for each kind of program (decision 0074); what may not happen
+	# is a Linux program reaching them, or an old call answered at a Linux number
 	boot "$t/got"
 	printf 'nr-1000 -38\nnr-1001 -38\nnr-1002 -38\nnr-1003 -38\nexit 0\n' > "$t/want"
 	cmp -s "$t/got" "$t/want" || { echo "an AiOs-only number is still answered: $(diff "$t/want" "$t/got" | grep '^>' | head -4 | tr '\n' ' ')"; exit 1; }
@@ -62,7 +61,7 @@ numbers)
 	grep -q '^old-ms 0$' "$t/old" || bad="$bad ms gave $(sed -n 's/^old-ms //p' "$t/old"), not the 0 a kernel with no clock gives;"
 	grep -q '^old-save -1$' "$t/old" || bad="$bad save gave $(sed -n 's/^old-save //p' "$t/old"), not -1 on a kernel that may not write;"
 	[ -z "$bad" ] || { echo "an old program no longer works through its table:$bad"; exit 1; }
-	echo "no AiOs-only number left in the gate's table or its stubs; 1000 to 1003 each answered -38, as Linux answers them; an old program asking 85, 232, 265 and 45 gets Linux's answers, and no number from 0 to 999 loads a file; and through its table it still loads, allocates, reads the clock and is refused a save as before" ;;
+	echo "a Linux program answered -38 at 1000 to 1003, as Linux answers it; an old program asking 85, 232, 265 and 45 gets Linux's answers, and no number from 0 to 999 loads a file; and through its table it still loads, allocates, reads the clock and is refused a save as before" ;;
 random)
 	for i in 1 2 3; do boot "$t/r$i"; grep -qx '[0-9a-f]\{32\}' "$t/r$i" || { echo "boot $i gave no AT_RANDOM: $(head -1 "$t/r$i")"; exit 1; }; done
 	for pair in "1 2" "1 3" "2 3"; do

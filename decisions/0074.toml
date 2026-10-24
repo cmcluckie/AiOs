@@ -1,0 +1,11 @@
+id      = "0074"
+date    = 2026-10-24
+kind    = "specs and tests"
+touches = ["specs/gate.10@1.toml", "tests/gate.linux-only@1.toml", "tests/programs/debt.sh"]
+asked   = "Eleven tries at TECH-DEBT 1 (findings 0024 items 13 to 25) kept moving the four old calls rather than removing them; the honest removal is large and the harm small.  The harm findings 0021 named is a Linux program reaching the old calls.  SPEC.gate.10 is rewritten: a Linux program sees Linux's table alone and gets -38 at 1000 to 1003; old programs keep 1000 to 1003 as a second table, as Linux keeps one per kind of program, and no old call is answered at a Linux number.  The test drops its source check for numbers of 1000 and up and keeps the rest.  TECH-DEBT 1 in findings 0021 is read the same way.  Try 3's change passes the new test; the repo as it is fails it.  The mechanic runs once more against the new spec."
+options = ["as written", "keep the spec, Claude writes the full removal", "take try 3 as it was"]
+default = "as written"
+chose   = "as written"
+why     = "Chris, 2026-10-24: can't we just move the numbers back to the original numbers and implement that functionality?  I think so.  We simply asked it to do way too much."
+by      = "KEY.chris@1"
+drafted = "Claude"
