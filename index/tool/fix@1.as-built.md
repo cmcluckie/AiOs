@@ -19,16 +19,18 @@ skip the quartermaster).
    file, the lines shown and how many it has, then each line numbered; find a word in a folder or file it names, or in pool,
    specs, tests, index, findings and jig.  A path that starts with /, holds .., or reaches .git
    is refused.
-4. Stops at submit_fix (a path and a whole file), at FIX_TURNS calls (40), or when
+4. Stops at submit_fix (files: one or more, each a path and its whole content; a
+   single path and content is taken too), at FIX_TURNS calls (40), or when
    the model ends its turn without one.
-5. Refuses a fix for anything but an existing file under pool/, unjudged.
-   Otherwise copies the repo again, puts the fix in that copy, and runs jig/test
+5. Refuses a fix for anything but existing files under pool/, all of one part
+   (pool/PART.x@n/), unjudged.  Otherwise copies the repo again, puts every file
+   of the fix in that copy, and runs jig/test
    there, the same tests.  A pass needs the red test PASS and no test FAIL that
    was not already FAIL before (decision 0060): tests already red are other jobs.
 6. Records the run with jig/runs: item fix-TEST, the model, the try (FIX_TRY), the
    prompt's fingerprint, every call's input and output tokens added up, the result
    (pass, fail or refused), and the lines changed: lines removed plus lines added,
-   by diff.  The conversation is input.txt; the diff is output.txt.
+   by diff, over every file of the fix.  The conversation is input.txt; the diff is output.txt.
 
 The suite in each copy is told where the upstream clones are (LINUX, MUSL, V7, BSD,
 beside the repo unless set), so the tests that read them run there as they do in the
@@ -46,4 +48,4 @@ a green fix is a proposal Chris decides on, like any other change.
   cap are jig/model's); jig/runs to record.
 
 ## Size
-jig/fix 166 lines (shell); fix/prompt.txt 7 lines.
+jig/fix 183 lines (shell); fix/prompt.txt 7 lines.

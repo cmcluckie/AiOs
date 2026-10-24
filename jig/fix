@@ -2,8 +2,8 @@
 # fix: the mechanic's bench (part 21, findings 0024).  One model is handed one red
 # test: the test's file, the spec clause it checks and what it printed.  It may look
 # at the repo through the look tool, which answers only from a copy and refuses any
-# path outside it, and hands in its fix through submit_fix: one existing file under
-# pool/, whole.  The suite runs once on the repo as it is, to know which tests are
+# path outside it, and hands in its fix through submit_fix: one or more existing files
+# of one part under pool/, each whole.  The suite runs once on the repo as it is, to know which tests are
 # already red, and once in the fix's own copy: the fix is a pass only if the red test
 # turns green and no test that was green turns red (decision 0060).  Other tests
 # already red are other jobs, and do not count against it.  Every call is counted, and
@@ -88,7 +88,7 @@ look() {	# look COMMAND ARG...
 }
 
 cp='{"cachePoint":{"type":"default"}}'
-tools='{"tools":[{"toolSpec":{"name":"look","description":"Look at the repo, as it stands with the test red. command is list (args: a folder), read (args: a file, then optionally the first and last line to show, or give them as start_line and end_line; at most 400 lines at a time; it answers with the file, the lines shown and how many it has, then each line with its number) or find (args: a word, then optionally a folder or file to look in; otherwise pool, specs, tests, index, findings and jig).","inputSchema":{"json":{"type":"object","properties":{"command":{"type":"string","enum":["list","read","find"]},"args":{"type":"array","items":{"type":"string"}},"start_line":{"type":"integer"},"end_line":{"type":"integer"}},"required":["command","args"]}}}},{"toolSpec":{"name":"submit_fix","description":"Hand in the fix: the path of one existing file under pool/ and its whole new content. This ends your turn; the fix is then judged by every test.","inputSchema":{"json":{"type":"object","properties":{"path":{"type":"string"},"content":{"type":"string"}},"required":["path","content"]}}}},{"cachePoint":{"type":"default"}}]}'
+tools='{"tools":[{"toolSpec":{"name":"look","description":"Look at the repo, as it stands with the test red. command is list (args: a folder), read (args: a file, then optionally the first and last line to show, or give them as start_line and end_line; at most 400 lines at a time; it answers with the file, the lines shown and how many it has, then each line with its number) or find (args: a word, then optionally a folder or file to look in; otherwise pool, specs, tests, index, findings and jig).","inputSchema":{"json":{"type":"object","properties":{"command":{"type":"string","enum":["list","read","find"]},"args":{"type":"array","items":{"type":"string"}},"start_line":{"type":"integer"},"end_line":{"type":"integer"}},"required":["command","args"]}}}},{"toolSpec":{"name":"submit_fix","description":"Hand in the fix: files, a list of the files you changed, each its path (an existing file under pool/, all in the same part, e.g. pool/PART.gate@2/) and its whole new content. This ends your turn; the fix is then judged by every test.","inputSchema":{"json":{"type":"object","properties":{"files":{"type":"array","items":{"type":"object","properties":{"path":{"type":"string"},"content":{"type":"string"}},"required":["path","content"]}}},"required":["files"]}}}},{"cachePoint":{"type":"default"}}]}'
 { printf 'The red test, tests/%s.toml:\n\n' "$test"; cat "$tf"
   printf '\nThe spec clause it checks, %s:\n\n%s\n\nWhat it printed when it ran:\n\n%s\n' "$binds" "$clause" "$redline"
 } > "$d/first.txt"
@@ -105,9 +105,16 @@ while :; do
 	cread=$((cread + $(jq '.usage.cacheReadInputTokens // 0' "$d/reply.json"))); cwrite=$((cwrite + $(jq '.usage.cacheWriteInputTokens // 0' "$d/reply.json")))
 	jq --slurpfile r "$d/reply.json" '. + [$r[0].output.message]' "$d/messages.json" > "$d/m.new" && mv "$d/m.new" "$d/messages.json"
 	if jq -e '[.output.message.content[] | select(.toolUse.name == "submit_fix")] | length > 0' "$d/reply.json" > /dev/null; then
-		jq -r '[.output.message.content[] | select(.toolUse.name == "submit_fix") | .toolUse.input][0].path // ""' "$d/reply.json" > "$d/path"
-		jq -j '[.output.message.content[] | select(.toolUse.name == "submit_fix") | .toolUse.input][0].content // ""' "$d/reply.json" > "$d/fixed"
-		path=$(cat "$d/path"); break
+		# one file (path, content) or several (files: [{path, content}, ...]), each kept apart
+		jq -c '[.output.message.content[] | select(.toolUse.name == "submit_fix") | .toolUse.input][0]
+			| if .files then .files else [{path, content}] end | .[]' "$d/reply.json" > "$d/handed"
+		mkdir -p "$d/fixed"; n=0; : > "$d/paths"
+		while IFS= read -r fl; do
+			n=$((n + 1))
+			printf '%s' "$fl" | jq -r '.path // ""' >> "$d/paths"
+			printf '%s' "$fl" | jq -j '.content // ""' > "$d/fixed/$n"
+		done < "$d/handed"
+		path=$(head -1 "$d/paths"); break
 	fi
 	[ "$(jq -r '.stopReason // ""' "$d/reply.json")" = tool_use ] || { why="it stopped without handing in a fix"; break; }
 	results='[]'
@@ -130,16 +137,26 @@ lines=0; line=""; : > "$d/output.txt"
 if [ -z "$path" ]; then
 	result=refused; line="no fix handed in${why:+ ($why)}"
 else
-	case "$path" in
-	pool/*/*) case "$path" in *..*) bad=1 ;; *) bad="" ;; esac ;;
-	*) bad=1 ;;
-	esac
-	if [ -n "$bad" ] || [ ! -f "$d/base/$path" ]; then
-		result=refused; line="only a file under pool/ that already exists may be fixed, not $path"
+	# every file an existing one under pool/, and all of them in one part
+	bad=""; part=$(printf '%s\n' "$path" | cut -d/ -f1-2)
+	while IFS= read -r p; do
+		case "$p" in
+		pool/*/*) case "$p" in *..*) bad="only a file under pool/ that already exists may be fixed, not $p" ;; esac ;;
+		*) bad="only a file under pool/ that already exists may be fixed, not $p" ;;
+		esac
+		[ -n "$bad" ] || [ -f "$d/base/$p" ] || bad="only a file under pool/ that already exists may be fixed, not $p"
+		[ -n "$bad" ] || [ "$(printf '%s\n' "$p" | cut -d/ -f1-2)" = "$part" ] || bad="a fix is the files of one part; $p is not in $part"
+		[ -z "$bad" ] || break
+	done < "$d/paths"
+	if [ -n "$bad" ]; then
+		result=refused; line=$bad
 	else
 		copy "$d/judge" || die "could not copy the repo to judge"
-		cp "$d/fixed" "$d/judge/$path"
-		diff "$d/base/$path" "$d/judge/$path" > "$d/output.txt"
+		n=0
+		while IFS= read -r p; do
+			n=$((n + 1)); cp "$d/fixed/$n" "$d/judge/$p"
+			{ echo "=== $p"; diff "$d/base/$p" "$d/judge/$p"; } >> "$d/output.txt"
+		done < "$d/paths"
 		lines=$(grep -c '^[<>]' "$d/output.txt")
 		# shellcheck disable=SC2086
 		(cd "$d/judge" && sh jig/test $FIX_SUITE) > "$d/suite.txt" 2>&1

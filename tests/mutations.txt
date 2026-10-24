@@ -278,9 +278,9 @@ exam.ollama@1 | red | jig/model | s/case "\$MODEL_NAME" in ollama:\*) call_ollam
 fix.judged@1 | red | jig/fix | s/^grep -q "\^FAIL  \$code " "\$d\/red.txt" || {/true || {/ | a test that is already green is handed to the model anyway, and paid for
 fix.judged@1 | red | jig/fix | s/echo "refused: \$a is outside the repo"; return 1/:/ | the look tool answers for any path, outside the repo included
 fix.judged@1 | red | jig/fix | s/sh jig\/test \$FIX_SUITE/sh jig\/test $test/ | the judge runs only the test that was red, so a fix that breaks another one passes
-fix.judged@1 | red | jig/fix | s/\*) bad=1 ;;/*) bad="" ;;/ | a fix for a file outside pool/ is judged like any other
+fix.judged@1 | red | jig/fix | s/^\t\t\*) bad="only a file under pool\/ that already exists may be fixed, not \$p" ;;/\t\t*) : ;;/ | a fix for a file outside pool/ is judged like any other
 fix.judged@1 | red | jig/fix | s/tin=\$((tin + /tin=$((0 + / | only the last call's input tokens are counted
-fix.judged@1 | red | jig/fix | s/cp "\$d\/fixed" "\$d\/judge\/\$path"/cp "$d\/fixed" "$d\/judge\/$path"; cp "$d\/fixed" "$repo\/$path"/ | the fix is written into the repo itself, not only into the judge's copy
+fix.judged@1 | red | jig/fix | s/cp "\$d\/fixed\/\$n" "\$d\/judge\/\$p"/cp "$d\/fixed\/$n" "$d\/judge\/$p"; cp "$d\/fixed\/$n" "$repo\/$p"/ | the fix is written into the repo itself, not only into the judge's copy
 fix.judged@1 | red | jig/fix | s/grep -c '\^\[<>\]'/grep -c '^>'/ | only added lines are counted as changed
 fix.judged@1 | red | jig/fix | s/grep -qx "\$c" "\$d\/red-before" || printf/printf/ | a test already red before the fix is held against it, so no fix can pass while another job is open
 fix.judged@1 | red | jig/fix | s/\[ ! -s "\$d\/red-new" \]/true/ | a test that was green and went red is not held against the fix
@@ -290,3 +290,5 @@ fix.judged@1 | red | jig/fix | s/\$cread read from the cache, // | the summary l
 fix.judged@1 | red | jig/fix | s/(if .input.start_line then \[.input.start_line, (.input.end_line \/\/ empty)\] else \[\] end)/[]/ | start_line and end_line are ignored, as on try 2
 fix.judged@1 | red | jig/fix | s/echo "\$1, lines \$a to \$b of \$n"/:/ | a read no longer says which lines it shows, so a model cannot tell it got the wrong ones
 fix.judged@1 | red | jig/fix | s/^export LINUX MUSL V7 BSD$/:/ | the judge's copy is not told where the upstream clones are, so the tests that need them skip, as on try 3
+fix.judged@1 | red | jig/fix | s/end\( *\)|\( *\)\.\[\]' "\$d\/reply.json"/end\1|\2.[0]' "$d\/reply.json"/ | only the first file of a fix is taken, as the bench did on try 4, when the fix needed two
+fix.judged@1 | red | jig/fix | s/= "\$part" \] || bad="a fix is the files of one part/= "$part" ] || : "a fix is the files of one part/ | a fix may change files of several parts at once

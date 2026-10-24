@@ -1,0 +1,11 @@
+id      = "0064"
+date    = 2026-10-23
+kind    = "rules and words"
+touches = ["jig/fix", "fix/prompt.txt", "specs/fix.1@1.toml", "tests/fix.judged@1.toml", "tests/programs/fix.sh", "tests/mutations.txt", "index/tool/fix@1.as-built.md"]
+asked   = "Findings 0024 item 17: TECH-DEBT 1 lives in two files of PART.gate@2, and the bench took one, so try 4 could not pass.  submit_fix takes files, a list of paths and whole contents, all existing files of one part under pool/; a single path and content is still taken.  The judge puts every file in its copy and counts the changed lines of all of them.  The prompt says one part, not one file.  TST.fix.judged red on two files before, green after; two more mutations; two older ones rewritten for the new code, which they no longer matched."
+options = ["as written", "any files under pool/, across parts"]
+default = "as written"
+chose   = "as written"
+why     = "Chris, 2026-10-23: fix it and I will run again.  One part is the smallest unit a fix should touch; a fix across parts is two jobs."
+by      = "KEY.chris@1"
+drafted = "Claude"

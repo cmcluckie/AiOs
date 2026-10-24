@@ -14,6 +14,8 @@
 #   a test that was red before the fix and is still red after (fixprobe.always,
 #     another job) does not count against it
 #   a fix handed in for a file outside pool/ is refused, and nothing is judged
+#   a fix may hand in several files of one part at once (pool/PART.fixprobe@1/f.c
+#     and g.S), their changed lines added up; files of two parts are refused
 #   the copy the model worked from never changes: f.c still says "broken"
 #   a test that needs an upstream clone beside the repo still finds it from the
 #     judge's copy (fixprobe.clone), so nothing is skipped that runs in the repo
@@ -25,7 +27,8 @@ command -v qemu-system-x86_64 > /dev/null || { echo "no QEMU here, so jig/test d
 command -v jq > /dev/null || { echo "no jq here"; exit 2; }
 t=$(mktemp -d); trap 'rm -rf "$t"' EXIT
 mkdir "$t/r"; tar --exclude=./.git --exclude=./out --exclude=./runs -cf - . | tar -xf - -C "$t/r"
-r="$t/r"; mkdir -p "$r/pool/PART.fixprobe@1"; printf 'broken\n' > "$r/pool/PART.fixprobe@1/f.c"
+r="$t/r"; mkdir -p "$r/pool/PART.fixprobe@1" "$r/pool/PART.fixprobe@2"; printf 'broken\n' > "$r/pool/PART.fixprobe@1/f.c"
+printf 'one\n' > "$r/pool/PART.fixprobe@1/g.S"; printf 'other part\n' > "$r/pool/PART.fixprobe@2/f.c"
 printf '#!/bin/sh\ngrep -qx fixed pool/PART.fixprobe@1/f.c && { echo fixed; exit 0; }\necho "f.c says $(head -1 pool/PART.fixprobe@1/f.c)"; exit 1\n' > "$r/tests/programs/fixprobe-red.sh"
 printf '#!/bin/sh\ngrep -q breaks-other pool/PART.fixprobe@1/f.c && { echo "broken by the fix"; exit 1; }\necho fine; exit 0\n' > "$r/tests/programs/fixprobe-other.sh"
 printf '#!/bin/sh\necho "red before any fix, and after"; exit 1\n' > "$r/tests/programs/fixprobe-always.sh"
@@ -80,4 +83,15 @@ rm -rf "$t/runs"; fakes "$t/f-out" "fixed
 " tests/programs/fixprobe-red.sh
 MODEL_FAKE="$t/f-out" run fixprobe.red@1 && fail "a fix outside pool/ was judged"
 grep -q '^result *= "refused"' "$t/runs"/*/run.toml && grep -q "only a file under pool/" "$t/said" || fail "a fix outside pool/ was not refused: $(tail -1 "$t/said")"
-echo "a green test refused before any call; a test already red before the fix not held against it; the look answered from the repo and refused outside it; a read given as two numbers, or as start_line and end_line, headed with where it is; a find kept to one folder; a good fix a pass with its 2 lines and 600 in, 120 out, 6000 from the cache, on its summary line; nothing skipped in the judge's copy that runs beside the clones; a fix that broke another test a fail; a fix outside pool/ refused unjudged; the model's copy untouched"
+# a fix that needs two files of the same part hands both in at once
+rm -rf "$t/runs"; mkdir -p "$t/f-two"
+reply "$t/f-two/1.json" submit_fix '{"files":[{"path":"pool/PART.fixprobe@1/f.c","content":"fixed\n"},{"path":"pool/PART.fixprobe@1/g.S","content":"two\n"}]}'
+MODEL_FAKE="$t/f-two" run fixprobe.red@1 || fail "a fix in two files of one part was not judged a pass: $(tail -1 "$t/said")"
+grep -q '^lines *= 4$' "$t/runs"/*/run.toml || fail "the changed lines of both files were not counted: $(grep '^lines' "$t/runs"/*/run.toml)"
+grep -q 'g.S' "$t/runs"/*/output.txt || fail "the second file's change is not in the run's output"
+# two files in two different parts is refused, nothing judged
+rm -rf "$t/runs"; mkdir -p "$t/f-split"
+reply "$t/f-split/1.json" submit_fix '{"files":[{"path":"pool/PART.fixprobe@1/f.c","content":"fixed\n"},{"path":"pool/PART.fixprobe@2/f.c","content":"x\n"}]}'
+MODEL_FAKE="$t/f-split" run fixprobe.red@1 && fail "a fix across two parts was judged"
+grep -q '^result *= "refused"' "$t/runs"/*/run.toml && grep -q "one part" "$t/said" || fail "a fix across two parts was not refused: $(tail -1 "$t/said")"
+echo "a green test refused before any call; a fix in two files of one part a pass with both files' 4 lines, one across two parts refused; a test already red before the fix not held against it; the look answered from the repo and refused outside it; a read given as two numbers, or as start_line and end_line, headed with where it is; a find kept to one folder; a good fix a pass with its 2 lines and 600 in, 120 out, 6000 from the cache, on its summary line; nothing skipped in the judge's copy that runs beside the clones; a fix that broke another test a fail; a fix outside pool/ refused unjudged; the model's copy untouched"

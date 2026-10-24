@@ -7,4 +7,4 @@ red_when   = "a test that is already green is not refused before any call, or a 
 timeout_ms = 120000
 isolates   = "TOOL.fix@1"
 runner     = "jig/test cmd sh tests/programs/fix.sh"
-mutations  = 15
+mutations  = 17
