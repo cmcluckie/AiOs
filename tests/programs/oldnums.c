@@ -20,8 +20,9 @@
  * table says it does on a kernel with no clock; save answers -1, cat's petition
  * not asking to write.
  * And a sweep, since a load can hide behind any number, not only the four above
- * (try 10, findings 0024 item 23): every number from 0 to 449 but the two that
- * end the program (1, 252), asked with load's arguments, must not fill the
+ * (tries 10 and 11, findings 0024 items 23 and 24): every number from 0 to 999,
+ * where the check for numbers of 1000 and up takes over, but the two that end the
+ * program (1, 252), asked with load's arguments, must not fill the
  * buffer or answer the file's 33 bytes.  "sweep-load none", or the numbers that did.
  * Boots on: cat.
  * Expects refusal: CAP.time.read, CAP.fs.write.
@@ -78,10 +79,10 @@ void __attribute__((section(".text.start"))) _start(const struct door *d)
 	r2 = sys(45, 16, 0, 0);
 	line("nr-45", 0, r == r2 ? "same" : "moved");
 	{
-		char hit[256];
+		char hit[512];
 		int h = 0, n;
 
-		for (n = 0; n < 450; n++) {
+		for (n = 0; n < 1000; n++) {
 			if (n == 1 || n == 252)
 				continue;
 			for (i = 0; i < 64; i++)
@@ -91,7 +92,7 @@ void __attribute__((section(".text.start"))) _start(const struct door *d)
 			for (i = 0; i < 64; i++)
 				if (buf[i] != 'z')
 					same = 0;
-			if ((r == 33 || !same) && h < 240) {
+			if ((r == 33 || !same) && h < 500) {
 				if (h)
 					hit[h++] = ',';
 				if (n >= 100) hit[h++] = (char)('0' + n / 100);

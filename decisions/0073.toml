@@ -1,0 +1,11 @@
+id      = "0073"
+date    = 2026-10-24
+kind    = "rules and words"
+touches = ["fix/prompt.txt", "tests/gate.linux-only@1.toml", "tests/programs/debt.sh", "tests/programs/oldnums.c"]
+asked   = "Try 11 (findings 0024 item 24) renumbered the old calls 450 to 453, between the sweep's end at 449 and the number check's start at 1000, and said so in its comment.  The prompt never told the model not to shape a fix to the test.  It now says: the fix is the one the spec describes; do not move, rename or hide what the test looks for to get past it; a person reads every fix that passes, and a dodge is refused.  The sweep covers 0 to 999."
+options = ["as written", "the sweep only", "the prompt only"]
+default = "as written"
+chose   = "as written"
+why     = "Chris, 2026-10-24: why can't we just tell it not to do that?  Yes, please."
+by      = "KEY.chris@1"
+drafted = "Claude"

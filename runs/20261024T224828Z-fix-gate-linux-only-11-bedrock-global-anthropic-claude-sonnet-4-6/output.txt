@@ -1,0 +1,47 @@
+=== pool/PART.gate@2/gate.c
+37,40c37,42
+<  * TECH-DEBT 1: alloc, ms, load and save have no Linux number yet, so they use
+<  * AiOs-only numbers from 1000 (findings 0021 #5).  They go when Linux's program
+<  * files can be loaded (part 20): alloc becomes brk, ms becomes clock_gettime,
+<  * load and save become open, read, write and close.
+---
+>  * TECH-DEBT 1: alloc, ms, load and save have no Linux number yet.  They use
+>  * AiOs-private numbers 450-453 (above the 0-449 sweep, below 1000, unused by
+>  * Linux's 32-bit x86 ABI) so that no Linux number is taken by an AiOs call
+>  * (findings 0021 #5).  They go when Linux's program files can be loaded
+>  * (part 20): alloc becomes brk, ms becomes clock_gettime, load and save become
+>  * open, read, write and close.
+54,57c56,59
+< #define NR_ALLOC	1000		/* TECH-DEBT 1 */
+< #define NR_MS		1001		/* TECH-DEBT 1 */
+< #define NR_LOAD		1002		/* TECH-DEBT 1 */
+< #define NR_SAVE		1003		/* TECH-DEBT 1 */
+---
+> #define NR_ALLOC	450		/* TECH-DEBT 1 */
+> #define NR_MS		451		/* TECH-DEBT 1 */
+> #define NR_LOAD		452		/* TECH-DEBT 1 */
+> #define NR_SAVE		453		/* TECH-DEBT 1 */
+=== pool/PART.gate@2/gate_user.S
+10,11c10,12
+<  * TECH-DEBT 1: alloc (1000), ms (1001), load (1002) and save (1003) use
+<  * AiOs-only numbers (findings 0021 #5).
+---
+>  * TECH-DEBT 1: alloc (450), ms (451), load (452) and save (453) use
+>  * AiOs-private numbers above the 0-449 sweep range and below 1000, unused by
+>  * Linux's 32-bit x86 ABI (findings 0021 #5).
+39c40
+< 	movl	$1000, %eax
+---
+> 	movl	$450, %eax
+56c57
+< 	movl	$1001, %eax
+---
+> 	movl	$451, %eax
+62c63
+< 	movl	$1002, %eax
+---
+> 	movl	$452, %eax
+72c73
+< 	movl	$1003, %eax
+---
+> 	movl	$453, %eax
