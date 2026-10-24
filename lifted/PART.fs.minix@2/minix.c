@@ -51,9 +51,14 @@
  *   times                                no clock of day on this machine (plan 9.12):
  *                                        new files are dated 1 January 1970
  *   printk                               the caller reports; failures are -1
- * Glue, ours: bread and bwrite (two sectors a block), the first-zero-bit and
- * set-bit for a little-endian bitmap (minix.h maps them to the *_le helpers),
- * and copying fields instead of memcpy.
+ * Writing is compiled in only when the flavor's petitions ask for CAP.fs.write
+ * (the builder defines GRANT_FS_WRITE, decision 0065): without it there is no
+ * bwrite, no bitmap change, no new inode or zone and no minix_save, so a kernel
+ * asked only to read files has nothing in it that writes one.  The way Linux
+ * leaves out what its configuration does not ask for, with #ifdef CONFIG_*.
+ * Glue, ours: the #ifdef GRANT_FS_WRITE lines, bread and bwrite (two sectors a
+ * block), the first-zero-bit and set-bit for a little-endian bitmap (minix.h
+ * maps them to the *_le helpers), and copying fields instead of memcpy.
  */
 
 #include "minix.h"
@@ -128,12 +133,14 @@ static int bread(unsigned long block, void *buf)
 	return ata_read(block * 2, b) || ata_read(block * 2 + 1, b + 512) ? -1 : 0;
 }
 
+#ifdef GRANT_FS_WRITE
 static int bwrite(unsigned long block, const void *buf)
 {
 	const unsigned char *b = buf;
 
 	return ata_write(block * 2, b) || ata_write(block * 2 + 1, b + 512) ? -1 : 0;
 }
+#endif
 
 static void copy(void *to, const void *from, unsigned long n)
 {
@@ -161,6 +168,7 @@ static unsigned long length(const char *s)
 	return n;
 }
 
+#ifdef GRANT_FS_WRITE
 /* Glue: little-endian bitmaps, bit 0 is the low bit of byte 0 (minix.h's
  * find_first_zero_bit_le, __set_bit_le). */
 static unsigned long find_first_zero_bit(const unsigned char *map, unsigned long size)
@@ -186,8 +194,13 @@ static int test_and_clear_bit(unsigned long nr, unsigned char *map)
 	map[nr >> 3] &= ~(1 << (nr & 7));
 	return was;
 }
+#endif
 
+#ifdef GRANT_FS_WRITE
 static unsigned char sb_block[BLOCK_SIZE], map[BLOCK_SIZE], iblock[BLOCK_SIZE], dblock[BLOCK_SIZE];
+#else
+static unsigned char sb_block[BLOCK_SIZE], iblock[BLOCK_SIZE], dblock[BLOCK_SIZE];
+#endif
 
 /* fs/minix/inode.c minix_fill_super, the V1 branch, and minix_check_superblock */
 int minix_mount(void)
@@ -217,9 +230,11 @@ int minix_mount(void)
 	return 0;
 }
 
+#ifdef GRANT_FS_WRITE
 /* fs/minix/inode.c: the bitmaps start at block 2, inode map first, then zone map */
 static unsigned long imap_block(unsigned long i) { return 2 + i; }
 static unsigned long zmap_block(unsigned long i) { return 2 + sbi.s_imap_blocks + i; }
+#endif
 
 /* fs/minix/bitmap.c minix_V1_raw_inode: which block an inode lives in, and where */
 static struct minix_inode *raw_inode(unsigned long ino, unsigned long *block)
@@ -245,6 +260,7 @@ static int read_inode(unsigned long ino, struct minix_inode *in)
 	return 0;
 }
 
+#ifdef GRANT_FS_WRITE
 /* fs/minix/inode.c V1_minix_update_inode: the inode back where it lives */
 static int write_inode(unsigned long ino, const struct minix_inode *in)
 {
@@ -351,18 +367,19 @@ static unsigned long new_inode(void)
 		return 0;
 	return j;
 }
+#endif
 
 /* fs/minix/itree_v1.c block_to_path, the direct branch: block n of a file is
  * zone n, for n under 7.  create allocates a zeroed zone where there is none. */
 static unsigned long bmap(struct minix_inode *in, unsigned long n, int create)
 {
-	unsigned long z;
-
 	if (n >= DIRECT)
 		return 0;
 	if (in->i_zone[n] || !create)
 		return in->i_zone[n];
-	z = new_block();
+#ifdef GRANT_FS_WRITE
+	unsigned long z = new_block();
+
 	if (!z)
 		return 0;
 	zero(dblock, BLOCK_SIZE);
@@ -370,6 +387,9 @@ static unsigned long bmap(struct minix_inode *in, unsigned long n, int create)
 		return 0;
 	in->i_zone[n] = z;
 	return z;
+#else
+	return 0;		/* making a zone is writing, and writing was not asked for */
+#endif
 }
 
 /* fs/minix/dir.c minix_last_byte, with Linux's page as our block */
@@ -421,6 +441,7 @@ static unsigned long find_entry(const struct minix_inode *dir, const char *name,
 	return 0;
 }
 
+#ifdef GRANT_FS_WRITE
 /* fs/minix/dir.c minix_add_link: the first empty slot, or the one at the end */
 static int add_link(struct minix_inode *dir, unsigned long dirino,
 		    const char *name, int namelen, unsigned long ino)
@@ -464,6 +485,7 @@ got_it:
 		dir->i_size = pos + sbi.s_dirsize;
 	return write_inode(dirino, dir);
 }
+#endif
 
 long minix_load(const char *name, void *buf, unsigned long max)
 {
@@ -497,6 +519,7 @@ long minix_load(const char *name, void *buf, unsigned long max)
 	return (long)got;
 }
 
+#ifdef GRANT_FS_WRITE
 /* fs/minix/namei.c minix_mknod (minix_create calls it): a new inode, then its
  * name; the data, which Linux writes later from the page cache, goes in
  * between.  A name already there keeps its inode: truncated to nothing, as
@@ -544,3 +567,4 @@ long minix_save(const char *name, const void *buf, unsigned long len)
 		return -1;
 	return ata_flush() ? -1 : 0;
 }
+#endif

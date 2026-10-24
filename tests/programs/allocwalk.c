@@ -6,7 +6,9 @@
  *   refused SIZE      the first 1 MiB request refused
  *   small ADDR        the 16-byte request after the refusal
  *   end               the program got here, so nothing halted it
- * Not a component; never admitted. */
+ * Not a component; never admitted.
+ * Boots on: life.
+ */
 #include "door.h"
 static const struct door *d;
 static void hex(unsigned long v)

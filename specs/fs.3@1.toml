@@ -1,0 +1,7 @@
+code       = "SPEC.fs.3@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+component  = "PART.fs.minix@2"
+clause     = "A kernel built for a flavor whose petitions do not ask for CAP.fs.write has no code that writes a file: save answers -1, the disk is left exactly as it was, and minix_save is not in the image."
+author     = "KEY.chris"

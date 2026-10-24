@@ -3,6 +3,7 @@
  * Probe for TST.share.waits@1: a program that asks for one byte from the console
  * and waits for it.  Nothing is ever typed.  It runs beside the stopwatch, which
  * should keep its time while this one waits (TECH-DEBT 2).
+ * Boots on: share, gateshare.
  */
 #include "door.h"
 

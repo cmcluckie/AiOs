@@ -1,6 +1,8 @@
 /* Probe for TST.loader.ms@1 and TST.timer.rate@1: print what the ms door says,
  * one line every 500 ms by the door, forever.  jig/test stamps each line with
- * the host's clock and compares the two.  Not a component; never admitted. */
+ * the host's clock and compares the two.  Not a component; never admitted.
+ * Boots on: stopwatch.
+ */
 #include "door.h"
 static const struct door *d;
 static void num(unsigned long v)

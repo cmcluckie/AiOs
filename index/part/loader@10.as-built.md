@@ -34,5 +34,7 @@ As @9, and for a Linux program file: the 16 MiB window (zeroed, then the file's
 pieces), the stack table and strings at its top, and a refusal line on the console.
 
 ## Size
-loader.c 605 lines, 430 of them code (@9: 303).  The kernel file for the cat flavor:
-29,048 bytes (text 16,524, data 124, bss 153,800).
+loader.c 611 lines, 430 of them code (@9: 303).  The kernel file for the cat flavor:
+24,852 bytes (text 13,916, data 124, bss 149,704) since decision 0065 (part 21),
+when the Minix write code stopped being built into a kernel whose petition only
+reads files; 29,048 bytes (text 16,524, bss 153,800) before.

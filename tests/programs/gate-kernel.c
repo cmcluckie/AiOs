@@ -3,6 +3,7 @@
  * Probe for TST.gate.kernel-refused@1: a program that reaches into the kernel's
  * own memory, at 1 MiB where the kernel is loaded.  It reads the byte and
  * writes the same value back, so a kernel that lets it through is not damaged.
+ * Boots on: gate.
  */
 #include "door.h"
 

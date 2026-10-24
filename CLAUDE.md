@@ -199,6 +199,17 @@ exactly; when a new one is needed, add it here in the same commit.
   the findings, with what replaces it and when it goes; a test checks the two
   lists match.  Nothing else uses the mark.  First entry: the system call
   numbers 1000 to 1003 (findings 0021 #5).
+- **Extras.**  constitution/extras.toml: what each flavor's kernel exposed
+  that none of its petitions asked for, when the referee first held the
+  built kernel to rule 11 (decision 0065).  Debt by another name, listed by
+  flavor and capability; the referee refuses anything not on it and any line
+  that is no longer true, so it only shrinks.
+- **Switched off unless asked.**  A part that can do more than a flavor asks
+  compiles the rest out: the builder sets GRANT_ for each capability the
+  petitions ask for (CAP.fs.write@2 is GRANT_FS_WRITE), the part's entry
+  names the capability and a symbol in `off_unless_asked`, and the referee
+  checks the symbol is in the image exactly when it was asked for.  Linux's
+  #ifdef CONFIG_, with the petition as the configuration.
 - **Program.**  A flat binary linked with the loader's program.ld, entered at
   byte 0 with the system call table.  Hello, Hanoi, the rungs.
 - **Machine (MACHINE).**  The VM definition: one serial port,
@@ -222,7 +233,9 @@ exactly; when a new one is needed, add it here in the same commit.
   rewritten from shell to C the same night, because the referee is permanent
   code): `check` (rules 1, 9, 19, the build gate), `hardware` (rule 12,
   against constitution/instructions.toml), `rules` (2 to 8 on every petition,
-  written to tests/referee-results.txt, findings 0017), `lines` (rule 13).
+  written to tests/referee-results.txt, findings 0017), `lines` (rule 13),
+  `artifact` (rule 11 on the kernel as linked, run by the builder) and
+  `probes` (rule 22, where test programs boot; both decision 0065).
   `pool/AGT.referee@1/referee` builds it and hands over.  The decision ledger
   is `jig/ledger`, a script, because it reads git history; inside AiOs that
   job is admission.  The builder calls the referee before and after every
@@ -246,7 +259,8 @@ exactly; when a new one is needed, add it here in the same commit.
   the queue and the whole order runs again from the referee, recompiling
   only what changed (plan 5.6, 5.7).  Nothing in AiOs runs without a defined
   trigger.  Today: `jig/aios build`, started by hand, which calls the referee
-  first; the after half is plan 3.4 and 3.7.
+  first, and on the linked kernel (rule 11's parts and capabilities, decision
+  0065); the referee running the tester on the image is plan 3.7.
 - **Decision ledger.**  Every choice an agent makes among options, written
   down: the options, the default, what was chosen, the reason and who chose.
   The referee checks it against what actually changed, so a change with no

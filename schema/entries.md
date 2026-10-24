@@ -52,8 +52,10 @@ were one table, @@component@@ (findings 0014).
     licence       = "GPL-2.0-only"
     depends       = []                   # component catalogue numbers needed at run time; empty is a statement, not an omission
     builds_with   = []                   # kernels only, from PART.loader@8: parts it can be built with, each behind a switch; a build turns on only those the flavor's petitions name (plan 5.8)
+    switches      = []                   # kernels only, from PART.loader@10: the capabilities its own code can leave out when not asked (GRANT_); a part's off_unless_asked is honoured only in a kernel that lists it (decision 0065)
     build_depends = ["TOOL.c@1"]  # component catalogue numbers needed to build; never in the image
     exposes       = []                   # CAP catalogue numbers this component provides to others
+    off_unless_asked = []                # "CAP symbol": an exposed CAP compiled out unless the flavor asks for it (GRANT_ switch), and a symbol that is in the image only when it is in; rule 11 checks the image (decision 0065)
     requires      = ["CAP.tty.write@1", "CAP.proc.exit@1"]   # CAP catalogue numbers it needs
     scaffold      = false                # true: provided by the jig for now; rebuilt when its pool version is admitted
     as_built      = "index/part/hello@1.as-built.md"   # derived from source, regenerated on every admission

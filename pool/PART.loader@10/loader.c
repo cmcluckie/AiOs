@@ -32,6 +32,12 @@
  *   HAVE_SHARE            PART.share@2          more than one program at once, behind the gate
  *   HAVE_SCREEN_VGA       PART.screen.vga@1       the screen, a second console
  *
+ * A part can do more than a flavor asks of it.  For each capability the
+ * flavor's petitions ask for, the builder also sets GRANT_ and the
+ * capability's name (CAP.fs.write@2 is GRANT_FS_WRITE).  Without
+ * GRANT_FS_WRITE, PART.fs.minix@2 compiles in reading only, and save answers
+ * -1, as it does with no disk (decision 0065).
+ *
  * With both clocks the kernel asks the hypervisor first and times the 8254 if
  * there is no answer, as @7 did.  That is a choice made at run time between
  * two parts, which plan 5.8 says only a petition-requested chooser may make
@@ -368,7 +374,7 @@ static long door_load(const char *name, void *buf, unsigned long max)
 
 static long door_save(const char *name, const void *buf, unsigned long n)
 {
-#ifdef HAVE_FS_MINIX
+#if defined(HAVE_FS_MINIX) && defined(GRANT_FS_WRITE)
 	unsigned long f = irq_save();
 	long r = minix_save(name, buf, n);
 

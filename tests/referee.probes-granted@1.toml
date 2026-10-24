@@ -1,0 +1,10 @@
+code       = "TST.referee.probes-granted@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+binds      = "SPEC.referee.15@1"
+red_when   = "the referee refuses the test programs as they are; or, in a throwaway copy, it passes catfiles.c booted on cat, nowrite.c without its expected refusal, a program expecting a granted call refused, a program with no Boots on line, or pastend.c naming a flavor its script does not boot it on; or a refusal does not name rule 22 and the program"
+timeout_ms = 60000
+isolates   = "AGT.referee@1"
+runner     = "jig/test cmd sh tests/programs/probes.sh"
+mutations  = 2

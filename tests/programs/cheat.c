@@ -4,6 +4,7 @@
  * on the serial port itself instead of asking the system.  The output is byte
  * for byte hello's, so hello's own test cannot tell.  Only the referee can.
  * Never built into anything; tests/programs/cheat.sh swaps it in, in a copy.
+ * Boots on: hello.
  */
 #include "../PART.loader@1/door.h"
 

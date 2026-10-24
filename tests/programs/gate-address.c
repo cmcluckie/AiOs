@@ -5,6 +5,7 @@
  * kernel's bytes on the console and read(0, kernel, 16) would let input
  * overwrite the kernel; both must come back -14 (EFAULT).  The probe says what
  * it was answered with, using only addresses of its own.
+ * Boots on: gate.
  */
 #include "door.h"
 

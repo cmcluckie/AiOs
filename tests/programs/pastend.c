@@ -5,6 +5,7 @@
  * reads the last byte of its window, says so, then reads the first byte past it,
  * which it was never given (TECH-DEBT 3).  A kernel that maps only the window
  * stops it there with a page fault.
+ * Boots on: cat.
  */
 #include "door.h"
 

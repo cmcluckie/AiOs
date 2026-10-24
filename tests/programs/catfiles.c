@@ -1,10 +1,13 @@
-/* Probe for TST.cat.*@1: puts the files cat is asked to print on the disk, using
- * the old system call table's save (the loader runs flat programs as before):
+/* Probe for TST.cat.*@1: puts the files cat is asked to print on the disk.  It
+ * runs on the editor's kernel, whose petition (0007) asks to write files; cat's
+ * asks only to read them, so cat's kernel has no save (decision 0065):
  *   one   two lines
  *   two   one line
  *   big   5,000 bytes: "line 0001\n" to "line 0500\n", more than cat's buffer
  * Says "files written" when all three were saved, "save failed" otherwise.
- * Not a component; never admitted. */
+ * Not a component; never admitted.
+ * Boots on: editor.
+ */
 #include "door.h"
 static char big[5000];
 void _start(const struct door *d) __attribute__((section(".text.start")));

@@ -10,6 +10,7 @@ depends       = ["PART.serial.8250@2", "PART.gate@2"]
 builds_with   = ["PART.timer.kvmclock@1", "PART.timer.tsc-pit@1", "PART.timer.tsc-pit@2", "PART.fs.minix@1", "PART.fs.minix@2", "PART.share@2", "PART.screen.vga@1"]
 build_depends = ["TOOL.c@1"]
 exposes       = ["CAP.proc.exit@1", "CAP.mem.alloc@1"]
+switches      = ["CAP.fs.write@2"]
 requires      = []
 scaffold      = false
 as_built      = "index/part/loader@10.as-built.md"

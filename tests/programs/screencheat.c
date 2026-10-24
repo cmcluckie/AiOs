@@ -1,3 +1,6 @@
+/* The cheat of findings 0019 #7: a program that writes the screen itself.
+ * Boots on: no flavor's kernel; kept as the record of findings 0019 #7.
+ */
 #include "../../pool/PART.loader@8/door.h"
 __attribute__((section(".text.start"))) void _start(const struct door *d)
 {

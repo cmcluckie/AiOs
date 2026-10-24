@@ -22,6 +22,11 @@ numbers that have no entry, it stops and writes those numbers down.
   referee checks the flavor, then the loader and each program are compiled and linked and an image is made.  A program that depends on nothing
   is refused (rule 17), a source not in the pool is refused (rule 18), and the
   referee's hardware check (rule 12) runs on each program after it is built.
+  The kernel and its parts are compiled with -DGRANT_ and the name of every
+  capability the flavor's petitions ask for (CAP.fs.write@2 is GRANT_FS_WRITE),
+  and as soon as the kernel is linked the referee holds it to rule 11
+  (`referee artifact`); a refusal stops the build before any program is
+  compiled (decision 0065).
 - run FLAVOR: build, then boot on the flavor's machine.
 - pack ARCHIVE NAME FILE...: programs into one cpio archive, in order.
 

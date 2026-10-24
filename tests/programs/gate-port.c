@@ -3,6 +3,7 @@
  * Probe for TST.gate.port-refused@1: a program that writes bytes to the serial
  * port with outb instead of asking the kernel to.  The bytes spell PORTCHEAT,
  * which nothing else in the capture contains.
+ * Boots on: gate, gateshare.
  */
 #include "door.h"
 

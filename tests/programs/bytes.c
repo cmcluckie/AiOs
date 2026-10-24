@@ -1,5 +1,7 @@
 /* Probe for TST.serial.in-order@1: hand the write door all 256 byte values in
- * order, in one call, then one byte at a time in reverse.  Not a component. */
+ * order, in one call, then one byte at a time in reverse.  Not a component.
+ * Boots on: hello.
+ */
 #include "door.h"
 void __attribute__((section(".text.start"), noreturn)) _start(const struct door *d)
 {

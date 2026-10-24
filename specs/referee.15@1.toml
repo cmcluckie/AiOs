@@ -1,0 +1,7 @@
+code       = "SPEC.referee.15@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+component  = "AGT.referee@1"
+clause     = "Every test program written against the system call table says which flavors' kernels it boots on, and makes only the calls those flavors' petitions ask for, or constitution/extras.toml lists, unless it says it expects that call refused; a probe script that boots it on exactly one flavor's kernel boots it on one it names.  Anything else is refused, naming rule 22, the program, the flavor and the call."
+author     = "KEY.chris"

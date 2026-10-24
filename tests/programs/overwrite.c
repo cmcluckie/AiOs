@@ -4,6 +4,7 @@
  * that make PART.fs.minix@2 take zones, give them back, fill all seven, empty
  * the file, and grow it again.  Says how each save went, then loads the file
  * and says whether it is byte for byte the last thing saved.
+ * Boots on: editor.
  */
 #include "door.h"
 

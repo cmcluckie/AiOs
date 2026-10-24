@@ -21,6 +21,7 @@
   7. Program: the clock on the screen (plan 9.12).
   8. Committee, part 1: the seats, each on its own model, every vote open and checkable (plan 8.1).
   9. Committee, part 2: quorum and deadlock, tested before they are needed (plan 8.2).
+     Chris, 2026-10-23: the committee also audits the referee.  The referee is the control, run on every build; the committee checks, every so often, that what the referee enforces still matches the constitution, judges whether a grant makes sense at all, and argues exceptions to a decision Chris signs.  Part 21 found rule 11 written and never enforced; this is the seat that catches that.
   10. Purpose agent: the same petition weighed differently on two machines (plan 11.3).
   11. Program: BusyBox vi, voted on (plan 9.11).
   12. Historian: a real Linux security fix pulled through the door, provenance intact (plan 11.1).

@@ -1,6 +1,8 @@
 /* Probe for TST.vga.plain@1: thirty plain lines, "line 1" to "line 30", no
  * escapes, then wait for a key.  The screen holds 25, so the first five have
- * scrolled off the top by the time the tester looks. */
+ * scrolled off the top by the time the tester looks.
+ * Boots on: screen.
+ */
 #include "door.h"
 
 void __attribute__((section(".text.start"), noreturn)) _start(const struct door *d)

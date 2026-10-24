@@ -128,7 +128,15 @@ rule number and the offending catalogue number, nothing else.
     choice, human or seat.  See schema/signing.md.
 11. The built image contains no component not listed, exposes no CAP not granted,
     and the VM definition has no device no CAP requires.  Checked against the
-    artifact, not the petition.
+    artifact, not the petition: `pool/AGT.referee@1/referee artifact`, which the
+    builder runs on every kernel it links, from 2026-10-23 (decision 0065).  A
+    part may switch a capability off unless asked (`off_unless_asked`: the
+    builder sets GRANT_ for each capability asked for, and the named symbol is
+    in the image only when it is on); the referee looks for the symbol with nm.
+    What each kernel exposed unasked when the check began is listed by flavor
+    in constitution/extras.toml, and that list only shrinks: a capability not
+    asked for and not listed, or listed and no longer there, is refused.  The
+    VM half of this rule is not checked yet.
 12. A program touches no hardware: no port I/O and no privileged instruction in
     its own compiled code.  Everything it does to the machine goes through a
     system call, so its capabilities are the whole of what it can do.  Checked
@@ -167,6 +175,14 @@ rule number and the offending catalogue number, nothing else.
     (`sentence`; a capability's is `touches`).  An entry without one is
     refused: a learning system's catalogue is read by people before it is read
     by the referee.  Decided 2026-10-16.
+22. A test program booted on a flavor's kernel makes only the system calls
+    that flavor's petitions ask for (or constitution/extras.toml lists for it),
+    unless it says it expects the call refused.  Every program written against
+    the system call table says where it boots (`Boots on:`), and one that
+    expects a refusal says which (`Expects refusal:`).  A program that has to
+    succeed at something boots on a flavor allowed to do it, not on the flavor
+    under test.  Checked by `pool/AGT.referee@1/referee probes`.  Decided
+    2026-10-23 (decision 0065).
 
 ## What is deliberately not here
 

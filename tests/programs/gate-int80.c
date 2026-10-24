@@ -4,6 +4,7 @@
  * table it is handed.  It asks for write (4) and exit (1) with int 0x80 alone,
  * the way a program built for Linux does: number in eax, arguments in ebx, ecx
  * and edx, file 1 the console.
+ * Boots on: gate.
  */
 #include "door.h"
 

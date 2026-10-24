@@ -4,4 +4,6 @@ You are given the test, the clause of the spec it checks, and what it printed wh
 
 When you know the fix, hand it in with submit_fix: every file you changed, each its path (existing files under pool/, all in one part) and its whole new content, every line, not a diff.  Change only what the fix needs.  Keep the file's comments true: if a comment says something is left broken on purpose (TECH-DEBT), and you fix it, say what you did instead.
 
-Your fix is judged by running every test in the repo.  It is a fix only if they all pass.
+A kernel holds only what its flavor's petitions ask for.  The builder switches a part's code off when the petitions do not ask for what it does, and the referee refuses to build a kernel that exposes anything they did not ask for (schema/petition.md, rule 11).  So a fix may not give a program a system call its petition does not ask for; find another way.
+
+Your fix is judged by running every test in the repo, before and after it.  It is a fix only if its test turns green and no test that was green turns red.

@@ -4,7 +4,9 @@
  * fall of the 8254's high byte (256 counts, 214.6 us), how many times the
  * byte was read, what the last read cost in counter cycles, and how long the
  * step took.  Then the test Linux applies at step 1.  Runs on the stopwatch's
- * machine, in place of the program.  Not a component; never admitted. */
+ * machine, in place of the program.  Not a component; never admitted.
+ * Boots on: stopwatch.
+ */
 #include "door.h"
 
 #define STEPS 12

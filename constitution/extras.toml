@@ -1,0 +1,76 @@
+# What each flavor's kernel exposes that none of the flavor's petitions asks for,
+# as it stood when the referee first held the built kernel to rule 11
+# (decision 0065, findings 0024 #18).  Each one is debt: a kernel that holds
+# what nobody asked for.  The referee refuses a build whose kernel exposes a
+# capability its petitions do not ask for and this file does not list, and
+# refuses one where this file lists a capability the kernel no longer has, so
+# the list only gets shorter.  A line comes off when its debt is paid: the part
+# switches the capability off unless asked (off_unless_asked), or a decided
+# petition asks for it.
+#
+# One [[extra]] per flavor and capability, in flavor order.  Human-only, like
+# all of constitution/.
+
+[[extra]]
+flavor = "calc"
+cap    = "CAP.mem.alloc@1"
+
+[[extra]]
+flavor = "editor"
+cap    = "CAP.mem.alloc@1"
+
+[[extra]]
+flavor = "gate"
+cap    = "CAP.mem.alloc@1"
+
+[[extra]]
+flavor = "gate"
+cap    = "CAP.tty.read@1"
+
+[[extra]]
+flavor = "gateshare"
+cap    = "CAP.mem.alloc@1"
+
+[[extra]]
+flavor = "gateshare"
+cap    = "CAP.proc.exit@1"
+
+[[extra]]
+flavor = "gateshare"
+cap    = "CAP.tty.read@1"
+
+[[extra]]
+flavor = "share"
+cap    = "CAP.mem.alloc@1"
+
+[[extra]]
+flavor = "share"
+cap    = "CAP.proc.exit@1"
+
+[[extra]]
+flavor = "share"
+cap    = "CAP.tty.read@1"
+
+[[extra]]
+flavor = "sort"
+cap    = "CAP.mem.alloc@1"
+
+[[extra]]
+flavor = "sort"
+cap    = "CAP.proc.exit@1"
+
+[[extra]]
+flavor = "sort"
+cap    = "CAP.tty.read@1"
+
+[[extra]]
+flavor = "stopwatch"
+cap    = "CAP.mem.alloc@1"
+
+[[extra]]
+flavor = "stopwatch"
+cap    = "CAP.proc.exit@1"
+
+[[extra]]
+flavor = "stopwatch"
+cap    = "CAP.tty.read@1"

@@ -21,14 +21,20 @@
  *                                 resolves or comes with a component not yet
  *                                 admitted (rule 1), capability reasons are SPEC
  *                                 codes (rule 2), it has not expired (rule 9)
+ *   referee artifact <flavor>     rule 11, on the kernel as linked: every part in
+ *                                 it listed, every capability it exposes asked
+ *                                 for, switched off and absent (nm), or listed in
+ *                                 constitution/extras.toml; run by the builder
+ *   referee probe <flavor> <src>  rule 22 for one test program on one flavor
+ *   referee probes                rule 22 for every test program in tests/programs
  *
  * The ledger (decisions against the diff) stays a jig script, jig/ledger: it
  * reads git history, which the sealed system will not have; there, admission
  * does that job.
  *
  * Failures name rules and codes, never tool output.  Runs on the jig today,
- * against the repository as files; libc for files and one popen for the
- * compiler and git.
+ * against the repository as files; libc for files and popen for the
+ * compiler, git and nm.
  */
 #include <stdarg.h>
 #include <stdio.h>
@@ -350,6 +356,279 @@ static int cmd_check(const char *flavor)
 	printf("flavor %s: buildable on %s, program", flavor, machine);
 	for (int i = 0; i < np; i++) printf(" %s", primaries[i]);
 	printf("\n");
+	return 0;
+}
+
+/* ---- artifact: rule 11, the kernel as linked, held to the petitions ---- */
+
+/* a flavor: its petitions, what they ask for, the components they list, and the
+ * kernel the builder builds for it (the newest boot component, else the newest
+ * kernel its programs depend on) */
+struct flavor { char pets[32][MAXL]; int npet; char kernel[MAXL]; };
+static struct set asked, listed;
+
+static void read_flavor(const char *name, struct flavor *f)
+{
+	char ff[PATHL], primaries[32][MAXL];
+	int np = 0;
+	snprintf(ff, sizeof ff, "flavors/%s.toml", name);
+	if (!exists(ff)) die("no flavor named %s", name);
+	f->npet = list(ff, "petitions", f->pets, 32);
+	f->kernel[0] = 0;
+	asked.n = listed.n = 0;
+	for (int i = 0; i < f->npet; i++) {
+		char pf[PATHL]; snprintf(pf, sizeof pf, "petitions/%s.toml", f->pets[i]);
+		char *t = slurp(pf);
+		if (!t) die("missing petition %s", f->pets[i]);
+		static struct row rows[256];
+		int nr = rows_of(t, rows, 256);
+		for (int r = 0; r < nr; r++) {
+			if (!strcmp(rows[r].kind, "capability")) add_set(&asked, rows[r].code);
+			if (strcmp(rows[r].kind, "component")) continue;
+			add_set(&listed, rows[r].code);
+			if (!strcmp(rows[r].b, "boot") && (!f->kernel[0] || version_of(rows[r].code) >= version_of(f->kernel))) strcpy(f->kernel, rows[r].code);
+			if (!strcmp(rows[r].b, "primary") && np < 32) strcpy(primaries[np++], rows[r].code);
+		}
+		free(t);
+	}
+	if (!f->kernel[0]) loader_for(primaries, np, f->kernel);
+}
+
+/* constitution/extras.toml: what each flavor's kernel exposed that none of its
+ * petitions asked for, when rule 11 was first checked (decision 0065).  It only
+ * shrinks. */
+static void extras_of(const char *flavor, struct set *out)
+{
+	out->n = 0;
+	char *t = slurp("constitution/extras.toml");
+	if (!t) return;
+	char fl[MAXL] = "", cap[MAXL] = "", v[MAXL];
+	int open = 0;
+	for (const char *p = t; p && *p; p = strchr(p, '\n') ? strchr(p, '\n') + 1 : NULL) {
+		if (!strncmp(p, "[[", 2)) {
+			if (open && !strcmp(fl, flavor) && cap[0]) add_set(out, cap);
+			open = !strncmp(p, "[[extra]]", 9);
+			fl[0] = cap[0] = 0;
+			continue;
+		}
+		if (!open) continue;
+		if (!strncmp(p, "flavor", 6) && field_in(p, "flavor", v, sizeof v)) strcpy(fl, v);
+		else if (!strncmp(p, "cap ", 4) && field_in(p, "cap", v, sizeof v)) strcpy(cap, v);
+	}
+	if (open && !strcmp(fl, flavor) && cap[0]) add_set(out, cap);
+	free(t);
+}
+
+static int cmd_artifact(const char *flavor)
+{
+	struct flavor f;
+	static struct set parts, syms, exposed, extras, kept;
+	char elf[PATHL], kp[PATHL], kf[PATHL], cf[PATHL], items[64][MAXL];
+	read_flavor(flavor, &f);
+	snprintf(elf, sizeof elf, "out/%s/loader.elf", flavor);
+	snprintf(kp, sizeof kp, "out/%s/kernel-parts.txt", flavor);
+	if (!exists(elf)) die("rule 11: flavor %s has no kernel built, %s", flavor, elf);
+	/* the parts in the kernel: the builder's list when it chose them (plan 5.8),
+	 * else everything the kernel depends on, as it was built before @8 */
+	parts.n = 0;
+	char *t = slurp(kp);
+	if (t) {
+		for (char *l = strtok(t, "\n"); l; l = strtok(NULL, "\n")) if (*l) add_set(&parts, l);
+		free(t);
+	} else {
+		code_file(f.kernel, kf, sizeof kf);
+		int nd = list(kf, "depends", items, 64);
+		for (int j = 0; j < nd; j++) add_set(&parts, items[j]);
+	}
+	for (int k = 0; k < parts.n; k++) {
+		code_file(parts.items[k], cf, sizeof cf);
+		int nd = list(cf, "depends", items, 64);
+		for (int j = 0; j < nd; j++) add_set(&parts, items[j]);
+	}
+	for (int k = 0; k < parts.n; k++)
+		if (!in_set(&listed, parts.items[k])) die("rule 11: flavor %s's kernel holds %s, which none of its petitions lists", flavor, parts.items[k]);
+	/* what is in the image, by name */
+	syms.n = 0;
+	char cmd[PATHL + 16]; snprintf(cmd, sizeof cmd, "nm '%s' 2>/dev/null", elf);
+	FILE *nm = popen(cmd, "r");
+	if (!nm) die("rule 11: cannot list the symbols of %s", elf);
+	char line[MAXS];
+	while (fgets(line, sizeof line, nm)) {
+		char a[MAXL], ty[8], name[MAXL];
+		if (sscanf(line, "%255s %7s %255s", a, ty, name) == 3 && strcmp(ty, "U")) add_set(&syms, name);
+	}
+	if (pclose(nm) != 0 || !syms.n) die("rule 11: nm could not read %s", elf);
+	/* every capability the kernel and its parts expose, and the ones switched off */
+	exposed.n = 0;
+	static char off_cap[64][MAXL], off_sym[64][MAXL];
+	int noff = 0;
+	add_set(&parts, f.kernel);
+	for (int k = 0; k < parts.n; k++) {
+		code_file(parts.items[k], cf, sizeof cf);
+		int ne = list(cf, "exposes", items, 64);
+		for (int j = 0; j < ne; j++) add_set(&exposed, items[j]);
+		ne = list(cf, "off_unless_asked", items, 64);
+		for (int j = 0; j < ne && noff < 64; j++)
+			if (sscanf(items[j], "%255s %255s", off_cap[noff], off_sym[noff]) == 2) noff++;
+	}
+	extras_of(flavor, &extras);
+	kept.n = 0;
+	int off = 0;
+	for (int k = 0; k < exposed.n; k++) {
+		const char *c = exposed.items[k];
+		int o = -1;
+		for (int j = 0; j < noff; j++) if (!strcmp(off_cap[j], c)) o = j;
+		if (o >= 0) {
+			int in = in_set(&syms, off_sym[o]);
+			if (in_set(&asked, c) && !in) die("rule 11: flavor %s asks for %s, and %s is not in its kernel", flavor, c, off_sym[o]);
+			if (!in_set(&asked, c) && in) die("rule 11: flavor %s does not ask for %s, which its kernel switches off unless asked, and %s is in it", flavor, c, off_sym[o]);
+			if (!in_set(&asked, c)) { off++; printf("%s: switched off, not asked for\n", c); }
+			continue;
+		}
+		if (in_set(&asked, c)) continue;
+		if (in_set(&extras, c)) { add_set(&kept, c); printf("%s: not asked for; listed in constitution/extras.toml\n", c); continue; }
+		die("rule 11: flavor %s's kernel exposes %s, which none of its petitions asks for", flavor, c);
+	}
+	for (int k = 0; k < extras.n; k++)
+		if (!in_set(&kept, extras.items[k])) die("rule 11: constitution/extras.toml lists %s for flavor %s, whose kernel no longer exposes it unasked; take the line off", extras.items[k], flavor);
+	printf("flavor %s: %s and %d part(s), all listed; nothing exposed unasked but %d switched off and %d in constitution/extras.toml\n", flavor, f.kernel, parts.n - 1, off, kept.n);
+	return 0;
+}
+
+/* ---- probes: rule 22, a test program boots only where it is granted ---- */
+
+/* the system call table of a kernel, from its door.h: each entry's name and the
+ * capability its comment names, without the version */
+static int door_of(const char *kernel, char names[][MAXL], char caps[][MAXL], int max)
+{
+	char kf[PATHL], src[MAXL], dh[PATHL];
+	code_file(kernel, kf, sizeof kf);
+	field(kf, "source", src, sizeof src);
+	snprintf(dh, sizeof dh, "%sdoor.h", src);
+	char *t = slurp(dh);
+	if (!t) return 0;
+	int n = 0;
+	for (char *p = t; (p = strstr(p, "(*")) && n < max; p += 2) {
+		char *e = strchr(p, ')'), *nl = strchr(p, '\n'), *c = strstr(p, "/* CAP.");
+		if (!e || !nl || !c || c > nl) continue;
+		snprintf(names[n], MAXL, "%.*s", (int)(e - p - 2), p + 2);
+		c += 3;
+		snprintf(caps[n], MAXL, "%.*s", (int)strcspn(c, ": "), c);
+		n++;
+	}
+	free(t);
+	return n;
+}
+
+static int granted(const char *cap, struct set *extras)
+{
+	size_t l = strlen(cap);
+	for (int i = 0; i < asked.n; i++) if (!strncmp(asked.items[i], cap, l) && asked.items[i][l] == '@') return 1;
+	for (int i = 0; i < extras->n; i++) if (!strncmp(extras->items[i], cap, l) && extras->items[i][l] == '@') return 1;
+	return 0;
+}
+
+/* SRC, a test program, booted on FLAVOR's kernel: the number of refusals */
+static int probe_one(const char *flavor, const char *src, const char *text)
+{
+	struct flavor f;
+	static struct set extras;
+	char names[16][MAXL], caps[16][MAXL], refuse[16][MAXL];
+	int bad = 0, nref = 0;
+	read_flavor(flavor, &f);
+	extras_of(flavor, &extras);
+	int nd = door_of(f.kernel, names, caps, 16);
+	if (!nd) { printf("rule 22: %s boots on flavor %s, whose kernel %s has no door.h\n", src, flavor, f.kernel); return 1; }
+	/* "Expects refusal: CAP.fs.write." names capabilities without versions; the
+	 * line's full stop is not part of the last one */
+	const char *r = strstr(text, "Expects refusal:");
+	if (r) {
+		const char *nl = strchr(r, '\n');
+		for (const char *p = r; (p = strstr(p, "CAP.")) && (!nl || p < nl) && nref < 16; p += 4) {
+			size_t l = strspn(p, "CAP.abcdefghijklmnopqrstuvwxyz0123456789-");
+			while (l && p[l - 1] == '.') l--;
+			snprintf(refuse[nref++], MAXL, "%.*s", (int)l, p);
+		}
+	}
+	int used[16] = { 0 };
+	for (int k = 0; k < nd; k++) {
+		char call[MAXL + 4]; snprintf(call, sizeof call, "->%s(", names[k]);
+		if (!strstr(text, call)) continue;
+		int ref = -1;
+		for (int i = 0; i < nref; i++) if (!strcmp(refuse[i], caps[k])) ref = i;
+		if (ref >= 0) used[ref] = 1;
+		if (granted(caps[k], &extras) && ref >= 0) { printf("rule 22: %s says it expects %s refused on flavor %s, whose petitions ask for it\n", src, caps[k], flavor); bad++; }
+		if (!granted(caps[k], &extras) && ref < 0) { printf("rule 22: %s calls %s (%s) on flavor %s, whose petitions do not ask for it\n", src, names[k], caps[k], flavor); bad++; }
+	}
+	for (int i = 0; i < nref; i++) if (!used[i]) { printf("rule 22: %s says it expects %s refused and makes no call that needs it\n", src, refuse[i]); bad++; }
+	return bad;
+}
+
+static int cmd_probe(const char *flavor, const char *src)
+{
+	char *t = slurp(src);
+	if (!t) die("no test program %s", src);
+	int bad = probe_one(flavor, src, t);
+	free(t);
+	if (bad) return 1;
+	printf("%s on flavor %s: every call it makes is asked for, or expected refused\n", src, flavor);
+	return 0;
+}
+
+/* every test program written against the system call table, and the probe
+ * scripts that boot them */
+static int cmd_probes(void)
+{
+	static char cs[256][MAXL], shs[256][MAXL];
+	int nc = listdir("tests/programs", ".c", cs, 256), ns = listdir("tests/programs", ".sh", shs, 256);
+	int bad = 0, checked = 0;
+	static char *sh[256];
+	for (int i = 0; i < ns; i++) { char p[PATHL]; snprintf(p, sizeof p, "tests/programs/%s", shs[i]); sh[i] = slurp(p); }
+	for (int i = 0; i < nc; i++) {
+		char src[PATHL], fl[16][MAXL];
+		snprintf(src, sizeof src, "tests/programs/%s", cs[i]);
+		char *t = slurp(src);
+		if (!t || !strstr(t, "door.h\"")) { free(t); continue; }
+		checked++;
+		int nf = 0, nowhere = 0;
+		const char *b = strstr(t, "Boots on:");
+		if (!b) { printf("rule 22: %s has no Boots on line: which flavors' kernels it boots on\n", src); bad++; free(t); continue; }
+		b += 9;
+		while (*b == ' ') b++;
+		if (!strncmp(b, "no flavor", 9)) nowhere = 1;	/* "Boots on: no flavor's kernel." */
+		const char *end = nowhere ? b : b + strcspn(b, "\n");
+		while (b < end && nf < 16) {
+			while (b < end && (*b == ' ' || *b == ',')) b++;
+			size_t l = 0;
+			while (b + l < end && ((b[l] >= 'a' && b[l] <= 'z') || (b[l] >= '0' && b[l] <= '9') || b[l] == '-')) l++;
+			if (!l) break;
+			snprintf(fl[nf++], MAXL, "%.*s", (int)l, b);
+			b += l;
+			if (*b == '.') break;
+		}
+		if (!nf && !nowhere) { printf("rule 22: %s names no flavor on its Boots on line\n", src); bad++; }
+		for (int k = 0; k < nf; k++) bad += probe_one(fl[k], src, t);
+		/* a script that boots it on exactly one flavor's kernel boots it on one it names */
+		for (int s2 = 0; s2 < ns; s2++) {
+			if (!sh[s2] || !strstr(sh[s2], src)) continue;
+			if (strstr(sh[s2], "${AIOS_SHARE")) continue;
+			char seen[16][MAXL]; int nseen = 0;
+			for (const char *p = sh[s2]; (p = strstr(p, "out/")); p += 4) {
+				size_t l = strspn(p + 4, "abcdefghijklmnopqrstuvwxyz0123456789-");
+				if (!l || strncmp(p + 4 + l, "/loader.elf", 11)) continue;
+				char nm2[MAXL]; snprintf(nm2, sizeof nm2, "%.*s", (int)l, p + 4);
+				int dup = 0; for (int q = 0; q < nseen; q++) if (!strcmp(seen[q], nm2)) dup = 1;
+				if (!dup && nseen < 16) strcpy(seen[nseen++], nm2);
+			}
+			if (nseen != 1) continue;
+			int ok = 0; for (int k = 0; k < nf; k++) if (!strcmp(fl[k], seen[0])) ok = 1;
+			if (!ok) { printf("rule 22: tests/programs/%s boots %s on flavor %s's kernel, and %s does not say it boots there\n", shs[s2], src, seen[0], src); bad++; }
+		}
+		free(t);
+	}
+	for (int i = 0; i < ns; i++) free(sh[i]);
+	if (bad) { printf("%d refusal(s)\n", bad); return 1; }
+	printf("%d test programs: each boots only where every call it makes is asked for, listed, or expected refused\n", checked);
 	return 0;
 }
 
@@ -679,6 +958,9 @@ int main(int argc, char **argv)
 	if (argc >= 2 && !strcmp(argv[1], "rules")) return cmd_rules();
 	if (argc >= 3 && !strcmp(argv[1], "lines")) return cmd_lines(argv[2]);
 	if (argc >= 3 && !strcmp(argv[1], "petition")) return cmd_petition(argv[2]);
-	fputs("referee check <flavor> | hardware <code> <src> | rules | lines <file> | petition <file>\n", stderr);
+	if (argc >= 3 && !strcmp(argv[1], "artifact")) return cmd_artifact(argv[2]);
+	if (argc >= 4 && !strcmp(argv[1], "probe")) return cmd_probe(argv[2], argv[3]);
+	if (argc >= 2 && !strcmp(argv[1], "probes")) return cmd_probes();
+	fputs("referee check <flavor> | hardware <code> <src> | rules | lines <file> | petition <file> | artifact <flavor> | probe <flavor> <src> | probes\n", stderr);
 	return 2;
 }

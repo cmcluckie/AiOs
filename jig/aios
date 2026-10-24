@@ -8,7 +8,9 @@
 #   aios list                 flavors and petitions in this repo
 #   aios build <flavor>       builder: collect the components, compile, image;
 #                             if the petitions name catalogue numbers that have no
-#                             entry, stop (exit 3) and write them to out/<flavor>/missing.txt
+#                             entry, stop (exit 3) and write them to out/<flavor>/missing.txt;
+#                             the kernel gets GRANT_ for every capability asked for, and
+#                             the referee checks it as linked (rule 11, decision 0065)
 #   aios missing <flavor>     those catalogue numbers, one to a line, and nothing else
 #   aios run <flavor>         check, build, boot on the flavor's machine
 #   aios pack <archive> <name> <file>...   programs into one cpio archive, in
@@ -78,6 +80,12 @@ kernel_for() {	# FLAVOR_FILE PROGRAMS...
 }
 # PART.timer.tsc-pit@2 -> HAVE_TIMER_TSC_PIT
 have_of() { n=${1#PART.}; n=${n%@*}; echo "HAVE_$(echo "$n" | tr 'a-z.-' 'A-Z__')"; }
+# CAP.fs.write@2 -> GRANT_FS_WRITE: a capability the flavor asked for, as a switch
+# a part can compile its own code in or out by (decision 0065)
+grant_of() { n=${1#CAP.}; n=${n%@*}; echo "GRANT_$(echo "$n" | tr 'a-z.-' 'A-Z__')"; }
+petition_caps() {	# every CAP a petition asks for
+	awk '/^\[\[/{c=0} /^\[\[capability\]\]/{c=1} c && /^code/{gsub(/[" ]/,"",$3); print $3}' "$1"
+}
 
 # newc ARCHIVE NAME FILE...: a cpio archive in the "new ASCII" format (magic 070701),
 # the one Linux's initramfs uses, one regular file per program, in order.
@@ -192,6 +200,7 @@ cmd_build() {
 	lf=$(code_file "$loader"); ldir=$(field "$lf" source)
 	out="out/$1"; mkdir -p "$out"
 	CC=${CC:-gcc}
+	grants=$(for id in $(list_field "$f" petitions); do petition_caps "petitions/$id.toml"; done | sort -u | while read -r c; do printf -- '-D%s ' "$(grant_of "$c")"; done)
 	CFLAGS="-m32 -std=c11 -ffreestanding -fno-pic -fno-pie -fno-stack-protector -fno-builtin -fno-asynchronous-unwind-tables -mno-sse -mno-mmx -mno-red-zone -mgeneral-regs-only -nostdlib -nostdinc -O2 -Wall -Wextra -Werror"
 	LDFLAGS="-static -no-pie -nostartfiles -Wl,--build-id=none -Wl,-z,noexecstack"
 	if [ -n "$(list_field "$lf" builds_with)" ]; then
@@ -215,15 +224,28 @@ cmd_build() {
 	else
 		ddirs=""; incs=""; haves=""	# before @8: everything the loader depends on, built into it
 		for dep in $(list_field "$lf" depends); do ddirs="$ddirs $(field "$(code_file "$dep")" source)"; done
+		parts=$(list_field "$lf" depends)
 		rm -f "$out/kernel-parts.txt"
 	fi
+	# a part that leaves a capability out unless asked can do that only in a kernel
+	# whose own code honours the switch (its switches); otherwise it is refused here,
+	# by name, not by the compiler (decision 0065)
+	asked=$(for id in $(list_field "$f" petitions); do petition_caps "petitions/$id.toml"; done | sort -u)
+	for c in $parts; do
+		for o in $(sed -n 's/^off_unless_asked *= *\[\(.*\)\].*/\1/p' "$(code_file "$c")" | tr ',' '\n' | sed 's/^ *"//; s/ .*//'); do
+			printf '%s\n' "$asked" | grep -qx "$o" && continue
+			list_field "$lf" switches | grep -qx "$o" || die "rule 11: flavor $1 does not ask for $o, which $c leaves out unless asked, and $loader cannot be built that way; it needs a kernel that lists $o in switches"
+		done
+	done
 	for d in "$ldir" $ddirs; do [ -d "$d" ] || die "rule 18: source $d is not in the pool"; done
 	objs=""
 	# the parts, then the kernel's own .S then .c: the link order every earlier kernel was built in
 	for src in $(for d in $ddirs; do for x in "$d"*.c "$d"*.S; do [ -e "$x" ] && echo "$x"; done; done) $(for x in "$ldir"*.S "$ldir"*.c; do [ -e "$x" ] && echo "$x"; done); do
-		o="$out/$(basename "${src%.*}").o"; $CC $CFLAGS $haves $incs -c -o "$o" "$src"; objs="$objs $o"
+		o="$out/$(basename "${src%.*}").o"; $CC $CFLAGS $haves $grants $incs -c -o "$o" "$src"; objs="$objs $o"
 	done
 	$CC $CFLAGS $LDFLAGS -T "$ldir/loader.ld" -o "$out/loader.elf" $objs
+	# the referee, on the kernel as linked: rule 11, nothing in it the petitions did not ask for
+	sh pool/AGT.referee@1/referee artifact "$1" > /dev/null
 	# each program is built against its own loader's program format, unchanged
 	members=""; summary=""
 	for prog in $progs; do
@@ -277,5 +299,5 @@ case "${1:-}" in
 	build) cmd_build "${2:?flavor}" ;;
 	run)   cmd_run "${2:?flavor}" ;;
 	pack)  shift; newc "$@" ;;
-	*) sed -n '2,15p' "$0"; exit 2 ;;
+	*) sed -n '2,17p' "$0"; exit 2 ;;
 esac

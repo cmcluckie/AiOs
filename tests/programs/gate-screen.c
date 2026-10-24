@@ -5,6 +5,7 @@
  * Findings 0019 #7 is the cheat, tests/programs/screencheat.c the first
  * version of it.  Says "before" through the system call table, stores, then
  * says "got away" if it is still running.
+ * Boots on: gate.
  */
 #include "door.h"
 

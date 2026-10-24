@@ -1,9 +1,10 @@
 #!/bin/sh
 # Probe for TST.cat.*@1: Berkeley's cat on AiOs, on the cat flavor's machine.  A
 # fresh empty Minix disk is made the way the machine makes one, the files are put
-# on it by tests/programs/catfiles.c (run first, under the same kernel, through
-# the old table's save), then cat is booted with its arguments on the kernel
-# command line.  One mode per test:
+# on it by tests/programs/catfiles.c, run first on the editor's kernel, whose
+# petition asks to write files (cat's asks only to read them, so cat's kernel
+# cannot write; decision 0065), then cat is booted with its arguments on the
+# kernel command line.  One mode per test:
 #   stdin    cat, typed two lines and Ctrl+D: the two lines, then "exit 0"
 #   one      cat /one: the file, then "exit 0"
 #   multi    cat /one /two: one, then two, then "exit 0"
@@ -17,13 +18,14 @@ command -v qemu-system-x86_64 > /dev/null && command -v mkfs.minix > /dev/null |
 t=$(mktemp -d); trap 'rm -rf "$t"' EXIT
 fail() { echo "$*"; exit 1; }
 sh jig/aios build cat > "$t/build" 2>&1 || fail "the cat flavor does not build: $(tail -1 "$t/build")"
+sh jig/aios build editor > "$t/build" 2>&1 || fail "the editor flavor does not build: $(tail -1 "$t/build")"
 machine=pool/MACHINE.serial-disk@2/machine.sh
-L=pool/PART.loader@10
+L=pool/PART.loader@8
 CF="-m32 -std=c11 -ffreestanding -fno-pic -fno-pie -fno-stack-protector -fno-builtin -fno-asynchronous-unwind-tables -mno-sse -mno-mmx -mno-red-zone -mgeneral-regs-only -nostdlib -nostdinc -O2 -Wall -Wextra -Werror"
 gcc $CF -I $L -c -o "$t/files.o" tests/programs/catfiles.c && gcc $CF -static -no-pie -nostartfiles -Wl,--build-id=none -Wl,-z,noexecstack -T $L/program.ld -o "$t/files.bin" "$t/files.o" || fail "the file writer does not build"
 truncate -s 1M "$t/disk"; mkfs.minix -1 -n 14 "$t/disk" > /dev/null
 export AIOS_DISK="$t/disk"
-timeout 60 sh $machine out/cat/loader.elf "$t/files.bin" < /dev/null > "$t/files.out" 2> /dev/null
+timeout 60 sh pool/MACHINE.serial-disk@1/machine.sh out/editor/loader.elf "$t/files.bin" < /dev/null > "$t/files.out" 2> /dev/null
 grep -q "^files written" "$t/files.out" || fail "the files were not put on the disk: $(head -1 "$t/files.out")"
 fsck.minix -f "$t/disk" > /dev/null 2>&1 || fail "the disk is not clean after the files were written"
 

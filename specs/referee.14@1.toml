@@ -1,0 +1,7 @@
+code       = "SPEC.referee.14@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+component  = "AGT.referee@1"
+clause     = "After a flavor's kernel is linked, every part in it is a component the flavor's petitions list, and every capability it exposes is one they ask for, one switched off and absent from the image, or one constitution/extras.toml lists for that flavor; anything else, a switched-off capability whose code is in the image anyway, an asked-for one whose code is not, or a listed extra the kernel no longer has, stops the build, naming rule 11, the flavor and the capability."
+author     = "KEY.chris"

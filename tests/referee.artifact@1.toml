@@ -1,0 +1,10 @@
+code       = "TST.referee.artifact@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+binds      = "SPEC.referee.14@1"
+red_when   = "in a throwaway copy, calc does not build as it is; calc builds once its line in constitution/extras.toml is taken off; hello builds with an extra listed that its kernel does not have; cat builds once PART.fs.minix@2 no longer switches CAP.fs.write@2 off, once its write code is forced in, or once PART.loader@10 no longer lists the switch; or a refusal does not name rule 11, the flavor and the capability"
+timeout_ms = 300000
+isolates   = "AGT.referee@1"
+runner     = "jig/test cmd sh tests/programs/artifact.sh"
+mutations  = 4

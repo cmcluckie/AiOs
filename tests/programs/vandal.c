@@ -2,7 +2,9 @@
  * else's memory.  It reads its own first byte (fine), says where it is about
  * to write, then writes one byte just past the end of its own 8 MiB.  Under
  * loader@6 that address belongs to nobody it can reach: the processor refuses,
- * and the kernel should stop this program alone. */
+ * and the kernel should stop this program alone.
+ * Boots on: share, gateshare.
+ */
 #include "door.h"
 
 void __attribute__((section(".text.start"))) _start(const struct door *door)
