@@ -76,7 +76,7 @@ grep -q 'pool/PART.fixprobe@1/f.c:1:broken' "$in/input.txt" && ! grep -q 'tests/
 grep -q ', 0 skipped' "$t/said" || fail "a test that needs a clone beside the repo was skipped in the judge's copy: $(tail -1 "$t/said")"
 grep -q '6000 read from the cache' "$t/said" || fail "the summary line leaves out the tokens read from the cache: $(tail -1 "$t/said")"
 grep -qx broken "$r/pool/PART.fixprobe@1/f.c" || fail "the copy the model worked from was changed"
-grep -q '^  call 1 of 60: read pool/PART.fixprobe@1/f.c' "$t/said" && grep -q '^  hand-in 1: pass' "$t/said" || fail "the run did not say each call and each hand-in as it went"
+grep -q '^  call 1 of 60: read pool/PART.fixprobe@1/f.c' "$t/said" && grep -q '^  hand-in 1: pass' "$t/said" && grep -q '^    FAIL  TST.fixprobe.red@1' "$t/said" && grep -q '^    PASS  TST.fixprobe.red@1' "$t/said" || fail "the run did not say each call, each hand-in and each test of both suite runs as it went"
 grep -q '"text": *"Call 1 of 60 done; 59 left."' "$in/input.txt" || fail "the model was not told after its first call how many of its 60 it has left"
 # with a cap of 12, the second answer says ten are left and asks for the fix now
 rm -rf "$t/runs"; fakes "$t/f-budget" "fixed

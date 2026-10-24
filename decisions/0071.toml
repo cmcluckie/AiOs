@@ -1,0 +1,11 @@
+id      = "0071"
+date    = 2026-10-24
+kind    = "rules and words"
+touches = ["jig/fix", "tests/programs/fix.sh", "tests/fix.judged@1.toml", "tests/mutations.txt"]
+asked   = "The bench's lines (decision 0069) leave the two suite runs silent, five minutes each.  Each test's PASS, FAIL or SKIP line is now shown as the suite runs it, indented under the bench's own lines and cut at 110 characters, on stderr; the files the judge reads are written as before.  TST.fix.judged checks it, one more mutation."
+options = ["as written", "a count of tests instead", "silent, as before"]
+default = "as written"
+chose   = "as written"
+why     = "Chris, 2026-10-24: maybe include the lines for the test suite?"
+by      = "KEY.chris@1"
+drafted = "Claude"

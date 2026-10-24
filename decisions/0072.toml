@@ -1,0 +1,11 @@
+id      = "0072"
+date    = 2026-10-24
+kind    = "specs and tests"
+touches = ["tests/gate.linux-only@1.toml", "tests/programs/debt.sh", "tests/programs/oldnums.c"]
+asked   = "Try 10 (findings 0024 item 23) passed the judge by moving the old calls to 180 to 183, numbers the test did not name.  Take it, or make the old programs' probe sweep every number from 0 to 449 (but exit's two) with load's arguments, so a load hidden at any number is found?  Try 10's change fails the sweep at 182 and try 6's at 85; the repo as it is passes."
+options = ["as written", "take try 10"]
+default = "as written"
+chose   = "as written"
+why     = "Chris, 2026-10-24: yes.  A test that lists the cheats it knows loses to the next one; the sweep finds a load wherever it hides."
+by      = "KEY.chris@1"
+drafted = "Claude"

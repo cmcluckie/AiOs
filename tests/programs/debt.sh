@@ -54,6 +54,7 @@ numbers)
 	case "$(ans 232)" in -38|-2|-61|-95) ;; *) bad="$bad 232 answered '$(ans 232)', not listxattr's answer;" ;; esac
 	case "$(ans 265)" in -38|-14) ;; *) bad="$bad 265 answered '$(ans 265)', not clock_gettime's answer;" ;; esac
 	grep -q '^nr-45 0 same$' "$t/old" || bad="$bad 45 asked twice for 16 gave $(sed -n 's/^nr-45 0 //p' "$t/old") answers, not brk's;"
+	grep -q '^sweep-load none$' "$t/old" || bad="$bad a load answered at $(sed -n 's/^sweep-load //p' "$t/old");"
 	[ -z "$bad" ] || { echo "an old program is still answered by an AiOs call behind a Linux number:$bad"; exit 1; }
 	# and through the table it was handed, an old program still works (try 8)
 	grep -q '^old-load 33 exact$' "$t/old" || bad="$bad load gave $(sed -n 's/^old-load //p' "$t/old"), not the file's 33 bytes;"
@@ -61,7 +62,7 @@ numbers)
 	grep -q '^old-ms 0$' "$t/old" || bad="$bad ms gave $(sed -n 's/^old-ms //p' "$t/old"), not the 0 a kernel with no clock gives;"
 	grep -q '^old-save -1$' "$t/old" || bad="$bad save gave $(sed -n 's/^old-save //p' "$t/old"), not -1 on a kernel that may not write;"
 	[ -z "$bad" ] || { echo "an old program no longer works through its table:$bad"; exit 1; }
-	echo "no AiOs-only number left in the gate's table or its stubs; 1000 to 1003 each answered -38, as Linux answers them; an old program asking 85, 232, 265 and 45 gets Linux's answers; and through its table it still loads, allocates, reads the clock and is refused a save as before" ;;
+	echo "no AiOs-only number left in the gate's table or its stubs; 1000 to 1003 each answered -38, as Linux answers them; an old program asking 85, 232, 265 and 45 gets Linux's answers, and no number from 0 to 449 loads a file; and through its table it still loads, allocates, reads the clock and is refused a save as before" ;;
 random)
 	for i in 1 2 3; do boot "$t/r$i"; grep -qx '[0-9a-f]\{32\}' "$t/r$i" || { echo "boot $i gave no AT_RANDOM: $(head -1 "$t/r$i")"; exit 1; }; done
 	for pair in "1 2" "1 3" "2 3"; do

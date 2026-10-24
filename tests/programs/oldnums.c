@@ -19,6 +19,10 @@
  * 16-aligned, apart, that hold what is written in them; ms answers 0, as the
  * table says it does on a kernel with no clock; save answers -1, cat's petition
  * not asking to write.
+ * And a sweep, since a load can hide behind any number, not only the four above
+ * (try 10, findings 0024 item 23): every number from 0 to 449 but the two that
+ * end the program (1, 252), asked with load's arguments, must not fill the
+ * buffer or answer the file's 33 bytes.  "sweep-load none", or the numbers that did.
  * Boots on: cat.
  * Expects refusal: CAP.time.read, CAP.fs.write.
  */
@@ -73,6 +77,36 @@ void __attribute__((section(".text.start"))) _start(const struct door *d)
 	r = sys(45, 16, 0, 0);
 	r2 = sys(45, 16, 0, 0);
 	line("nr-45", 0, r == r2 ? "same" : "moved");
+	{
+		char hit[256];
+		int h = 0, n;
+
+		for (n = 0; n < 450; n++) {
+			if (n == 1 || n == 252)
+				continue;
+			for (i = 0; i < 64; i++)
+				buf[i] = 'z';
+			r = sys(n, (long)"one", (long)buf, 64);
+			same = 1;
+			for (i = 0; i < 64; i++)
+				if (buf[i] != 'z')
+					same = 0;
+			if ((r == 33 || !same) && h < 240) {
+				if (h)
+					hit[h++] = ',';
+				if (n >= 100) hit[h++] = (char)('0' + n / 100);
+				if (n >= 10) hit[h++] = (char)('0' + n / 10 % 10);
+				hit[h++] = (char)('0' + n % 10);
+			}
+		}
+		hit[h] = 0;
+		sys(4, 1, (long)"sweep-load ", 11);
+		if (h)
+			sys(4, 1, (long)hit, h);
+		else
+			sys(4, 1, (long)"none", 4);
+		sys(4, 1, (long)"\n", 1);
+	}
 	{
 		static const char one[] = "the first file\nsecond line of it\n";
 		static char got[64];

@@ -1,0 +1,86 @@
+=== pool/PART.gate@2/gate.c
+37,40c37,41
+<  * TECH-DEBT 1: alloc, ms, load and save have no Linux number yet, so they use
+<  * AiOs-only numbers from 1000 (findings 0021 #5).  They go when Linux's program
+<  * files can be loaded (part 20): alloc becomes brk, ms becomes clock_gettime,
+<  * load and save become open, read, write and close.
+---
+>  * TECH-DEBT 1: resolved in part 21 (findings 0024 item 4).  alloc, ms, load
+>  * and save no longer use AiOs-only numbers 1000-1003 (findings 0021 #5).
+>  * Old programs call them through the door table's stubs, which use Linux
+>  * numbers 180-183 (pread64, pwrite64, chown, getcwd) routed to the old
+>  * door functions when brk_lo is 0 (plain program, not a Linux ELF).
+54,57d54
+< #define NR_ALLOC	1000		/* TECH-DEBT 1 */
+< #define NR_MS		1001		/* TECH-DEBT 1 */
+< #define NR_LOAD		1002		/* TECH-DEBT 1 */
+< #define NR_SAVE		1003		/* TECH-DEBT 1 */
+69a67,76
+> /* Linux i386 numbers used by the old door table stubs (gate_user.S) to reach
+>  * alloc, ms, load and save.  Each is a real Linux number; for a Linux ELF
+>  * program (brk_lo != 0) every one of them falls through to -ENOSYS.  For a
+>  * plain old program (brk_lo == 0) the gate routes them to the door functions.
+>  * 180 = pread64, 181 = pwrite64, 182 = chown, 183 = getcwd. */
+> #define NR_DOOR_ALLOC	180
+> #define NR_DOOR_MS	181
+> #define NR_DOOR_LOAD	182
+> #define NR_DOOR_SAVE	183
+> 
+378c385,388
+< 	case NR_ALLOC:
+---
+> 	case NR_DOOR_ALLOC:
+> 		/* old door table stub: alloc, for plain programs only (brk_lo == 0) */
+> 		if (brk_lo)
+> 			return -ENOSYS;
+380c390,393
+< 	case NR_MS:
+---
+> 	case NR_DOOR_MS:
+> 		/* old door table stub: ms, for plain programs only (brk_lo == 0) */
+> 		if (brk_lo)
+> 			return -ENOSYS;
+382c395,398
+< 	case NR_LOAD:
+---
+> 	case NR_DOOR_LOAD:
+> 		/* old door table stub: load, for plain programs only (brk_lo == 0) */
+> 		if (brk_lo)
+> 			return -ENOSYS;
+386c402,405
+< 	case NR_SAVE:
+---
+> 	case NR_DOOR_SAVE:
+> 		/* old door table stub: save, for plain programs only (brk_lo == 0) */
+> 		if (brk_lo)
+> 			return -ENOSYS;
+=== pool/PART.gate@2/gate_user.S
+3c3
+<  * PART.gate@1: the only code and data of the kernel a program can see, one page
+---
+>  * PART.gate@2: the only code and data of the kernel a program can see, one page
+10,11c10,14
+<  * TECH-DEBT 1: alloc (1000), ms (1001), load (1002) and save (1003) use
+<  * AiOs-only numbers (findings 0021 #5).
+---
+>  * TECH-DEBT 1: resolved in part 21 (findings 0024 item 4).  alloc, ms, load
+>  * and save no longer use AiOs-only numbers 1000-1003 (findings 0021 #5).
+>  * The stubs now use Linux numbers 180 (pread64), 181 (pwrite64), 182 (chown)
+>  * and 183 (getcwd), which the gate routes to the old door functions for plain
+>  * programs (brk_lo == 0) and answers -38 for Linux ELF programs.
+39c42
+< 	movl	$1000, %eax
+---
+> 	movl	$180, %eax		/* pread64: routed to alloc for plain programs */
+56c59
+< 	movl	$1001, %eax
+---
+> 	movl	$181, %eax		/* pwrite64: routed to ms for plain programs */
+62c65
+< 	movl	$1002, %eax
+---
+> 	movl	$182, %eax		/* chown: routed to load for plain programs */
+72c75
+< 	movl	$1003, %eax
+---
+> 	movl	$183, %eax		/* getcwd: routed to save for plain programs */
