@@ -306,3 +306,5 @@ fix.judged@1 | red | jig/fix | s/^\t\t\[ "$result" = pass \] \&\& break$/\t\tbre
 fix.judged@1 | red | jig/fix | s/^say() { printf '  %s\\n' "$\*" >\&2; }/say() { :; }/ | the run is silent until its summary, as on tries 1 to 8
 fix.judged@1 | red | jig/fix | s/then \[ "$turn" -gt 1 \] || exit 2;/then exit 2;/ | a model lost halfway leaves no record, and what the calls before it cost is lost, as on try 9
 fix.judged@1 | red | jig/fix | s/^shown() { cut -c1-110 .*/shown() { cat > \/dev\/null; }/ | the suite runs out of sight, five quiet minutes at a time, as on try 10
+gate.linux-only@1 | red | pool/PART.gate@2/gate.c | s/^\t\t\treturn -ENOSYS;\t\t\/\* TECH-DEBT 1: old table only; a Linux program gets -38 \*\//\t\t\t(void)0;/ | the fix taken out again: a Linux program reaches the old table at 1000 to 1003
+gate.linux-only@1 | red | pool/PART.gate@2/gate.c | s/^\tcase NR_LOAD:$/\tcase NR_LOAD: return -ENOSYS;/ | the old table's load stops working for old programs too

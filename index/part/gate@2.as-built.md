@@ -29,7 +29,7 @@ findings 0023 item 10):
   statx (383): an open descriptor only (the console as a character device with a
   1 KiB block; a file as a read-only regular file and its size); by name, ENOSYS.
   ioctl (54): ENOTTY.  exit (1) and exit_group (252): "exit N" on the console, then
-  the kernel's exit.  Any other number, ENOSYS.  Every buffer and name is checked to
+  the kernel's exit.  1000 to 1003, the old table's own alloc, ms, load and save, ENOSYS for a Linux program since part 21 (decision 0075; old programs keep them).  Any other number, ENOSYS.  Every buffer and name is checked to
   lie inside the window, else EFAULT, and the kernel does not touch it.
 
 ## What it does not turn on

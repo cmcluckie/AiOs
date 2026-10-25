@@ -34,10 +34,12 @@
  * the frames; who runs next is decided by the scheduler the sharing part
  * registers (gate_schedule), not here.
  *
- * TECH-DEBT 1: alloc, ms, load and save have no Linux number yet, so they use
- * AiOs-only numbers from 1000 (findings 0021 #5).  They go when Linux's program
- * files can be loaded (part 20): alloc becomes brk, ms becomes clock_gettime,
- * load and save become open, read, write and close.
+ * TECH-DEBT 1: alloc, ms, load and save keep their AiOs-only numbers 1000 to
+ * 1003 as a second table for programs written for the old table (findings 0021
+ * #5, decision 0074).  A Linux program asking 1000 to 1003 gets -38 (ENOSYS),
+ * as Linux answers a number it has no call for.  Paid in this part: the
+ * numbers stay, as Linux keeps one table for each kind of program, and only a
+ * Linux program reaching them was the debt (findings 0024 item 26).
  */
 
 #include "gate.h"
@@ -51,10 +53,10 @@
 #define NR_EXIT		1		/* Linux i386 */
 #define NR_READ		3
 #define NR_WRITE	4
-#define NR_ALLOC	1000		/* TECH-DEBT 1 */
-#define NR_MS		1001		/* TECH-DEBT 1 */
-#define NR_LOAD		1002		/* TECH-DEBT 1 */
-#define NR_SAVE		1003		/* TECH-DEBT 1 */
+#define NR_ALLOC	1000		/* TECH-DEBT 1: old table only */
+#define NR_MS		1001		/* TECH-DEBT 1: old table only */
+#define NR_LOAD		1002		/* TECH-DEBT 1: old table only */
+#define NR_SAVE		1003		/* TECH-DEBT 1: old table only */
 #define NR_OPEN		5
 #define NR_CLOSE	6		/* Linux i386, from here on: the calls a normal Linux program makes */
 #define NR_BRK		45
@@ -376,14 +378,22 @@ static long syscall(const unsigned long *frame)
 			return console_read((char *)b, c);
 		return (long)calls->read((void *)b, c);
 	case NR_ALLOC:
+		if (brk_lo)
+			return -ENOSYS;		/* TECH-DEBT 1: old table only; a Linux program gets -38 */
 		return (long)calls->alloc(a);
 	case NR_MS:
+		if (brk_lo)
+			return -ENOSYS;		/* TECH-DEBT 1: old table only; a Linux program gets -38 */
 		return (long)calls->ms();
 	case NR_LOAD:
+		if (brk_lo)
+			return -ENOSYS;		/* TECH-DEBT 1: old table only; a Linux program gets -38 */
 		if (!user_name_ok((const char *)a) || !user_ok(b, c))
 			return -EFAULT;
 		return calls->load((const char *)a, (void *)b, c);
 	case NR_SAVE:
+		if (brk_lo)
+			return -ENOSYS;		/* TECH-DEBT 1: old table only; a Linux program gets -38 */
 		if (!user_name_ok((const char *)a) || !user_ok(b, c))
 			return -EFAULT;
 		return calls->save((const char *)a, (const void *)b, c);

@@ -1,0 +1,31 @@
+=== pool/PART.gate@2/gate.c
+37,38c37,40
+<  * TECH-DEBT 1: alloc, ms, load and save have no Linux number yet, so they use
+<  * AiOs-only numbers from 1000 (findings 0021 #5).  They go when Linux's program
+---
+>  * TECH-DEBT 1: alloc, ms, load and save keep their AiOs-only numbers 1000 to
+>  * 1003 as a second table for programs written for the old table (findings 0021
+>  * #5, decision 0074).  A Linux program asking 1000 to 1003 gets -38 (ENOSYS),
+>  * as Linux answers a number it has no call for.  They go when Linux's program
+54,57c56,59
+< #define NR_ALLOC	1000		/* TECH-DEBT 1 */
+< #define NR_MS		1001		/* TECH-DEBT 1 */
+< #define NR_LOAD		1002		/* TECH-DEBT 1 */
+< #define NR_SAVE		1003		/* TECH-DEBT 1 */
+---
+> #define NR_ALLOC	1000		/* TECH-DEBT 1: old table only */
+> #define NR_MS		1001		/* TECH-DEBT 1: old table only */
+> #define NR_LOAD		1002		/* TECH-DEBT 1: old table only */
+> #define NR_SAVE		1003		/* TECH-DEBT 1: old table only */
+378a381,382
+> 		if (brk_lo)
+> 			return -ENOSYS;		/* TECH-DEBT 1: old table only; a Linux program gets -38 */
+380a385,386
+> 		if (brk_lo)
+> 			return -ENOSYS;		/* TECH-DEBT 1: old table only; a Linux program gets -38 */
+382a389,390
+> 		if (brk_lo)
+> 			return -ENOSYS;		/* TECH-DEBT 1: old table only; a Linux program gets -38 */
+386a395,396
+> 		if (brk_lo)
+> 			return -ENOSYS;		/* TECH-DEBT 1: old table only; a Linux program gets -38 */

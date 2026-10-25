@@ -7,4 +7,4 @@ red_when   = "under the cat flavor's kernel, a Linux program that calls 1000, 10
 timeout_ms = 60000
 isolates   = "PART.gate@2"
 runner     = "jig/test cmd sh tests/programs/debt.sh numbers"
-mutations  = 0
+mutations  = 2

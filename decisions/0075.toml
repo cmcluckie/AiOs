@@ -1,0 +1,11 @@
+id      = "0075"
+date    = 2026-10-24
+kind    = "code"
+touches = ["pool/PART.gate@2/gate.c", "tests/mutations.txt", "tests/gate.linux-only@1.toml"]
+asked   = "Try 13 (findings 0024 item 26) passed the judge against the spec as decision 0074 reads it: a Linux program gets -38 at 1000 to 1003, old programs keep them, 22 lines in PART.gate@2/gate.c, nothing hidden.  Take it?  As the mechanic wrote it, but for the last sentence of its TECH-DEBT 1 comment, kept from the old text and made untrue by decision 0074 (the numbers go when Linux's program files can be loaded), which Claude rewrote: paid in this part, the numbers stay, only a Linux program reaching them was the debt.  The as-built spec and findings 0021 say it is paid in PART.gate@2.  TST.gate.linux-only, green now, gains two mutations: the fix taken out, and old programs' load broken."
+options = ["as written", "take it word for word, stale sentence and all", "do not take it"]
+default = "as written"
+chose   = "as written"
+why     = "Chris, 2026-10-24: take it."
+by      = "KEY.chris@1"
+drafted = "Claude"
