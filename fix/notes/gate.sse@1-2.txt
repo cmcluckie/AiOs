@@ -1,0 +1,6 @@
+Try 1 turned SSE on and kept each program's registers in its own FXSAVE area, saved and restored on every switch, the way Linux does it.  Keep that.  It was not taken, for two reasons:
+
+1. The x87 control word it gives a new program is 0x027F, double precision, while its comment says 64-bit precision.  Linux gives 0x037F (extended precision, every exception masked).  Write 0x037F, so the comment and the value agree with Linux.
+2. It sets CR4.OSFXSR and CR4.OSXMMEXCPT without asking whether the processor has them.  On one without FXSR or SSE the kernel stops at boot, where before it started.  Ask CPUID first (leaf 1, EDX bit 24 FXSR and bit 25 SSE).  Without them, leave CR0 and CR4 as they were and do not FXSAVE or FXRSTOR, so the kernel runs as it did before; say so in the comment.
+
+Change only PART.gate@2.

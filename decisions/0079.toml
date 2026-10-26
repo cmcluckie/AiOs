@@ -1,0 +1,11 @@
+id      = "0079"
+date    = 2026-10-25
+kind    = "rules and words"
+touches = ["fix/notes/gate.sse@1-2.txt"]
+asked   = "SSE's try 1 (findings 0024 item 30) passed the judge with the right approach and two flaws: an x87 control word of 0x027F where its comment and Linux say 0x037F, and CR4 bits set without a CPUID check, so a processor without FXSR or SSE would stop at boot.  Send it back with a reviewer's note for try 2, or fix the lines by hand?"
+options = ["a note and try 2", "Claude fixes the lines"]
+default = "a note and try 2"
+chose   = "a note and try 2"
+why     = "Chris, 2026-10-25: yes."
+by      = "KEY.chris@1"
+drafted = "Claude"

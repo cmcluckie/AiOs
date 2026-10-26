@@ -1,0 +1,50 @@
+=== pool/PART.gate@2/gate.c
+14a15,20
+>  * SSE (findings 0023 item 13, SPEC.gate.11@1): the kernel sets CR4.OSFXSR and
+>  * CR4.OSXMMEXCPT, clears CR0.EM and sets CR0.MP so the processor accepts SSE
+>  * instructions.  Each space has its own 512-byte FXSAVE buffer; on every
+>  * context switch the outgoing space's SSE state is saved and the incoming
+>  * space's is restored.
+>  *
+96a103
+> #define FXSAVE_SIZE	512		/* bytes saved by FXSAVE: x87, SSE registers and control words */
+102a110
+> 	unsigned char fxsave[FXSAVE_SIZE] __attribute__((aligned(16)));	/* SSE/x87 state */
+472a481,483
+> 		/* save the outgoing space's SSE/x87 state, restore the incoming space's */
+> 		__asm__ volatile("fxsave %0" : "=m"(cur->fxsave));
+> 		__asm__ volatile("fxrstor %0" : : "m"(next->fxsave));
+565a577,584
+> /* Tell the processor the kernel handles SSE state: set CR4.OSFXSR (bit 9) and
+>  * CR4.OSXMMEXCPT (bit 10), clear CR0.EM (bit 2), set CR0.MP (bit 1). */
+> static void sse_enable(void)
+> {
+> 	__asm__ volatile("movl %%cr4, %%eax; orl $0x600, %%eax; movl %%eax, %%cr4" : : : "eax");
+> 	__asm__ volatile("movl %%cr0, %%eax; andl $0xfffffffb, %%eax; orl $0x2, %%eax; movl %%eax, %%cr0" : : : "eax");
+> }
+> 
+570a590
+> 	sse_enable();
+581a602,617
+> /* Initialise a space's FXSAVE buffer to a clean state: FCW masking all FP
+>  * exceptions, MXCSR masking all SSE exceptions, all registers zero. */
+> static void fxsave_init(struct gate_space *s)
+> {
+> 	unsigned long i;
+> 
+> 	for (i = 0; i < FXSAVE_SIZE; i++)
+> 		s->fxsave[i] = 0;
+> 	/* FCW at offset 0: mask all exceptions (bits 0-5 set), PC=11 (64-bit), RC=00 */
+> 	s->fxsave[0] = 0x7f;
+> 	s->fxsave[1] = 0x02;
+> 	/* MXCSR at offset 24: mask all SSE exceptions (bits 7-12 set) */
+> 	s->fxsave[24] = 0x80;
+> 	s->fxsave[25] = 0x1f;
+> }
+> 
+598a635
+> 	fxsave_init(s);
+636a674
+> 	fxsave_init(s);
+672a711
+> 	fxsave_init(s);

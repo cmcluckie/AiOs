@@ -1,0 +1,15 @@
+id            = "20261026T035932Z-fix-gate-sse-1-bedrock-global-anthropic-claude-sonnet-4-6"
+date          = "2026-10-26T03:59:32Z"
+item          = "fix-gate-sse"
+model         = "bedrock:global.anthropic.claude-sonnet-4-6"
+version       = "2026-10-26"
+sitting       = "20261026T035932Z"
+prompt        = "7abe7603"
+try           = 1
+input_tokens  = 45
+output_tokens = 29141
+cache_read_tokens  = 349994
+cache_write_tokens = 49773
+cost_usd      = 0.728897
+result        = "pass"
+lines         = 39
