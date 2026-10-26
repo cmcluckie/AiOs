@@ -18,7 +18,8 @@
 # prompt is its own line on the scorecard), FIX_TRY (1: which try this is), FIX_TURNS
 # (60 calls; every answer tells the model how many it has left, decision 0067), FIX_MAXTOKENS (16000 per reply), FIX_SUITE (the tests the judge runs,
 # as jig/test's prefixes; empty, the default, is every test), FIX_OUT (out/fix),
-# MODEL_NAME and MODEL_ID (see jig/model).  Needs jq.
+# FIX_NOTE (a file: a reviewer's note on an earlier fix, handed over with the test,
+# decision 0076), MODEL_NAME and MODEL_ID (see jig/model).  Needs jq.
 set -u
 repo=$(cd "$(dirname "$0")/.." && pwd)
 FIX_PROMPT=${FIX_PROMPT:-$repo/fix/prompt.txt}
@@ -39,6 +40,7 @@ test=$1
 tf="$repo/tests/$test.toml"
 [ -f "$tf" ] || die "no test $test (no tests/$test.toml)"
 [ -f "$FIX_PROMPT" ] || die "no prompt at $FIX_PROMPT"
+[ -z "${FIX_NOTE:-}" ] || [ -f "$FIX_NOTE" ] || die "no reviewer's note at $FIX_NOTE"
 field() { sed -n "s/^$2 *= *\"\(.*\)\".*/\1/p" "$1" | head -1; }
 code=$(field "$tf" code); binds=$(field "$tf" binds)
 clause=$(field "$repo/specs/${binds#SPEC.}.toml" clause)
@@ -98,6 +100,8 @@ cp='{"cachePoint":{"type":"default"}}'
 tools='{"tools":[{"toolSpec":{"name":"look","description":"Look at the repo, as it stands with the test red. command is list (args: a folder), read (args: a file, then optionally the first and last line to show, or give them as start_line and end_line; at most 400 lines at a time; it answers with the file, the lines shown and how many it has, then each line with its number) or find (args: a word, then optionally a folder or file to look in; otherwise pool, specs, tests, index, findings and jig).","inputSchema":{"json":{"type":"object","properties":{"command":{"type":"string","enum":["list","read","find"]},"args":{"type":"array","items":{"type":"string"}},"start_line":{"type":"integer"},"end_line":{"type":"integer"}},"required":["command","args"]}}}},{"toolSpec":{"name":"submit_fix","description":"Hand in the fix: files, a list of the files you changed, each its path (an existing file under pool/, all in the same part, e.g. pool/PART.gate@2/) and its whole new content. The fix is then judged by every test: a pass ends the run; otherwise you are told what the tests printed, and may hand in again while you have calls left.","inputSchema":{"json":{"type":"object","properties":{"files":{"type":"array","items":{"type":"object","properties":{"path":{"type":"string"},"content":{"type":"string"}},"required":["path","content"]}}},"required":["files"]}}}},{"cachePoint":{"type":"default"}}]}'
 { printf 'The red test, tests/%s.toml:\n\n' "$test"; cat "$tf"
   printf '\nThe spec clause it checks, %s:\n\n%s\n\nWhat it printed when it ran:\n\n%s\n' "$binds" "$clause" "$redline"
+  # a reviewer's note on an earlier fix of this test, when there is one (decision 0076)
+  [ -z "${FIX_NOTE:-}" ] || { printf '\nA person read an earlier fix for this test and wrote:\n\n'; cat "$FIX_NOTE"; }
 } > "$d/first.txt"
 jq -n --rawfile t "$d/first.txt" '[{role:"user",content:[{text:$t}]}]' > "$d/messages.json"
 prompt=$(git -C "$repo" hash-object "$FIX_PROMPT" 2> /dev/null | cut -c1-8); [ -n "$prompt" ] || prompt=$(cksum < "$FIX_PROMPT" | cut -d' ' -f1)

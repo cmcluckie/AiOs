@@ -1,5 +1,5 @@
 # tests/referee-results.txt, written by the referee (AGT.referee@1, rules).  Do not edit by hand.
-# run 2026-10-21T23:06Z at commit d64bc83: rules 2 to 8 and 21 of schema/petition.md, every petition
+# run 2026-10-25T04:22Z at commit e445e10: rules 2 to 8 and 21 of schema/petition.md, every petition
 PASS  rule 2  petition 0000
 PASS  rule 3  petition 0000
 PASS  rule 4  petition 0000

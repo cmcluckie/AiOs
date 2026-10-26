@@ -1,0 +1,49 @@
+=== pool/PART.loader@10/loader.c
+448a449,469
+>  * One random 32-bit word from the processor's rdrand instruction.  Retries
+>  * until the carry flag is set (the hardware's signal that the value is good).
+>  * Intel 64 and IA-32 Architectures Software Developer's Manual, volume 2B,
+>  * RDRAND.
+>  */
+> static unsigned long rdrand32(void)
+> {
+> 	unsigned long val;
+> 	unsigned char ok;
+> 
+> 	do {
+> 		__asm__ volatile(".byte 0x0f, 0xc7, 0xf0\n\t"	/* rdrand %eax */
+> 				 "setc %1"
+> 				 : "=a"(val), "=qm"(ok)
+> 				 :
+> 				 : "cc");
+> 	} while (!ok);
+> 	return val;
+> }
+> 
+> /*
+454,455c475,476
+<  * AT_RANDOM above them.  TECH-DEBT 4: those 16 bytes are the processor's cycle
+<  * counter, not random (decision 0046); AiOs has no source of randomness yet.
+---
+>  * AT_RANDOM above them.  Those 16 bytes come from the processor's rdrand
+>  * instruction (SPEC.loader.15@1, decision 0046).
+465d485
+< 	unsigned long tsc_lo, tsc_hi;
+509d528
+< 	__asm__ volatile("rdtsc" : "=a"(tsc_lo), "=d"(tsc_hi));
+511,512c530,541
+< 	for (k = 0; k < 16; k++)
+< 		top[k] = (unsigned char)((k < 8 ? tsc_lo >> (8 * (k & 3)) : tsc_hi >> (8 * (k & 3))) ^ (k * 37));
+---
+> 	{
+> 		unsigned long r0 = rdrand32(), r1 = rdrand32(), r2 = rdrand32(), r3 = rdrand32();
+> 
+> 		top[ 0] = (unsigned char)(r0      ); top[ 1] = (unsigned char)(r0 >>  8);
+> 		top[ 2] = (unsigned char)(r0 >> 16); top[ 3] = (unsigned char)(r0 >> 24);
+> 		top[ 4] = (unsigned char)(r1      ); top[ 5] = (unsigned char)(r1 >>  8);
+> 		top[ 6] = (unsigned char)(r1 >> 16); top[ 7] = (unsigned char)(r1 >> 24);
+> 		top[ 8] = (unsigned char)(r2      ); top[ 9] = (unsigned char)(r2 >>  8);
+> 		top[10] = (unsigned char)(r2 >> 16); top[11] = (unsigned char)(r2 >> 24);
+> 		top[12] = (unsigned char)(r3      ); top[13] = (unsigned char)(r3 >>  8);
+> 		top[14] = (unsigned char)(r3 >> 16); top[15] = (unsigned char)(r3 >> 24);
+> 	}

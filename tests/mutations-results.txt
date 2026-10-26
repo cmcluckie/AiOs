@@ -1,5 +1,5 @@
 # tests/mutations-results.txt, written by jig/mutate.  Do not edit by hand.
-# run 2026-10-21T22:42Z at commit d64bc83
+# run 2026-10-25T03:56Z at commit e445e10
 KILLED    hello.exact-bytes@1  one wrong letter in hello's message
 KILLED    hello.exact-bytes@1  the newline goes missing
 KILLED    hello.exact-bytes@1  one extra write before exit
@@ -69,7 +69,7 @@ KILLED    editor.typing@1  Delete takes the letter after the one under the curso
 KILLED    editor.typing@1  the up arrow stays on the same line
 KILLED    editor.typing@1  the down arrow from past the end of a shorter line lands at its start, not its end
 KILLED    editor.save-over@1  Ctrl+S saves all but the last letter
-KILLED    editor.save-over@1  the editor's petition names the old filesystem, which never writes over a file, and its kernel is built with it
+KILLED    editor.save-over@1  saving refuses a name already there, as @1 did, so the editor's second save fails (the petition naming @1 is now refused by the referee first, decision 0065)
 KILLED    editor.undo@1  every key is its own run, so undo takes back one letter
 KILLED    editor.undo@1  the second Ctrl+Z no longer puts it back
 KILLED    editor.quit-asks@1  Ctrl+Q quits with unsaved changes, no question asked
@@ -112,7 +112,7 @@ KILLED    builder.missing-list@1  the list comes out in the opposite order
 KILLED    builder.no-guess@1  numbers that have an entry are listed as missing too
 KILLED    builder.no-guess@1  the builder adds a number of its own to every line it lists
 KILLED    builder.no-guess@1  a stale list is kept when nothing is missing any more
-KILLED    loader.partition@1  the builder turns on every part the kernel can be built with, asked for or not: the bundle is back
+KILLED    loader.partition@1  the builder turns on every part the kernel can be built with, asked for or not: the bundle is back (with the referee kept from the kernel, which since decision 0065 refuses it first)
 KILLED    loader.partition@1  the builder ignores the petitions: every kernel is the bare console, and the editor loses its disk
 KILLED    life.colour@1  a newborn cell is dark yellow, not bright
 KILLED    life.colour@1  every live cell is green: who was just born is lost
@@ -210,7 +210,7 @@ KILLED    gate.on-time@1  the tick no longer gives the processor to the next pro
 KILLED    gate.all-exit@1  the machine halts when the first program exits
 KILLED    gate.share-ladder@1  the system call table's first two entries swapped
 KILLED    gate.shared-port@1  each shared program is given I/O privilege 3
-KILLED    gate.partition@1  the builder turns on every part the kernel can be built with, asked for or not: the bundle is back
+KILLED    gate.partition@1  the builder turns on every part the kernel can be built with but the filesystem, asked for or not: the bundle is back (with the referee kept from the kernel, which since decision 0065 refuses it first; the filesystem left out because loader@9 cannot build it read-only and says so)
 KILLED    gate.partition@1  the builder ignores the petitions: every kernel is the bare console, and the editor loses its disk
 KILLED    reader.bsd-pin@1  Berkeley is read at V7's pin
 KILLED    reader.bsd-pin@1  Berkeley is read at Linux's pin
@@ -264,4 +264,41 @@ KILLED    builder.decided@1  a petition no human decided is built
 KILLED    builder.decided@1  a decision by a key nobody holds counts
 KILLED    builder.decided@1  a decision naming petitions/* decides every petition, those still to come included
 KILLED    builder.decided@1  a decision naming any petition decides them all
-# 261 killed, 0 survived unexpectedly, 3 known survivors, 0 no-ops, 0 no-builds
+KILLED    exam.ollama@1  the context size is left to Ollama's own settings, so a long sitting is quietly cut short
+KILLED    exam.ollama@1  the reader's answer goes back with no name, so the model cannot tell which tool spoke
+KILLED    exam.ollama@1  Ollama's input and output tokens are swapped, so every count is wrong
+KILLED    exam.ollama@1  a local model is sent to Bedrock instead, with the AWS key
+KILLED    fix.judged@1  a test that is already green is handed to the model anyway, and paid for
+KILLED    fix.judged@1  the look tool answers for any path, outside the repo included
+KILLED    fix.judged@1  the judge runs only the test that was red, so a fix that breaks another one passes
+KILLED    fix.judged@1  a fix for a file outside pool/ is judged like any other
+KILLED    fix.judged@1  only the last call's input tokens are counted
+KILLED    fix.judged@1  the fix is written into the repo itself, not only into the judge's copy
+KILLED    fix.judged@1  only added lines are counted as changed
+KILLED    fix.judged@1  a test already red before the fix is held against it, so no fix can pass while another job is open
+KILLED    fix.judged@1  a test that was green and went red is not held against the fix
+KILLED    fix.judged@1  a range given as two numbers is ignored and the file comes back from line 1, as on try 1
+KILLED    fix.judged@1  a find told where to look searches everywhere anyway
+KILLED    fix.judged@1  the summary line leaves out the tokens read from the cache, as on try 1
+KILLED    fix.judged@1  start_line and end_line are ignored, as on try 2
+KILLED    fix.judged@1  a read no longer says which lines it shows, so a model cannot tell it got the wrong ones
+KILLED    fix.judged@1  the judge's copy is not told where the upstream clones are, so the tests that need them skip, as on try 3
+KILLED    fix.judged@1  only the first file of a fix is taken, as the bench did on try 4, when the fix needed two
+KILLED    fix.judged@1  a fix may change files of several parts at once
+KILLED    fs.no-write@1  every kernel gets writing whether its flavor asked or not, and the referee no longer looks at the kernel
+KILLED    fs.no-write@1  a kernel asked only to read says a save worked
+KILLED    referee.artifact@1  the builder never hands the linked kernel to the referee
+KILLED    referee.artifact@1  an extra listed for a flavor whose kernel no longer has it stays listed
+KILLED    referee.artifact@1  a capability switched off unless asked is let through with its code in the image
+KILLED    referee.probes-granted@1  a test program may make a call its flavor never asked for
+KILLED    referee.probes-granted@1  a script may boot a program on a kernel the program does not name
+KILLED    referee.artifact@1  a part is switched off in a kernel that cannot build it that way, and the compiler is left to say so
+KILLED    fix.judged@1  the model is never told how many calls it has left, as on try 7
+KILLED    fix.judged@1  the model is told it must hand in only when it has none left to do it with
+KILLED    fix.judged@1  a fix that is not a pass ends the run, as on try 8: never shown what broke, never another hand-in
+KILLED    fix.judged@1  the run is silent until its summary, as on tries 1 to 8
+KILLED    fix.judged@1  a model lost halfway leaves no record, and what the calls before it cost is lost, as on try 9
+KILLED    fix.judged@1  the suite runs out of sight, five quiet minutes at a time, as on try 10
+KILLED    gate.linux-only@1  the fix taken out again: a Linux program reaches the old table at 1000 to 1003
+KILLED    gate.linux-only@1  the old table's load stops working for old programs too
+# 298 killed, 0 survived unexpectedly, 3 known survivors, 0 no-ops, 0 no-builds

@@ -111,6 +111,15 @@ reply "$t/f-two/1.json" submit_fix '{"files":[{"path":"pool/PART.fixprobe@1/f.c"
 MODEL_FAKE="$t/f-two" run fixprobe.red@1 || fail "a fix in two files of one part was not judged a pass: $(tail -1 "$t/said")"
 grep -q '^lines *= 4$' "$t/runs"/*/run.toml || fail "the changed lines of both files were not counted: $(grep '^lines' "$t/runs"/*/run.toml)"
 grep -q 'g.S' "$t/runs"/*/output.txt || fail "the second file's change is not in the run's output"
+# a reviewer's note goes to the model with the test; a note that is not there stops it before any call
+rm -rf "$t/runs"; fakes "$t/f-note" "fixed
+"
+printf 'check the flag before you use it\n' > "$t/note"
+FIX_NOTE="$t/note" MODEL_FAKE="$t/f-note" run fixprobe.red@1 || fail "a run with a reviewer's note did not pass: $(tail -1 "$t/said")"
+grep -q 'A person read an earlier fix for this test and wrote:' "$t/runs"/*/input.txt && grep -q 'check the flag before you use it' "$t/runs"/*/input.txt || fail "the reviewer's note did not reach the model"
+rm -rf "$t/runs"; mkdir -p "$t/f-nonote"
+FIX_NOTE="$t/no-such-note" MODEL_FAKE="$t/f-nonote" run fixprobe.red@1 && fail "a run with a missing note went ahead"
+[ ! -e "$t/f-nonote/.n" ] || fail "a run with a missing note made a call"
 # the model cannot be reached after the first call: the calls already paid for are recorded
 rm -rf "$t/runs"; mkdir -p "$t/f-gone"
 reply "$t/f-gone/1.json" look '{"command":"read","args":["pool/PART.fixprobe@1/f.c"]}'
@@ -123,4 +132,4 @@ reply "$t/f-split/1.json" submit_fix '{"files":[{"path":"pool/PART.fixprobe@1/f.
 stop "$t/f-split/2.json"
 MODEL_FAKE="$t/f-split" run fixprobe.red@1 && fail "a fix across two parts was judged"
 grep -q '^result *= "refused"' "$t/runs"/*/run.toml && grep -q "one part" "$t/said" || fail "a fix across two parts was not refused: $(tail -1 "$t/said")"
-echo "a green test refused before any call; a fix in two files of one part a pass with both files' 4 lines, one across two parts refused; a test already red before the fix not held against it; the look answered from the repo and refused outside it; a read given as two numbers, or as start_line and end_line, headed with where it is; a find kept to one folder; a good fix a pass with its 2 lines and 600 in, 120 out, 6000 from the cache, on its summary line; nothing skipped in the judge's copy that runs beside the clones; a fix that broke another test a fail; a fix outside pool/ refused unjudged; a fix that broke a test sent back with what it printed, and a second hand-in judged a pass; the model's copy untouched; after every call the model told how many it has left, and with ten left asked for its fix; each call and hand-in said as it went; a model lost after its first call recorded with what it cost"
+echo "a green test refused before any call; a fix in two files of one part a pass with both files' 4 lines, one across two parts refused; a test already red before the fix not held against it; the look answered from the repo and refused outside it; a read given as two numbers, or as start_line and end_line, headed with where it is; a find kept to one folder; a good fix a pass with its 2 lines and 600 in, 120 out, 6000 from the cache, on its summary line; nothing skipped in the judge's copy that runs beside the clones; a fix that broke another test a fail; a fix outside pool/ refused unjudged; a fix that broke a test sent back with what it printed, and a second hand-in judged a pass; the model's copy untouched; after every call the model told how many it has left, and with ten left asked for its fix; each call and hand-in said as it went; a model lost after its first call recorded with what it cost; a reviewer's note handed over with the test, a missing one refused before any call"

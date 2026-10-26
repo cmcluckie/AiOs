@@ -1,0 +1,11 @@
+id      = "0076"
+date    = 2026-10-25
+kind    = "rules and words"
+touches = ["specs/gate.4@1.toml", "tests/gate.debt-listed@1.toml", "tests/programs/gate-debt.sh", "jig/fix", "fix/notes/loader.random@1-2.txt", "tests/programs/fix.sh", "tests/fix.judged@1.toml", "tests/mutations.txt"]
+asked   = "TECH-DEBT 4's try 1 (findings 0024 item 27) turned its test green and failed on the debt test, because a paid debt's mark leaves the source while findings 0021, which the mechanic may not touch, still lists it.  The debt test now checks one way, every mark listed, and names listed debts with no mark as paid, to be closed in findings; each debt has its own red test to say whether it is.  Try 1 was also not safe: rdrand with no CPUID check and no retry limit.  The bench gains FIX_NOTE, a reviewer's note handed to the model with the test, and try 2 carries one.  TST.fix.judged checks the note and a missing one, one more mutation; the debt test keeps its mutation."
+options = ["as written", "Claude fixes try 1's lines instead of a second try"]
+default = "as written"
+chose   = "as written"
+why     = "Chris, 2026-10-25: OK, do it your way."
+by      = "KEY.chris@1"
+drafted = "Claude"

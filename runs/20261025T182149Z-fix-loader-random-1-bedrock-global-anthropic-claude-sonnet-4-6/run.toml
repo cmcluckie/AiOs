@@ -1,0 +1,15 @@
+id            = "20261025T182149Z-fix-loader-random-1-bedrock-global-anthropic-claude-sonnet-4-6"
+date          = "2026-10-25T18:21:49Z"
+item          = "fix-loader-random"
+model         = "bedrock:global.anthropic.claude-sonnet-4-6"
+version       = "2026-10-25"
+sitting       = "20261025T182149Z"
+prompt        = "7abe7603"
+try           = 1
+input_tokens  = 27
+output_tokens = 11585
+cache_read_tokens  = 100760
+cache_write_tokens = 53663
+cost_usd      = 0.405320
+result        = "fail"
+lines         = 41

@@ -1,0 +1,6 @@
+Try 1 used rdrand for AT_RANDOM, which is what SPEC.loader.15 asks for, and its test passed.  It was not taken, for two reasons:
+
+1. It never asks whether the processor has rdrand.  On one that does not, the kernel stops on an invalid instruction before the first Linux program starts.  The machine runs QEMU with -cpu host under KVM and with TCG's default processor without it, and TCG's default has no rdrand.  Ask CPUID first (leaf 1, ECX bit 30), the way Linux decides X86_FEATURE_RDRAND.
+2. It retries rdrand until it succeeds, with no limit.  Linux gives up after 10 tries (RDRAND_RETRY_LOOPS, arch/x86/include/asm/archrandom.h).
+
+The spec says where the bytes come from otherwise must be said.  Where there is no rdrand, or it fails 10 times, keep the cycle counter as before, and keep TECH-DEBT 4 marked on that path only, saying it is the fallback.  Change only PART.loader@10.
