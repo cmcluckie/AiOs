@@ -32,10 +32,14 @@ findings 0023 item 10):
   the kernel's exit.  1000 to 1003, the old table's own alloc, ms, load and save, ENOSYS for a Linux program since part 21 (decision 0075; old programs keep them).  Any other number, ENOSYS.  Every buffer and name is checked to
   lie inside the window, else EFAULT, and the kernel does not touch it.
 
-## What it does not turn on
-The processor's vector instructions (SSE): AiOs never sets CR4.OSFXSR, so a program
-that uses them is stopped with an invalid-instruction fault (vector 6), as the jig
-showed (findings 0023 item 13).  Programs built against musl are built for the 486.
+## SSE (since part 21, decision 0080)
+Where CPUID says the processor has FXSR and SSE (leaf 1, EDX bits 24 and 25), the
+gate sets CR4.OSFXSR and CR4.OSXMMEXCPT, clears CR0.EM and sets CR0.MP, and keeps a
+512-byte FXSAVE area for each program, saved and restored on every switch; a new
+program starts with Linux's x87 control word 0x037F and MXCSR 0x1F80.  Without them
+it leaves CR0 and CR4 as they were, and a program that uses SSE is stopped with an
+invalid-instruction fault (vector 6), as every program was before (findings 0023
+item 13).  Programs built against musl are still built for the 486.
 
 ## Every syscall or hardware access
 As @1, and it loads %gs's descriptor only through the table: a program sets %gs

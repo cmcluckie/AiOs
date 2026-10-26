@@ -7,4 +7,4 @@ red_when   = "under the cat flavor's kernel, a Linux program built with SSE is s
 timeout_ms = 60000
 isolates   = "PART.gate@2"
 runner     = "jig/test cmd sh tests/programs/debt.sh sse"
-mutations  = 0
+mutations  = 3

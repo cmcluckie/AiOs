@@ -1,0 +1,11 @@
+id      = "0080"
+date    = 2026-10-25
+kind    = "code"
+touches = ["pool/PART.gate@2/gate.c", "tests/gate.sse@1.toml", "tests/mutations.txt"]
+asked   = "SSE's try 2 (findings 0024 item 31) passed the judge and followed the reviewer's note: CPUID first, 0x037F, each program's FXSAVE area kept across switches, 83 lines in PART.gate@2/gate.c; under emulation without SSE the kernel still boots.  Take it?  As the mechanic wrote it but for its cpuid statement, whose output could be assigned the register its own pop restores; Claude made all four registers outputs.  TST.gate.sse, green now, gains three mutations, two killed and one a known survivor."
+options = ["as written", "take it word for word", "do not take it"]
+default = "as written"
+chose   = "as written"
+why     = "Chris, 2026-10-25: yes."
+by      = "KEY.chris@1"
+drafted = "Claude"

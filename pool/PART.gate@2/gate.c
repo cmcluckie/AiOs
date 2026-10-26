@@ -34,6 +34,14 @@
  * the frames; who runs next is decided by the scheduler the sharing part
  * registers (gate_schedule), not here.
  *
+ * SSE (findings 0023 item 13): if the processor has FXSR and SSE (CPUID leaf 1
+ * EDX bits 24 and 25), the kernel sets CR4.OSFXSR and CR4.OSXMMEXCPT, clears
+ * CR0.EM and sets CR0.MP, and keeps a 512-byte FXSAVE area for each program,
+ * saving and restoring it on every switch, the way Linux does.  A new program's
+ * x87 control word is 0x037F: extended precision, every exception masked, as
+ * Linux gives.  Without FXSR and SSE the kernel leaves CR0 and CR4 as they
+ * were and does not FXSAVE or FXRSTOR, so it runs as it did before.
+ *
  * TECH-DEBT 1: alloc, ms, load and save keep their AiOs-only numbers 1000 to
  * 1003 as a second table for programs written for the old table (findings 0021
  * #5, decision 0074).  A Linux program asking 1000 to 1003 gets -38 (ENOSYS),
@@ -94,12 +102,14 @@ extern char gate_user_start[], gate_stack_lo[], gate_stack_hi[];
 extern char gate_door[], gate_return[];
 
 #define KSTACK_WORDS	4096		/* 16 KiB of kernel stack for each space */
+#define FXSAVE_SIZE	512		/* bytes for FXSAVE/FXRSTOR, 16-byte aligned */
 
 struct gate_space {
 	unsigned long cr3;		/* its page directory */
 	unsigned long *frame;		/* where its registers were saved, on its kernel stack */
 	unsigned long kstack_top;	/* where a trap from ring 3 lands (the TSS's esp0) */
 	int user_stack;			/* ring 3 stands on the gate's own stack (one program, no sharing) */
+	unsigned char fxsave[FXSAVE_SIZE] __attribute__((aligned(16)));	/* SSE/x87 state, when sse_on */
 };
 
 static unsigned long long gdt[7];
@@ -112,6 +122,7 @@ static struct gate_space spaces[GATE_MAX_SPACES];
 static int nspaces;
 static struct gate_space *cur;
 static const struct gate_sched *sched;
+static int sse_on;			/* 1 if the processor has FXSR and SSE and we enabled them */
 
 static unsigned long win_lo, win_hi;	/* the same virtual window in every space */
 static unsigned long brk_lo, brk_cur, map_lo;	/* a Linux program's heap: brk grows up from brk_lo, mmap2 down from map_lo; 0 for the others */
@@ -446,11 +457,17 @@ unsigned long *gate_trap(unsigned long *frame)
 
 	cur->frame = frame;
 	if (vec == 0x80) {
+		if (sse_on)
+			__asm__ volatile("fxsave %0" : "=m"(cur->fxsave));
 		frame[7] = (unsigned long)syscall(frame);
+		if (sse_on)
+			__asm__ volatile("fxrstor %0" : : "m"(cur->fxsave));
 		return frame;
 	}
 	if (sched && ((vec & ~0xfUL) == 0x30 || vec == 0xff)) {
 		/* a hardware interrupt: the scheduler may take the processor away */
+		if (sse_on)
+			__asm__ volatile("fxsave %0" : "=m"(cur->fxsave));
 		next = sched->irq(vec, cur);
 	} else {
 		/* The processor refused something.  The two numbers are the vector and the
@@ -460,6 +477,8 @@ unsigned long *gate_trap(unsigned long *frame)
 		else
 			addr = frame[12];
 		if (sched && (frame[13] & 3) == 3) {
+			if (sse_on)
+				__asm__ volatile("fxsave %0" : "=m"(cur->fxsave));
 			next = sched->fault(vec, addr, cur);
 		} else {
 			hex8(msg + 18, vec);
@@ -474,6 +493,8 @@ unsigned long *gate_trap(unsigned long *frame)
 		tss[1] = (unsigned int)next->kstack_top;
 		__asm__ volatile("movl %0, %%cr3" : : "r"(next->cr3) : "memory");
 	}
+	if (sse_on)
+		__asm__ volatile("fxrstor %0" : : "m"(next->fxsave));
 	return next->frame;
 }
 
@@ -570,6 +591,54 @@ static void paging_on(unsigned long cr3)
 	__asm__ volatile("movl %%cr0, %%eax; orl $0x80010000, %%eax; movl %%eax, %%cr0" : : : "eax");
 }
 
+/*
+ * Check CPUID for FXSR (EDX bit 24) and SSE (EDX bit 25).  If both are present,
+ * set CR4.OSFXSR and CR4.OSXMMEXCPT, clear CR0.EM and set CR0.MP, and
+ * initialize the current space's FXSAVE area with Linux's x87 control word
+ * (0x037F: extended precision, every exception masked).  Sets sse_on.
+ */
+static void sse_init(struct gate_space *s)
+{
+	unsigned long eax = 1, ebx, ecx = 0, edx;
+	unsigned long cr0, cr4;
+	unsigned int i;
+
+	/* CPUID leaf 1: feature flags in EDX; cpuid writes all four */
+	__asm__ volatile("cpuid" : "+a"(eax), "=b"(ebx), "+c"(ecx), "=d"(edx));
+	(void)ebx;
+
+	/* bit 24: FXSR, bit 25: SSE */
+	if (!((edx >> 24) & 1) || !((edx >> 25) & 1)) {
+		/* no FXSR or SSE: leave CR0 and CR4 as they were, do not FXSAVE or FXRSTOR */
+		sse_on = 0;
+		return;
+	}
+
+	/* set CR4.OSFXSR (bit 9) and CR4.OSXMMEXCPT (bit 10) */
+	__asm__ volatile("movl %%cr4, %0" : "=r"(cr4));
+	cr4 |= (1 << 9) | (1 << 10);
+	__asm__ volatile("movl %0, %%cr4" : : "r"(cr4));
+
+	/* clear CR0.EM (bit 2), set CR0.MP (bit 1) */
+	__asm__ volatile("movl %%cr0, %0" : "=r"(cr0));
+	cr0 = (cr0 & ~(1UL << 2)) | (1UL << 1);
+	__asm__ volatile("movl %0, %%cr0" : : "r"(cr0));
+
+	sse_on = 1;
+
+	/* initialize the first space's FXSAVE area: zero it, then set x87 CW to
+	 * 0x037F (extended precision, every exception masked), as Linux gives a new program */
+	for (i = 0; i < FXSAVE_SIZE; i++)
+		s->fxsave[i] = 0;
+	/* x87 control word is at offset 0 in the FXSAVE area (16-bit field) */
+	*(unsigned short *)s->fxsave = 0x037f;
+	/* MXCSR is at offset 24 in the FXSAVE area; Linux's default is 0x1f80 (all SSE exceptions masked) */
+	*(unsigned int *)(s->fxsave + 24) = 0x1f80;
+
+	/* load the initialized state into the processor */
+	__asm__ volatile("fxrstor %0" : : "m"(s->fxsave));
+}
+
 void __attribute__((noreturn)) gate_enter(unsigned long eip, unsigned long esp, unsigned long eflags);
 void __attribute__((noreturn)) gate_resume_frame(unsigned long cr3, unsigned long *frame);
 
@@ -599,6 +668,7 @@ void __attribute__((noreturn)) gate_run(unsigned long entry, unsigned long lo, u
 	cur = s;
 	tables_init();
 	paging_on(s->cr3);
+	sse_init(s);
 
 	__asm__("" : "+r"(top));		/* the stack is a place the linker chose, not an object the compiler may reason about */
 	sp = (unsigned long *)top;
@@ -637,6 +707,7 @@ void __attribute__((noreturn)) gate_exec(unsigned long entry, unsigned long phys
 	cur = s;
 	tables_init();
 	paging_on(s->cr3);
+	sse_init(s);
 	gate_enter(entry, esp, 0x002);	/* interrupts off, I/O privilege 0 */
 }
 
@@ -655,6 +726,7 @@ struct gate_space *gate_space_new(unsigned long phys, unsigned long virt, unsign
 {
 	struct gate_space *s;
 	unsigned long *f, *us;
+	unsigned int i;
 
 	if (nspaces >= GATE_MAX_SPACES || !window_ok(virt, virt + len))
 		return 0;
@@ -670,6 +742,16 @@ struct gate_space *gate_space_new(unsigned long phys, unsigned long virt, unsign
 	s->cr3 = (unsigned long)pds[nspaces];
 	s->kstack_top = (unsigned long)&kstacks[nspaces][KSTACK_WORDS];
 	s->user_stack = 0;
+
+	/* initialize the new space's FXSAVE area if SSE is on */
+	if (sse_on) {
+		for (i = 0; i < FXSAVE_SIZE; i++)
+			s->fxsave[i] = 0;
+		/* x87 CW 0x037F: extended precision, every exception masked, as Linux gives */
+		*(unsigned short *)s->fxsave = 0x037f;
+		/* MXCSR at offset 24: 0x1f80, all SSE exceptions masked */
+		*(unsigned int *)(s->fxsave + 24) = 0x1f80;
+	}
 
 	/* the program's stack, written through its physical address (paging is off): _start's argument and return */
 	us = (unsigned long *)(phys + (stack_top_virt - virt));
@@ -710,5 +792,6 @@ void __attribute__((noreturn)) gate_start(struct gate_space *first)
 	cur = first;
 	tables_init();
 	paging_on(first->cr3);
+	sse_init(first);
 	gate_resume(first);
 }
