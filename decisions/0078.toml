@@ -1,0 +1,11 @@
+id      = "0078"
+date    = 2026-10-25
+kind    = "code"
+touches = ["pool/PART.loader@10/loader.c", "tests/loader.random@1.toml", "tests/mutations.txt"]
+asked   = "TECH-DEBT 4's try 3 (findings 0024 item 29) passed the judge: rdrand after a CPUID check, ten tries a word, the cycle counter as the marked fallback, 77 lines in PART.loader@10/loader.c; under emulation with rdrand switched off cat still runs.  Take it?  As the mechanic wrote it but for its cpuid line, which did not declare eax as written; Claude made eax an output.  The as-built spec and findings 0021 say the debt is now the fallback alone.  TST.loader.random, green now, gains two mutations, one killed and one a known survivor."
+options = ["as written", "take it word for word", "do not take it"]
+default = "as written"
+chose   = "as written"
+why     = "Chris, 2026-10-25: sure."
+by      = "KEY.chris@1"
+drafted = "Claude"

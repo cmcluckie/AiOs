@@ -20,11 +20,13 @@ AT_PAGESZ (4,096), AT_ENTRY, AT_RANDOM and AT_NULL.  The arguments are the kerne
 command line split on spaces, at most 15.  Then PART.gate@2's gate_exec runs it,
 its heap starting at the page after its last piece.
 
-TECH-DEBT 4: the AT_RANDOM bytes come from the processor's cycle counter and are
-not random (decision 0046, findings 0021).
+The AT_RANDOM bytes come from rdrand where CPUID says the processor has it
+(leaf 1, ECX bit 30), four words, up to ten tries each, as Linux does (decision
+0078, part 21).  TECH-DEBT 4: on a processor without rdrand, or when a word fails
+ten tries, that word is the cycle counter, not random (decision 0046, findings 0021).
 
 ## Every syscall or hardware access
-As @9, and rdtsc once, for AT_RANDOM.
+As @9, and for AT_RANDOM cpuid once, then rdrand (rdtsc only on the fallback).
 
 ## Every symbol it imports
 As @9, and gate_exec (PART.gate@2).

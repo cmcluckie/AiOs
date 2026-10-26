@@ -446,13 +446,46 @@ static void __attribute__((noreturn)) elf_refuse(const char *why)
 }
 
 /*
+ * Try rdrand once; return 1 and fill *out on success, 0 on failure.
+ * The CF flag is 1 if the hardware gave a valid number (Intel SDM, RDRAND).
+ */
+static int rdrand32(unsigned int *out)
+{
+	unsigned int v;
+	unsigned char ok;
+
+	__asm__ volatile(".byte 0x0f, 0xc7, 0xf0\n\t"	/* rdrand %eax */
+			 "setc %1"
+			 : "=a"(v), "=qm"(ok)
+			 :
+			 : "cc");
+	*out = v;
+	return (int)ok;
+}
+
+/*
+ * Does the processor have rdrand?  CPUID leaf 1, ECX bit 30, the way Linux
+ * decides X86_FEATURE_RDRAND (arch/x86/kernel/cpu/common.c).
+ */
+static int has_rdrand(void)
+{
+	unsigned int eax = 1, ecx = 0;
+
+	__asm__ volatile("cpuid" : "+a"(eax), "+c"(ecx) : : "ebx", "edx");	/* cpuid writes all four */
+	return (ecx >> 30) & 1;
+}
+
+/*
  * Load and start it.  The window is the 16 MiB from the first piece's 4 MiB
  * boundary, on the physical RAM from 4 MiB (the program's addresses are its own;
  * the gate maps them).  The stack is laid out at the top, as Linux's
  * create_elf_tables does: argc, the argument pointers, a zero, the environment
  * (none), a zero, the facts (auxiliary vector), then the strings and 16 bytes for
- * AT_RANDOM above them.  TECH-DEBT 4: those 16 bytes are the processor's cycle
- * counter, not random (decision 0046); AiOs has no source of randomness yet.
+ * AT_RANDOM above them.  The 16 bytes come from rdrand where the processor has
+ * it (CPUID leaf 1, ECX bit 30), trying up to 10 times per word as Linux does
+ * (RDRAND_RETRY_LOOPS, arch/x86/include/asm/archrandom.h); TECH-DEBT 4: where
+ * there is no rdrand, or it fails 10 times, the bytes are the processor's cycle
+ * counter, not random (decision 0046).
  */
 static void __attribute__((noreturn)) elf_run(const struct hvm_start_info *si, const unsigned char *f, unsigned long size)
 {
@@ -462,7 +495,6 @@ static void __attribute__((noreturn)) elf_run(const struct hvm_start_info *si, c
 	unsigned long *sp, uargv[16];
 	unsigned char *top, *dst;
 	const char *cmd = si->cmdline_paddr ? (const char *)(unsigned long)si->cmdline_paddr : "";
-	unsigned long tsc_lo, tsc_hi;
 
 	if (h->ident[4] != 1 || h->ident[5] != 1 || h->machine != 3 || h->type != 2)
 		elf_refuse("not a 32-bit x86 program file that can run as it is");
@@ -506,10 +538,43 @@ static void __attribute__((noreturn)) elf_run(const struct hvm_start_info *si, c
 
 	/* the strings first, at the very top: AT_RANDOM's 16 bytes, then the arguments */
 	top = (unsigned char *)(ELF_PHYS + ELF_WINDOW);
-	__asm__ volatile("rdtsc" : "=a"(tsc_lo), "=d"(tsc_hi));
 	top -= 16;
-	for (k = 0; k < 16; k++)
-		top[k] = (unsigned char)((k < 8 ? tsc_lo >> (8 * (k & 3)) : tsc_hi >> (8 * (k & 3))) ^ (k * 37));
+	{
+		/*
+		 * Fill the 16 AT_RANDOM bytes from rdrand (4 words of 32 bits), asking
+		 * up to 10 times per word as Linux does (RDRAND_RETRY_LOOPS).  If the
+		 * processor has no rdrand, or a word fails all 10 tries, fall back to
+		 * the cycle counter for that word.  TECH-DEBT 4: the cycle counter is
+		 * not random (decision 0046); it is the fallback only.
+		 */
+		int use_rdrand = has_rdrand();
+		unsigned int *rnd_words = (unsigned int *)top;
+		unsigned int j;
+
+		for (j = 0; j < 4; j++) {
+			unsigned int val;
+			int got = 0;
+
+			if (use_rdrand) {
+				int tries;
+
+				for (tries = 0; tries < 10; tries++) {
+					if (rdrand32(&val)) {
+						got = 1;
+						break;
+					}
+				}
+			}
+			if (!got) {
+				/* TECH-DEBT 4: fallback to cycle counter, not random (decision 0046) */
+				unsigned long tsc_lo, tsc_hi;
+
+				__asm__ volatile("rdtsc" : "=a"(tsc_lo), "=d"(tsc_hi));
+				val = (unsigned int)(tsc_lo ^ (tsc_hi << 16) ^ (j * 0x9e3779b9U));
+			}
+			rnd_words[j] = val;
+		}
+	}
 	{
 		unsigned long rnd = lo + ((unsigned long)top - ELF_PHYS);
 		const char *c = cmd;

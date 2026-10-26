@@ -7,4 +7,4 @@ red_when   = "three boots of the cat flavor's kernel hand a Linux program AT_RAN
 timeout_ms = 120000
 isolates   = "PART.loader@10"
 runner     = "jig/test cmd sh tests/programs/debt.sh random"
-mutations  = 0
+mutations  = 2
