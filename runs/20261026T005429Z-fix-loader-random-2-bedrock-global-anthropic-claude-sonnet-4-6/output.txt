@@ -1,0 +1,61 @@
+=== pool/PART.loader@10/loader.c
+448a449,475
+>  * Use rdrand to fill buf with n bytes, 4 bytes at a time.  Returns 1 on
+>  * success, 0 if rdrand fails 10 times on any word (RDRAND_RETRY_LOOPS, the
+>  * way Linux gives up: arch/x86/include/asm/archrandom.h).
+>  */
+> static int rdrand_fill(unsigned char *buf, unsigned long n)
+> {
+> 	unsigned long i, val;
+> 	int ok, tries;
+> 
+> 	for (i = 0; i < n; i += 4) {
+> 		for (tries = 0; tries < 10; tries++) {
+> 			__asm__ volatile(".byte 0x0f, 0xc7, 0xf0 ; setc %1"
+> 					 : "=a"(val), "=qm"(ok) : : "cc");
+> 			if (ok)
+> 				break;
+> 		}
+> 		if (!ok)
+> 			return 0;
+> 		buf[i]     = (unsigned char)(val);
+> 		buf[i + 1] = (unsigned char)(val >> 8);
+> 		buf[i + 2] = (unsigned char)(val >> 16);
+> 		buf[i + 3] = (unsigned char)(val >> 24);
+> 	}
+> 	return 1;
+> }
+> 
+> /*
+454,455c481,486
+<  * AT_RANDOM above them.  TECH-DEBT 4: those 16 bytes are the processor's cycle
+<  * counter, not random (decision 0046); AiOs has no source of randomness yet.
+---
+>  * AT_RANDOM above them.  The 16 bytes are from the processor's rdrand instruction
+>  * where it has one (CPUID leaf 1, ECX bit 30, the way Linux checks
+>  * X86_FEATURE_RDRAND), with up to 10 retries per word (RDRAND_RETRY_LOOPS).
+>  * TECH-DEBT 4: where rdrand is absent or fails, the bytes are the processor's
+>  * cycle counter, not random (decision 0046); AiOs has no other source of
+>  * randomness.
+465a497
+> 	unsigned int cpuid_ecx;
+509d540
+< 	__asm__ volatile("rdtsc" : "=a"(tsc_lo), "=d"(tsc_hi));
+511,512c542,555
+< 	for (k = 0; k < 16; k++)
+< 		top[k] = (unsigned char)((k < 8 ? tsc_lo >> (8 * (k & 3)) : tsc_hi >> (8 * (k & 3))) ^ (k * 37));
+---
+> 	/* Ask CPUID leaf 1, ECX bit 30 whether rdrand is available (the way Linux
+> 	 * checks X86_FEATURE_RDRAND), then fill the 16 bytes from it with up to 10
+> 	 * retries per word (RDRAND_RETRY_LOOPS).  On a processor without rdrand, or
+> 	 * if it fails 10 times, fall back to the cycle counter.
+> 	 * TECH-DEBT 4 (fallback only): the cycle counter is not random (decision 0046). */
+> 	__asm__ volatile("cpuid" : "=c"(cpuid_ecx) : "a"(1) : "ebx", "edx");
+> 	if ((cpuid_ecx & (1u << 30)) && rdrand_fill(top, 16)) {
+> 		/* rdrand filled all 16 bytes */
+> 	} else {
+> 		/* TECH-DEBT 4: no rdrand or it failed; use the cycle counter instead (decision 0046) */
+> 		__asm__ volatile("rdtsc" : "=a"(tsc_lo), "=d"(tsc_hi));
+> 		for (k = 0; k < 16; k++)
+> 			top[k] = (unsigned char)((k < 8 ? tsc_lo >> (8 * (k & 3)) : tsc_hi >> (8 * (k & 3))) ^ (k * 37));
+> 	}

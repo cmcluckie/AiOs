@@ -1,0 +1,11 @@
+id      = "0077"
+date    = 2026-10-25
+kind    = "rules and words"
+touches = ["jig/fix", "tests/programs/fix.sh", "tests/fix.judged@1.toml", "tests/mutations.txt"]
+asked   = "TECH-DEBT 4's try 2 (findings 0024 item 28) handed in a fix that did not assemble; sent back with the assembler's words, it gave an empty reply, and the bench ended the run with 53 calls left.  A model that stops without a fix while it has calls left is now reminded once (call count, a fix or a corrected one, hand it in with submit_fix); an empty reply is kept in the record as \"(the reply was empty)\", since one cannot be sent back as it is.  TST.fix.judged checks it, one more mutation."
+options = ["as written", "end the run, as before"]
+default = "as written"
+chose   = "as written"
+why     = "Chris, 2026-10-25: yes to 0077."
+by      = "KEY.chris@1"
+drafted = "Claude"

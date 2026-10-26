@@ -100,6 +100,13 @@ reply "$t/f-again/2.json" submit_fix '{"path":"pool/PART.fixprobe@1/f.c","conten
 MODEL_FAKE="$t/f-again" run fixprobe.red@1 || fail "a second hand-in, after the first broke a test, was not judged a pass: $(tail -1 "$t/said")"
 grep -q '2 hand-in(s)' "$t/said" && grep -q '^lines *= 2$' "$t/runs"/*/run.toml || fail "the second hand-in was not counted, or its own lines were not the ones recorded: $(tail -1 "$t/said")"
 grep -q 'fixprobe.other' "$t/runs"/*/input.txt || fail "the first hand-in was not answered with the test that went red"
+# sent back, it stops with an empty reply; reminded once, it hands in again (loader.random try 2)
+rm -rf "$t/runs"; mkdir -p "$t/f-nudge"
+reply "$t/f-nudge/1.json" submit_fix '{"path":"pool/PART.fixprobe@1/f.c","content":"fixed breaks-other\n"}'
+printf '{"output":{"message":{"role":"assistant","content":[]}},"stopReason":"end_turn","usage":{"inputTokens":100,"outputTokens":0}}\n' > "$t/f-nudge/2.json"
+reply "$t/f-nudge/3.json" submit_fix '{"path":"pool/PART.fixprobe@1/f.c","content":"fixed\n"}'
+MODEL_FAKE="$t/f-nudge" run fixprobe.red@1 || fail "a model that stopped with an empty reply was not reminded and given its second hand-in: $(tail -1 "$t/said")"
+grep -q 'You stopped without handing in a corrected fix' "$t/runs"/*/input.txt && grep -q '(the reply was empty)' "$t/runs"/*/input.txt || fail "the reminder, or the note that the reply was empty, is not in the run's record"
 
 rm -rf "$t/runs"; fakes "$t/f-out" "fixed
 " tests/programs/fixprobe-red.sh
@@ -132,4 +139,4 @@ reply "$t/f-split/1.json" submit_fix '{"files":[{"path":"pool/PART.fixprobe@1/f.
 stop "$t/f-split/2.json"
 MODEL_FAKE="$t/f-split" run fixprobe.red@1 && fail "a fix across two parts was judged"
 grep -q '^result *= "refused"' "$t/runs"/*/run.toml && grep -q "one part" "$t/said" || fail "a fix across two parts was not refused: $(tail -1 "$t/said")"
-echo "a green test refused before any call; a fix in two files of one part a pass with both files' 4 lines, one across two parts refused; a test already red before the fix not held against it; the look answered from the repo and refused outside it; a read given as two numbers, or as start_line and end_line, headed with where it is; a find kept to one folder; a good fix a pass with its 2 lines and 600 in, 120 out, 6000 from the cache, on its summary line; nothing skipped in the judge's copy that runs beside the clones; a fix that broke another test a fail; a fix outside pool/ refused unjudged; a fix that broke a test sent back with what it printed, and a second hand-in judged a pass; the model's copy untouched; after every call the model told how many it has left, and with ten left asked for its fix; each call and hand-in said as it went; a model lost after its first call recorded with what it cost; a reviewer's note handed over with the test, a missing one refused before any call"
+echo "a green test refused before any call; a fix in two files of one part a pass with both files' 4 lines, one across two parts refused; a test already red before the fix not held against it; the look answered from the repo and refused outside it; a read given as two numbers, or as start_line and end_line, headed with where it is; a find kept to one folder; a good fix a pass with its 2 lines and 600 in, 120 out, 6000 from the cache, on its summary line; nothing skipped in the judge's copy that runs beside the clones; a fix that broke another test a fail; a fix outside pool/ refused unjudged; a fix that broke a test sent back with what it printed, and a second hand-in judged a pass; the model's copy untouched; after every call the model told how many it has left, and with ten left asked for its fix; each call and hand-in said as it went; a model lost after its first call recorded with what it cost; a reviewer's note handed over with the test, a missing one refused before any call; a model that stops without a fix reminded once"

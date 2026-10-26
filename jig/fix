@@ -149,7 +149,7 @@ judge() {
 	fi
 }
 
-tin=0; tout=0; cread=0; cwrite=0; turn=0; path=""; why=""; hand=0
+tin=0; tout=0; cread=0; cwrite=0; turn=0; path=""; why=""; hand=0; nudged=0
 while :; do
 	turn=$((turn + 1))
 	[ "$turn" -le "$FIX_TURNS" ] || { why="more than $FIX_TURNS calls"; break; }
@@ -206,7 +206,23 @@ EOT
 		jq --slurpfile r "$d/res.json" '. + $r[0]' "$d/messages.json" > "$d/m.new" && mv "$d/m.new" "$d/messages.json"
 		continue
 	fi
-	[ "$(jq -r '.stopReason // ""' "$d/reply.json")" = tool_use ] || { why="it stopped without handing in a fix"; break; }
+	if [ "$(jq -r '.stopReason // ""' "$d/reply.json")" != tool_use ]; then
+		# stopped without a fix: reminded once, while calls are left (try 2 of
+		# loader.random stopped with an empty reply after its first hand-in, findings
+		# 0024 item 28, decision 0077).  An empty reply cannot be sent back as it is,
+		# so it is kept as a note that says it was empty.
+		left=$((FIX_TURNS - turn))
+		if [ "$nudged" -eq 0 ] && [ "$left" -gt 0 ]; then
+			nudged=1
+			say "call $turn of $FIX_TURNS: stopped without a fix; reminded once"
+			if [ "$hand" -gt 0 ]; then what="a corrected fix"; else what="a fix"; fi
+			jq --arg n "You stopped without handing in $what.  Call $turn of $FIX_TURNS done; $left left.  Look further if you need to, then hand it in with submit_fix." \
+				'(.[-1].content) |= (if length == 0 then [{text:"(the reply was empty)"}] else . end) | . + [{role:"user",content:[{text:$n}]}]' \
+				"$d/messages.json" > "$d/m.new" && mv "$d/m.new" "$d/messages.json"
+			continue
+		fi
+		why="it stopped without handing in a fix"; break
+	fi
 	results='[]'
 	while IFS= read -r tu; do
 		id=$(printf '%s' "$tu" | jq -r .toolUseId); cmd=$(printf '%s' "$tu" | jq -r '.input.command // ""')
