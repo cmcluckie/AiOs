@@ -316,3 +316,5 @@ gate.sse@1 | survives | pool/PART.gate@2/gate.c | s/^\t\t__asm__ volatile("fxrst
 gate.window-end@1 | red | pool/PART.gate@2/gate.c | s/for (j = 0; j < tail_pages; j++)/for (j = 0; j <= tail_pages; j++)/ | one page past the window's end is opened to ring 3
 gate.window-end@1 | red | pool/PART.gate@2/gate.c | s/pt\[j\] = (tail_phys + (j << 12)) [|] 0x3;/pt[j] = (tail_phys + (j << 12)) + 0x7;/ | the whole last 4 MiB is opened to ring 3, as before the fix
 gate.window-end@1 | red | pool/PART.gate@2/gate.c | s/\tif (tail) {/\tif (tail \&\& 0) {/ | the part-block is never mapped, so the program loses the end of its own memory
+share.waits@1 | red | pool/PART.loader@9/loader.c | s/^\t__asm__ volatile("sti" : : : "memory");/\t(void)0;/ | the wait runs with interrupts off again, so the stopwatch freezes while a program waits for a key
+share.waits@1 | red | pool/PART.loader@9/loader.c | s/^\t__asm__ volatile("sti" : : : "memory");/\t(void)0;/;s/^\tf = irq_save();/\t__asm__ volatile("sti" : : : "memory");\n\tf = irq_save();/ | interrupts come back on only once the byte has arrived, too late for the wait

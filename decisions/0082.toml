@@ -1,0 +1,11 @@
+id      = "0082"
+date    = 2026-10-27
+kind    = "code"
+touches = ["pool/PART.loader@9/loader.c", "tests/share.waits@1.toml", "tests/mutations.txt"]
+asked   = "Waits' try 1 (findings 0024 item 33) passed the judge on its first hand-in: one sti before the wait for a byte, 7 lines in PART.loader@9/loader.c.  Take it?  TECH-DEBT 2 is paid in PART.loader@9.  TST.share.waits, green now, gains two mutations, both killed."
+options = ["take it", "do not take it"]
+default = "take it"
+chose   = "take it"
+why     = "Chris, 2026-10-27: Take it!"
+by      = "KEY.chris@1"
+drafted = "Claude"

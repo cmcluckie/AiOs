@@ -1,0 +1,11 @@
+=== pool/PART.loader@9/loader.c
+287,289c287,289
+< /* Wait for one byte, then take whatever else has already arrived.  TECH-DEBT 2:
+<  * a system call runs with interrupts off, so while a program waits here no
+<  * other program gets a turn.  It goes in the mechanic, after the series. */
+---
+> /* Wait for one byte, then take whatever else has already arrived.  Paid
+>  * TECH-DEBT 2: interrupts are re-enabled during the spin-wait so the timer
+>  * tick fires and other programs get their turns while this one waits. */
+296a297
+> 	__asm__ volatile("sti" : : : "memory");

@@ -7,4 +7,4 @@ red_when   = "on the gate's sharing kernel, the stopwatch next to a program wait
 timeout_ms = 30000
 isolates   = "PART.loader@9"
 runner     = "jig/test cmd env AIOS_SHARE=gateshare sh tests/programs/waiter.sh"
-mutations  = 0
+mutations  = 2

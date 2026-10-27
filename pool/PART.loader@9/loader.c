@@ -284,9 +284,9 @@ static void door_write(const void *s, unsigned long n)
 	irq_restore(f);
 }
 
-/* Wait for one byte, then take whatever else has already arrived.  TECH-DEBT 2:
- * a system call runs with interrupts off, so while a program waits here no
- * other program gets a turn.  It goes in the mechanic, after the series. */
+/* Wait for one byte, then take whatever else has already arrived.  Paid
+ * TECH-DEBT 2: interrupts are re-enabled during the spin-wait so the timer
+ * tick fires and other programs get their turns while this one waits. */
 static unsigned long door_read(void *buf, unsigned long n)
 {
 	unsigned char *p = buf;
@@ -294,6 +294,7 @@ static unsigned long door_read(void *buf, unsigned long n)
 
 	if (n == 0)
 		return 0;
+	__asm__ volatile("sti" : : : "memory");
 	while (!serial8250_poll(CONSOLE_PORT))
 		;
 	f = irq_save();

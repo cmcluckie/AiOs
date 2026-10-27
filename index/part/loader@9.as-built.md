@@ -20,6 +20,12 @@ halts, or, with sharing, resumes the next program first.  Otherwise as @8
 share hook is PART.share@2, not @1; the program is not called but entered by
 the gate; PART.share@1 is not built with it.
 
+Since part 21 (decision 0082), a program waiting in read for its first byte
+waits with interrupts on, so the tick still reaches the scheduler and the other
+programs keep their turns; the byte and whatever follows it are taken with
+interrupts off, and the rest of the call runs with them on, as a Linux system
+call does.
+
 ## Every syscall or hardware access
 As @8: the serial port through PART.serial.8250@2; rdtsc when a clock part is
 in; the reset by triple fault on halt.  New: nothing of its own; the gate
