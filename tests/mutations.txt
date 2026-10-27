@@ -313,3 +313,6 @@ fix.judged@1 | red | jig/fix | s/if \[ "$nudged" -eq 0 \] \&\& \[ "$left" -gt 0 
 gate.sse@1 | red | pool/PART.gate@2/gate.c | s/cr4 |= (1 << 9)/cr4 |= 0 * (1 << 9)/ | the processor is never told the kernel saves the SSE registers, so the first SSE instruction stops the program
 gate.sse@1 | red | pool/PART.gate@2/gate.c | s/if (!((edx >> 24) \& 1) || !((edx >> 25) \& 1)) {/if (1) {/ | SSE left off on every processor, those that have it too
 gate.sse@1 | survives | pool/PART.gate@2/gate.c | s/^\t\t__asm__ volatile("fxrstor %0" : : "m"(next->fxsave));/\t\t(void)0;/ | a switch no longer puts back the next program's SSE registers: the test runs one SSE program, so nothing can see two share them yet (findings 0024 item 31)
+gate.window-end@1 | red | pool/PART.gate@2/gate.c | s/for (j = 0; j < tail_pages; j++)/for (j = 0; j <= tail_pages; j++)/ | one page past the window's end is opened to ring 3
+gate.window-end@1 | red | pool/PART.gate@2/gate.c | s/pt\[j\] = (tail_phys + (j << 12)) [|] 0x3;/pt[j] = (tail_phys + (j << 12)) + 0x7;/ | the whole last 4 MiB is opened to ring 3, as before the fix
+gate.window-end@1 | red | pool/PART.gate@2/gate.c | s/\tif (tail) {/\tif (tail \&\& 0) {/ | the part-block is never mapped, so the program loses the end of its own memory

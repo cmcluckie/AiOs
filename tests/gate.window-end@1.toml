@@ -7,4 +7,4 @@ red_when   = "on the cat flavor's machine given 62 MiB, a plain program cannot r
 timeout_ms = 60000
 isolates   = "PART.gate@2"
 runner     = "jig/test cmd sh tests/programs/pastend.sh"
-mutations  = 0
+mutations  = 3

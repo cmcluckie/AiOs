@@ -1,0 +1,11 @@
+id      = "0081"
+date    = 2026-10-25
+kind    = "code"
+touches = ["pool/PART.gate@2/gate.c", "tests/gate.window-end@1.toml", "tests/mutations.txt"]
+asked   = "Window-end's try 1 (findings 0024 item 32) passed the judge on its second hand-in: the last part of a program's window mapped through a page table of its own, only the 4 KiB pages inside the window open to ring 3, 39 lines in PART.gate@2/gate.c.  Take it?  TECH-DEBT 3 is paid.  TST.gate.window-end, green now, gains three mutations, all killed."
+options = ["take it", "do not take it"]
+default = "take it"
+chose   = "take it"
+why     = "Chris, 2026-10-25: Ok."
+by      = "KEY.chris@1"
+drafted = "Claude"

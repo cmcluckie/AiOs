@@ -117,6 +117,7 @@ static unsigned int tss[26];
 static unsigned long long idt[256];
 static unsigned long pds[GATE_MAX_SPACES][1024] __attribute__((aligned(4096)));
 static unsigned long pt0[1024] __attribute__((aligned(4096)));
+static unsigned long tail_pts[GATE_MAX_SPACES][1024] __attribute__((aligned(4096)));
 static unsigned long kstacks[GATE_MAX_SPACES][KSTACK_WORDS] __attribute__((aligned(16)));
 static struct gate_space spaces[GATE_MAX_SPACES];
 static int nspaces;
@@ -569,19 +570,37 @@ static void base_init(int user_stack)
 			pt0[i] |= 0x4;		/* ring 3's stack, when it stands on the gate's */
 }
 
-/* A page directory: every address maps to itself, closed to ring 3, except that
- * the window [virt, virt + len) maps to physical memory from PHYS and is open.
- * TECH-DEBT 3: the window is rounded up to whole 4 MiB pages, so a program can
- * reach the tail past its end.  It goes in the mechanic, after the series. */
-static void space_map(unsigned long *pd, unsigned long phys, unsigned long virt, unsigned long len)
+/*
+ * A page directory: every address maps to itself, closed to ring 3, except that
+ * the window [virt, virt + len) maps to physical memory from phys and is open.
+ * Full 4 MiB chunks of the window use PSE superpages.  When the window's end is
+ * not on a 4 MiB boundary, the last partial chunk is mapped page by page using
+ * tail_pts[idx], so only the pages actually inside the window are open to ring 3.
+ * Paid TECH-DEBT 3: the window is now exact, not rounded up to a 4 MiB line.
+ */
+static void space_map(unsigned long *pd, unsigned long phys, unsigned long virt, unsigned long len, int idx)
 {
-	unsigned long i, n = (len + 0x3fffffUL) >> 22;
+	unsigned long i, n = len >> 22;			/* number of full 4 MiB chunks */
+	unsigned long tail = len & 0x3fffffUL;		/* bytes in the partial last chunk, 0 if exact */
+	unsigned long tail_pages, tail_phys, j;
+	unsigned long *pt;
 
 	pd[0] = (unsigned long)pt0 | 0x7;	/* the first 4 MiB: page by page */
 	for (i = 1; i < 1024; i++)
 		pd[i] = (i << 22) | 0x83;	/* 4 MiB pages, present, writable, kernel only */
 	for (i = 0; i < n; i++)
-		pd[(virt >> 22) + i] = (phys + (i << 22)) | 0x87;	/* the program's window: ring 3 may use it */
+		pd[(virt >> 22) + i] = (phys + (i << 22)) | 0x87;	/* full chunks: ring 3 may use them */
+	if (tail) {
+		/* partial last chunk: map page by page, only pages within the window open to ring 3 */
+		pt = tail_pts[idx];
+		tail_pages = (tail + PAGE - 1) >> 12;
+		tail_phys = phys + (n << 22);
+		for (j = 0; j < 1024; j++)
+			pt[j] = (tail_phys + (j << 12)) | 0x3;	/* present, writable, kernel only */
+		for (j = 0; j < tail_pages; j++)
+			pt[j] = (tail_phys + (j << 12)) | 0x7;	/* present, writable, ring 3 may use it */
+		pd[(virt >> 22) + n] = (unsigned long)pt | 0x7;	/* PDE points at the page table */
+	}
 }
 
 static void paging_on(unsigned long cr3)
@@ -661,7 +680,7 @@ void __attribute__((noreturn)) gate_run(unsigned long entry, unsigned long lo, u
 	win_hi = hi;
 	nspaces = 1;
 	base_init(1);
-	space_map(pds[0], lo, lo, hi - lo);
+	space_map(pds[0], lo, lo, hi - lo, 0);
 	s->cr3 = (unsigned long)pds[0];
 	s->kstack_top = (unsigned long)stack_top;
 	s->user_stack = 1;
@@ -700,7 +719,7 @@ void __attribute__((noreturn)) gate_exec(unsigned long entry, unsigned long phys
 		map_lo -= 0x100000UL;		/* the stack keeps 1 MiB below where it starts */
 	nspaces = 1;
 	base_init(0);
-	space_map(pds[0], phys, virt, len);
+	space_map(pds[0], phys, virt, len, 0);
 	s->cr3 = (unsigned long)pds[0];
 	s->kstack_top = (unsigned long)stack_top;
 	s->user_stack = 0;
@@ -738,7 +757,7 @@ struct gate_space *gate_space_new(unsigned long phys, unsigned long virt, unsign
 		base_init(0);
 	}
 	s = &spaces[nspaces];
-	space_map(pds[nspaces], phys, virt, len);
+	space_map(pds[nspaces], phys, virt, len, nspaces);
 	s->cr3 = (unsigned long)pds[nspaces];
 	s->kstack_top = (unsigned long)&kstacks[nspaces][KSTACK_WORDS];
 	s->user_stack = 0;

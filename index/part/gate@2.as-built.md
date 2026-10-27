@@ -41,6 +41,15 @@ it leaves CR0 and CR4 as they were, and a program that uses SSE is stopped with 
 invalid-instruction fault (vector 6), as every program was before (findings 0023
 item 13).  Programs built against musl are still built for the 486.
 
+## The window's end (since part 21, decision 0081)
+Whole 4 MiB pages of a program's window are mapped as before.  When the window does
+not end on a 4 MiB line, its last part is mapped through a page table of the
+program's own (four, one for each space, 4 KiB each, in the bss), and only the 4 KiB
+pages inside the window are open to ring 3; the rest of that 4 MiB is present,
+writable and kernel only, and maps to the program's own RAM, not to the same
+address as the rest of memory.  A program that reads past its end is stopped with a
+page fault at the first byte past it (TST.gate.window-end).
+
 ## Every syscall or hardware access
 As @1, and it loads %gs's descriptor only through the table: a program sets %gs
 itself after set_thread_area.
