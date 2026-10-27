@@ -1,0 +1,11 @@
+id      = "0091"
+date    = 2026-10-27
+kind    = "rule"
+touches = ["findings/0026.md"]
+asked   = "The 3090's second try ran out of room too, the sixth lesson not holding (findings 0026 item 9).  More room: Ollama keeps the conversation in 8 bits (q8_0), a small loss of exactness, said in the article; 98,304 tokens fit 100% on the card.  Runs from try 3 use MODEL_NUM_CTX=98304."
+options = ["8-bit, 98,304 tokens", "stay at 49,152"]
+default = "8-bit, 98,304 tokens"
+chose   = "8-bit, 98,304 tokens"
+why     = "Chris, 2026-10-27: \"Yes\" to more room if the second try still ran out, then set it on the card himself and read back 98304 at 100% GPU."
+by      = "KEY.chris@1"
+drafted = "Claude"
