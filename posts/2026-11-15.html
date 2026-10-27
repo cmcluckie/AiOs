@@ -152,7 +152,7 @@ The bench that judges every fix: https://github.com/cmcluckie/aios/blob/main/jig
 <li><a href="https://github.com/cmcluckie/aios/blob/main/tests/exam.ollama%401.toml">exam.ollama@1</a>.  Checks: A model named ollama:NAME is called on a local Ollama (OLLAMA_URL, default http://localhost:11434) by the same rules as any other: it needs a price, and the cap is asked first.  The request the exam builds is handed to Ollama as one whole chat (the system prompt first, earlier tool calls and their answers handed back as such, the tools offered), with the context size (MODEL_NUM_CTX, default 32768) and the reply's limit set on the request, never in Ollama's own settings; the reply comes back in the shape the exam already reads, with Ollama's own token counts.  An Ollama that cannot be reached means this host cannot run it.  Goes red when: a saved Ollama reply is refused, the request sent does not name the model by its Ollama name, ask for one whole reply, or set num_ctx and the reply's limit on itself, the system prompt is not first, an earlier tool call or the reader's answer is not handed back as such, an empty user message is sent, the reader is not offered as a tool, the reply does not come back in the exam's shape with Ollama's own token counts, a local model with no price is called, or an Ollama nobody listens for is anything but 'cannot run here'.  Status: Passed by the runner (on the jig, under KVM): a Bedrock-shaped request reached Ollama as one: its model, num_ctx 32768 and the reply's limit set per request, the system prompt first, the earlier tool call and the reader's answer handed back, the reader offered as a tool; the reply came back in the shape the exam reads, with Ollama's own 321 in and 45 out; a model with no price was refused before any call, and an Ollama nobody listens for is 'cannot run here'.  Mutations caught: 4.</li>
 </ul>
 <h2>Code on GitHub</h2>
-<p>Every line that changed, on one page (hash when committed)</p>
+<p><a href="https://github.com/cmcluckie/aios/compare/34b128d...e55f9d7">Every line that changed, on one page</a>.</p>
 <p>The commits behind this post, in order:</p>
 <ol>
 <li><a href="https://github.com/cmcluckie/aios/commit/c810da0">Part 21: the plan (findings 0024); jig/model calls a local Ollama, the 3090's price row (decision 0056); the mechanic may share a model (decision 0057)</a></li>
@@ -183,7 +183,7 @@ The bench that judges every fix: https://github.com/cmcluckie/aios/blob/main/jig
 <li><a href="https://github.com/cmcluckie/aios/commit/3dafa0d">Part 21: waits taken; a program waiting for a key no longer stops the others, TECH-DEBT 2 paid (decision 0082)</a></li>
 <li><a href="https://github.com/cmcluckie/aios/commit/c30a46f">Part 21: put back what decision 0079's commit wrote over by mistake (decision 0083)</a></li>
 <li><a href="https://github.com/cmcluckie/aios/commit/9eeb38b">Part 21: the jig's final mutation run, 308 killed, 5 known survivors; decision 0083's why (c30a46f)</a></li>
-<li>Part 21: the post page, TOOL.exam@1's as-built brought up to date (decision 0084), the jig's test results (hash when committed)</li>
+<li><a href="https://github.com/cmcluckie/aios/commit/e55f9d7">Part 21: the post page and its image; links in the post (decision 0085); the exam tool&#x27;s as-built brought up to date (decision 0084)</a></li>
 </ol>
 <p><a href="https://github.com/cmcluckie/aios">The whole repo</a>.</p>
 </div>
