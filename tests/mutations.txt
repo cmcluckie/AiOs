@@ -324,6 +324,8 @@ fix.judged@1 | red | jig/fix | s/if \[ -n "\$at" \]; then git -C "\$repo" archiv
 fix.judged@1 | red | jig/fix | s/ \&\& rm -rf "\$1\/runs" "\$1\/out"$// | the copy at FIX_AT keeps runs/, so the model can read how the fix was done last time
 fix.judged@1 | red | jig/fix | s/^RUNS_AT=\$at RUNS_SITTING/RUNS_AT= RUNS_SITTING/ | the run does not record which commit it worked from
 fix.judged@1 | red | jig/fix | s/\[ "\$stop" = max_tokens \] \&\& say/false \&\& say/ | a reply cut off at the limit is taken for a model gone quiet
-exam.ollama@1 | red | jig/model | s/ elif .done_reason == "length" then "max_tokens"// | an Ollama reply cut off at its limit is handed on as if it had finished
+exam.ollama@1 | red | jig/model | s/elif .done_reason == "length" then/elif false then/ | an Ollama reply cut off at its limit is handed on as if it had finished
 fix.judged@1 | red | jig/fix | s/^\[ -z "\$at" \] || { GIT_CEILING_DIRECTORIES=\$d; export GIT_CEILING_DIRECTORIES; }$/:/ | a copy at FIX_AT, inside the repo's folder, reads the repo's history and refuses its later commits, as on the 3090's first run
 fix.judged@1 | red | jig/fix | s/env -u MODEL_NAME -u MODEL_ID/env -u MODEL_ID/ | the model the bench calls leaks into the suite it runs, and the tests of the model tools call it, as on the 3090's second run
+exam.ollama@1 | red | jig/model | s/(if \$max > 0 and/(if true or/ | a reply stopped by a full context is taken for one cut off at its limit, as on the 3090's first try
+fix.judged@1 | red | jig/fix | s/if \[ "\$stop" = model_context_window_exceeded \]; then/if false; then/ | a conversation that outgrew the context is taken for a model gone quiet, and reminded into a context with no room

@@ -14,3 +14,4 @@ What earlier fixes taught us:
 - Hand in only code: the part's files under pool/.  Not its as-built spec, not findings, not tests.
 - The kernel is built with every warning an error.  Put brackets where gcc would ask for them, use every variable you declare, and give each asm statement exactly the inputs, outputs and clobbers it uses.
 - If you are stuck, say what you found and what is in the way, then hand in your best fix.  Never send an empty reply.
+- Find first, then read only the lines you need.  Never read a whole file you have already read.  Everything you read stays in your memory, and your memory is small: a conversation that outgrows it ends the run with nothing handed in.

@@ -1,0 +1,11 @@
+id      = "0090"
+date    = 2026-10-27
+kind    = "code"
+touches = ["jig/model", "jig/fix", "fix/prompt-2.txt", "specs/exam.9@1.toml", "specs/fix.1@1.toml", "tests/exam.ollama@1.toml", "tests/fix.judged@1.toml", "tests/programs/exam.sh", "tests/programs/fix.sh", "tests/mutations.txt", "index/tool/fix@1.as-built.md", "decisions/0089.toml"]
+asked   = "The 3090's first try ran out of room: its conversation filled the card's 49,152 tokens, and the bench called it a reply cut off at 16,000 (findings 0026 item 8).  Tell the two apart and end the run on a full context, said as that; and add a sixth lesson to its instructions: find first, read only the lines needed, never a whole file twice.  Then try 2, the rest the same; if it still runs out, more room with 8-bit context storage, said in the article.  Red first, two mutations, killed.  Also decision 0089's why, committed pending."
+options = ["take it", "do not take it"]
+default = "take it"
+chose   = "take it"
+why     = "Chris, 2026-10-27: \"Yes\"."
+by      = "KEY.chris@1"
+drafted = "Claude"

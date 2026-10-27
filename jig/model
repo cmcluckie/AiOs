@@ -71,15 +71,16 @@ to_ollama() {
 # Ollama's reply IN in Converse's shape: its text, its tool calls (each given an id
 # from the reply's time and its place, since Ollama gives none), its own token counts,
 # and a reply cut off at its limit (done_reason length) as max_tokens, as Bedrock says it
-# (decision 0086).  A thinking model's thinking is not kept; its tokens are in the count
+# (decision 0086); stopped short of the limit, the conversation filled the context, and
+# that is model_context_window_exceeded, Bedrock's word for it (decision 0090).  A thinking model's thinking is not kept; its tokens are in the count
 from_ollama() {
-	jq '(.message.tool_calls // []) as $tc
+	jq --argjson max "${2:-0}" '(.message.tool_calls // []) as $tc
 		| (.created_at // "0" | gsub("[^0-9]"; "")) as $t
 		| {output: {message: {role: "assistant", content: (
 			(if (.message.content // "") != "" then [{text: .message.content}] else [] end)
 			+ [$tc | to_entries[] | {toolUse: {toolUseId: ("ollama-" + $t + "-" + (.key | tostring)), name: .value.function.name,
 				input: (.value.function.arguments | if type == "string" then (fromjson? // {}) else . end)}}])}},
-		   stopReason: (if ($tc | length) > 0 then "tool_use" elif .done_reason == "length" then "max_tokens" else "end_turn" end),
+		   stopReason: (if ($tc | length) > 0 then "tool_use" elif .done_reason == "length" then (if $max > 0 and (.eval_count // 0) >= $max then "max_tokens" else "model_context_window_exceeded" end) else "end_turn" end),
 		   usage: {inputTokens: (.prompt_eval_count // 0), outputTokens: (.eval_count // 0),
 			   totalTokens: ((.prompt_eval_count // 0) + (.eval_count // 0))}}' "$1"
 }
@@ -95,7 +96,7 @@ call_ollama() {	# call_ollama IN OUT
 			--data-binary "@$2.sent" "${OLLAMA_URL:-http://localhost:11434}/api/chat" 2> /dev/null) || { rm -f "$2.sent" "$2.raw"; cannot "could not reach Ollama at ${OLLAMA_URL:-http://localhost:11434}"; }
 		[ "$code" = 200 ] || die "Ollama said $code: $(head -c 300 "$2.raw")"
 	fi
-	from_ollama "$2.raw" > "$2" || die "Ollama's reply could not be read: $(head -c 200 "$2.raw")"
+	from_ollama "$2.raw" "$(jq '.inferenceConfig.maxTokens // 0' "$1")" > "$2" || die "Ollama's reply could not be read: $(head -c 200 "$2.raw")"
 	rm -f "$2.sent" "$2.raw"
 }
 

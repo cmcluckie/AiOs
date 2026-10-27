@@ -50,7 +50,9 @@ repo, instead of skipping.
   reply is kept as a note that says it was empty (decision 0077).
 - A reply cut off at FIX_MAXTOKENS (16000) is said to be, and the reminder tells the
   model why; an Ollama reply cut off at its limit comes back from jig/model as
-  max_tokens, as Bedrock's does (decision 0086).
+  max_tokens, as Bedrock's does (decision 0086).  One stopped short of the limit
+  because the conversation filled the model's context comes back as
+  model_context_window_exceeded, and the run ends there, said as that (decision 0090).
 - FIX_AT=COMMIT: the model's copy and the judge's are the repo as it was at that
   commit (git archive), with runs/ and out/ left out, so a fix already taken can be
   made again from where it started, with no record of how it was done; the run
@@ -72,4 +74,4 @@ a green fix is a proposal Chris decides on, like any other change.
   cap are jig/model's); jig/runs to record.
 
 ## Size
-jig/fix 279 lines (shell); fix/prompt.txt 9 lines; fix/prompt-2.txt, the second version, 16 lines (decision 0087).
+jig/fix 279 lines (shell); fix/prompt.txt 9 lines; fix/prompt-2.txt, the second version, 17 lines (decisions 0087 and 0090).

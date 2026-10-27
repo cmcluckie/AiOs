@@ -234,6 +234,12 @@ EOT
 	# cut off at FIX_MAXTOKENS is not quiet but too long: a thinking model can spend
 	# the whole reply thinking (decision 0086)
 	[ "$stop" = max_tokens ] && say "call $turn of $FIX_TURNS: the reply was cut off at $FIX_MAXTOKENS tokens"
+	# the conversation outgrew the model's context: nothing more can be said to it, so the
+	# run ends there (the 3090's first try, findings 0026 item 8, decision 0090)
+	if [ "$stop" = model_context_window_exceeded ]; then
+		why="the conversation outgrew the model's context${MODEL_NUM_CTX:+ ($MODEL_NUM_CTX tokens)}"
+		say "call $turn of $FIX_TURNS: $why"; break
+	fi
 	if [ "$stop" != tool_use ]; then
 		# stopped without a fix: reminded once, while calls are left (try 2 of
 		# loader.random stopped with an empty reply after its first hand-in, findings
