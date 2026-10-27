@@ -57,6 +57,8 @@ repo, instead of skipping.
   records the commit as at (decision 0086).
   Those copies cannot see the repo's history, so jig/test in them does not hold
   the repo's later commits to the old copy's decisions (decision 0088).
+- The suite in each copy runs without the bench's own settings (MODEL_NAME, the
+  context, the prompt and the FIX_ ones), as it would in the repo (decision 0089).
 
 ## What it never does
 Changes the repo: the model's look and the judge each work in their own copy, and

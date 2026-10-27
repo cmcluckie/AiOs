@@ -67,6 +67,11 @@ field() { sed -n "s/^$2 *= *\"\(.*\)\".*/\1/p" "$1" | head -1; }
 code=$(field "$tf" code); binds=$(field "$tf" binds)
 clause=$(field "$d/base/specs/${binds#SPEC.}.toml" clause)
 
+# the suite in a copy runs as it would in the repo, without the bench's settings: the
+# model, its context, the prompt and the rest are the bench's, and the tests of the
+# model tools set their own (the first 3090 run, decision 0089)
+suite() { (cd "$1" && shift && env -u MODEL_NAME -u MODEL_ID -u MODEL_NUM_CTX -u MODEL_MAX_COST -u OLLAMA_URL \
+	-u FIX_PROMPT -u FIX_AT -u FIX_NOTE -u FIX_SUITE -u FIX_OUT -u FIX_TRY -u FIX_TURNS -u FIX_MAXTOKENS sh jig/test "$@"); }
 # a line on stderr for each step, so a person watching sees it move (decision 0069);
 # the summary stays the last line on stdout
 say() { printf '  %s\n' "$*" >&2; }
@@ -75,7 +80,7 @@ shown() { cut -c1-110 | sed 's/^/    /' >&2; }	# each test's line as the suite r
 if [ -n "$at" ]; then where="as it was at $at"; else where="as it is"; fi
 say "running the suite on the repo $where, to see what is red before (a few minutes)"
 # shellcheck disable=SC2086
-(cd "$d/base" && sh jig/test $FIX_SUITE) 2>&1 | tee "$d/red.txt" | shown
+suite "$d/base" $FIX_SUITE 2>&1 | tee "$d/red.txt" | shown
 say "$(tail -1 "$d/red.txt" | sed 's/^# //'); handing $test to $MODEL_NAME, $FIX_TURNS calls"
 grep -q "^\(PASS\|FAIL\|SKIP\)  $code " "$d/red.txt" || cannot "the test did not run here: $(tail -1 "$d/red.txt")"
 grep -q "^FAIL  $code " "$d/red.txt" || { grep -q "^SKIP  $code " "$d/red.txt" && cannot "the test cannot run here: $(grep "^SKIP" "$d/red.txt" | head -1)"; die "$test is not red: nothing to fix"; }
@@ -151,7 +156,7 @@ judge() {
 	done < "$d/paths"
 	lines=$(grep -c '^[<>]' "$d/output.txt")
 	# shellcheck disable=SC2086
-	(cd "$d/judge" && sh jig/test $FIX_SUITE) 2>&1 | tee "$d/suite.txt" | shown
+	suite "$d/judge" $FIX_SUITE 2>&1 | tee "$d/suite.txt" | shown
 	summary=$(tail -1 "$d/suite.txt")
 	# the tests red before, and the tests red now that were not
 	sed -n 's/^FAIL  \([^ ]*\) .*/\1/p' "$d/red.txt" | sort > "$d/red-before"

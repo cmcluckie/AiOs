@@ -277,7 +277,7 @@ exam.ollama@1 | red | jig/model | s/inputTokens: (.prompt_eval_count \/\/ 0), ou
 exam.ollama@1 | red | jig/model | s/case "\$MODEL_NAME" in ollama:\*) call_ollama "\$1" "\$2"; return ;; esac/:/ | a local model is sent to Bedrock instead, with the AWS key
 fix.judged@1 | red | jig/fix | s/^grep -q "\^FAIL  \$code " "\$d\/red.txt" || {/true || {/ | a test that is already green is handed to the model anyway, and paid for
 fix.judged@1 | red | jig/fix | s/echo "refused: \$a is outside the repo"; return 1/:/ | the look tool answers for any path, outside the repo included
-fix.judged@1 | red | jig/fix | s/sh jig\/test \$FIX_SUITE/sh jig\/test $test/ | the judge runs only the test that was red, so a fix that breaks another one passes
+fix.judged@1 | red | jig/fix | s/suite "\$d\/judge" \$FIX_SUITE/suite "$d\/judge" $test/ | the judge runs only the test that was red, so a fix that breaks another one passes
 fix.judged@1 | red | jig/fix | s/^\t\t\*) bad="only a file under pool\/ that already exists may be fixed, not \$p" ;;/\t\t*) : ;;/ | a fix for a file outside pool/ is judged like any other
 fix.judged@1 | red | jig/fix | s/tin=\$((tin + /tin=$((0 + / | only the last call's input tokens are counted
 fix.judged@1 | red | jig/fix | s/cp "\$d\/fixed\/\$n" "\$d\/judge\/\$p"/cp "$d\/fixed\/$n" "$d\/judge\/$p"; cp "$d\/fixed\/$n" "$repo\/$p"/ | the fix is written into the repo itself, not only into the judge's copy
@@ -326,3 +326,4 @@ fix.judged@1 | red | jig/fix | s/^RUNS_AT=\$at RUNS_SITTING/RUNS_AT= RUNS_SITTIN
 fix.judged@1 | red | jig/fix | s/\[ "\$stop" = max_tokens \] \&\& say/false \&\& say/ | a reply cut off at the limit is taken for a model gone quiet
 exam.ollama@1 | red | jig/model | s/ elif .done_reason == "length" then "max_tokens"// | an Ollama reply cut off at its limit is handed on as if it had finished
 fix.judged@1 | red | jig/fix | s/^\[ -z "\$at" \] || { GIT_CEILING_DIRECTORIES=\$d; export GIT_CEILING_DIRECTORIES; }$/:/ | a copy at FIX_AT, inside the repo's folder, reads the repo's history and refuses its later commits, as on the 3090's first run
+fix.judged@1 | red | jig/fix | s/env -u MODEL_NAME -u MODEL_ID/env -u MODEL_ID/ | the model the bench calls leaks into the suite it runs, and the tests of the model tools call it, as on the 3090's second run

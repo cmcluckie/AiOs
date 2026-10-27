@@ -32,9 +32,11 @@ printf 'one\n' > "$r/pool/PART.fixprobe@1/g.S"; printf 'other part\n' > "$r/pool
 printf '#!/bin/sh\ngrep -qx fixed pool/PART.fixprobe@1/f.c && { echo fixed; exit 0; }\necho "f.c says $(head -1 pool/PART.fixprobe@1/f.c)"; exit 1\n' > "$r/tests/programs/fixprobe-red.sh"
 printf '#!/bin/sh\ngrep -q breaks-other pool/PART.fixprobe@1/f.c && { echo "broken by the fix"; exit 1; }\necho fine; exit 0\n' > "$r/tests/programs/fixprobe-other.sh"
 printf '#!/bin/sh\necho "red before any fix, and after"; exit 1\n' > "$r/tests/programs/fixprobe-always.sh"
+# a test that fails when the bench's own settings reach the suite (the first 3090 run, decision 0089)
+printf '#!/bin/sh\n[ -z "${MODEL_NAME:-}${FIX_PROMPT:-}${MODEL_NUM_CTX:-}" ] && { echo "clean"; exit 0; }\necho "the bench set MODEL_NAME=${MODEL_NAME:-} FIX_PROMPT=${FIX_PROMPT:-} MODEL_NUM_CTX=${MODEL_NUM_CTX:-}"; exit 1\n' > "$r/tests/programs/fixprobe-env.sh"
 # a test that needs an upstream clone beside the repo, as the reader and origin tests do
 mkdir -p "$t/musl"; printf '#!/bin/sh\n[ -n "${MUSL:-}" ] && [ -d "$MUSL" ] && { echo "found $MUSL"; exit 0; }\necho "no clone of musl"; exit 2\n' > "$r/tests/programs/fixprobe-clone.sh"
-for n in red other always clone; do
+for n in red other always clone env; do
 	printf 'code       = "TST.fixprobe.%s@1"\nstatus     = "draft"\nadmitted   = ""\nretired_by = ""\nbinds      = "SPEC.fixprobe.1@1"\nred_when   = "f.c is not fixed"\ntimeout_ms = 10000\nisolates   = "PART.fixprobe@1"\nrunner     = "jig/test cmd sh tests/programs/fixprobe-%s.sh"\nmutations  = 0\n' "$n" "$n" > "$r/tests/fixprobe.$n@1.toml"
 done
 printf 'code       = "SPEC.fixprobe.1@1"\nstatus     = "draft"\nadmitted   = ""\nretired_by = ""\ncomponent  = "PART.fixprobe@1"\nclause     = "f.c says fixed."\nauthor     = "KEY.chris"\n' > "$r/specs/fixprobe.1@1.toml"
@@ -73,6 +75,7 @@ grep -q 'outside the repo' "$in/input.txt" || fail "a look outside the repo was 
 grep -q '"text": *"tests/programs/fixprobe-red.sh, lines 2 to 2 of 3\\n2\\tgrep -qx fixed' "$in/input.txt" || fail "a read of lines 2 to 2, given as two numbers, did not give line 2 alone"
 grep -q '"text": *"tests/programs/fixprobe-red.sh, lines 3 to 3 of 3\\n3\\techo' "$in/input.txt" || fail "a read given start_line and end_line, as Sonnet asked on try 2, did not give that line, headed with where it is in the file"
 grep -q 'pool/PART.fixprobe@1/f.c:1:broken' "$in/input.txt" && ! grep -q 'tests/programs/fix.sh:[0-9]*:' "$in/input.txt" || fail "a find in one folder was not kept to that folder"
+! grep -q 'FAIL  TST.fixprobe.env@1' "$t/said" || fail "the bench's own settings reached the suite it runs: $(grep 'fixprobe.env' "$t/said" | head -1)"
 grep -q ', 0 skipped' "$t/said" || fail "a test that needs a clone beside the repo was skipped in the judge's copy: $(tail -1 "$t/said")"
 grep -q '6000 read from the cache' "$t/said" || fail "the summary line leaves out the tokens read from the cache: $(tail -1 "$t/said")"
 grep -qx broken "$r/pool/PART.fixprobe@1/f.c" || fail "the copy the model worked from was changed"
