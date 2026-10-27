@@ -19,7 +19,10 @@
 # (60 calls; every answer tells the model how many it has left, decision 0067), FIX_MAXTOKENS (16000 per reply), FIX_SUITE (the tests the judge runs,
 # as jig/test's prefixes; empty, the default, is every test), FIX_OUT (out/fix),
 # FIX_NOTE (a file: a reviewer's note on an earlier fix, handed over with the test,
-# decision 0076), MODEL_NAME and MODEL_ID (see jig/model).  Needs jq.
+# decision 0076), FIX_AT (a commit: the model looks at, and the judge runs, the repo
+# as it was at that commit instead of as it is, runs/ left out, so a fix already
+# taken can be made again from where it started; recorded in the run as at, decision
+# 0086), MODEL_NAME and MODEL_ID (see jig/model).  Needs jq.
 set -u
 repo=$(cd "$(dirname "$0")/.." && pwd)
 FIX_PROMPT=${FIX_PROMPT:-$repo/fix/prompt.txt}
@@ -37,24 +40,36 @@ cannot() { echo "fix: $*" >&2; exit 2; }
 command -v jq > /dev/null || cannot "jq is not installed"
 [ $# -eq 1 ] || die "needs TEST, e.g. gate.sse@1"
 test=$1
-tf="$repo/tests/$test.toml"
-[ -f "$tf" ] || die "no test $test (no tests/$test.toml)"
+at=""
+if [ -n "${FIX_AT:-}" ]; then
+	at=$(git -C "$repo" rev-parse --short "$FIX_AT^{commit}" 2> /dev/null) || die "no commit $FIX_AT in this repo"
+fi
 [ -f "$FIX_PROMPT" ] || die "no prompt at $FIX_PROMPT"
 [ -z "${FIX_NOTE:-}" ] || [ -f "$FIX_NOTE" ] || die "no reviewer's note at $FIX_NOTE"
-field() { sed -n "s/^$2 *= *\"\(.*\)\".*/\1/p" "$1" | head -1; }
-code=$(field "$tf" code); binds=$(field "$tf" binds)
-clause=$(field "$repo/specs/${binds#SPEC.}.toml" clause)
 
 d="$FIX_OUT/$test-try$FIX_TRY"; rm -rf "$d"; mkdir -p "$d"
-copy() { mkdir -p "$1" && (cd "$repo" && tar --exclude=./.git --exclude=./out --exclude=./runs -cf - .) | tar -xf - -C "$1"; }
-copy "$d/base" || die "could not copy the repo"
+# the repo the model looks at and the judge runs: as it is, or as it was at FIX_AT;
+# never .git, out/ or runs/, so no record of an earlier fix is there to read
+copy() {
+	mkdir -p "$1" || return 1
+	if [ -n "$at" ]; then git -C "$repo" archive "$at" | tar -xf - -C "$1" && rm -rf "$1/runs" "$1/out"
+	else (cd "$repo" && tar --exclude=./.git --exclude=./out --exclude=./runs -cf - .) | tar -xf - -C "$1"
+	fi
+}
+copy "$d/base" || die "could not copy the repo${at:+ at $at}"
+tf="$d/base/tests/$test.toml"
+[ -f "$tf" ] || die "no test $test (no tests/$test.toml${at:+ at $at})"
+field() { sed -n "s/^$2 *= *\"\(.*\)\".*/\1/p" "$1" | head -1; }
+code=$(field "$tf" code); binds=$(field "$tf" binds)
+clause=$(field "$d/base/specs/${binds#SPEC.}.toml" clause)
 
 # a line on stderr for each step, so a person watching sees it move (decision 0069);
 # the summary stays the last line on stdout
 say() { printf '  %s\n' "$*" >&2; }
 shown() { cut -c1-110 | sed 's/^/    /' >&2; }	# each test's line as the suite runs it, cut short
 # before spending anything: the suite as it is, and the test must be red in it
-say "running the suite on the repo as it is, to see what is red before (a few minutes)"
+if [ -n "$at" ]; then where="as it was at $at"; else where="as it is"; fi
+say "running the suite on the repo $where, to see what is red before (a few minutes)"
 # shellcheck disable=SC2086
 (cd "$d/base" && sh jig/test $FIX_SUITE) 2>&1 | tee "$d/red.txt" | shown
 say "$(tail -1 "$d/red.txt" | sed 's/^# //'); handing $test to $MODEL_NAME, $FIX_TURNS calls"
@@ -149,7 +164,7 @@ judge() {
 	fi
 }
 
-tin=0; tout=0; cread=0; cwrite=0; turn=0; path=""; why=""; hand=0; nudged=0
+tin=0; tout=0; cread=0; cwrite=0; turn=0; path=""; why=""; hand=0; nudged=0; stop=""
 while :; do
 	turn=$((turn + 1))
 	[ "$turn" -le "$FIX_TURNS" ] || { why="more than $FIX_TURNS calls"; break; }
@@ -206,7 +221,11 @@ EOT
 		jq --slurpfile r "$d/res.json" '. + $r[0]' "$d/messages.json" > "$d/m.new" && mv "$d/m.new" "$d/messages.json"
 		continue
 	fi
-	if [ "$(jq -r '.stopReason // ""' "$d/reply.json")" != tool_use ]; then
+	stop=$(jq -r '.stopReason // ""' "$d/reply.json")
+	# cut off at FIX_MAXTOKENS is not quiet but too long: a thinking model can spend
+	# the whole reply thinking (decision 0086)
+	[ "$stop" = max_tokens ] && say "call $turn of $FIX_TURNS: the reply was cut off at $FIX_MAXTOKENS tokens"
+	if [ "$stop" != tool_use ]; then
 		# stopped without a fix: reminded once, while calls are left (try 2 of
 		# loader.random stopped with an empty reply after its first hand-in, findings
 		# 0024 item 28, decision 0077).  An empty reply cannot be sent back as it is,
@@ -216,12 +235,14 @@ EOT
 			nudged=1
 			say "call $turn of $FIX_TURNS: stopped without a fix; reminded once"
 			if [ "$hand" -gt 0 ]; then what="a corrected fix"; else what="a fix"; fi
-			jq --arg n "You stopped without handing in $what.  Call $turn of $FIX_TURNS done; $left left.  Look further if you need to, then hand it in with submit_fix." \
+			n="You stopped without handing in $what."
+			[ "$stop" = max_tokens ] && n="Your reply was cut off at $FIX_MAXTOKENS tokens, before you handed in $what.  Keep the next reply shorter."
+			jq --arg n "$n  Call $turn of $FIX_TURNS done; $left left.  Look further if you need to, then hand it in with submit_fix." \
 				'(.[-1].content) |= (if length == 0 then [{text:"(the reply was empty)"}] else . end) | . + [{role:"user",content:[{text:$n}]}]' \
 				"$d/messages.json" > "$d/m.new" && mv "$d/m.new" "$d/messages.json"
 			continue
 		fi
-		why="it stopped without handing in a fix"; break
+		why="it stopped without handing in a fix"; [ "$stop" = max_tokens ] && why="its reply was cut off at $FIX_MAXTOKENS tokens"; break
 	fi
 	results='[]'
 	while IFS= read -r tu; do
@@ -252,7 +273,7 @@ if [ "$hand" -eq 0 ]; then
 	result=refused; line="no fix handed in${why:+ ($why)}"
 fi
 cp "$d/messages.json" "$d/input.txt"
-RUNS_SITTING=$(date -u +%Y%m%dT%H%M%SZ) RUNS_PROMPT=$prompt RUNS_CACHE_READ=$cread RUNS_CACHE_WRITE=$cwrite \
+RUNS_AT=$at RUNS_SITTING=$(date -u +%Y%m%dT%H%M%SZ) RUNS_PROMPT=$prompt RUNS_CACHE_READ=$cread RUNS_CACHE_WRITE=$cwrite \
 	sh "$repo/jig/runs" record "fix-$(printf %s "${test%@*}" | tr . -)" "$MODEL_NAME" "$(date -u +%Y-%m-%d)" "$FIX_TRY" "$tin" "$tout" "$result" "$lines" "$d/input.txt" "$d/output.txt" > /dev/null || exit 1
-echo "$test, try $FIX_TRY, prompt $prompt: $result ($line); $hand hand-in(s); $lines lines changed; $tin in, $cread read from the cache, $cwrite written to it, $tout out, over $turn calls"
+echo "$test, try $FIX_TRY, prompt $prompt${at:+, at $at}: $result ($line); $hand hand-in(s); $lines lines changed; $tin in, $cread read from the cache, $cwrite written to it, $tout out, over $turn calls"
 [ "$result" = pass ]

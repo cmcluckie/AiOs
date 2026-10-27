@@ -1,0 +1,11 @@
+id      = "0086"
+date    = 2026-10-27
+kind    = "code"
+touches = ["jig/fix", "jig/model", "jig/runs", "specs/fix.1@1.toml", "specs/exam.9@1.toml", "tests/fix.judged@1.toml", "tests/exam.ollama@1.toml", "tests/programs/fix.sh", "tests/programs/exam.sh", "tests/mutations.txt", "index/tool/fix@1.as-built.md"]
+asked   = "Part 22 runs the 3090 on the same five fixes Sonnet made, from where Sonnet started.  The bench takes FIX_AT=COMMIT: the model's copy and the judge's are the repo at that commit, without runs/ or out/, and the run records the commit.  And a reply cut off at the token limit (a thinking model can spend it all thinking) is said to be, to the person and the model, and jig/model hands an Ollama reply cut off at its limit on as max_tokens.  Red first: TST.fix.judged and TST.exam.ollama failed on the bench as it was; five mutations, all killed.  Take it?"
+options = ["take it", "do not take it"]
+default = "take it"
+chose   = "take it"
+why     = "Chris, 2026-10-27: \"Exactly what I wanted, I wanted to do the same fixes\" and \"Lets get it started\"."
+by      = "KEY.chris@1"
+drafted = "Claude"

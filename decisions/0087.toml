@@ -1,0 +1,11 @@
+id      = "0087"
+date    = 2026-10-27
+kind    = "rule"
+touches = ["fix/prompt-2.txt"]
+asked   = "The 3090's instructions: fix/prompt.txt as Sonnet's winning tries had it, and what Sonnet's tries taught us, as five lessons: ask CPUID before an instruction the processor may not have; do it Linux's way with Linux's numbers; hand in code only; every warning is an error; if stuck, say so and hand in the best fix, never an empty reply.  No fix given away.  A reviewer's note on top only if a try falls short.  fix/prompt.txt stays as it is, the record of what Sonnet was told."
+options = ["the lessons in the prompt, notes only when needed", "Sonnet's prompt and notes on the same path", "Sonnet's prompt with the notes from the start"]
+default = "the lessons in the prompt, notes only when needed"
+chose   = "the lessons in the prompt, notes only when needed"
+why     = "Chris, 2026-10-27: \"we should be learning from what we had to give Sonnet ... take what we already learned, put those into the prompts that we give it, and if we have to give it hints, in addition to that ... then yes, of course, we give it those hints.\""
+by      = "KEY.chris@1"
+drafted = "Claude"

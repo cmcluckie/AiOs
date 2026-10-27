@@ -69,7 +69,9 @@ to_ollama() {
 }
 
 # Ollama's reply IN in Converse's shape: its text, its tool calls (each given an id
-# from the reply's time and its place, since Ollama gives none), its own token counts
+# from the reply's time and its place, since Ollama gives none), its own token counts,
+# and a reply cut off at its limit (done_reason length) as max_tokens, as Bedrock says it
+# (decision 0086).  A thinking model's thinking is not kept; its tokens are in the count
 from_ollama() {
 	jq '(.message.tool_calls // []) as $tc
 		| (.created_at // "0" | gsub("[^0-9]"; "")) as $t
@@ -77,7 +79,7 @@ from_ollama() {
 			(if (.message.content // "") != "" then [{text: .message.content}] else [] end)
 			+ [$tc | to_entries[] | {toolUse: {toolUseId: ("ollama-" + $t + "-" + (.key | tostring)), name: .value.function.name,
 				input: (.value.function.arguments | if type == "string" then (fromjson? // {}) else . end)}}])}},
-		   stopReason: (if ($tc | length) > 0 then "tool_use" else "end_turn" end),
+		   stopReason: (if ($tc | length) > 0 then "tool_use" elif .done_reason == "length" then "max_tokens" else "end_turn" end),
 		   usage: {inputTokens: (.prompt_eval_count // 0), outputTokens: (.eval_count // 0),
 			   totalTokens: ((.prompt_eval_count // 0) + (.eval_count // 0))}}' "$1"
 }
