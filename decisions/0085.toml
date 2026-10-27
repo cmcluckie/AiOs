@@ -1,0 +1,11 @@
+id      = "0085"
+date    = 2026-10-27
+kind    = "rule"
+touches = ["CLAUDE.md", "posts/voice.md", "jig/postcheck"]
+asked   = "Decision 0010 kept links out of the post and sent them to a First comment section.  For part 21 Chris wants GitHub links in the post itself.  Allow them after the closing line and before the hashtag, each on its own line after a few words saying what it is, not counted in the 150 to 220 words, with jig/postcheck holding them to that?"
+options = ["links in the post", "links in a First comment", "no links"]
+default = "links in the post"
+chose   = "links in the post"
+why     = "Chris, 2026-10-27: \"we can put it in the post section\" and \"I don't care if it changes the urls\" (LinkedIn rewrites links to its own short ones)."
+by      = "KEY.chris@1"
+drafted = "Claude"

@@ -1,0 +1,11 @@
+id      = "0084"
+date    = 2026-10-27
+kind    = "repair"
+touches = ["index/tool/exam@1.as-built.md"]
+asked   = "TOOL.exam@1's as-built spec never learned that jig/model calls a local Ollama (decision 0056, SPEC.exam.9) or waits 600 seconds for Bedrock (decision 0070); found while writing part 21's As built.  Bring it up to date: the Ollama route, the wait, the network line and the size (model 140 lines, 519 in all)?"
+options = ["bring it up to date", "leave it"]
+default = "bring it up to date"
+chose   = "bring it up to date"
+why     = "Chris, 2026-10-27: \"Its done\", approving part 21's page, whose As built links this spec."
+by      = "KEY.chris@1"
+drafted = "Claude"

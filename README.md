@@ -30,6 +30,7 @@ Each file holds the short post, the title and the full article.
 | 18 | 2026-11-09 | [The gate](posts/2026-11-09.html) |
 | 19 | 2026-11-11 | [The petition nobody wrote](posts/2026-11-11.html) |
 | 20 | 2026-11-13 | [Found a 30 year old bug hidden in a basic UNIX command](posts/2026-11-13.html) |
+| 21 | 2026-11-15 | [Why can't we just tell it not to do that?](posts/2026-11-15.html) |
 
 ![AiOs: the nucleus at the centre, the agents that build and guard it around it, and the jig underneath](docs/aios-components.png)
 

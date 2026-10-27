@@ -20,8 +20,15 @@ Sits a model for one exam item (exam/items.toml) and writes down what happened.
   pass or fail with the lift's code lines.  It passes only if every test is
   green.  Exit 2 if a test skipped.  The repo is not touched.
 - model converse REQ OUT, model ping: one call to Bedrock's Converse API, signed
-  by curl.  Refused first if the model has no row in jig/prices.toml or the
-  month's cap has no room for MODEL_MAX_COST.
+  by curl, waiting up to 600 seconds for the reply.  Refused first if the model
+  has no row in jig/prices.toml or the month's cap has no room for
+  MODEL_MAX_COST.  Since part 21 (SPEC.exam.9, decision 0056), a model named
+  ollama:NAME is called on a local Ollama instead (OLLAMA_URL, default
+  http://localhost:11434), by the same price and cap rules: the request is
+  handed over as one whole chat with the context size (MODEL_NUM_CTX, default
+  32768) and the reply's limit set on the request, and the reply comes back in
+  Bedrock's shape with Ollama's own token counts.  An Ollama nobody answers is
+  cannot run here.
 - runs record, count, spent, budget: writes runs/<id>/ (run.toml, input.txt,
   output.txt); counts code lines (non-blank, outside comments); sums the
   month's cost; refuses a call that could pass jig/budget.toml's cap.
@@ -44,7 +51,8 @@ tool and the last message of every call.
   jig/prices.toml, jig/budget.toml, runs/, ~/.aios/aws.
 - Writes: runs/; out/sit/ (each try's messages, replies, final answer and lift);
   temp copies of the repo, deleted on exit.
-- Network: model alone, to bedrock-runtime.<region>.amazonaws.com over HTTPS.
+- Network: model alone, to bedrock-runtime.<region>.amazonaws.com over HTTPS,
+  or to OLLAMA_URL for an ollama: model.
   The key file must be mode 600 and stays outside the repo.  MODEL_FAKE swaps in
   saved replies for tests and calls nothing.
 - No ports, no registers.
@@ -54,5 +62,5 @@ It does not tell the model what machine the part must run on; the pass is the
 tests' word alone.  A try that fails because of that gap stays a fail.
 
 ## Size
-sit 121 lines, judge 56, model 78, runs 123, scorecard 79: 457 lines of shell.
+sit 121 lines, judge 56, model 140, runs 123, scorecard 79: 519 lines of shell.
 Needs jq, curl, awk, sed, tar and git.

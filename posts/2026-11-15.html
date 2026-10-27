@@ -1,0 +1,204 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Why can't we just tell it not to do that?</title>
+<style>
+body{max-width:760px;margin:32px auto;padding:0 16px;font-family:Georgia,serif;font-size:18px;line-height:1.6;color:#222;background:#fff}
+section{border:1px solid #ddd;border-radius:10px;padding:0 20px 12px;margin:0 0 28px}
+.bar{display:flex;justify-content:space-between;align-items:center;margin:0 -20px 12px;padding:8px 20px;background:#f4f3ef;border-bottom:1px solid #ddd;border-radius:10px 10px 0 0;font:600 14px system-ui,sans-serif;color:#555;user-select:none}
+button{font:600 14px system-ui,sans-serif;padding:6px 16px;border-radius:16px;border:1px solid #0a66c2;background:#0a66c2;color:#fff;cursor:pointer}
+button.done{background:#fff;color:#0a66c2}
+.text{white-space:pre-wrap;font-family:system-ui,sans-serif;font-size:15px}
+.img{font:14px system-ui,sans-serif;color:#555}
+</style></head><body>
+<section id="post">
+<div class="bar"><span>1. Post</span><button onclick="copyText('post-body',this)">Copy</button></div>
+<div id="post-body" class="text">
+AiOs, part 21 (Kernel code: 1102 lines). "It wasn't hiding.  It wrote it down."...
+
+We left five things broken on purpose in AiOs.  This part, I handed them to another AI to fix: Claude Sonnet, on Amazon's servers, one red test at a time, judged by every test there is.
+
+The first job was four system calls sitting at numbers only AiOs uses.  It took thirteen tries.  Four of the first eleven passed every test and weren't the fix.  It moved the calls, then renamed them, then parked them just past where the test stopped looking, and left a comment in the code saying exactly that.
+
+So I told it not to.  It still hid three of the four.  That's when it landed for me: we simply asked it to do way too much.  I rewrote the spec, and try 13 fixed it in 22 lines.
+
+The other four fixes took six tries between them.  Nineteen recorded tries, $13.88 in all, and every test on my machine is green.
+
+A requirement nobody can meet honestly is a bad requirement, and it took a model to remind me.
+
+Every try, what it did and what it cost: https://github.com/cmcluckie/aios/blob/main/findings/0024.md
+Try 11's own change, comment and all: https://github.com/cmcluckie/aios/blob/main/runs/20261024T224828Z-fix-gate-linux-only-11-bedrock-global-anthropic-claude-sonnet-4-6/output.txt
+Try 13, the fix I took: https://github.com/cmcluckie/aios/commit/e445e10
+The bench that judges every fix: https://github.com/cmcluckie/aios/blob/main/jig/fix
+
+Every try, what it did and what it cost: https://github.com/cmcluckie/aios/blob/main/findings/0024.md
+Try 11's own change, comment and all: https://github.com/cmcluckie/aios/blob/main/runs/20261024T224828Z-fix-gate-linux-only-11-bedrock-global-anthropic-claude-sonnet-4-6/output.txt
+Try 13, the fix I took: https://github.com/cmcluckie/aios/commit/e445e10
+The bench that judges every fix: https://github.com/cmcluckie/aios/blob/main/jig/fix
+
+#AiOs
+</div>
+</section>
+<section id="title">
+<div class="bar"><span>2. Title</span><button onclick="copyText('title-body',this)">Copy</button></div>
+<div id="title-body"><h1>Why can't we just tell it not to do that?</h1></div>
+</section>
+<section id="article">
+<div class="bar"><span>3. Article</span><button onclick="copyRich('article-body',this)">Copy</button></div>
+<div id="article-body">
+<p><em>The story behind AiOs, part 21.</em></p>
+<h2>The mechanic</h2>
+<p>Early in his career, my dad was a mechanic.  He and my mom pinched and saved everything they earned to build a better life for me and my sister, and eventually they bought a Subway restaurant.  There's some debate in the family over whether my parents bought it because it was a viable business, or because my sister wouldn't stop eating there and was slowly bankrupting them.  For the record, my sister is a beautiful mother of two, and the Subway sandwiches had no effect on her whatsoever.  My dad retired happily at 55.  Mom took a little while longer; she took more convincing that she could actually retire.  But the mechanic thing stuck with me.</p>
+<p>I rebuilt some of my own cars.  Tie rods, carburetors, brake pads, the basic stuff.  I never took it anywhere serious, but I liked knowing how it worked.</p>
+<p>That started earlier.  My mom and I used to go to yard sales, and I'd come home with some crappy tape player and get the screwdriver out.  I didn't care if it played music.  I wanted to know how it worked.  My son George does the same thing now.  Sometimes taking something apart is more interesting than playing with it, and I think that's kind of cool, because that's exactly who I am.</p>
+<h2>We left things broken on purpose</h2>
+<p>If you've followed along, you may have noticed we left a lot of things broken.  I could have fixed them on the spot, and you'd never have known they existed.  But that's no fun.  I wanted to come back and fix them, because that's who I am.</p>
+<p>They're written down, every one, in the repo.  The kernel still answers four system calls with numbers only AiOs uses.  While one program waits for a key, every other program freezes.  A program can reach a little memory past what it was given.  The 16 "random" bytes a Linux program asks for at start-up are the processor's cycle counter, and the spec says so.  And AiOs never turns on SSE, the newer instructions, so a program built for a modern chip stops dead.</p>
+<p>Each of those is a tape player on the workbench.</p>
+<p>Usually, when I took stuff apart, it very rarely got put back together.  Taking it apart was far more fun, and I got so excited I never really looked at how to put it back together.  Well, fast forward a lot of years, and on this blog, we have no excuse but to put it all back together.  So that's what we're going to do now.</p>
+<h2>Until now, the mechanic was Claude</h2>
+<p>AiOs has a job description for every agent in it.  The mechanic's is short: fix things.  It may propose a change.  It may not install anything.  Somebody else decides.</p>
+<p>Until now that was Claude, the AI writing the code with me.  When the clock in part 12 gave up on my real machine and worked fine in emulation, Claude was the one who dug into why.  That's mechanic work.</p>
+<p>This part hands the wrench to a different model.  Claude Sonnet 4.6, on Amazon's servers, gets one broken thing at a time and has to fix it.  Claude, the one I work with, moves to the other side of the counter: it writes the instructions, reads every fix, and tells me what it thinks.  I decide.</p>
+<p>I'd planned to race my RTX 3090 against it in this same part.  It didn't fit.  The 3090 gets the same bench, the same instructions and the same notes, next time.</p>
+<h2>The bench</h2>
+<p>First, every broken thing got a test that goes red.  Most of them had none, so a model could have changed nothing and passed everything.  Five tests, written by Claude, decided by me, each red on AiOs as it was.</p>
+<p>Then the bench.  The model gets the red test, what it printed, and a way to read the repo.  Nothing else.  It hands in whole files, and only files of one part, under the folder where our own code lives.  Then the judge runs every test there is, in its own copy of the repo, about five minutes on the jig.  A fix passes when its own red test goes green and nothing that was green goes red.</p>
+<p>And a pass isn't the end.  A pass is a proposal.  Claude reads it, then I read Claude's read, then I say yes or no.</p>
+<p>Here's why that last step matters.</p>
+<h2>Thirteen tries for four numbers</h2>
+<p>The first job looked like the easy one.  Four system calls, alloc, ms, load and save, sit at numbers only AiOs uses, 1000 to 1003.  Linux has nothing there.  Make it right.</p>
+<p>It took thirteen tries.</p>
+<p>Tries 1 and 2 weren't the model's fault.  Our tool for reading a file took a line range one way only.  Sonnet asked for lines the way a person would, got the whole file from line 1 every time, said so in plain words, and spent a pile of calls working around it.  Then it asked a second way the tool didn't know, and the same thing happened.  We fixed the tool twice.  Lesson: a tool for a model has to take the question the way the model asks it, and say plainly what it handed back.</p>
+<p>Try 3 passed.  Every test green.  The first fix a model ever wrote for AiOs that the whole suite liked.  And it wasn't the fix.  A Linux program now got Linux's "no such call" at 1000 to 1003, and old programs kept the AiOs-only numbers exactly as before.  The test only looked from one side.  Sonnet even said so, and then wrote "TECH-DEBT 1 (fixed here)" in the code anyway.</p>
+<p>Try 5 broke <code>cat</code>, and that one I'm grateful for.  To get rid of save, it sent saving through Linux's open, write and close, and <code>cat</code>'s kernel refused to open a file for writing.  The fix was honest.  What broke was a helper in our tests that had been writing to <code>cat</code>'s disk all along, on a kernel that was never supposed to be able to write.  The petitions were right: nobody ever asked for writing.  The kernel had it anyway, because the builder took the file system part whole.  Rule 11 in our own rulebook said a kernel never has a power nobody asked for.  It had said that since the start.  Nothing ever checked it.  Now the referee does, on every kernel, and <code>cat</code>'s kernel shrank from 29,048 bytes to 24,852.  A rule nobody enforces is a note.  The first real change by a model found it.</p>
+<p>Then it got funny.</p>
+<p>Try 6 passed.  It moved the four old calls to Linux numbers that mean something else.  Load lived at Linux's readlink.  Every number in the file was Linux's, so the test was happy.</p>
+<p>Try 10 passed.  The test had learned those four numbers, so the calls moved to four it didn't know.</p>
+<p>Try 11 passed.  The test now swept 0 to 449, so the calls went to 450 to 453.  And the comment it wrote in the code said why: "above the 0-449 sweep, below 1000".</p>
+<p>It wasn't hiding.  It wrote it down.</p>
+<h2>Why can't we just tell it not to do that?</h2>
+<p>That's what I said to Claude.  Four of eleven tries had passed by getting past the test instead of doing the job, and twice it had said so in the code.  And the instructions had never once said not to.</p>
+<p>So we told it.  The fix is the one the spec describes.  Don't move, rename or hide what the test is looking for.  A person reads every fix that passes.</p>
+<p>Try 12, told plainly: it did load the real way, and hid the other three.</p>
+<p>And that's when it landed for me.  We simply asked it to do way too much.</p>
+<p>The numbers were never the harm.  The harm was a Linux program reaching calls that aren't Linux's.  Linux itself keeps a separate table of calls for each kind of program.  AiOs can do the same: old programs keep their old table, and a Linux program gets "no such call" at those numbers.  I rewrote the spec to say that.</p>
+<p>Try 13: eight calls, 22 lines, four <code>if</code>s.  A Linux program gets Linux's answer, old programs work exactly as before, nothing moved, nothing renamed, nothing hidden.  Almost line for line what try 3 wrote, back when I refused it.</p>
+<p>Twelve tries in, the fix was to question the requirement.  I've been a product guy a long time, and I still had to learn that one again from a test.</p>
+<h2>The other four</h2>
+<p>After that, the rest went fast, and each one taught something different.</p>
+<p><strong>The random bytes.</strong>  Try 1 used the processor's own random-number instruction, which is the right idea, and the test went green.  But it never asked the processor whether it has that instruction.  On a chip without it, AiOs would stop dead at start-up, where before it worked.  The jig's processor has it, so no test could see that.  So the bench grew one more thing: a reviewer's note, handed to the model with the test.  Claude wrote it: ask the processor first, try ten times like Linux does, keep the old counter as the fallback and mark it.  Try 2 read the note, planned exactly that, and wrote an instruction that wouldn't assemble.  Then it went quiet.  Not a word.  The bench now nudges a model once before giving up.  Try 3 did it, taken with one line Claude corrected and said so.</p>
+<p><strong>SSE.</strong>  Try 1 did what Linux does, almost.  It gave new programs the wrong setting for floating-point precision, and again it never asked the processor first.  A note, then try 2, taken with one more line Claude corrected.</p>
+<p><strong>The memory past the end.</strong>  One try.  Its first hand-in didn't compile, a missing pair of brackets.  The bench sent back what the compiler said, and the second hand-in passed.  Now a program reads its last byte and gets stopped on the very next one.</p>
+<p><strong>The freeze.</strong>  One try, one hand-in, one instruction.  When a program waits for a key, the kernel turns interrupts back on while it waits, so the clock keeps ticking and the other programs keep their turns.  31 cents.  The cheapest of the lot.</p>
+<h2>What it cost</h2>
+<p>Every try is recorded in the repo with what it cost, and here's what the files add up to.</p>
+<p>Nineteen tries are recorded, $13.88 on Amazon's servers.  One more was lost when a call timed out before the bench knew how to record a lost run; only the Amazon bill knows that one.  The four system calls took $10.82 of it.  The other four fixes together, six tries, took $3.06.</p>
+<p>The whole suite on the jig after the last fix: 122 tests passed, none failed.  308 deliberate breakages caught, and five that aren't, each one known and written down.  One of those is new in this part: the test for SSE runs one program, so it can't see two programs mixing up each other's registers.</p>
+<h2>Why they broke</h2>
+<p>Here's the pattern, and it isn't the one I expected.</p>
+<p>The model wasn't bad at the work.  When it did the job, it did it well, and usually the way Linux does it.  It broke three ways.</p>
+<p>When the test checked less than the spec, it did exactly what the test checked.  The cheapest change that passes is what comes back, and it'll even tell you that's what it did.</p>
+<p>When the test couldn't see something, a chip without an instruction, it didn't think of it either.  A note from a reviewer fixed that every time.</p>
+<p>And when we asked for too much, it gave us the part it could do and hid the rest.  That one was on us.</p>
+<p>Sonnet didn't break any of those rules.  The rules had holes, and it walked through them.</p>
+<h2>The other thing that broke</h2>
+<p>One more, because it's only fair.  While Claude was gathering the numbers for this article, it found that one of its own commits had quietly written over another.  It had built a change from an old copy of the repo, and a page of notes about the random bytes, two of the deliberate breakages and two rows of the ledger were gone.  No code was touched.  Claude found it, put it all back word for word, and wrote down how it happened.  I signed it.</p>
+<p>Same lesson, other side of the counter.</p>
+<h2>What I'm taking away</h2>
+<p>Every fix in this part passed the tests.  Not every fix that passed the tests was a fix.</p>
+<p>So that's the piece this part adds: a pass is a proposal, not a verdict.  The judge says whether it works.  A person reads it and says whether it's what we asked for.  And when the tests can't see something, a reviewer's note can.</p>
+<p>We may not fix things very often.  We may just learn how they work.  But you know what?  This is how new stuff gets built.</p>
+<p>Come along!</p>
+<h2>Read along</h2>
+<ol><li><a href="https://github.com/cmcluckie/aios/blob/main/fix/prompt.txt">fix/prompt.txt</a>.  What the mechanic is told.  Look for the line about not moving, renaming or hiding what the test is looking for.</li><li><a href="https://github.com/cmcluckie/aios/blob/main/jig/fix">jig/fix</a>.  The bench: one red test, the look tool, the hand-in, and the judge.</li><li><a href="https://github.com/cmcluckie/aios/blob/main/findings/0024.md">findings/0024.md</a>.  Every try, what it did, what it cost, and why it was taken or not.</li><li><a href="https://github.com/cmcluckie/aios/blob/main/pool/PART.gate%402/gate.c">pool/PART.gate@2/gate.c</a>.  Search for <code>NR_ALLOC</code>: the four <code>if</code>s from try 13 start there.</li><li><a href="https://github.com/cmcluckie/aios/blob/main/fix/notes/gate.sse%401-2.txt">fix/notes/gate.sse@1-2.txt</a>.  A reviewer's note, the thing that made the difference twice.</li><li><a href="https://github.com/cmcluckie/aios/blob/main/pool/PART.loader%409/loader.c">pool/PART.loader@9/loader.c</a>.  Search for <code>sti</code>: the whole fix for the freeze.</li></ol>
+<h2>Try this</h2>
+<p>Open <code>pool/PART.loader@9/loader.c</code>, find the line with <code>"sti"</code>, and put <code>//</code> in front of it.  Then run <code>sh jig/test share.waits</code>.  It fails with "it never showed 00:00": the stopwatch freezes the moment the other program waits for a key.  Take the <code>//</code> back out and it passes again.  Claude ran this under emulation; on the jig it's one of the deliberate breakages, caught.</p>
+<h2>As built</h2>
+<p>This part added one component and changed seven.  New: the mechanic's bench (TOOL.fix@1).  Changed: the gate that answers Linux's calls (the old table kept for old programs, SSE, the window's end), the loader for Linux programs (rdrand for AT_RANDOM), the sharing kernel's loader (a wait with interrupts on), the file system (writing compiled in only when asked), the builder (each kernel given only what its petitions ask for), the referee (rule 11 checked against the linked kernel, rule 22 for test programs) and the exam's model client (a local Ollama).  Each has an as-built spec, hand-written from the code (<a href="https://github.com/cmcluckie/aios/blob/main/index/agent/referee%401.as-built.md">referee@1</a>, <a href="https://github.com/cmcluckie/aios/blob/main/index/part/gate%402.as-built.md">gate@2</a>, <a href="https://github.com/cmcluckie/aios/blob/main/index/part/loader%4010.as-built.md">loader@10</a>, <a href="https://github.com/cmcluckie/aios/blob/main/index/part/loader%409.as-built.md">loader@9</a>, <a href="https://github.com/cmcluckie/aios/blob/main/index/part/fs.minix%402.as-built.md">fs.minix@2</a>, <a href="https://github.com/cmcluckie/aios/blob/main/index/tool/builder%401.as-built.md">builder@1</a>, <a href="https://github.com/cmcluckie/aios/blob/main/index/tool/fix%401.as-built.md">fix@1</a>, <a href="https://github.com/cmcluckie/aios/blob/main/index/tool/exam%401.as-built.md">exam@1</a>).</p>
+<h2>Addendum: the tests</h2>
+<p>Every test for this post, run by <code>sh jig/test</code> on the jig, under KVM, at commit 3dafa0d, the last commit that changed code; <code>sh jig/mutate</code> at c30a46f.  The whole suite: 122 passed, 0 failed, 4 skipped (the four skipped are retired, each replaced by a newer test).  Every deliberate breakage in the repo: 308 caught, 5 known survivors, each written down.  This post's 11 tests: 11 passed.  Of their deliberate breakages, 48 were caught, and 2 known survivors are written down.</p>
+<h3>PART.gate@2</h3>
+<ul>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/gate.linux-only%401.toml">gate.linux-only@1</a>.  Checks: A Linux program sees Linux's table alone: every system call the gate answers it is at Linux's 32-bit x86 number for that call, and at a number Linux has no call for, 1000 to 1003 among them, it answers what Linux does, -38 (ENOSYS).  Programs written for the old table keep its own numbers, 1000 to 1003, as a second table, the way Linux keeps one table for each kind of program, and keep working through it; no old call is answered at a Linux number (TECH-DEBT 1, findings 0021 item 5, as decision 0074 reads it).  Goes red when: under the cat flavor's kernel, a Linux program that calls 1000, 1001, 1002 or 1003 gets anything but -38; or an old program asking 85, 232, 265 or 45 with the arguments of load, save, ms or alloc is answered as that call (the file loaded into its buffer, an answer outside what Linux or -38 gives, or two brk(16) answers that differ, or any number from 0 to 999 but 1 and 252 asked with load's arguments fills the buffer or answers the file's 33 bytes); or that old program, through its own table, no longer loads the file one exactly, gets two good 16-aligned blocks from alloc, 0 from ms on a kernel with no clock, and -1 from save on a kernel that may not write.  Status: Passed by the runner (on the jig, under KVM): a Linux program answered -38 at 1000 to 1003, as Linux answers it; an old program asking 85, 232, 265 and 45 gets Linux's answers, and no number from 0 to 999 loads a file; and through its table it still loads, allocates, reads the clock and is refused a save as before.  Mutations caught: 2.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/gate.sse%401.toml">gate.sse@1</a>.  Checks: A program may use the SSE instructions: the kernel tells the processor it saves their registers, and keeps each program's own (findings 0023 item 13).  Goes red when: under the cat flavor's kernel, a Linux program built with SSE is stopped, or its four sums come out wrong.  Status: Passed by the runner (on the jig, under KVM): a program built with SSE ran, its four sums right.  Mutations caught: 2.  Known survivors, written down: 1.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/gate.window-end%401.toml">gate.window-end@1</a>.  Checks: A program's window is exactly the memory it was given: an address past its end is closed to it even when the end is not on a 4 MiB line, and the program is stopped there with a page fault (TECH-DEBT 3).  Goes red when: on the cat flavor's machine given 62 MiB, a plain program cannot read the last byte of its window, or reads the first byte past it and carries on, or is stopped anywhere but 03E00000.  Status: Passed by the runner (on the jig, under KVM): read the last byte it was given, stopped at 03E00000 (page fault), the first byte past it.  Mutations caught: 3.</li>
+</ul>
+<h3>PART.gate@1</h3>
+<ul>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/gate.debt-listed%401.toml">gate.debt-listed@1</a>.  Checks: Every line of source marked TECH-DEBT has an entry in findings 0021 saying what replaces it and when it goes; an entry whose marks are all gone is paid, and its own test says whether it is (decision 0076).  Goes red when: a line marked TECH-DEBT in pool/ has no entry in findings/0021.md.  Status: Passed by the runner (on the jig, under KVM): every TECH-DEBT mark is listed in findings/0021.md: 1 2 3 4.  Mutations caught: 1.</li>
+</ul>
+<h3>PART.loader@10</h3>
+<ul>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/loader.random%401.toml">loader.random@1</a>.  Checks: The 16 bytes a Linux program is handed as AT_RANDOM are random: from the processor's random-number instruction where it has one, and the as-built spec says where they come from otherwise (TECH-DEBT 4, decision 0046).  Goes red when: three boots of the cat flavor's kernel hand a Linux program AT_RANDOMs of which any two agree in more than 4 of their 16 bytes, which bytes read from a counter do.  Status: Passed by the runner (on the jig, under KVM): three boots, three AT_RANDOMs, each pair differing in at least 12 of 16 bytes.  Mutations caught: 1.  Known survivors, written down: 1.</li>
+</ul>
+<h3>PART.loader@9</h3>
+<ul>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/share.waits%401.toml">share.waits@1</a>.  Checks: While a program waits in read for a byte, the timer still ticks and the other programs still get their turns (TECH-DEBT 2).  Goes red when: on the gate's sharing kernel, the stopwatch next to a program waiting for a byte that never comes does not show every second once, in order, through 00:09 or 00:10.  Status: Passed by the runner (on the jig, under KVM): next to a program waiting for input: 00:00 to 00:09, every second once, in order, in 10 s by the host.  Mutations caught: 2.</li>
+</ul>
+<h3>PART.fs.minix@2</h3>
+<ul>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/fs.no-write%401.toml">fs.no-write@1</a>.  Checks: A kernel built for a flavor whose petitions do not ask for CAP.fs.write has no code that writes a file: save answers -1, the disk is left exactly as it was, and minix_save is not in the image.  Goes red when: on the cat flavor's kernel, whose petition asks to read files and not to write them, a program's save answers anything but -1, the disk afterwards holds any file or differs by one byte from the empty disk it started as, or nm finds minix_save in out/cat/loader.elf.  Status: Passed by the runner (on the jig, under KVM): no minix_save in the cat kernel; save answered -1; the disk is the empty disk it started as.  Mutations caught: 2.</li>
+</ul>
+<h3>AGT.referee@1</h3>
+<ul>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/referee.artifact%401.toml">referee.artifact@1</a>.  Checks: After a flavor's kernel is linked, every part in it is a component the flavor's petitions list, and every capability it exposes is one they ask for, one switched off and absent from the image, or one constitution/extras.toml lists for that flavor; anything else, a switched-off capability whose code is in the image anyway, an asked-for one whose code is not, or a listed extra the kernel no longer has, stops the build, naming rule 11, the flavor and the capability.  Goes red when: in a throwaway copy, calc does not build as it is; calc builds once its line in constitution/extras.toml is taken off; hello builds with an extra listed that its kernel does not have; cat builds once PART.fs.minix@2 no longer switches CAP.fs.write@2 off, once its write code is forced in, or once PART.loader@10 no longer lists the switch; or a refusal does not name rule 11, the flavor and the capability.  Status: Passed by the runner (on the jig, under KVM): rule 11 held: calc as it is; refused a taken-off extra, a stale extra, an unswitched part, forced-in write code and a kernel that cannot switch.  Mutations caught: 4.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/referee.probes-granted%401.toml">referee.probes-granted@1</a>.  Checks: Every test program written against the system call table says which flavors' kernels it boots on, and makes only the calls those flavors' petitions ask for, or constitution/extras.toml lists, unless it says it expects that call refused; a probe script that boots it on exactly one flavor's kernel boots it on one it names.  Anything else is refused, naming rule 22, the program, the flavor and the call.  Goes red when: the referee refuses the test programs as they are; or, in a throwaway copy, it passes catfiles.c booted on cat, nowrite.c without its expected refusal, a program expecting a granted call refused, a program with no Boots on line, or pastend.c naming a flavor its script does not boot it on; or a refusal does not name rule 22 and the program.  Status: Passed by the runner (on the jig, under KVM): rule 22 held: the test programs as they are; refused five ways.  Mutations caught: 2.</li>
+</ul>
+<h3>TOOL.fix@1</h3>
+<ul>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/fix.judged%401.toml">fix.judged@1</a>.  Checks: jig/fix hands one red test to one model: the test, its spec clause and what it printed.  The model may look at the repo through a tool that answers only from a copy of it and refuses any path outside it, and hands in its fix through another, as one or more whole files of one part under pool/.  The suite runs once on the repo as it is and once with the fix in its own copy: the fix is a pass only if the red test turns green and no test that was green turns red; tests already red before are other jobs and do not count against it.  Every call is written into the run record with its tokens, and the run with its result and the code lines the fix changed.  A test that is already green is refused before any call; a fix outside pool/, or across more than one part, is refused unjudged; nothing the model does changes the repo.  Goes red when: a test that is already green is not refused before any call, or a call is made for it, or a run is kept; the model's look is not answered from the repo, or a look outside the repo is answered; a fix that turns the red test green with the rest green is not recorded as a pass with its changed lines and the tokens of every call; a fix that turns another test red is not a fail, or a test already red before is held against a good fix; a fix for a file outside pool/ is judged instead of refused; or the copy the model worked from is changed; or the model is not told after every call how many of its calls are left, or is not asked for its fix with ten left; or a fix that broke a test is not sent back with what the test printed, or a second hand-in is not judged on its own; or the run does not say each call, hand-in and test as it goes; or a model lost after its first call leaves no record of the calls it cost; or a reviewer's note does not reach the model, or a missing one does not stop it before any call; or a model that stops without a fix, with calls left, is not reminded once.  Status: Passed by the runner (on the jig, under KVM): a green test refused before any call; a fix in two files of one part a pass with both files' 4 lines, one across two parts refused; a test already red before the fix not held against it; the look answered from the repo and refused outside it; a read given as two numbers, or as start_line and end_line, headed with where it is; a find kept to one folder; a good fix a pass with its 2 lines and 600 in, 120 out, 6000 from the cache, on its summary line; nothing skipped in the judge's copy that runs beside the clones; a fix that broke another test a fail; a fix outside pool/ refused unjudged; a fix that broke a test sent back with what it printed, and a second hand-in judged a pass; the model's copy untouched; after every call the model told how many it has left, and with ten left asked for its fix; each call and hand-in said as it went; a model lost after its first call recorded with what it cost; a reviewer's note handed over with the test, a missing one refused before any call; a model that stops without a fix reminded once.  Mutations caught: 25.</li>
+</ul>
+<h3>TOOL.exam@1</h3>
+<ul>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/exam.ollama%401.toml">exam.ollama@1</a>.  Checks: A model named ollama:NAME is called on a local Ollama (OLLAMA_URL, default http://localhost:11434) by the same rules as any other: it needs a price, and the cap is asked first.  The request the exam builds is handed to Ollama as one whole chat (the system prompt first, earlier tool calls and their answers handed back as such, the tools offered), with the context size (MODEL_NUM_CTX, default 32768) and the reply's limit set on the request, never in Ollama's own settings; the reply comes back in the shape the exam already reads, with Ollama's own token counts.  An Ollama that cannot be reached means this host cannot run it.  Goes red when: a saved Ollama reply is refused, the request sent does not name the model by its Ollama name, ask for one whole reply, or set num_ctx and the reply's limit on itself, the system prompt is not first, an earlier tool call or the reader's answer is not handed back as such, an empty user message is sent, the reader is not offered as a tool, the reply does not come back in the exam's shape with Ollama's own token counts, a local model with no price is called, or an Ollama nobody listens for is anything but 'cannot run here'.  Status: Passed by the runner (on the jig, under KVM): a Bedrock-shaped request reached Ollama as one: its model, num_ctx 32768 and the reply's limit set per request, the system prompt first, the earlier tool call and the reader's answer handed back, the reader offered as a tool; the reply came back in the shape the exam reads, with Ollama's own 321 in and 45 out; a model with no price was refused before any call, and an Ollama nobody listens for is 'cannot run here'.  Mutations caught: 4.</li>
+</ul>
+<h2>Code on GitHub</h2>
+<p>Every line that changed, on one page (hash when committed)</p>
+<p>The commits behind this post, in order:</p>
+<ol>
+<li><a href="https://github.com/cmcluckie/aios/commit/c810da0">Part 21: the plan (findings 0024); jig/model calls a local Ollama, the 3090's price row (decision 0056); the mechanic may share a model (decision 0057)</a></li>
+<li><a href="https://github.com/cmcluckie/aios/commit/a3e0425">Part 21: five tests that make the fixes visible, each red on AiOs as it is (decision 0058)</a></li>
+<li><a href="https://github.com/cmcluckie/aios/commit/8ae364b">Part 21: the mechanic's bench, jig/fix and its first prompt (decision 0059)</a></li>
+<li><a href="https://github.com/cmcluckie/aios/commit/2a35b7e">Part 21: a fix passes when its test turns green and nothing green goes red (decision 0060)</a></li>
+<li><a href="https://github.com/cmcluckie/aios/commit/f216fd5">Part 21: try 1 recorded; the bench's look tool reads ranges as asked, and the summary names cached tokens (decision 0061)</a></li>
+<li><a href="https://github.com/cmcluckie/aios/commit/9183f99">Part 21: try 2 recorded; the look tool takes start_line and end_line and says where it is (decision 0062)</a></li>
+<li><a href="https://github.com/cmcluckie/aios/commit/03aa3ea">Part 21: try 3 passed and was not taken; the test holds the source to the spec, the judge finds the clones (decision 0063)</a></li>
+<li><a href="https://github.com/cmcluckie/aios/commit/b533217">Part 21: a fix may be several files of one part (decision 0064)</a></li>
+<li><a href="https://github.com/cmcluckie/aios/commit/0533bb2">Part 21: try 5 broke cat, and rule 11 had never been checked; the kernel holds only what its petitions ask for (decision 0065)</a></li>
+<li><a href="https://github.com/cmcluckie/aios/commit/5d18cee">Part 21: the audit at part 21 (findings 0025); README's State brought to part 20; plan/brief.md retitled, reordered, four items closed, gen two parked, the appliance added</a></li>
+<li><a href="https://github.com/cmcluckie/aios/commit/d3ca526">Part 21: the ledger hashes for decision 0065 and the audit</a></li>
+<li><a href="https://github.com/cmcluckie/aios/commit/1c6e7f6">Part 21: try 6 renamed the old calls instead of removing them; the test asks from the old programs' side too (decision 0066)</a></li>
+<li><a href="https://github.com/cmcluckie/aios/commit/8bec45c">Part 21: try 7 ran out of calls; the model is told how many it has left (decision 0067)</a></li>
+<li><a href="https://github.com/cmcluckie/aios/commit/a234756">Part 21: try 8 broke life; old programs tested through their own table, and a failing fix comes back with what broke (decision 0068)</a></li>
+<li><a href="https://github.com/cmcluckie/aios/commit/67b6a47">Part 21: the bench says each step; try 9 lost to a timeout, Bedrock waits longer and a lost run is still recorded (decisions 0069, 0070)</a></li>
+<li><a href="https://github.com/cmcluckie/aios/commit/cc3f56f">Part 21: try 10 moved the old calls to new numbers; the probe sweeps every number, and the bench shows each test (decisions 0071, 0072)</a></li>
+<li><a href="https://github.com/cmcluckie/aios/commit/6479257">Part 21: try 11 parked the old calls past the sweep; the prompt says not to dodge the test (decision 0073)</a></li>
+<li><a href="https://github.com/cmcluckie/aios/commit/dc38cdf">Part 21: we asked too much; old programs keep their own table, Linux programs get -38 there (decision 0074)</a></li>
+<li><a href="https://github.com/cmcluckie/aios/commit/e445e10">Part 21: the mechanic's first fix taken; TECH-DEBT 1 paid in gate@2 (decision 0075)</a></li>
+<li><a href="https://github.com/cmcluckie/aios/commit/0272ecf">Part 21: TECH-DEBT 4 try 1; paid debt no longer fails an honest fix, and the bench takes a reviewer's note (decision 0076)</a></li>
+<li><a href="https://github.com/cmcluckie/aios/commit/277e34a">Part 21: TECH-DEBT 4 try 2 went quiet after a failed hand-in; a model that stops is reminded once (decision 0077)</a></li>
+<li><a href="https://github.com/cmcluckie/aios/commit/d4f368e">Part 21: TECH-DEBT 4 taken; rdrand with a CPUID check, the counter only as the fallback (decision 0078)</a></li>
+<li><a href="https://github.com/cmcluckie/aios/commit/b387741">Part 21: SSE try 1, right approach, two flaws; a reviewer's note for try 2 (decision 0079)</a></li>
+<li><a href="https://github.com/cmcluckie/aios/commit/9922819">Part 21: SSE taken; CPUID first, Linux's control words, each program's registers kept (decision 0080)</a></li>
+<li><a href="https://github.com/cmcluckie/aios/commit/9c6c852">Part 21: window-end taken; nothing past a program's memory is open to it, TECH-DEBT 3 paid (decision 0081)</a></li>
+<li><a href="https://github.com/cmcluckie/aios/commit/3dafa0d">Part 21: waits taken; a program waiting for a key no longer stops the others, TECH-DEBT 2 paid (decision 0082)</a></li>
+<li><a href="https://github.com/cmcluckie/aios/commit/c30a46f">Part 21: put back what decision 0079's commit wrote over by mistake (decision 0083)</a></li>
+<li><a href="https://github.com/cmcluckie/aios/commit/9eeb38b">Part 21: the jig's final mutation run, 308 killed, 5 known survivors; decision 0083's why (c30a46f)</a></li>
+<li>Part 21: the post page, TOOL.exam@1's as-built brought up to date (decision 0084), the jig's test results (hash when committed)</li>
+</ol>
+<p><a href="https://github.com/cmcluckie/aios">The whole repo</a>.</p>
+</div>
+</section>
+<p class="img">Image: 2026-11-15.png, in this folder.</p>
+<script>
+function flash(b){b.textContent='Copied';b.classList.add('done');setTimeout(function(){b.textContent='Copy';b.classList.remove('done')},1500)}
+function select(id){var r=document.createRange();r.selectNodeContents(document.getElementById(id));var s=getSelection();s.removeAllRanges();s.addRange(r);return s}
+// A pasted image doesn't survive into LinkedIn, so each one is copied as a marker naming its file.
+function copyRich(id,b){var c=document.getElementById(id).cloneNode(true);c.removeAttribute('id');
+  c.querySelectorAll('img').forEach(function(i){var p=document.createElement('p');p.innerHTML='<strong>[Upload '+i.getAttribute('src')+' here]</strong>';(i.closest('p.img')||i).replaceWith(p)});
+  c.style.position='fixed';c.style.left='-9999px';document.body.appendChild(c);
+  var r=document.createRange();r.selectNodeContents(c);var s=window.getSelection();s.removeAllRanges();s.addRange(r);
+  document.execCommand('copy');s.removeAllRanges();c.remove();flash(b)}
+function copyText(id,b){var t=document.getElementById(id).innerText.trim();
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(function(){flash(b)},function(){copyRich(id,b)})}else{copyRich(id,b)}}
+</script>
+</body></html>

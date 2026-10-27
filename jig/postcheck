@@ -32,11 +32,11 @@ check_html() {
 	# Parts 1 to 6 went out as one line and stay that way until Chris edits the live post;
 	# from part 7, and for any older post rewritten, the story format (decision 0010).
 	if [ "$(grep -c . "$p")" -gt 1 ] || [ "$n" -ge 7 ]; then
-		w=$(wc -w < "$p")
+		w=$(grep -v 'https\?://' "$p" | wc -w)		# links, on their own lines, are not counted (decision 0085)
 		[ "$w" -ge 150 ] && [ "$w" -le 220 ] || bad "$h" "post is $w words; 150 to 220"
 		[ "$(grep . "$p" | tail -1)" = "#$N" ] || bad "$h" "post does not end with #$N"
 		grep -q '^[-*•] ' "$p" && bad "$h" "post has a bullet point"
-		grep -q 'http' "$p" && bad "$h" "post has a link; a link goes in the First comment section"
+		grep 'https\?://' "$p" | grep -qv '^[^ ].*: https\?://[^ ]*$' && bad "$h" "post has a link that is not on its own line after a few words saying what it is (decision 0085)"
 		sed -n '2,$p' "$p" | grep . | head -1 | grep -q '^\(In this part\|Today I\)' && bad "$h" "post opens with 'In this part' or 'Today I'"
 		sed '1d' "$p" | grep -q '[a-z0-9"]\. [A-Z]' && bad "$h" "post's story has one space after a period; two"
 	else

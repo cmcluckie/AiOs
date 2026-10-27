@@ -445,9 +445,11 @@ thousands of people and the one-line teasers after it reached a few hundred).
 3. One closing sentence connecting it to how he thinks about building
    software or running product.  No preaching.
 4. `#AiOs` on its own line (`#AiOS` for parts 1 to 12, matching their name).
-No bullet points, no links, and never open with "In this part" or "Today I".
-A link the post needs goes in a `comment` section after `post`, labelled
-"First comment".  jig/postcheck checks all of it from part 7.  K is the lines of code taken from Linux (lifted/, the .c files, no blanks, no
+No bullet points, and never open with "In this part" or "Today I".  Links
+go after the closing sentence and before the hashtag, each on its own line
+with a few words saying what it is (decision 0085; LinkedIn rewrites them to
+its own short links, and that is fine).  The links are not counted in the
+150 to 220 words.  jig/postcheck checks all of it from part 7.  K is the lines of code taken from Linux (lifted/, the .c files, no blanks, no
 comments, as the as-built specs record them) on the day the post goes out:
 57 from part 1, 69 from part 6.  LinkedIn attaches the article to it.
 
