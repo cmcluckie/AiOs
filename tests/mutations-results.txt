@@ -1,5 +1,5 @@
 # tests/mutations-results.txt, written by jig/mutate.  Do not edit by hand.
-# run 2026-10-27T17:31Z at commit 3dafa0d
+# run 2026-10-27T18:08Z at commit c30a46f
 KILLED    hello.exact-bytes@1  one wrong letter in hello's message
 KILLED    hello.exact-bytes@1  the newline goes missing
 KILLED    hello.exact-bytes@1  one extra write before exit
@@ -303,6 +303,8 @@ KILLED    gate.linux-only@1  the fix taken out again: a Linux program reaches th
 KILLED    gate.linux-only@1  the old table's load stops working for old programs too
 KILLED    fix.judged@1  a reviewer's note is never handed to the model
 KILLED    fix.judged@1  a model that stops without a fix is never reminded, and the run ends, as on loader.random try 2
+KILLED    loader.random@1  rdrand never used and the fallback gives the same bytes every boot
+SURVIVED  loader.random@1  rdrand never succeeds, so every word is the cycle counter: the fallback's bytes differ enough from boot to boot that three boots cannot tell them from random (findings 0024 item 29)  (known, written down)
 KILLED    gate.sse@1  the processor is never told the kernel saves the SSE registers, so the first SSE instruction stops the program
 KILLED    gate.sse@1  SSE left off on every processor, those that have it too
 SURVIVED  gate.sse@1  a switch no longer puts back the next program's SSE registers: the test runs one SSE program, so nothing can see two share them yet (findings 0024 item 31)  (known, written down)
@@ -311,4 +313,4 @@ KILLED    gate.window-end@1  the whole last 4 MiB is opened to ring 3, as before
 KILLED    gate.window-end@1  the part-block is never mapped, so the program loses the end of its own memory
 KILLED    share.waits@1  the wait runs with interrupts off again, so the stopwatch freezes while a program waits for a key
 KILLED    share.waits@1  interrupts come back on only once the byte has arrived, too late for the wait
-# 307 killed, 0 survived unexpectedly, 4 known survivors, 0 no-ops, 0 no-builds
+# 308 killed, 0 survived unexpectedly, 5 known survivors, 0 no-ops, 0 no-builds

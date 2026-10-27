@@ -6,6 +6,6 @@ asked   = "Decision 0079's commit (b387741) wrote over decision 0078's changes t
 options = ["put them back", "leave them out"]
 default = "put them back"
 chose   = "put them back"
-why     = "PENDING: Chris to rule"
+why     = "Chris committed it as c30a46f, 2026-10-27, with this line still pending; his commit is the ruling."
 by      = "KEY.chris@1"
 drafted = "Claude"
