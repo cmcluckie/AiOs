@@ -55,6 +55,8 @@ repo, instead of skipping.
   commit (git archive), with runs/ and out/ left out, so a fix already taken can be
   made again from where it started, with no record of how it was done; the run
   records the commit as at (decision 0086).
+  Those copies cannot see the repo's history, so jig/test in them does not hold
+  the repo's later commits to the old copy's decisions (decision 0088).
 
 ## What it never does
 Changes the repo: the model's look and the judge each work in their own copy, and

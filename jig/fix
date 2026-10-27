@@ -57,6 +57,10 @@ copy() {
 	fi
 }
 copy "$d/base" || die "could not copy the repo${at:+ at $at}"
+# a copy at FIX_AT sits inside the repo's folder, and must not read the repo's history:
+# jig/test checks every commit since its last run against the copy's own decisions,
+# and the old copy does not have the later ones (decision 0088)
+[ -z "$at" ] || { GIT_CEILING_DIRECTORIES=$d; export GIT_CEILING_DIRECTORIES; }
 tf="$d/base/tests/$test.toml"
 [ -f "$tf" ] || die "no test $test (no tests/$test.toml${at:+ at $at})"
 field() { sed -n "s/^$2 *= *\"\(.*\)\".*/\1/p" "$1" | head -1; }

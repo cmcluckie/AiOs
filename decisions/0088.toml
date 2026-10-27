@@ -1,0 +1,11 @@
+id      = "0088"
+date    = 2026-10-27
+kind    = "code"
+touches = ["jig/fix", "tests/programs/fix.sh", "tests/fix.judged@1.toml", "tests/mutations.txt", "index/tool/fix@1.as-built.md"]
+asked   = "The 3090's first run stopped before any call: the copy at 9c6c852 read the repo's real history and refused 3dafa0d against its own older decisions (findings 0026 item 6).  A copy at FIX_AT no longer sees the repo's history.  Red first, one mutation, killed.  Take it?"
+options = ["take it", "do not take it"]
+default = "take it"
+chose   = "take it"
+why     = "PENDING: Chris to rule"
+by      = "KEY.chris@1"
+drafted = "Claude"

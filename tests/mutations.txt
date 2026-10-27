@@ -325,3 +325,4 @@ fix.judged@1 | red | jig/fix | s/ \&\& rm -rf "\$1\/runs" "\$1\/out"$// | the co
 fix.judged@1 | red | jig/fix | s/^RUNS_AT=\$at RUNS_SITTING/RUNS_AT= RUNS_SITTING/ | the run does not record which commit it worked from
 fix.judged@1 | red | jig/fix | s/\[ "\$stop" = max_tokens \] \&\& say/false \&\& say/ | a reply cut off at the limit is taken for a model gone quiet
 exam.ollama@1 | red | jig/model | s/ elif .done_reason == "length" then "max_tokens"// | an Ollama reply cut off at its limit is handed on as if it had finished
+fix.judged@1 | red | jig/fix | s/^\[ -z "\$at" \] || { GIT_CEILING_DIRECTORIES=\$d; export GIT_CEILING_DIRECTORIES; }$/:/ | a copy at FIX_AT, inside the repo's folder, reads the repo's history and refuses its later commits, as on the 3090's first run
