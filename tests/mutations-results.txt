@@ -1,5 +1,5 @@
 # tests/mutations-results.txt, written by jig/mutate.  Do not edit by hand.
-# run 2026-10-25T03:56Z at commit e445e10
+# run 2026-10-27T17:31Z at commit 3dafa0d
 KILLED    hello.exact-bytes@1  one wrong letter in hello's message
 KILLED    hello.exact-bytes@1  the newline goes missing
 KILLED    hello.exact-bytes@1  one extra write before exit
@@ -301,4 +301,14 @@ KILLED    fix.judged@1  a model lost halfway leaves no record, and what the call
 KILLED    fix.judged@1  the suite runs out of sight, five quiet minutes at a time, as on try 10
 KILLED    gate.linux-only@1  the fix taken out again: a Linux program reaches the old table at 1000 to 1003
 KILLED    gate.linux-only@1  the old table's load stops working for old programs too
-# 298 killed, 0 survived unexpectedly, 3 known survivors, 0 no-ops, 0 no-builds
+KILLED    fix.judged@1  a reviewer's note is never handed to the model
+KILLED    fix.judged@1  a model that stops without a fix is never reminded, and the run ends, as on loader.random try 2
+KILLED    gate.sse@1  the processor is never told the kernel saves the SSE registers, so the first SSE instruction stops the program
+KILLED    gate.sse@1  SSE left off on every processor, those that have it too
+SURVIVED  gate.sse@1  a switch no longer puts back the next program's SSE registers: the test runs one SSE program, so nothing can see two share them yet (findings 0024 item 31)  (known, written down)
+KILLED    gate.window-end@1  one page past the window's end is opened to ring 3
+KILLED    gate.window-end@1  the whole last 4 MiB is opened to ring 3, as before the fix
+KILLED    gate.window-end@1  the part-block is never mapped, so the program loses the end of its own memory
+KILLED    share.waits@1  the wait runs with interrupts off again, so the stopwatch freezes while a program waits for a key
+KILLED    share.waits@1  interrupts come back on only once the byte has arrived, too late for the wait
+# 307 killed, 0 survived unexpectedly, 4 known survivors, 0 no-ops, 0 no-builds

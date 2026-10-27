@@ -1,0 +1,11 @@
+id      = "0083"
+date    = 2026-10-27
+kind    = "repair"
+touches = ["findings/0024.md", "findings/0021.md", "posts/commits.md", "tests/mutations.txt"]
+asked   = "Decision 0079's commit (b387741) wrote over decision 0078's changes to findings 0024 and 0021, the ledger and the mutation list, from a stale copy in Claude's workspace (findings 0024 item 34).  Put them back word for word from d4f368e, where they were decided?"
+options = ["put them back", "leave them out"]
+default = "put them back"
+chose   = "put them back"
+why     = "PENDING: Chris to rule"
+by      = "KEY.chris@1"
+drafted = "Claude"
