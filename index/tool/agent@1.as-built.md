@@ -48,7 +48,8 @@ The program (agent/mechanic, the `agent` command):
   PASS and no FAIL, and every test green before to print PASS and no FAIL.  A
   paid builder asks the job's share and the month's cap before each call; a job
   stops at its deadline.  Writes out/agent/JOB-tryN/ and records the run with
-  jig/runs (bench, peak context, ended).
+  jig/runs (bench, peak context, ended, calls, seconds).  Its note also says its
+  calls, its peak context and its wall minutes (SPEC.agent.11).
 - `agent count MODEL FILE...`: the model's own count of each file, from Ollama;
   `agent estimate CALIBRATION COUNTED FILE`: the calibrated estimate (SPEC.agent.9).
 - `agent direct PLAN` (SPEC.agent.5): one director.  Tools job, search_log,
@@ -57,7 +58,8 @@ The program (agent/mechanic, the `agent` command):
   failures on the same test, or no drop), takes done only from the notes, and
   folds the director's older turns into a standing written from its log.  Writes
   out/agent/PART/ (log.md, jobs/, director.json, report.md, question.md when it
-  stops) and records the director's own run.
+  stops) and records the director's own run, with its calls and wall seconds.
+  To each note it is shown it adds its own peak context as of that job.
 
 ## Every syscall or hardware access
 Files under its out folder and the repo it is given.  Child processes, each with
@@ -78,7 +80,8 @@ AGENT_QUIET.  Files: out/agent/, and one run in runs/ per builder and director.
 On the jig, only the throwaway folder its ssh command makes and removes.
 
 ## Size
-2985 lines of Rust: the runtime 1085 (react 294, model 271, sigv4 177, room 109,
-money 84, transport 84, prompts 59), the program 1900 (build 507, direct 496,
-plan 179, judge 160, main 149, look 148, record 113, note 83, stuck 58).  Built
+3395 lines of Rust: the runtime 1291 (model 382, react 303, sigv4 177, room 148,
+transport 131, money 84, prompts 59, lib 7), the program 2104 (build 605, direct
+521, main 203, plan 191, judge 160, look 148, record 121, note 90, stuck 58,
+util 7).  Built
 with warnings as errors; `sh agent/make` in WSL builds out/agent/agent.

@@ -54,6 +54,8 @@ impl Runs {
         peak: u64,
         ended: &str,
         trial: &str,
+        calls: u64,
+        seconds: u64,
     ) -> Result<String, String> {
         let day = runtime::sigv4::now();
         let day = format!("{}-{}-{}", &day[..4], &day[4..6], &day[6..8]);
@@ -66,7 +68,9 @@ impl Runs {
             .env("RUNS_PEAK", peak.to_string())
             .env("RUNS_ENDED", ended)
             .env("RUNS_AT", at)
-            .env("RUNS_PROMPT", prompt);
+            .env("RUNS_PROMPT", prompt)
+            .env("RUNS_CALLS", calls.to_string())
+            .env("RUNS_SECONDS", seconds.to_string());
         if let Some(s) = sitting {
             c.env("RUNS_SITTING", s);
         }

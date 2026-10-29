@@ -65,7 +65,7 @@ fn cmd_note(a: &[String]) -> i32 {
         return 1;
     }
     let files: Vec<String> = a[4..].to_vec();
-    print!("{}", note::write(&String::from_utf8_lossy(&input), &note::Job { job: &a[0], try_: t, tokens: k, seconds: s, files: &files }));
+    print!("{}", note::write(&String::from_utf8_lossy(&input), &note::Job { job: &a[0], try_: t, tokens: k, seconds: s, files: &files, calls: None, peak: None }));
     0
 }
 

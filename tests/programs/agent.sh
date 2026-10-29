@@ -12,6 +12,7 @@
 #   sh tests/programs/agent.sh limit   TST.agent.limit@1: a builder's limits; what is on disk handed in
 #   sh tests/programs/agent.sh tokens  TST.agent.tokens@1: the estimate, calibrated by the model's count
 #   sh tests/programs/agent.sh trial   TST.agent.trial@1: the second prompts, and the trial against the first
+#   sh tests/programs/agent.sh columns TST.agent.columns@1: the race's columns, in every note and on the card
 #   sh tests/programs/agent.sh direct  TST.agent.direct@1: a director and its limits
 #   sh tests/programs/agent.sh bedrock TST.agent.bedrock@1: gear 2, and what it may spend
 #
@@ -386,6 +387,52 @@ limit)
 	ans3 badedit 1 3 | grep -q 'refused: only a file under pool/' || fail "an edit to a test was made: $(ans3 badedit 1 3)"
 	grep -qx 'code       = "TST.toy.answer@1"' "$t/out/toy-try14/work/tests/toy.answer@1.toml" || fail "the refused edit changed the file anyway"
 	echo "a builder's thinking past its cap of 2000 is stopped after 3 of 6 pieces and the turn asked again with thinking off and the reply's own 12000; an edit left on disk is handed in by the program and passes when the run ends, and when the replies are cut off at their limit; a run cut off with nothing changed has the tests run on the commit as it was and a note; an edit that does not match its lines or is outside pool/ is refused and changes nothing" ;;
+columns)
+	# a builder's note says its calls, its peak context and its wall minutes, and its run
+	# in runs/ its calls and seconds
+	toy
+	mkdir "$t/whole"; cp "$fx"/build/[0-9].json "$t/whole/"
+	run whole; o="$t/out/toy-try1"
+	[ $rc -eq 0 ] || fail "the builder on the toy gave exit $rc: $(head -2 "$t/whole.err" | tr '\n' ' ')"
+	grep -qx 'calls         = 8' "$o/note.toml" && grep -qx 'peak_context  = 2250' "$o/note.toml" && grep -qE '^minutes       = [0-9]+$' "$o/note.toml" ||
+		fail "the builder's note does not say its 8 calls, its peak context of 2250 and its minutes: $(tr '\n' ' ' < "$o/note.toml" | cut -c1-300)"
+	rr=$(ls "$t"/runs/*/run.toml)
+	grep -qx 'calls         = 8' "$rr" && grep -qE '^seconds       = [0-9]+$' "$rr" || fail "the builder's run in runs/ does not say its calls and seconds: $(tail -4 "$rr" | tr '\n' ' ')"
+	# a director adds its own peak context, as of the job, to each note it is shown, and
+	# its run in runs/ says its calls and seconds
+	cat > "$t/builder" <<'FAKE'
+#!/bin/sh
+jf=$2; job=$(sed -n 's/^job = "\(.*\)"$/\1/p' "$jf"); try=$(sed -n 's/^try = //p' "$jf")
+o=$AGENT_OUT/$job-try$try; mkdir -p "$o"
+printf 'PASS  TST.share.waits@1  1s  ok\n# 1 passed, 0 failed, 0 skipped\n' | "$T/agent" note "$job" "$try" 10 10 > "$o/note.toml"
+printf 'result       = "pass"\nended        = "pass"\nwhy          = ""\n' > "$o/run.toml"
+FAKE
+	mkdir "$t/fake"; sed 's/toy.answer@1/share.waits@1/' "$fx/direct/done/4.json" > "$t/fake/1.json"
+	printf '{"model":"qwen3.8:27b","message":{"role":"assistant","content":"","tool_calls":[{"function":{"name":"done","arguments":{"report":"Passed."}}}]},"done":true,"done_reason":"stop","prompt_eval_count":900,"eval_count":20}\n' > "$t/fake/2.json"
+	T=$t AGENT_FAKE="$t/fake" AGENT_BUILDER="sh $t/builder" AGENT_OUT="$t/dout" AGENT_QUIET=1 AGENT_RUNS="sh $(pwd)/jig/runs" RUNS="$t/druns" PRICES="$(pwd)/jig/prices.toml" \
+		"$t/agent" direct agent/plans/waits.toml > "$t/d.out" 2> "$t/d.err"; rc=$?
+	[ $rc -eq 0 ] || fail "a director on waits gave exit $rc: $(cat "$t/d.err" "$t/d.out" | head -3)"
+	grep -qx 'director_peak = 1200' "$t"/dout/waits/jobs/waits-1-try1/note.toml || fail "the note does not say the director's peak context as of the job, 1200: $(tail -3 "$t"/dout/waits/jobs/waits-1-try1/note.toml | tr '\n' ' ')"
+	jq -r '[.messages[] | select(.role == "tool")][0].content' "$t/fake/sent-2.json" | grep -qx 'director_peak = 1200' || fail "the director was not shown its own peak in the note"
+	dr=$(ls "$t"/druns/*/run.toml)
+	grep -qx 'calls         = 2' "$dr" && grep -qE '^seconds       = [0-9]+$' "$dr" || fail "the director's run in runs/ does not say its 2 calls and its seconds: $(tail -4 "$dr" | tr '\n' ' ')"
+	# the card: each part with its builders' calls and biggest peak, the director's peak, and
+	# its wall minutes; a part from before these columns shows a dash, not a guess
+	rec() {	# rec ITEM TRY CALLS SECONDS PEAK SITTING
+		RUNS_CALLS=$3 RUNS_SECONDS=$4 RUNS_PEAK=$5 RUNS_SITTING=$6 RUNS_BENCH=agent RUNS_ENDED=pass RUNS="$t/card-runs" PRICES="$(pwd)/jig/prices.toml" \
+			sh jig/runs record "$1" ollama:qwen3.8:27b 2026-10-29 "$2" 100 10 pass 0 "$t/d.out" "$t/d.out" > /dev/null || fail "jig/runs would not record $1 with its calls and seconds"
+	}
+	rec fix-share-waits 1 40 2515 74727 20261029T160914Z; rec fix-share-waits 2 41 1900 60593 20261029T160914Z
+	rec fix-share-waits 3 27 1667 43648 20261029T160914Z; rec direct-waits 1 7 6780 2976 20261029T160914Z
+	RUNS_BENCH=agent RUNS_ENDED=pass RUNS_PEAK=900 RUNS_SITTING=20261028T100000Z RUNS="$t/card-runs" PRICES="$(pwd)/jig/prices.toml" \
+		sh jig/runs record direct-older ollama:qwen3.8:27b 2026-10-28 1 100 10 pass 0 "$t/d.out" "$t/d.out" > /dev/null || fail "an older director run could not be recorded"
+	RUNS="$t/card-runs" sh jig/scorecard > "$t/card" 2>&1 || fail "the scorecard failed: $(head -2 "$t/card")"
+	sed -n '/^The layered bench, by part$/,$p' "$t/card" > "$t/parts"
+	grep -q '^  waits .*3 builders, 108 calls, peak 74727  director peak 2976  113 minutes' "$t/parts" ||
+		fail "the card does not show waits with 3 builders, 108 calls, peak 74727, director peak 2976 and 113 minutes: $(cat "$t/parts")"
+	grep -q '^  older .*0 builders, - calls, peak -  director peak 900  - minutes' "$t/parts" ||
+		fail "a part recorded before the columns is not shown with dashes: $(grep older "$t/parts")"
+	echo "a builder's note says its calls, peak context and minutes, and its run its calls and seconds; a director adds its own peak, as of the job, to each note it is shown, and records its calls and seconds; the card shows each part's builders, their calls and biggest peak, the director's peak and the wall minutes, and dashes for a part from before" ;;
 direct)
 	# the director's replies are saved ones; its builders are a stand-in that hands back,
 	# for each try, the result the case's script line says, as a real note (agent note)

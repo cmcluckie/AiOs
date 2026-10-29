@@ -86,17 +86,30 @@ END {
 }' ITEMS="$tmp/items" "$tmp/items" "$tmp/runs"
 
 # the layered bench by part (findings 0029): one line per start of a director, its
-# part and how it went, a prompt trial's runs marked and shown together
+# part and how it went, a prompt trial's runs marked and shown together; and the
+# race's columns: its builders (the agent's other runs in the director's sitting),
+# their calls and the biggest peak context, the director's peak and its wall
+# minutes.  A run recorded before the columns has a dash, never a guess.
 for f in "$RUNS"/*/run.toml; do
 	[ -f "$f" ] || continue
 	awk 'function val(s) { sub(/^[^=]*= */, "", s); gsub(/"/, "", s); return s }
-		/^item *=/ { i = val($0) } /^sitting *=/ { st = val($0) } /^prompt *=/ { pr = val($0) }
+		/^item *=/ { i = val($0) } /^sitting *=/ { st = val($0) } /^prompt *=/ { pr = val($0) } /^bench *=/ { b = val($0) }
 		/^model *=/ { m = val($0) } /^result *=/ { r = val($0) } /^ended *=/ { e = val($0) } /^trial *=/ { tr = val($0) }
-		END { if (i ~ /^direct-/) printf "%s\t%s\t%s\t%s\t%s\t%s\t%s\n", (tr == "" ? "~" : tr), substr(i, 8), st, m, pr, r, e }' "$f"
-done | sort > "$tmp/parts"
+		/^peak_context *=/ { pk = val($0) } /^calls *=/ { c = val($0) } /^seconds *=/ { s = val($0) }
+		END { if (b == "agent") printf "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n", (tr == "" ? "~" : tr), i, st, m, pr, r, e,
+			(pk == "" ? "-" : pk), (c == "" ? "-" : c), (s == "" ? "-" : s) }' "$f"
+done > "$tmp/agentruns"
+awk -F'\t' 'NR == FNR { if ($2 !~ /^direct-/) { n[$3]++
+			if ($9 == "-") nc[$3] = 1; else c[$3] += $9
+			if ($8 == "-") np[$3] = 1; else if ($8 + 0 > p[$3] + 0) p[$3] = $8 }
+		next }
+	$2 ~ /^direct-/ { st = $3
+		printf "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%d builders, %s calls, peak %s  director peak %s  %s minutes\n", $1, substr($2, 8), st, $4, $5, $6, $7,
+			n[st], (n[st] == 0 || nc[st] ? "-" : c[st]), (n[st] == 0 || np[st] ? "-" : p[st]), $8, ($10 == "-" ? "-" : int(($10 + 59) / 60)) }' \
+	"$tmp/agentruns" "$tmp/agentruns" | sort > "$tmp/parts"
 if [ -s "$tmp/parts" ]; then
 	echo
 	echo "The layered bench, by part"
 	awk -F'\t' '{ if ($1 != "~" && $1 != last) printf "  prompt trial %s\n", $1; last = $1
-		printf "  %s%-14s %s  director prompt %s  %s  ended %s  sitting %s\n", ($1 == "~" ? "" : "  "), $2, $4, $5, toupper($6), $7, $3 }' "$tmp/parts"
+		printf "  %s%-14s %s  director prompt %s  %s  ended %s  sitting %s  %s\n", ($1 == "~" ? "" : "  "), $2, $4, $5, toupper($6), $7, $3, $8 }' "$tmp/parts"
 fi

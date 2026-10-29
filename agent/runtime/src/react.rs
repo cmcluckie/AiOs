@@ -36,6 +36,8 @@ pub trait Hooks {
     /// after each reply, what the model counted for what was sent: the system
     /// prompt, these messages and the tools (prompt_eval_count)
     fn sent(&mut self, _prompt_tokens: u64, _messages: &[Value]) {}
+    /// after each reply, the most context one call has held so far
+    fn peak(&mut self, _peak: u64) {}
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -103,6 +105,7 @@ pub fn run(
         r.tokens_out += reply.tokens_out;
         r.peak = r.peak.max(reply.tokens_in + reply.tokens_out);
         hooks.tally(r.tokens_in, r.tokens_out);
+        hooks.peak(r.peak);
         if reply.tokens_in > 0 && !reply.thought_cut {
             hooks.sent(reply.tokens_in, &r.messages);
         }

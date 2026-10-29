@@ -575,7 +575,7 @@ pub fn run(jobpath: &str) -> i32 {
     let _ = fs::write(dir.join("transcript.json"), serde_json::to_string_pretty(&json!({"system": system, "messages": r.messages})).unwrap_or_default());
     let suite = fs::read_to_string(dir.join("suite.txt")).unwrap_or(before.clone());
     let seconds = start.elapsed().as_secs();
-    let n = note::write(&suite, &note::Job { job: &j.job, try_: j.try_, tokens: r.tokens_in + r.tokens_out, seconds, files: &b.paths });
+    let n = note::write(&suite, &note::Job { job: &j.job, try_: j.try_, tokens: r.tokens_in + r.tokens_out, seconds, files: &b.paths, calls: Some(r.calls as u64), peak: Some(r.peak) });
     let _ = fs::write(dir.join("note.toml"), &n);
     let dollars = runs.cost(&recorded, r.tokens_in, r.tokens_out).unwrap_or(0.0);
     let run_toml = format!(
@@ -591,7 +591,7 @@ pub fn run(jobpath: &str) -> i32 {
     let sitting = std::env::var("AGENT_SITTING").ok().filter(|s| !s.is_empty() && plain(s, "._-"));
     if let Err(e) = runs.record(
         &j.item, &recorded, j.try_, r.tokens_in, r.tokens_out, &b.result, b.lines, &dir.join("transcript.json"),
-        &dir.join("output.txt"), &j.at, &print, sitting.as_deref(), r.peak, &ended, &j.trial,
+        &dir.join("output.txt"), &j.at, &print, sitting.as_deref(), r.peak, &ended, &j.trial, r.calls as u64, seconds,
     ) {
         eprintln!("agent: the run could not be recorded in runs/ ({e}); its files are in {}", dir.display());
         return 1;

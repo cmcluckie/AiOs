@@ -1,0 +1,10 @@
+code       = "TST.agent.columns@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+binds      = "SPEC.agent.11@1"
+red_when   = "a builder's result note does not say its calls, peak context and wall minutes, a director does not add its own peak to each note, a run in runs/ does not keep its calls and seconds, or the card's line for a part does not show its builders, their calls, the biggest peak, the director's peak and the wall minutes, with a dash for a run from before"
+timeout_ms = 120000
+isolates   = "TOOL.agent@1"
+runner     = "jig/test cmd sh tests/programs/agent.sh columns"
+mutations  = 4

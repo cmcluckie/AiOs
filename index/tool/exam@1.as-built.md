@@ -35,6 +35,8 @@ Sits a model for one exam item (exam/items.toml) and writes down what happened.
   month from 2026-10-29, findings 0027).  Since part 22 (SPEC.exam.10), a run
   given RUNS_BENCH=agent, RUNS_PEAK and RUNS_ENDED also records bench, its peak
   context and how it ended; a run without them is recorded as before.
+  RUNS_CALLS and RUNS_SECONDS, when given, add its calls and wall seconds
+  (SPEC.agent.11).
 - scorecard: reads runs/ and the hand lifts and prints, per model and item, one
   line per sitting: PASS or FAIL, lines kept against the hand lift's, tries,
   cost and the prompt's fingerprint; then items passed, sittings, total spent
@@ -42,7 +44,10 @@ Sits a model for one exam item (exam/items.toml) and writes down what happened.
   the agent's bench adds its bench, the most context any of its calls held and
   how its last try ended.  Below the items, the layered bench by part: one line
   per director run, its model, its prompt, pass or fail and how it ended, a
-  prompt trial's runs together under its name (RUNS_TRIAL, SPEC.agent.10).
+  prompt trial's runs together under its name (RUNS_TRIAL, SPEC.agent.10), and
+  the race's columns: its builders (the agent's other runs in its sitting), their
+  calls, the biggest peak among them, the director's peak and the wall minutes,
+  a dash where a run was recorded before them (SPEC.agent.11).
 
 ## What a run records
 id, date, item, model, version, sitting (one start of sit), prompt (first 8

@@ -1,0 +1,11 @@
+id      = "0102"
+date    = 2026-10-29
+kind    = "code"
+touches = ["agent/runtime/src/react.rs", "agent/mechanic/src/note.rs", "agent/mechanic/src/main.rs", "agent/mechanic/src/build.rs", "agent/mechanic/src/direct.rs", "agent/mechanic/src/record.rs", "jig/runs", "jig/scorecard", "specs/agent.11@1.toml", "tests/agent.columns@1.toml", "tests/programs/agent.sh", "tests/mutations.txt", "index/tool/agent@1.as-built.md", "index/tool/exam@1.as-built.md"]
+asked   = "The fifth item from the waits run (findings 0029): the race's columns before the race.  Every builder's note says its calls, its peak context and its wall minutes; a director adds its own peak, as of the job, to each note it is shown; every run in runs/ keeps its calls and wall seconds (RUNS_CALLS, RUNS_SECONDS); the card's line for a part shows its builders (the agent's runs in the director's sitting), their calls, the biggest peak, the director's peak and the wall minutes, a dash for a run recorded before.  SPEC.agent.11, TST.agent.columns (red before; four mutations, killed).  The waits runs were recorded before this, so their calls and seconds are dashes on the card; findings 0029 takes them from out/agent/waits/."
+options = ["take it", "do not take it"]
+default = "take it"
+chose   = "take it"
+why     = "Chris, 2026-10-29: \"Add to every result note and the scorecard: peak context per builder, director peak context, wall minutes, builder calls.  Those are the race's columns and they should exist before the race.\""
+by      = "KEY.chris@1"
+drafted = "Claude"

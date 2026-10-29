@@ -27,6 +27,8 @@
 #                                     old bench's
 #                                     RUNS_TRIAL, when given, names the prompt trial the run belongs to:
 #                                     runs alike but for their prompts, shown together on the card
+#                                     RUNS_CALLS and RUNS_SECONDS, when given, are the run's calls to its
+#                                     model and its wall seconds, the race's columns (findings 0029)
 #   runs spent [YYYY-MM]              the cost of every run recorded in that month (default: now)
 #   runs budget CEILING               exit 1 if this month's spend plus CEILING (the most the
 #                                     next call could cost, in dollars) would pass the cap in
@@ -97,6 +99,8 @@ record)	[ $# -eq 10 ] || die "needs ITEM MODEL VERSION TRY IN_TOKENS OUT_TOKENS 
 	bench=${RUNS_BENCH:-}; peak=${RUNS_PEAK:-}; ended=${RUNS_ENDED:-}
 	case "$bench" in ''|agent) ;; *) die "RUNS_BENCH is agent or not given, not '$bench'" ;; esac
 	[ -z "$peak" ] || whole RUNS_PEAK "$peak"
+	calls=${RUNS_CALLS:-}; seconds=${RUNS_SECONDS:-}
+	[ -z "$calls" ] || whole RUNS_CALLS "$calls"; [ -z "$seconds" ] || whole RUNS_SECONDS "$seconds"
 	trial=${RUNS_TRIAL:-}
 	case "$trial" in *[!A-Za-z0-9_-]*) die "RUNS_TRIAL is a name: letters, digits, - and _, not '$trial'" ;; esac
 	case "$ended" in ''|pass|fail|turns|room|stuck|stopped|budget|time|unreachable|error) ;;
@@ -126,6 +130,8 @@ EOF
 	[ -z "$at" ] || echo "at            = \"$at\"" >> "$RUNS/$id/run.toml"
 	[ -z "$bench" ] || echo "bench         = \"$bench\"" >> "$RUNS/$id/run.toml"
 	[ -z "$peak" ] || echo "peak_context  = $peak" >> "$RUNS/$id/run.toml"
+	[ -z "$calls" ] || echo "calls         = $calls" >> "$RUNS/$id/run.toml"
+	[ -z "$seconds" ] || echo "seconds       = $seconds" >> "$RUNS/$id/run.toml"
 	[ -z "$trial" ] || echo "trial         = \"$trial\"" >> "$RUNS/$id/run.toml"
 	[ -z "$ended" ] || echo "ended         = \"$ended\"" >> "$RUNS/$id/run.toml"
 	echo "$id" ;;

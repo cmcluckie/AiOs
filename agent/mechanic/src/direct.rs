@@ -74,6 +74,7 @@ struct Director {
     system: String,
     quiet: bool,
     words: String, // the director's own words at the end: a report or a question
+    peak: u64,     // the most context one of its calls has held so far
 }
 
 impl Director {
@@ -200,6 +201,9 @@ impl Director {
         let (Some(r), Ok(nt)) = (run, fs::read_to_string(run_dir.join("note.toml"))) else {
             return Err(("cannot run".into(), format!("the builder for {id} left no run record or note in {}", run_dir.display())));
         };
+        // the director's own peak, as of this job, goes into the note it keeps and is shown
+        let nt = format!("{nt}director_peak = {}\n", self.peak);
+        let _ = fs::write(run_dir.join("note.toml"), &nt);
         let s = |k: &str| r.get(k).and_then(|v| v.as_str()).unwrap_or("").to_string();
         let passed = s("result") == "pass";
         let status = format!("{}, ended {}{}{}", s("result"), s("ended"), if s("why").is_empty() { "" } else { ": " }, s("why"));
@@ -322,6 +326,10 @@ impl Hooks for Director {
         self.est.calibrate(counted, plain);
     }
 
+    fn peak(&mut self, peak: u64) {
+        self.peak = peak;
+    }
+
     fn tally(&mut self, tin: u64, tout: u64) {
         // the director's own dollars, as of the reply it is acting on
         self.mine = self.runs.cost(&self.recorded, tin, tout).unwrap_or(0.0);
@@ -429,6 +437,7 @@ pub fn run(planpath: &str) -> i32 {
         system: system.clone(),
         quiet,
         words: String::new(),
+        peak: 0,
     };
     d.log(&format!("# {id}\n\nplan {planpath}, at {}, sitting {stamp}", d.p.at));
     d.say(&format!("directing {id}: {} test(s), {} tries, {} minutes", d.p.tests.len(), d.p.max_tries, d.p.max_minutes));
@@ -496,7 +505,7 @@ pub fn run(planpath: &str) -> i32 {
     let item = format!("direct-{}", id.to_lowercase());
     if let Err(e) = d.runs.record(
         &item, &recorded, 1, r.tokens_in, r.tokens_out, if how == "done" { "pass" } else { "fail" }, 0,
-        &dir.join("director.json"), &dir.join("report.md"), &d.p.at, &print, Some(&stamp), r.peak, ended, &d.p.trial,
+        &dir.join("director.json"), &dir.join("report.md"), &d.p.at, &print, Some(&stamp), r.peak, ended, &d.p.trial, r.calls as u64, now() - started,
     ) {
         eprintln!("agent: the director's run could not be recorded in runs/ ({e}); its files are in {}", dir.display());
     }

@@ -387,3 +387,7 @@ agent.tokens@1 | red | agent/runtime/src/react.rs | s/hooks.sent(reply.tokens_in
 agent.trial@1 | red | agent/mechanic/src/direct.rs | s/plan::write(\&p));/fs::read_to_string(planpath).unwrap_or_default());/ | the director is shown strategic's comments, and hands one to a builder as its hint, as on waits
 agent.trial@1 | red | agent/mechanic/src/direct.rs | s/job += \&format!("trial = /job += \&format!("# trial = / | a builder's run in a prompt trial is recorded as if it were not one
 agent.trial@1 | red | jig/runs | s/\[ -z "\$trial" \] [|][|] echo "trial/[ -n "$trial" ] || echo "trial/ | a run's trial is never written, and the card cannot set a trial's runs side by side
+agent.columns@1 | red | agent/mechanic/src/note.rs | s/(job.calls, job.peak)/(job.calls.filter(|_| false), job.peak)/ | a builder's note leaves out its calls, its peak and its minutes, so the race has no columns to fill
+agent.columns@1 | red | agent/mechanic/src/direct.rs | s/self.peak = peak;/self.peak = peak.min(0);/ | the director's peak is never kept, and every note says it held nothing
+agent.columns@1 | red | jig/scorecard | s/c\[\$3\] += \$9/c[$3] += 0/ | the card shows no calls for any part's builders
+agent.columns@1 | red | jig/scorecard | s/int((\$10 + 59) \/ 60)/int($10 \/ 600)/ | the card's wall minutes are a tenth of the real ones

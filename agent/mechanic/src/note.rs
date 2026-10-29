@@ -15,6 +15,10 @@ pub struct Job<'a> {
     pub tokens: u64,
     pub seconds: u64,
     pub files: &'a [String],
+    /// a builder's calls and the most context one held, for the race's columns
+    /// (findings 0029); the note command has neither
+    pub calls: Option<u64>,
+    pub peak: Option<u64>,
 }
 
 /// A TOML basic string: backslash and quote escaped, control characters dropped.
@@ -78,6 +82,9 @@ pub fn write(output: &str, job: &Job) -> String {
     );
     if job.files.len() > MAX_FILES {
         n += &format!("files_more    = {}\n", job.files.len() - MAX_FILES);
+    }
+    if let (Some(c), Some(p)) = (job.calls, job.peak) {
+        n += &format!("calls         = {c}\npeak_context  = {p}\nminutes       = {}\n", job.seconds.div_ceil(60));
     }
     n
 }
