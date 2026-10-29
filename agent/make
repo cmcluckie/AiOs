@@ -1,0 +1,15 @@
+#!/bin/sh
+# make: builds the agent in WSL, beside Ollama, into out/agent/agent, from the
+# lockfile and nothing newer (design.md's tool table: the Rust toolchain, in WSL,
+# never on the jig).  The tests build their own, with the fake transport
+# (tests/programs/agent.sh).
+#
+#   sh agent/make       exit 0 built, 1 it did not build, 2 no cargo here
+set -u
+cd "$(dirname "$0")/.."
+command -v cargo > /dev/null || { echo "make: no cargo here; in WSL: curl https://sh.rustup.rs -sSf | sh" >&2; exit 2; }
+mkdir -p out/agent
+CARGO_TARGET_DIR=${CARGO_TARGET_DIR:-$HOME/.cache/aios/agent}; export CARGO_TARGET_DIR
+RUSTFLAGS="-D warnings" cargo build --release --locked --manifest-path agent/Cargo.toml || exit 1
+cp "$CARGO_TARGET_DIR/release/agent" out/agent/agent || exit 1
+echo "built out/agent/agent with $(rustc --version)"

@@ -1,0 +1,22 @@
+[package]
+name = "mechanic"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+
+# The director and builder program on top of the runtime: the only part that knows
+# about part plans, the jig and the run records (findings 0027).
+
+[[bin]]
+name = "agent"
+path = "src/main.rs"
+
+[features]
+fake = ["runtime/fake"]
+
+[dependencies]
+runtime = { version = "0.1.0", path = "../runtime" }
+serde = { version = "1.0.229", features = ["derive"] }
+serde_json = { version = "1", features = ["preserve_order"] }
+toml = "1.1.8"

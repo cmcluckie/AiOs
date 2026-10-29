@@ -1,0 +1,15 @@
+code          = "TOOL.agent@1"
+sentence      = "The layered mechanic (agent/, findings 0027): a director and fresh builders on the 3090, the program running the jig's tests and writing the notes between them; a Rust program run in WSL beside Ollama, the second bench, with jig/fix the control."
+status        = "draft"
+admitted      = ""
+retired_by    = ""
+kind          = "program"
+source        = ""
+licence       = "GPL-2.0-only"
+depends       = []
+build_depends = []
+exposes       = []
+requires      = []
+scaffold      = true
+as_built      = "index/tool/agent@1.as-built.md"
+reproducible  = ""

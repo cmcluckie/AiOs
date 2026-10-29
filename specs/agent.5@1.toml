@@ -1,0 +1,7 @@
+code       = "SPEC.agent.5@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+component  = "TOOL.agent@1"
+clause     = "A director runs one part plan on the card.  Its one job, in the first message, is the plan as strategic wrote it; its role is the library's director prompt.  Its tools: job (a test from the plan, a why, and a hint for the builder), search_log, search_prompts, ask and done.  A job with no why, or for a test not in the plan, starts no builder.  Each job is written with the plan's commit and builder prompt and run by a fresh builder; the director is shown only the result note the program wrote.  The program keeps the limits: past the plan's tries or minutes no builder starts; the same failing tests the plan's number of runs in a row, or a failing count that has not gone below its earlier low in the plan's number of runs, is stuck; and any of these, or a question, stops the part with a note for strategic holding the reason and the last three result notes.  Done is taken only when every test in the plan has passed.  When the director's conversation passes its share of the card, its older turns are folded into one message naming every job with its status and every test in the plan, with the last three notes whole, the plan and the last four messages kept; a fold that would lose a job or a test is not used (findings 0027)."
+author     = "KEY.chris"

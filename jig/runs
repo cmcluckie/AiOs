@@ -20,6 +20,11 @@
 #                                     and RUNS_PROMPT a fingerprint of the prompt it was given (default -)
 #                                     RUNS_AT, when given, is the commit the run worked from (jig/fix's
 #                                     FIX_AT, decision 0086), written as at
+#                                     RUNS_BENCH (agent), RUNS_PEAK (the most tokens one call held)
+#                                     and RUNS_ENDED (pass, fail, turns, room, stuck, stopped, budget,
+#                                     time, unreachable or error), when given, say which bench ran it and how
+#                                     it ended, for the race (findings 0027); a run without them is the
+#                                     old bench's
 #   runs spent [YYYY-MM]              the cost of every run recorded in that month (default: now)
 #   runs budget CEILING               exit 1 if this month's spend plus CEILING (the most the
 #                                     next call could cost, in dollars) would pass the cap in
@@ -87,6 +92,11 @@ record)	[ $# -eq 10 ] || die "needs ITEM MODEL VERSION TRY IN_TOKENS OUT_TOKENS 
 	case "$sitting$prompt" in *[!A-Za-z0-9_.-]*) die "RUNS_SITTING and RUNS_PROMPT are letters, digits, . _ and - only" ;; esac
 	at=${RUNS_AT:-}
 	case "$at" in *[!0-9a-f]*) die "RUNS_AT is a commit's hash, not '$at'" ;; esac
+	bench=${RUNS_BENCH:-}; peak=${RUNS_PEAK:-}; ended=${RUNS_ENDED:-}
+	case "$bench" in ''|agent) ;; *) die "RUNS_BENCH is agent or not given, not '$bench'" ;; esac
+	[ -z "$peak" ] || whole RUNS_PEAK "$peak"
+	case "$ended" in ''|pass|fail|turns|room|stuck|stopped|budget|time|unreachable|error) ;;
+	*) die "RUNS_ENDED is pass, fail, turns, room, stuck, stopped, budget, time, unreachable or error, not '$ended'" ;; esac
 	slug=$(printf '%s' "$model" | tr -c 'A-Za-z0-9\n' '-')
 	id="$stamp-$item-$try-$slug"
 	[ ! -e "$RUNS/$id" ] || die "$id is already recorded"
@@ -110,6 +120,9 @@ result        = "$result"
 lines         = $lines
 EOF
 	[ -z "$at" ] || echo "at            = \"$at\"" >> "$RUNS/$id/run.toml"
+	[ -z "$bench" ] || echo "bench         = \"$bench\"" >> "$RUNS/$id/run.toml"
+	[ -z "$peak" ] || echo "peak_context  = $peak" >> "$RUNS/$id/run.toml"
+	[ -z "$ended" ] || echo "ended         = \"$ended\"" >> "$RUNS/$id/run.toml"
 	echo "$id" ;;
 spent)	month=${1:-$(printf '%.7s' "${RUNS_NOW:-$(date -u +%Y-%m-%dT%H:%M:%SZ)}")}
 	for f in "$RUNS"/*/run.toml; do [ -f "$f" ] && cat "$f"; done 2> /dev/null |

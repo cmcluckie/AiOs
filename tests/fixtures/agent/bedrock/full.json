@@ -1,0 +1,1 @@
+{"output":{"message":{"role":"assistant","content":[]}},"stopReason":"model_context_window_exceeded","usage":{"inputTokens":199000,"outputTokens":10,"totalTokens":199010}}

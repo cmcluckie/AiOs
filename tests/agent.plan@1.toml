@@ -1,0 +1,10 @@
+code       = "TST.agent.plan@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+binds      = "SPEC.agent.2@1"
+red_when   = "a good part plan is refused, or is not read back with every default filled in; or a plan with no tests, an empty test list, a third gear, a key no plan has, a commit that is not hex, a prompt with no version, a try cap that is a word or 0, a string never closed or a key given twice is not refused naming the field, or prints anything"
+timeout_ms = 60000
+isolates   = "TOOL.agent@1"
+runner     = "jig/test cmd sh tests/programs/agent.sh plan"
+mutations  = 5

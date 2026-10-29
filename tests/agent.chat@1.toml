@@ -1,0 +1,10 @@
+code       = "TST.agent.chat@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+binds      = "SPEC.agent.3@1"
+red_when   = "the model, context, reply limit, system prompt, conversation or tools are not sent as given, with the system prompt first; or a tool call, a plain answer, a cut at the reply limit and a full context are not told apart, with the tokens; or the thinking is kept; or a reply that is not Ollama's, or no model at all, does not fail saying so"
+timeout_ms = 60000
+isolates   = "TOOL.agent@1"
+runner     = "jig/test cmd sh tests/programs/agent.sh chat"
+mutations  = 5

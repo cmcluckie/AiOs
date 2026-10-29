@@ -1,0 +1,7 @@
+code       = "SPEC.agent.1@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+component  = "TOOL.agent@1"
+clause     = "The result note a director reads after a builder's run is written by the program from the jig's test output, never by the builder: the job, pass or fail, the tests passed and failed counted from the test lines, the failing tests' names, the first failure's message cut to one line of 160 characters, the try, the tokens, the seconds and the files changed; at most 20 failing names and 20 files, with how many more were left out, so the note stays under 200 words however red the run (findings 0027)."
+author     = "KEY.chris"

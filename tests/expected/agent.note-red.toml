@@ -1,0 +1,10 @@
+job           = "waits-1"
+status        = "fail"
+tests_passed  = 121
+tests_failed  = 1
+failing       = ["TST.share.waits@1"]
+first_failure = "TST.share.waits@1: it never showed 00:00"
+try           = 1
+tokens        = 1234
+seconds       = 56
+files_changed = ["pool/PART.loader@9/loader.c"]

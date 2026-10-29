@@ -1,0 +1,41 @@
+# Where the agent's loop came from (findings 0027, item 3): Chris's CivicCanada,
+# a C# app with an agent that answers questions about Canadian towns.  Ported to
+# Rust as logic, not lifted as code: no line of it is in this repo, so there is no blob of
+# ours to check against it, and jig/upstream does not read this file.  What was
+# taken, from where, and where it lives here, so it can be found again and so the
+# credit is on the record, as lifted/ records Linux's.
+
+[upstream]
+name       = "civiccanada"
+repo       = "https://github.com/cmcluckie/CivicCanada.git"
+commit     = "e429cebd00be2d2a3c039cfc3948dc0ff362e969"
+committed  = 2026-09-01T23:03:53-07:00
+author     = "KEY.chris@1"
+
+[port]
+by         = "KEY.chris@1"
+on         = 2026-10-29
+
+[[port.from]]
+file   = "src/CivicCanada.Ai/Orchestration/AgentLoop.cs"
+blob   = "c7d431e91dbdcdb4e97ade16795d5b4e5774cef7"
+what   = "the ReAct loop: the system primer apart from the user's question, a turn cap (AgentBudget.MaxTurns), a reply that cannot be parsed fed back as a correction instead of ending the run, and a halt that says why (Halt)"
+into   = ["agent/runtime/src/react.rs", "agent/runtime/src/model.rs"]
+
+[[port.from]]
+file   = "src/CivicCanada.Ai/Orchestration/AgentLoop.cs"
+blob   = "c7d431e91dbdcdb4e97ade16795d5b4e5774cef7"
+what   = "a tool's answer cut at 8000 characters with the marker '… truncated, N more characters. Narrow the query.' (Truncate, AgentBudget.MaxToolResultChars)"
+into   = ["agent/runtime/src/room.rs"]
+
+[[port.from]]
+file   = "src/CivicCanada.Web/Catalogue/ConversationCondenser.cs"
+blob   = "4e3c477ed2aac8e7ef95ff57ee4d621494ff241d"
+what   = "tokens estimated as characters over four (EstimateTokens); the history held to a share of the model's window (BudgetFor, HistoryShare); everything but the newest four messages folded, those kept word for word (Plan, KeepMessages)"
+into   = ["agent/runtime/src/room.rs", "agent/mechanic/src/direct.rs"]
+
+[[port.from]]
+file   = "src/CivicCanada.Web/Catalogue/ConversationCondenser.cs"
+blob   = "4e3c477ed2aac8e7ef95ff57ee4d621494ff241d"
+what   = "a fold checked for what it dropped (its call to CondensationFidelity.Dropped); here the director's fold must name every job and every test in the plan, or it is not used"
+into   = ["agent/mechanic/src/direct.rs"]

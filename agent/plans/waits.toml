@@ -1,0 +1,17 @@
+# A part plan, strategic's: the waits fix (TECH-DEBT 2), from the commit Sonnet
+# and the old bench's 3090 runs started from, so the layered agent's first real
+# run can be set beside them (findings 0026 item 11, findings 0027).  The model on
+# the card and its context are the agent's (AGENT_CARD_MODEL, AGENT_CARD_CTX).
+part       = "PART.loader@9: TECH-DEBT 2, a program waiting for a key stops the others"
+tests      = ["share.waits@1"]
+at         = "9c6c852"
+budget_usd = 0
+max_tries  = 10
+
+[gear]
+tactical = 1
+builders = 1
+
+[prompts]
+director = "director@1"
+builder  = "builder@1"

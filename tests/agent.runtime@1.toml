@@ -1,0 +1,10 @@
+code       = "TST.agent.runtime@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+binds      = "SPEC.agent.7@1"
+red_when   = "any of the runtime's own tests fails: the loop on saved replies (an unreadable call, a stop, the cap on calls, room against a cut, nothing there, a hook that stops a call), the signing against AWS's published examples, the prompt library's fingerprint, room's cut and drop, or the prices"
+timeout_ms = 300000
+isolates   = "TOOL.agent@1"
+runner     = "jig/test cmd sh tests/programs/agent.sh runtime"
+mutations  = 4

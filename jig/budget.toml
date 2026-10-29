@@ -2,4 +2,4 @@
 # recorded run.  jig/runs budget refuses a call that could pass it, before the
 # call is made.  A budget alert in the provider's console is the second wall;
 # this is the first.  Human-only.
-monthly_cap_usd = 20.00
+monthly_cap_usd = 40.00

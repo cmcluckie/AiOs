@@ -31,11 +31,16 @@ Sits a model for one exam item (exam/items.toml) and writes down what happened.
   cannot run here.
 - runs record, count, spent, budget: writes runs/<id>/ (run.toml, input.txt,
   output.txt); counts code lines (non-blank, outside comments); sums the
-  month's cost; refuses a call that could pass jig/budget.toml's cap.
+  month's cost; refuses a call that could pass jig/budget.toml's cap ($40 a
+  month from 2026-10-29, findings 0027).  Since part 22 (SPEC.exam.10), a run
+  given RUNS_BENCH=agent, RUNS_PEAK and RUNS_ENDED also records bench, its peak
+  context and how it ended; a run without them is recorded as before.
 - scorecard: reads runs/ and the hand lifts and prints, per model and item, one
   line per sitting: PASS or FAIL, lines kept against the hand lift's, tries,
   cost and the prompt's fingerprint; then items passed, sittings, total spent
-  and cost per passing sitting.  Items never sat print "not sat".
+  and cost per passing sitting.  Items never sat print "not sat".  A sitting on
+  the agent's bench adds its bench, the most context any of its calls held and
+  how its last try ended.
 
 ## What a run records
 id, date, item, model, version, sitting (one start of sit), prompt (first 8

@@ -1,0 +1,10 @@
+code       = "TST.agent.note@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+binds      = "SPEC.agent.1@1"
+red_when   = "the agent does not build with warnings as errors; or the note for a real red or green run from the jig is not the one expected, word for word; or a run with 60 failing tests and 30 files gives a note over 200 words, or loses the counts, or does not count what it left out, or keeps a first failure longer than one line; or a try that is not a number writes a note"
+timeout_ms = 60000
+isolates   = "TOOL.agent@1"
+runner     = "jig/test cmd sh tests/programs/agent.sh note"
+mutations  = 5

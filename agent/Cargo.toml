@@ -1,0 +1,15 @@
+# The layered mechanic (findings 0027): a runtime that knows nothing of AiOs, and
+# the director and builder program on top of it, the only part that knows about
+# part plans and the jig.  Built in WSL beside Ollama, never on the jig.
+[workspace]
+members = ["runtime", "mechanic"]
+resolver = "2"
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "GPL-2.0-only"
+publish = false
+
+[profile.release]
+opt-level = 2

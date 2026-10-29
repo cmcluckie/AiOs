@@ -5,6 +5,8 @@
 #   record     a run is recorded with its cost, or refused with a reason
 #   budget     the monthly cap refuses a call that could pass it
 #   scorecard  the table for two models matches tests/expected/scorecard.table@1.out
+#   bench      a run on the agent's bench keeps its bench, peak context and ending,
+#              and the scorecard shows them beside the old bench's
 #   judge      a lift stands in for the hand lift and the item's tests decide
 # Exit 0 is green, 1 is red, 2 means this host cannot run it (no QEMU).
 set -u
@@ -91,6 +93,29 @@ scorecard)
 	EXAM="$fx/items.toml" EXAM_ROOT="$fx" sh jig/scorecard > "$tmp/got" 2>&1 || fail "the scorecard failed on no runs"
 	[ "$(cat "$tmp/got")" = "no runs recorded in $RUNS" ] || fail "with no runs it said '$(head -1 "$tmp/got")'"
 	echo "two models, eleven runs in seven sittings: the table matches the one written by hand (a line per sitting with its passes, lines beside the hand lift's, tries, cost including the failed tries and prompt fingerprint, an item never sat, and the cost per passing sitting), and with no runs it says so" ;;
+bench)
+	R() { rec "$@" > /dev/null || fail "run '$*' was refused"; }
+	export RUNS_SITTING=20261029T100000Z RUNS_PROMPT=cccc3333
+	R 2026-10-29T10:00:00Z serial test:local v3 1 5000 500 fail 0
+	export RUNS_SITTING=20261029T110000Z RUNS_PROMPT=dddd4444 RUNS_BENCH=agent RUNS_PEAK=97204 RUNS_ENDED=room
+	R 2026-10-29T11:00:00Z serial test:local v3 1 97000 204 refused 0
+	RUNS_PEAK=41000 RUNS_ENDED=pass R 2026-10-29T11:10:00Z serial test:local v3 2 41000 900 pass 6
+	r=$(ls -d "$RUNS"/*T111000Z-serial-2-*)
+	grep -qx 'bench         = "agent"' "$r/run.toml" && grep -qx 'peak_context  = 41000' "$r/run.toml" && grep -qx 'ended         = "pass"' "$r/run.toml" ||
+		fail "the agent's run does not keep its bench, peak context and ending: $(grep -E '^(bench|peak|ended)' "$r/run.toml" | tr '\n' ' ')"
+	grep -q '^bench' "$(ls -d "$RUNS"/*T100000Z-serial-1-*)/run.toml" && fail "a run given no bench was written as one"
+	n=$(ls "$RUNS" | wc -l)
+	RUNS_ENDED=lost refuse "an ending that is not one" "RUNS_ENDED is pass" rec 2026-10-29T12:00:00Z timer test:local v3 1 1 1 fail 0
+	RUNS_BENCH=mine refuse "a bench that is not one" "RUNS_BENCH is agent" rec 2026-10-29T12:01:00Z timer test:local v3 1 1 1 fail 0
+	RUNS_PEAK=lots refuse "a peak that is not a number" "RUNS_PEAK must be a whole number" rec 2026-10-29T12:02:00Z timer test:local v3 1 1 1 fail 0
+	[ "$(ls "$RUNS" | wc -l)" -eq "$n" ] || fail "a refused run left something behind"
+	unset RUNS_SITTING RUNS_PROMPT RUNS_BENCH RUNS_PEAK RUNS_ENDED
+	EXAM="$fx/items.toml" EXAM_ROOT="$fx" sh jig/scorecard > "$tmp/got" 2>&1 || fail "the scorecard failed: $(head -2 "$tmp/got")"
+	grep -q '^  serial  FAIL  1 try  \$0.000000  prompt cccc3333$' "$tmp/got" ||
+		fail "the old bench's sitting is not shown as it always was: $(grep cccc "$tmp/got")"
+	grep -q '^  serial  PASS  6 lines (hand 10)  2 tries  \$0.000000  prompt dddd4444  bench agent, peak context 97204, ended pass$' "$tmp/got" ||
+		fail "the agent's sitting does not show its bench, the most context a call held, and how its last try ended: $(grep dddd "$tmp/got")"
+	echo "an agent run keeps bench agent, its peak context and how it ended; a run given none is the old bench's, unchanged on the card; an ending, a bench or a peak that is not one is refused and leaves nothing; the card shows the agent's sitting with the most context a call held (97204, from the try that ran out of room) and how its last try ended" ;;
 judge)
 	command -v qemu-system-x86_64 > /dev/null || { echo "no qemu-system-x86_64"; exit 2; }
 	hand=lifted/PART.serial.8250@1

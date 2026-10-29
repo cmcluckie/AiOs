@@ -1,0 +1,13 @@
+# A part plan for the race: the waits fix, from where Sonnet started it.
+part       = "PART.loader@9: TECH-DEBT 2, a program waiting for a key stops the others"
+tests      = ["share.waits@1"]   # the test that says it is done
+at         = "9c6c852"
+budget_usd = 0
+
+[gear]
+tactical = 1
+builders = 1
+
+[prompts]
+director = "director@1"
+builder  = "builder@1"

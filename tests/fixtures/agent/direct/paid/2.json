@@ -1,0 +1,1 @@
+{"output":{"message":{"role":"assistant","content":[{"text":"The answer first."},{"toolUse":{"toolUseId":"tooluse_1","name":"job","input":{"test":"toy.answer@1","why":"it is the one the other builds on"}}}]}},"stopReason":"tool_use","usage":{"inputTokens":1000,"outputTokens":100,"totalTokens":1100}}

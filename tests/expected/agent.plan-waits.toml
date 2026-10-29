@@ -1,0 +1,17 @@
+part                = "PART.loader@9: TECH-DEBT 2, a program waiting for a key stops the others"
+petition            = ""
+tests               = ["share.waits@1"]
+at                  = "9c6c852"
+budget_usd          = 0.00
+max_tries           = 10
+max_minutes         = 120
+stuck_same_failures = 3
+stuck_no_drop       = 5
+
+[gear]
+tactical            = 1
+builders            = 1
+
+[prompts]
+director            = "director@1"
+builder             = "builder@1"

@@ -1,0 +1,7 @@
+code       = "SPEC.agent.6@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+component  = "TOOL.agent@1"
+clause     = "Gear 2 is one call to Sonnet through Bedrock's Converse API, in the region the key file names, signed for bedrock there; the key is read from the file jig/model reads and refused, with nothing sent, if anyone but its owner can read it.  The conversation is handed over in Converse's shape: the system prompt as its system, turns that alternate, each tool's answer as the result of the call it answers and a note after it in the same turn, the tools as toolSpecs, the reply's limit as maxTokens; the reply is read back in the conversation's own shape, with its tokens, and tool_use, end_turn, max_tokens and a full context told apart.  Every paid call is asked first of the part's share (budget_usd, less what its builders and its director have spent) and of the month's cap (jig/runs budget, jig/budget.toml), with the most one call may cost (AGENT_MAX_COST); a call either has no room for is not made, and the run stops, recorded as ended on the budget with what it cost.  A plan with a paid layer and no dollars does not start (findings 0027)."
+author     = "KEY.chris"

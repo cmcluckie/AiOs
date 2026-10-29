@@ -1,0 +1,7 @@
+code       = "SPEC.agent.2@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+component  = "TOOL.agent@1"
+clause     = "A part plan is one TOML file strategic writes: the part, its petition (none for a fix), the tests that say it is done, the commit the work starts from, the gear of each layer (1, the card; 2, Sonnet on Bedrock), the part's share of the budget, the try cap, the time cap and the two stuck limits (10 tries, 120 minutes, 3 runs with the same failing tests, 5 runs with no drop, when not given), and the library versions of the director's and the builder's prompts.  A plan missing a field, with a key no plan has, or with a value of the wrong kind or out of range is refused, naming the field, and nothing runs (findings 0027)."
+author     = "KEY.chris"

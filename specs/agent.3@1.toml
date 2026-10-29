@@ -1,0 +1,7 @@
+code       = "SPEC.agent.3@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+component  = "TOOL.agent@1"
+clause     = "One call to the model on the card goes to Ollama's chat API with the model, the context it holds and each reply's limit, the system prompt first as its own message and the conversation and tools after it as given.  The reply is read as one of: asked for a tool, said something and stopped, cut off at its own limit, cut off because the conversation filled the context, not reached, or not readable; with the tokens it took in and gave out.  The thinking is counted and not kept.  The agent reaches the network only through one transport, reqwest in WSL, or a fake one of saved replies for the tests (findings 0027)."
+author     = "KEY.chris"

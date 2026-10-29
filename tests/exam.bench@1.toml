@@ -1,0 +1,10 @@
+code       = "TST.exam.bench@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+binds      = "SPEC.exam.10@1"
+red_when   = "a run on the agent's bench does not keep its bench, peak context and ending, or a run given none is written as the agent's or shown differently on the card; or a bench, ending or peak that is not one is recorded; or the card does not show an agent sitting's bench, the most context any call held and how its last try ended"
+timeout_ms = 60000
+isolates   = "TOOL.exam@1"
+runner     = "jig/test cmd sh tests/programs/exam.sh bench"
+mutations  = 3

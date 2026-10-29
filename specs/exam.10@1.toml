@@ -1,0 +1,7 @@
+code       = "SPEC.exam.10@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+component  = "TOOL.exam@1"
+clause     = "A run on the layered agent's bench is recorded with its bench, the most tokens one call held, and how it ended: a pass, a fail, out of calls, out of room, stuck, stopped, the model gone, or an error.  A run without them is the old bench's and its record and its line on the scorecard are what they were.  The scorecard shows, for each sitting on the agent's bench, the bench, the most context any of its calls held, and how its last try ended, so a race between the benches is graded on ceiling; dollars are shown and never graded (findings 0027)."
+author     = "KEY.chris"

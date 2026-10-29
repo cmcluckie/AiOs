@@ -1,0 +1,397 @@
+#!/bin/sh
+# Probe for the layered agent's tests (findings 0027).  Builds agent/ with cargo,
+# with the lockfile, warnings as errors, with the fake transport
+# (the runtime's `fake` feature), and runs one piece of it against fixtures, from
+# the outside, through its commands.  Nothing calls a model and nothing boots.
+#
+#   sh tests/programs/agent.sh runtime TST.agent.runtime@1: the runtime's own tests
+#   sh tests/programs/agent.sh note    TST.agent.note@1: the result note
+#   sh tests/programs/agent.sh plan    TST.agent.plan@1: the part plan
+#   sh tests/programs/agent.sh chat    TST.agent.chat@1: one call to the model
+#   sh tests/programs/agent.sh build   TST.agent.build@1: one builder, its fix judged
+#   sh tests/programs/agent.sh direct  TST.agent.direct@1: a director and its limits
+#   sh tests/programs/agent.sh bedrock TST.agent.bedrock@1: gear 2, and what it may spend
+#
+# Exit 0 green, 1 red, 2 where there is no cargo: the agent is built and tested in
+# WSL beside Ollama, and the jig has no Rust toolchain (design.md's tool table).
+# CARGO_TARGET_DIR (default ~/.cache/aios/agent) keeps the builds between runs.
+set -u
+cd "$(dirname "$0")/../.."
+fail() { echo "$*"; exit 1; }
+command -v cargo > /dev/null || { echo "no cargo here: the agent is built and tested in WSL, not on the jig"; exit 2; }
+t=$(mktemp -d); trap 'rm -rf "$t"' EXIT
+[ -f agent/Cargo.toml ] || fail "the agent does not build: there is no agent/Cargo.toml"
+CARGO_TARGET_DIR=${CARGO_TARGET_DIR:-$HOME/.cache/aios/agent}; export CARGO_TARGET_DIR
+if [ "${1:-}" = runtime ]; then
+	RUSTFLAGS="-D warnings" cargo test -q --locked --features fake --manifest-path agent/Cargo.toml -p runtime > "$t/out" 2>&1 ||
+		fail "the runtime's own tests: $(grep -E '^(test .* FAILED|error)' "$t/out" | head -3 | tr '\n' ' ')$(tail -2 "$t/out" | tr '\n' ' ')"
+	echo "the runtime's own tests: $(grep -o '[0-9]* passed; 0 failed' "$t/out" | head -1), on saved replies and AWS's published signing examples"
+	exit 0
+fi
+RUSTFLAGS="-D warnings" cargo build -q --locked --features fake --manifest-path agent/Cargo.toml 2> "$t/cc" || fail "the agent does not build: $(grep -m1 -E '^error' "$t/cc")$(head -c 200 "$t/cc" | tr '\n' ' ')"
+cp "$CARGO_TARGET_DIR/debug/agent" "$t/agent" || fail "the agent built, but there is no agent at $CARGO_TARGET_DIR/debug/agent"
+fx=tests/fixtures/agent; ex=tests/expected
+
+case "${1:-}" in
+note)
+	# a real red run on the jig (share.waits red at 3dafa0d before its fix was pulled, 121
+	# passed, 1 failed) and a real green one (122 passed); the job's own numbers given
+	"$t/agent" note waits-1 1 1234 56 pool/PART.loader@9/loader.c < "$fx/suite-waits-red.txt" > "$t/red.toml" 2> "$t/err" || fail "the note for a red run was not written: $(head -1 "$t/err")"
+	cmp -s "$t/red.toml" "$ex/agent.note-red.toml" || fail "the note for a red run is not the one expected: $(diff "$ex/agent.note-red.toml" "$t/red.toml" | head -4 | tr '\n' ' ')"
+	"$t/agent" note waits-2 2 98765 412 pool/PART.loader@9/loader.c < "$fx/suite-waits-green.txt" > "$t/green.toml" 2> "$t/err" || fail "the note for a green run was not written: $(head -1 "$t/err")"
+	cmp -s "$t/green.toml" "$ex/agent.note-green.toml" || fail "the note for a green run is not the one expected: $(diff "$ex/agent.note-green.toml" "$t/green.toml" | head -4 | tr '\n' ' ')"
+	# made up, to be worse than any real run: 60 failing tests with long messages, 30 files
+	awk 'BEGIN { for (i = 1; i <= 60; i++) printf "FAIL  TST.made.up%02d@1  1s  %s\n", i, "this message is far too long to go to the director whole, and it goes on and on and on and on and on and on and on, well past one line of any sensible width at all"
+		for (i = 1; i <= 3; i++) printf "PASS  TST.made.fine%d@1  0s  ok\n", i; print "# 3 passed, 60 failed, 0 skipped" }' > "$t/many.txt"
+	files=$(awk 'BEGIN { for (i = 1; i <= 30; i++) printf "pool/PART.made@1/f%02d.c ", i }')
+	# shellcheck disable=SC2086
+	"$t/agent" note many-1 3 10 20 $files < "$t/many.txt" > "$t/many.toml" 2> "$t/err" || fail "the note for a very red run was not written: $(head -1 "$t/err")"
+	w=$(wc -w < "$t/many.toml")
+	[ "$w" -le 200 ] || fail "the note for 60 failing tests and 30 files is $w words, over the 200 a director is given"
+	grep -q '^tests_failed  = 60$' "$t/many.toml" && grep -q '^tests_passed  = 3$' "$t/many.toml" || fail "the counts were cut along with the names: $(grep '^tests_' "$t/many.toml" | tr '\n' ' ')"
+	grep -q '^failing_more  = 40$' "$t/many.toml" && grep -q '^files_more    = 10$' "$t/many.toml" || fail "the names and files left out of the note are not counted in it"
+	[ "$(sed -n 's/^first_failure = "\(.*\)"$/\1/p' "$t/many.toml" | wc -c)" -le 161 ] || fail "the first failure is not cut to one line of 160 characters"
+	# a try that is not a number writes nothing and says why
+	"$t/agent" note bad-1 one 0 0 < "$fx/suite-waits-red.txt" > "$t/bad.toml" 2> "$t/err"; rc=$?
+	[ $rc -eq 2 ] && [ ! -s "$t/bad.toml" ] && grep -q 'try' "$t/err" || fail "a try that is not a number gave exit $rc and wrote $(wc -c < "$t/bad.toml") bytes"
+	echo "a red run and a green run from the jig give the notes expected, word for word; 60 failing tests and 30 files fit in $w words, the 40 and 10 left out counted, the first failure cut to a line; a try that is not a number writes nothing" ;;
+plan)
+	"$t/agent" plan "$fx/plan-waits.toml" > "$t/plan.toml" 2> "$t/err" || fail "a good part plan was refused: $(head -1 "$t/err")"
+	cmp -s "$t/plan.toml" "$ex/agent.plan-waits.toml" || fail "the plan read back is not the one expected, every default filled in: $(diff "$ex/agent.plan-waits.toml" "$t/plan.toml" | head -4 | tr '\n' ' ')"
+	# each spoiled copy refused, naming the field, and nothing printed
+	n=0
+	spoil() {	# spoil NAME SED-EXPRESSION WORD-THE-REFUSAL-NAMES
+		n=$((n + 1)); sed "$2" "$fx/plan-waits.toml" > "$t/spoiled$n.toml"	# a name the refusal cannot match by accident
+		"$t/agent" plan "$t/spoiled$n.toml" > "$t/out" 2> "$t/err"; rc=$?
+		[ $rc -eq 1 ] && [ ! -s "$t/out" ] && grep -q "$3" "$t/err" || fail "a plan with $1 gave exit $rc, printed $(wc -c < "$t/out") bytes, and said: $(head -1 "$t/err")"
+	}
+	spoil "no tests" '/^tests/d' 'tests'
+	spoil "an empty test list" 's/^tests .*/tests = []/' 'tests'
+	spoil "a third gear" 's/^tactical = 1/tactical = 3/' 'gear.tactical'
+	spoil "a key no plan has" 's/^budget_usd = 0/budget_usd = 0\nmax_tokens = 9/' 'max_tokens'
+	spoil "a commit that is not hex" 's/9c6c852/main/' 'at'
+	spoil "a prompt with no version" 's/director@1/director/' 'prompts'
+	spoil "a try cap as a word" 's/^budget_usd = 0/budget_usd = 0\nmax_tries = "ten"/' 'max_tries'
+	spoil "no try at all" 's/^budget_usd = 0/budget_usd = 0\nmax_tries = 0/' 'max_tries'
+	spoil "a string never closed" 's/director@1"/director@1/' 'not closed'
+	spoil "a key given twice" 's/^budget_usd = 0/budget_usd = 0\nbudget_usd = 1/' 'twice'
+	echo "a part plan read back with every default filled in: 10 tries, 120 minutes, stuck at 3 of the same or 5 with no drop; refused, naming the field, with no tests, an empty list, a third gear, a key no plan has, a commit that is not hex, a prompt with no version, a try cap as a word or 0, a string never closed, a key given twice" ;;
+chat)
+	command -v jq > /dev/null || fail "no jq here to read what the agent sent"
+	# replies made up in Ollama's shape, one per way a call ends; each case gets its own
+	# folder, as the fake hands back 1.json and keeps what was sent as sent-1.json
+	call() {	# call REPLY: one chat with REPLY as the model's answer; $rc, $t/REPLY/{out,err}
+		mkdir "$t/$1"; [ -f "$fx/chat/$1.json" ] && cp "$fx/chat/$1.json" "$t/$1/1.json"
+		AGENT_FAKE="$t/$1" OLLAMA_URL=http://ollama.test:11434 "$t/agent" chat qwen3.8:27b 98304 2000 \
+			< "$fx/chat/conversation.json" > "$t/$1/out" 2> "$t/$1/err"; rc=$?
+	}
+	field() { sed -n "s/^$2 *= //p" "$t/$1/out"; }
+	call tool
+	[ $rc -eq 0 ] || fail "a reply asking for a tool gave exit $rc: $(head -1 "$t/tool/err")"
+	s="$t/tool/sent-1.json"
+	[ "$(jq -r '.model, .stream, .options.num_ctx, .options.num_predict' "$s" | tr '\n' ' ')" = "qwen3.8:27b false 98304 2000 " ] ||
+		fail "the model, stream, context and reply limit sent are not the ones asked for: $(jq -c '{model, stream, options}' "$s")"
+	[ "$(jq -r '.messages[0].role, .messages[0].content' "$s" | tr '\n' '|')" = "system|You are a builder.  One job, then submit.|" ] ||
+		fail "the system prompt is not sent first, as its own message: $(jq -c '.messages[0]' "$s")"
+	[ "$(jq -c '.messages[1:]' "$s")" = "$(jq -c '.messages' "$fx/chat/conversation.json")" ] ||
+		fail "the conversation is not sent as it was given, in order, after the system prompt"
+	[ "$(jq -c '.tools' "$s")" = "$(jq -c '.tools' "$fx/chat/conversation.json")" ] || fail "the tools are not sent as given"
+	[ "$(field tool stop)" = '"tool"' ] && [ "$(field tool tokens_in)" = 5321 ] && [ "$(field tool tokens_out)" = 412 ] ||
+		fail "a reply asking for a tool is not read as one, with its tokens: $(head -3 "$t/tool/out" | tr '\n' ' ')"
+	m=$(field tool message)
+	[ "$(echo "$m" | jq -r '.tool_calls[0].function.arguments.why')" = "see where the interrupt flag is set" ] ||
+		fail "the tool call, and its why, are not in the reply kept: $m"
+	[ "$(echo "$m" | jq 'has("thinking")')" = false ] || fail "the thinking is kept in the conversation, and fills it"
+	call end
+	[ $rc -eq 0 ] && [ "$(field end stop)" = '"end"' ] || fail "a reply that just says something is read as $(field end stop), exit $rc"
+	call cut
+	[ $rc -eq 0 ] && [ "$(field cut stop)" = '"max_tokens"' ] || fail "a reply cut off at its own 2000 tokens is read as $(field cut stop), exit $rc"
+	call full
+	[ $rc -eq 0 ] && [ "$(field full stop)" = '"context"' ] || fail "a reply cut off at 204 tokens, the context full, is read as $(field full stop), exit $rc"
+	call garbled
+	[ $rc -eq 1 ] && [ "$(field garbled stop)" = '"error"' ] && grep -q 'could not be read' "$t/garbled/err" ||
+		fail "a reply that is not Ollama's gave exit $rc, read as $(field garbled stop), and said: $(head -1 "$t/garbled/err")"
+	call gone
+	[ $rc -eq 1 ] && [ "$(field gone stop)" = '"unreachable"' ] && grep -q 'ollama.test:11434' "$t/gone/err" ||
+		fail "no model there gave exit $rc, read as $(field gone stop), and said: $(head -1 "$t/gone/err")"
+	echo "the model, context, reply limit, system prompt first, the conversation and tools sent as given; a tool call read with its why and tokens, its thinking dropped; a plain answer, a cut at the reply limit and a full context told apart; a reply that is not Ollama's and no model at all fail, saying so" ;;
+build)
+	command -v jq > /dev/null && command -v git > /dev/null || fail "no jq or git here"
+	# a toy repo, made here, as the jig's clone and the builder's both: one part whose
+	# answer is 41 and should be 42, a test that says so, one that goes red if the fix
+	# says "break other", one red before and after, and a jig/test that runs the three
+	here=$(pwd); h="$t/home"; a="$h/aios"; mkdir -p "$a/pool/PART.toy@1" "$a/tests" "$a/specs" "$a/jig" "$a/prompts" "$a/runs"
+	printf 'int answer = 41;\n' > "$a/pool/PART.toy@1/toy.c"
+	awk 'BEGIN { for (i = 1; i <= 500; i++) printf "note %03d: the answer was 41 in the first draft, kept for now\n", i }' > "$a/pool/PART.toy@1/notes.txt"
+	printf 'code       = "TST.toy.answer@1"\nbinds      = "SPEC.toy.1@1"\n' > "$a/tests/toy.answer@1.toml"
+	printf 'code       = "SPEC.toy.1@1"\nclause     = "The answer is \\"42\\", not 41."\n' > "$a/specs/toy.1@1.toml"
+	printf 'You are a builder for the toy.\n' > "$a/prompts/builder@1.txt"
+	printf 'a run of an earlier try\n' > "$a/runs/old.txt"
+	cat > "$a/jig/test" <<'TOY'
+#!/bin/sh
+f=pool/PART.toy@1/toy.c; p=0; n=0
+if grep -q 'answer = 42' $f; then echo "PASS  TST.toy.answer@1  0s  42"; p=$((p+1)); else echo "FAIL  TST.toy.answer@1  0s  the answer is $(sed 's/[^0-9]//g' $f), not 42"; n=$((n+1)); fi
+grep -q forge $f && echo "PASS  TST.toy.answer@1  0s  a line the fix printed itself"
+if grep -q 'break other' $f; then echo "FAIL  TST.toy.other@1  0s  broken by the fix"; n=$((n+1))
+elif grep -q 'skip other' $f; then echo "SKIP  TST.toy.other@1  0s  skipped"
+else echo "PASS  TST.toy.other@1  0s  fine"; p=$((p+1)); fi
+[ -d runs ] && { echo "FAIL  TST.toy.copy@1  0s  the runs folder is in the copy"; n=$((n+1)); }
+echo "FAIL  TST.toy.old@1  0s  red before any of this"; n=$((n+1))
+echo "# $p passed, $n failed, 0 skipped"
+TOY
+	(cd "$a" && git init -q && git add -A && git -c user.name=t -c user.email=t@t commit -qm toy) || fail "could not make the toy repo"
+	at=$(git -C "$a" rev-parse --short=9 HEAD)
+	# the fake ssh runs the jig's half here, with the toy home as the jig's home
+	# with JIGDOWN set to a file, the jig answers once, then is gone
+	printf '#!/bin/sh\nshift\nif [ -n "${JIGDOWN:-}" ]; then [ -f "$JIGDOWN" ] && { echo "ssh: connect to host jig port 22: Connection refused" >&2; exit 255; }; : > "$JIGDOWN"; fi\nHOME=%s exec sh -c "$1"\n' "$h" > "$t/ssh"
+	job() {	# job FILE [EXTRA-LINE [TRY]]: the job to fix toy.answer at the toy's commit
+		printf 'job = "toy"\ntest = "toy.answer@1"\nat = "%s"\ntry = %s\nprompt = "builder@1"\nmodel = "%s"\nnum_ctx = 2048\nroom_share = 50\n%s\n' "$at" "${3:-1}" "${JOBMODEL:-qwen3.8:27b}" "${2:-}" > "$1"
+	}
+	run() {	# run CASE [EXTRA-LINE [TRY]]: the builder on the job, the replies in $t/CASE
+		job "$t/$1.toml" "${2:-}" "${3:-1}"
+		(cd "$a" && AGENT_FAKE="$t/$1" AGENT_SSH="sh $t/ssh" AGENT_JIG=toy@jig AGENT_OUT="$t/out" AGENT_QUIET=1 \
+			AGENT_RUNS="sh $here/jig/runs" RUNS="$t/runs" PRICES="$here/jig/prices.toml" AGENT_SITTING=20261029T120000Z \
+			"$t/agent" build "$t/$1.toml" > "$t/$1.out" 2> "$t/$1.err"); rc=$?
+	}
+	mkdir "$t/whole"; cp "$fx"/build/[0-9].json "$t/whole/"
+	run whole
+	o="$t/out/toy-try1"
+	[ $rc -eq 0 ] || fail "a builder that hands in the right fix on its eighth call gave exit $rc: $(head -2 "$t/whole.err" | tr '\n' ' ')$(cat "$t/whole.out")"
+	rt() { sed -n "s/^$1 *= *//p" "$o/run.toml"; }
+	[ "$(rt result)" = '"pass"' ] && [ "$(rt ended)" = '"pass"' ] && [ "$(rt calls)" = 8 ] && [ "$(rt hand_ins)" = 3 ] ||
+		fail "the run is not recorded as a pass on call 8 after 3 hand-ins: $(grep -E '^(result|ended|calls|hand_ins)' "$o/run.toml" | tr '\n' ' ')"
+	[ "$(rt bench)" = '"agent"' ] && [ "$(rt peak_context)" = 2250 ] && [ "$(rt tokens_in)" = 11910 ] && [ "$(rt tokens_out)" = 1070 ] ||
+		fail "the bench, the peak context (2250, the biggest call) or the tokens are not recorded: $(grep -E '^(bench|peak_context|tokens_)' "$o/run.toml" | tr '\n' ' ')"
+	# what the builder was sent: the role in the system prompt, the one job in the first message
+	s1="$t/whole/sent-1.json"
+	[ "$(jq -r '.messages[0].content' "$s1")" = "You are a builder for the toy." ] || fail "the system prompt is not the library's builder@1"
+	jq -r '.messages[1].content' "$s1" > "$t/first"
+	grep -q 'The answer is "42", not 41.' "$t/first" && grep -q '^FAIL  TST.toy.answer@1  0s  the answer is 41, not 42$' "$t/first" ||
+		fail "the first message does not hold the clause and what the red test printed on the jig: $(head -c 300 "$t/first" | tr '\n' ' ')"
+	ans() { jq -r "[.messages[] | select(.role == \"tool\")][$2].content" "$t/whole/sent-$1.json"; }
+	ans 2 0 | grep -q '^refused: say why' || fail "a look with no why was run: $(ans 2 0 | head -1)"
+	ans 3 1 | grep -q "^1	int answer = 41;$" || fail "a look that said why was not answered from the copy: $(ans 3 1 | head -2 | tr '\n' ' ')"
+	ans 4 2 | grep -q '^… truncated, [0-9]* more characters. Narrow the query.$' || fail "400 lines of notes were not cut with the marker: $(ans 4 2 | tail -1)"
+	[ "$(ans 4 2 | head -c 8000 | wc -c)" -eq 8000 ] || fail "the cut answer is not 8000 characters before its marker"
+	ans 5 3 | grep -q '^refused: ../../etc/passwd is outside the repo' || fail "a look outside the copy was not refused: $(ans 5 3)"
+	ans 6 4 | grep -q 'could not be read' || fail "a call whose arguments are not JSON was not answered with what was wrong: $(ans 6 4)"
+	ans 7 5 | grep -q 'judged: fail.*1 newly red: FAIL  TST.toy.other@1' || fail "a fix that broke a green test was not shown what it broke: $(ans 7 5 | head -2 | tr '\n' ' ')"
+	ans 7 5 | grep -q 'toy.old' && fail "a test red before the fix was counted against it"
+	ans 8 6 | grep -q 'refused: only a file under pool/' || fail "a fix to the test itself was not refused: $(ans 8 6)"
+	jq -r '.messages[-1].content' "$t/whole/sent-2.json" | grep -q '^Call 1 of 60 done; 59 left.$' || fail "the builder is not told how many calls it has left"
+	jq -e '[.messages[] | select(.thinking)] | length == 0' "$t/whole/sent-8.json" > /dev/null || fail "a thinking was kept in the conversation"
+	# 2048 tokens of context and half of it for the conversation: the 8000 characters of
+	# notes are dropped once four newer messages are in, and the builder is told so
+	ans 8 2 | grep -q '^\[dropped to make room: this answer was 80[0-9][0-9] characters; look again if you need it\]$' ||
+		fail "an old answer was not dropped to make room, nor said so: $(ans 8 2 | head -c 120)"
+	ans 8 4 | grep -q 'could not be read' || fail "a recent answer was dropped; the last four are kept word for word"
+	[ "$(sed -n 's/^status *= *//p' "$o/note.toml")" = '"fail"' ] && grep -q '^tests_failed  = 1$' "$o/note.toml" && grep -q '"pool/PART.toy@1/toy.c"' "$o/note.toml" ||
+		fail "the note from the last suite run is not the one the jig printed: $(tr '\n' ' ' < "$o/note.toml" | cut -c1-200)"
+	grep -q '^=== pool/PART.toy@1/toy.c$' "$o/output.txt" && [ "$(rt lines)" = 2 ] || fail "the change is not kept with the lines it changed: $(rt lines)"
+	grep -q 'toy.copy' "$o/before.txt" "$o/suite.txt" && fail "the jig's copy of the repo has runs/ in it, so an earlier run is there to read"
+	[ -d "$o/base/pool" ] && [ ! -e "$o/base/runs" ] || fail "the builder's copy is missing, or has runs/ in it"
+	# recorded in runs/ as every run is, so the month's spend and the card count it
+	rr=$(ls "$t"/runs/*/run.toml 2> /dev/null)
+	[ "$(echo "$rr" | grep -c .)" -eq 1 ] || fail "$(echo "$rr" | grep -c .) runs recorded in runs/, not 1"
+	for want in 'item          = "fix-toy-answer"' 'model         = "ollama:qwen3.8:27b"' 'sitting       = "20261029T120000Z"' 'result        = "pass"' \
+		'lines         = 2' 'input_tokens  = 11910' 'bench         = "agent"' 'peak_context  = 2250' 'ended         = "pass"' "at            = \"$at\""; do
+		grep -qxF "$want" "$rr" || fail "the run in runs/ does not say $want: $(grep -E '^(item|result|bench|peak|ended)' "$rr" | tr '\n' ' ')"
+	done
+	git -C "$a" diff --quiet HEAD && [ -z "$(git -C "$a" status --porcelain)" ] || fail "the builder touched the repo it was given: $(git -C "$a" status --porcelain | head -2)"
+	# out of room: a reply cut off short of its limit ends the run, honestly, and is a refusal
+	mkdir "$t/room"; cp "$fx/build/room.json" "$t/room/1.json"
+	run room '' 2
+	o="$t/out/toy-try2"
+	[ $rc -eq 1 ] && [ "$(rt ended)" = '"room"' ] && [ "$(rt result)" = '"refused"' ] && [ "$(rt peak_context)" = 97204 ] &&
+		grep -qx 'ended         = "room"' "$t"/runs/*/run.toml ||
+		fail "a builder whose conversation filled the card gave exit $rc and was recorded $(grep -E '^(ended|result|peak_context)' "$o/run.toml" | tr '\n' ' ')"
+	# no model at all on the first call: cannot run, and nothing recorded as a try
+	mkdir "$t/none"; run none "" 3; o="$t/out/toy-try3"
+	[ $rc -eq 2 ] && [ ! -f "$o/run.toml" ] && [ "$(ls "$t/runs" | wc -l)" -eq 2 ] || fail "a builder with no model to reach gave exit $rc, or recorded a try"
+	# a job with a key no job has: refused, naming it, before anything runs
+	mkdir "$t/odd"; run odd 'max_turn = 9'
+	[ $rc -eq 2 ] && grep -q 'max_turn' "$t/odd.err" && [ ! -f "$t/odd/sent-1.json" ] || fail "a job with a key no job has gave exit $rc and said: $(head -1 "$t/odd.err")"
+	# a hand-in's paths are checked before anything is written: none may climb out of the
+	# folder, and none may name a part by way of "."
+	mkdir "$t/escape"; cp "$fx/build/escape-1.json" "$t/escape/1.json"; cp "$fx/build/escape-2.json" "$t/escape/2.json"
+	run escape '' 6
+	[ ! -e "$t/escaped.txt" ] && [ ! -e "$t/out/escaped.txt" ] || fail "a hand-in path with .. wrote a file outside the builder's folder"
+	ans() { jq -r "[.messages[] | select(.role == \"tool\")][$2].content" "$t/$1/sent-$3.json"; }
+	ans escape 0 2 | grep -q 'refused: only a file under pool/ that already exists may be fixed, not ../../../escaped.txt' ||
+		fail "a hand-in path with .. was not refused: $(ans escape 0 2)"
+	grep -q 'refused' "$t/escape/3.json" 2> /dev/null; [ -f "$t/escape/sent-3.json" ] && ans escape 1 3 | grep -q 'not pool/./PART.toy@1/toy.c' ||
+		fail "a hand-in path through . was not refused"
+	# a fix that stops a green test is not a pass, nor one that prints its own PASS beside the FAIL
+	mkdir "$t/skip"; cp "$fx/build/skip-1.json" "$t/skip/1.json"; run skip '' 8
+	ans skip 0 2 | grep -q 'judged: fail.*1 newly red: GONE  TST.toy.other@1  green before, now skipped or not run' ||
+		fail "a fix that made a green test skip was not failed for it: $(ans skip 0 2 | head -1)"
+	mkdir "$t/forge"; cp "$fx/build/forge-1.json" "$t/forge/1.json"; run forge '' 9
+	ans forge 0 2 | grep -q 'judged: fail.  the test it was given is still red' ||
+		fail "a fix whose test printed both PASS and FAIL was taken: $(ans forge 0 2 | head -1)"
+	# the jig gone between the suite before and the hand-in: not the builder's failure, so
+	# cannot run, recorded, and the note is the suite before, not an ssh error with no counts
+	mkdir "$t/down"; cp "$fx/build/8.json" "$t/down/1.json"; JIGDOWN="$t/jigdown" run down '' 10
+	o="$t/out/toy-try10"
+	[ $rc -eq 2 ] && [ "$(rt ended)" = '"error"' ] && grep -q 'did not run on the jig' "$o/run.toml" && grep -q '^tests_failed  = 2$' "$o/note.toml" ||
+		fail "a jig gone at the hand-in gave exit $rc, ended $(rt ended), and a note of $(grep tests_failed "$o/note.toml")"
+	# the out folder given as a path from here, as it is by default: the judge still finds it
+	mkdir "$t/relout"; cp "$fx/build/8.json" "$t/relout/1.json"; job "$t/relout.toml" '' 7
+	(cd "$a" && AGENT_FAKE="$t/relout" AGENT_SSH="sh $t/ssh" AGENT_JIG=toy@jig AGENT_OUT=out/agent AGENT_QUIET=1 \
+		AGENT_RUNS="sh $here/jig/runs" RUNS="$t/runs" PRICES="$here/jig/prices.toml" "$t/agent" build "$t/relout.toml" > "$t/relout.out" 2> "$t/relout.err"); rc=$?
+	[ $rc -eq 0 ] && grep -q '^result       = "pass"$' "$a/out/agent/toy-try7/run.toml" ||
+		fail "the right fix with the out folder given from here was not a pass: exit $rc, $(cat "$t/relout.err")$(cat "$t/relout.out")"
+	# gear 2: no call past the month's cap, and none past the job's share of the part's
+	cp "$fx/bedrock/aws" "$t/aws"; chmod 600 "$t/aws"; printf 'monthly_cap_usd = 0.10\n' > "$t/cap.toml"
+	export AIOS_AWS="$t/aws" JOBMODEL=global.anthropic.claude-sonnet-4-6
+	mkdir "$t/capped"; cp "$fx/bedrock/tool.json" "$t/capped/1.json"
+	BUDGET="$t/cap.toml" run capped 'gear = 2' 4
+	[ $rc -eq 2 ] && grep -q 'would pass the cap of 0.10' "$t/capped.err" && [ ! -f "$t/capped/sent-1.json" ] ||
+		fail "a paid call the month's cap had no room for gave exit $rc, said $(head -1 "$t/capped.err"), and was sent: $(ls "$t/capped" | grep -c sent)"
+	mkdir "$t/share"; cp "$fx/bedrock/tool.json" "$t/share/1.json"; cp "$fx/bedrock/tool.json" "$t/share/2.json"
+	AGENT_MAX_COST=0.01 run share "$(printf 'gear = 2\nmax_usd = 0.012')" 5
+	o="$t/out/toy-try5"
+	[ $rc -eq 1 ] && [ -f "$t/share/sent-1.json" ] && [ ! -f "$t/share/sent-2.json" ] && [ "$(rt ended)" = '"budget"' ] && [ "$(rt calls)" = 1 ] &&
+		[ "$(rt dollars)" = 0.004500 ] && [ "$(rt model)" = '"bedrock:global.anthropic.claude-sonnet-4-6"' ] ||
+		fail "a job with \$0.012 to spend, \$0.0045 spent and a call that may cost \$0.01 made it, or was not recorded as ended on the budget: exit $rc, $(grep -E '^(ended|calls|dollars|model)' "$o/run.toml" | tr '\n' ' ')"
+	grep -qx 'ended         = "budget"' "$t"/runs/*-toy-answer-5-*/run.toml && grep -qx 'cost_usd      = 0.004500' "$t"/runs/*-toy-answer-5-*/run.toml ||
+		fail "the paid run is not in runs/ with its cost"
+	unset AIOS_AWS JOBMODEL
+	echo "a builder on a toy repo: a look with no why refused, one with a why answered from its copy, 400 lines cut at 8000 characters with the marker, a look outside refused, a call it could not read answered, a fix that broke a green test shown what it broke and not blamed for one red before, a fix to the test refused, a fix that makes a green test skip or prints its own PASS beside the FAIL failed, a hand-in path climbing out or through . refused before anything is written, the right fix a pass on call 8, also with the out folder given from here; a jig gone at the hand-in is cannot-run, with the note from the suite before; told its calls left, thinking dropped, an old answer dropped to make room and the last four kept; peak context, tokens, the note and the change recorded, and the run in runs/ with its bench and ending; the repo untouched; a full card ends as room, no model is cannot-run, and a job with a key no job has is refused; on gear 2 a call the month's cap has no room for is not sent, and a job stops before a call that could pass its share of the part's dollars, recorded with its cost" ;;
+direct)
+	# the director's replies are saved ones; its builders are a stand-in that hands back,
+	# for each try, the result the case's script line says, as a real note (agent note)
+	cat > "$t/builder" <<'FAKE'
+#!/bin/sh
+# fake builder: build JOBFILE; the line of $T/script numbered by the job's try: pass, or fail and the failing tests
+jf=$2; job=$(sed -n 's/^job = "\(.*\)"$/\1/p' "$jf"); try=$(sed -n 's/^try = //p' "$jf")
+cp "$jf" "$T/seen-$job.toml"; n=$(sed -n 's/^hint = "\(.*\)"$/\1/p' "$jf"); [ -z "$n" ] || cp "$n" "$T/seen-$job.hint"
+set -- $(sed -n "${try}p" "$T/script"); res=$1; shift
+o=$AGENT_OUT/$job-try$try; mkdir -p "$o"
+{ for f in "$@"; do echo "FAIL  TST.$f  1s  $f is still red, and the builder's fix did not change what the probe saw on the screen at all"; done
+  echo "PASS  TST.toy.base@1  0s  fine"; echo "# summary"; } | "$T/agent" note "$job" "$try" 1000 60 pool/PART.toy@1/toy.c > "$o/note.toml"
+printf 'result       = "%s"\nended        = "%s"\nwhy          = ""\ndollars      = %s\n' "$res" "$res" "${DOLLARS:-0}" > "$o/run.toml"
+[ "$res" = pass ]
+FAKE
+	plan() {	# plan CASE [EXTRA-LINES]: two toy tests, gear 1, the library's prompts
+		printf 'part = "PART.toy@1: the answer"\ntests = ["toy.answer@1", "toy.other@1"]\nat = "1234567"\nbudget_usd = %s\n%s\n[gear]\ntactical = %s\nbuilders = %s\n\n[prompts]\ndirector = "director@1"\nbuilder = "builder@1"\n' "${USD:-0}" "${2:-}" "${GT:-1}" "${GB:-1}" > "$t/$1.toml"
+	}
+	direct() {	# direct CASE SCRIPT [EXTRA-LINES]: $rc, $t/out/CASE/
+		mkdir -p "$t/$1"; cp "$fx/direct/$1"/*.json "$t/$1/" 2> /dev/null; printf '%s\n' "$2" | tr '|' '\n' > "$t/script"
+		plan "$1" "${3:-}"
+		T=$t AGENT_FAKE="$t/$1" AGENT_BUILDER="sh $t/builder" AGENT_OUT="$t/out" AGENT_QUIET=1 AGENT_CARD_CTX=${CTX:-98304} \
+			AGENT_RUNS="sh $(pwd)/jig/runs" RUNS="$t/runs-$1" PRICES="$(pwd)/jig/prices.toml" \
+			"$t/agent" direct "$t/$1.toml" > "$t/$1.out" 2> "$t/$1.err"; rc=$?
+		o="$t/out/$1"
+	}
+	tool() { jq -r "[.messages[] | select(.role == \"tool\")][$2].content" "$t/$1/sent-$3.json"; }
+	direct done 'fail toy.answer@1 toy.other@1|pass|pass'
+	[ $rc -eq 0 ] || fail "a director whose tests both passed gave exit $rc: $(cat "$t/done.out" "$t/done.err" | head -3 | tr '\n' ' ')"
+	tool done 0 2 | grep -q '^builder@1:[0-9]*: - An instruction the processor may not have.*CPUID' || fail "search_prompts did not find CPUID in the library's builder@1: $(tool done 0 2 | head -1)"
+	tool done 1 3 | grep -q '^refused: say why' || fail "a job with no why started a builder: $(tool done 1 3)"
+	tool done 2 4 | grep -q '^refused: nosuch@1 is not a test in the plan.  The plan.s tests: toy.answer@1 toy.other@1$' || fail "a test not in the plan was given out: $(tool done 2 4)"
+	[ "$(ls "$t"/seen-done-*.toml | wc -l)" -eq 3 ] || fail "$(ls "$t"/seen-done-*.toml | wc -l) builders started, not 3"
+	j1="$t/seen-done-1.toml"
+	for want in 'job = "done-1"' 'test = "toy.answer@1"' 'at = "1234567"' 'try = 1' 'prompt = "builder@1"' 'model = "qwen3.8:27b"' 'num_ctx = 98304'; do
+		grep -qxF "$want" "$j1" || fail "the first job does not say $want: $(tr '\n' ' ' < "$j1")"
+	done
+	[ "$(cat "$t/seen-done-1.hint")" = "The answer is set in toy.c, the only file of the part." ] || fail "the director's hint did not reach the builder"
+	tool done 3 5 | grep -q '^Job done-1, toy.answer@1: fail, ended fail.$' && tool done 3 5 | grep -q '^failing       = \["TST.toy.answer@1", "TST.toy.other@1"\]$' ||
+		fail "the director was not shown the program's note for the job: $(tool done 3 5 | head -4 | tr '\n' ' ')"
+	tool done 5 7 | grep -q '^refused: not every test in the plan has passed.  Not yet: toy.other@1$' || fail "done was taken with toy.other@1 never passed: $(tool done 5 7)"
+	grep -q '^# done: done$' "$o/report.md" && grep -q 'in 3 job(s)' "$o/report.md" && grep -q 'the hint fixed it' "$o/report.md" && [ ! -f "$o/question.md" ] ||
+		fail "the part report does not say done in 3 jobs with the director's words, or a question was left: $(head -3 "$o/report.md" | tr '\n' ' ')"
+	dr=$(ls "$t"/runs-done/*/run.toml 2> /dev/null)
+	[ "$(echo "$dr" | grep -c .)" -eq 1 ] && grep -qx 'item          = "direct-done"' "$dr" && grep -qx 'result        = "pass"' "$dr" &&
+		grep -qx 'input_tokens  = 12400' "$dr" && grep -qx 'ended         = "pass"' "$dr" && grep -qx 'bench         = "agent"' "$dr" ||
+		fail "the director's own run is not recorded in runs/ with its tokens and ending: $(grep -E '^(item|result|input_tokens|ended)' $dr | tr '\n' ' ')"
+	grep -q '^hint: Change only the number' "$o/log.md" && grep -q '^result: pass, ended pass$' "$o/log.md" || fail "the log does not keep the hints and the results"
+	# stuck: the same test failing three runs in a row stops the part; no fourth call
+	direct stuck 'fail toy.answer@1|fail toy.answer@1|fail toy.answer@1|pass'
+	[ $rc -eq 1 ] && [ "$(cat "$t/stuck/calls")" = 3 ] && grep -q '^# stuck stopped: stuck$' "$o/question.md" &&
+		grep -qx 'ended         = "stuck"' "$t"/runs-stuck/*/run.toml &&
+		grep -q 'the same 1 test(s) failed in the last 3 runs in a row on toy.answer@1: TST.toy.answer@1' "$o/question.md" ||
+		fail "three runs with the same failure did not stop the part as stuck: exit $rc, $(cat "$t/stuck/calls") calls, $(head -3 "$o/question.md" 2> /dev/null | tr '\n' ' ')"
+	[ "$(grep -c '^stuck-[0-9]:$' "$o/question.md")" -eq 3 ] || fail "the question note does not hold the last three notes"
+	# the same failures on jobs that move between tests are not stuck: each starts from the plan's commit
+	direct rotate 'fail toy.answer@1 toy.other@1|fail toy.answer@1 toy.other@1|fail toy.answer@1 toy.other@1'
+	[ $rc -eq 1 ] && grep -q '^# rotate stopped: asked$' "$o/question.md" ||
+		fail "three jobs on two tests, failing the same way, were called stuck: $(head -1 "$o/question.md")"
+	# no drop: two failing, then three, then two: not below the first low in the last two runs
+	direct nodrop 'fail toy.answer@1 toy.other@1|fail toy.answer@1 toy.other@1 toy.base@1|fail toy.answer@1 toy.base@1|pass' 'stuck_no_drop = 2'
+	[ $rc -eq 1 ] && grep -q 'the failing count has not gone below 2 in the last 2 runs' "$o/question.md" ||
+		fail "a failing count that did not drop did not stop the part: exit $rc, $(sed -n 3p "$o/question.md" 2> /dev/null)"
+	# out of tries: the plan's two tries used, the third job refused, no builder started
+	direct tries 'fail toy.answer@1|fail toy.other@1|pass' 'max_tries = 2'
+	[ $rc -eq 1 ] && grep -q 'all 2 tries in the plan were used' "$o/question.md" && [ ! -f "$t/seen-tries-3.toml" ] ||
+		fail "a third job past the plan's two tries was run, or the part did not stop: exit $rc"
+	# ask: the part waits, the question is in the note for strategic
+	direct ask ''
+	[ $rc -eq 1 ] && grep -q '^# ask stopped: asked$' "$o/question.md" && grep -q 'but the spec says 41.  Which is right?' "$o/question.md" ||
+		fail "a question from the director did not stop the part with it in the note: exit $rc"
+	# fold: on a 2048-token card the notes fill the director's room; its older turns are
+	# folded into the part's standing, which names every job, and the last four are kept
+	many() { awk -v k="$1" 'BEGIN { printf "fail toy.answer@1"; for (i = 1; i <= 18; i++) printf " toy.f%d-%02d@1", k, i }'; }
+	CTX=2048 direct fold "$(many 1)|$(many 2)|$(many 3)|$(many 4)|$(many 5)|pass"
+	f6=$(jq -r '.messages[2].content' "$t/fold/sent-6.json")
+	printf '%s' "$f6" | grep -q '^Where the part stands' || fail "the director's older turns were not folded on a full card: $(printf '%s' "$f6" | head -c 100)"
+	for k in 1 2 3 4 5; do printf '%s' "$f6" | grep -q "^- fold-$k, toy.answer@1: fail, ended fail$" || fail "the fold lost job fold-$k"; done
+	printf '%s' "$f6" | grep -q 'toy.other@1 (not yet)' || fail "the fold lost a test in the plan"
+	[ "$(printf '%s' "$f6" | grep -c '^job           = "fold-[345]"$')" -eq 3 ] && ! printf '%s' "$f6" | grep -q '^job           = "fold-[12]"$' ||
+		fail "the fold does not keep the last three notes whole, and only those"
+	jq -e '.messages[1].content | startswith("The part plan, fold:")' "$t/fold/sent-6.json" > /dev/null || fail "the plan was folded away"
+	[ "$(jq '.messages | length' "$t/fold/sent-6.json")" -eq 7 ] || fail "the fold did not keep exactly the system prompt, the plan, the standing and the last four messages"
+	# gear 2: a paid layer with no dollars does not start; with a few, it stops before a call it cannot pay for
+	GB=2 direct broke 'pass'
+	[ $rc -eq 2 ] && grep -q "budget_usd is 0" "$t/broke.err" || fail "a plan with paid builders and no dollars gave exit $rc: $(head -1 "$t/broke.err")"
+	cp "$fx/bedrock/aws" "$t/aws"; chmod 600 "$t/aws"
+	AIOS_AWS="$t/aws" AGENT_MAX_COST=0.01 DOLLARS=0.006 USD=0.02 GT=2 GB=2 direct paid 'fail toy.answer@1|pass'
+	[ $rc -eq 1 ] && [ ! -f "$t/paid/sent-2.json" ] && grep -q '^# paid stopped: budget$' "$o/question.md" ||
+		fail "a director with \$0.0095 left and a call that may cost \$0.01 made it, or did not stop on the budget: exit $rc, $(cat "$t/paid/calls") calls"
+	for want in 'model = "global.anthropic.claude-sonnet-4-6"' 'num_ctx = 200000' 'gear = 2' 'max_usd = 0.015500'; do
+		grep -qxF "$want" "$t/seen-paid-1.toml" || fail "the paid builder's job does not say $want: $(tr '\n' ' ' < "$t/seen-paid-1.toml")"
+	done
+	grep -qx 'cost_usd      = 0.004500' "$t"/runs-paid/*-direct-paid-*/run.toml && grep -qx 'ended         = "budget"' "$t"/runs-paid/*-direct-paid-*/run.toml ||
+		fail "the paid director's run is not in runs/ with its cost and ending"
+	echo "a director: search_prompts finds CPUID in builder@1, a job with no why or a test not in the plan starts no builder, each job written with the plan's commit, prompt and the hint, the program's note shown after each, done refused until both tests passed, then done in 3 jobs with its report and log; stuck after the same failure three runs in a row on one test but not across two, with no fourth call and the last three notes for strategic; stuck when the count did not drop; a third try past a plan of two refused; a question stops the part; on a full card older turns folded into a standing that names every job and test, the last three notes whole, the plan and the last four messages kept; on gear 2, no dollars is no start, a paid builder's job carries Sonnet, its context and what is left of the part's share, and the director stops before a call it cannot pay for, recorded with its cost" ;;
+bedrock)
+	command -v jq > /dev/null || fail "no jq here to read what the agent sent"
+	# a key file that is not a key, readable only by its owner, as jig/model wants it
+	cp "$fx/bedrock/aws" "$t/aws"; chmod 600 "$t/aws"
+	call() {	# call REPLY: one gear-2 chat with REPLY as Bedrock's answer
+		mkdir "$t/$1"; [ -f "$fx/bedrock/$1.json" ] && cp "$fx/bedrock/$1.json" "$t/$1/1.json"
+		AIOS_AWS="$t/aws" AGENT_GEAR=2 AGENT_FAKE="$t/$1" "$t/agent" chat global.anthropic.claude-sonnet-4-6 200000 2000 \
+			< "$fx/chat/conversation.json" > "$t/$1/out" 2> "$t/$1/err"; rc=$?
+	}
+	field() { sed -n "s/^$2 *= //p" "$t/$1/out"; }
+	call tool
+	[ $rc -eq 0 ] || fail "a Bedrock reply asking for a tool gave exit $rc: $(head -1 "$t/tool/err")"
+	[ "$(cat "$t/tool/sent-1.url")" = "https://bedrock-runtime.us-west-2.amazonaws.com/model/global.anthropic.claude-sonnet-4-6/converse aws:amz:us-west-2:bedrock" ] ||
+		fail "the call did not go to Converse in the key file's region, signed for bedrock there: $(cat "$t/tool/sent-1.url")"
+	s="$t/tool/sent-1.json"
+	[ "$(jq -r '.system[0].text' "$s")" = "You are a builder.  One job, then submit." ] && [ "$(jq '.inferenceConfig.maxTokens' "$s")" = 2000 ] ||
+		fail "the system prompt or the reply's limit is not where Converse wants them: $(jq -c '{system, inferenceConfig}' "$s")"
+	[ "$(jq -r '[.messages[].role] | join(" ")' "$s")" = "user assistant user" ] || fail "the turns do not alternate: $(jq -c '[.messages[].role]' "$s")"
+	id=$(jq -r '.messages[1].content[] | select(.toolUse) | .toolUse.toolUseId' "$s")
+	[ -n "$id" ] && [ "$(jq -r '.messages[2].content[0].toolResult.toolUseId' "$s")" = "$id" ] &&
+		[ "$(jq -r '.messages[2].content[0].toolResult.content[0].text' "$s")" = "/* loader.c */" ] ||
+		fail "the tool's answer is not handed back as the result of the call it answers: $(jq -c '.messages[1:]' "$s")"
+	[ "$(jq -r '.messages[2].content[1].text' "$s")" = "Call 1 of 60 done; 59 left." ] ||
+		fail "a note after a tool's answer is not joined to the same user turn: $(jq -c '.messages[2]' "$s")"
+	[ "$(jq -c '.messages[1].content[] | select(.toolUse) | .toolUse.input' "$s")" = "$(jq -c '.messages[1].tool_calls[0].function.arguments' "$fx/chat/conversation.json")" ] ||
+		fail "the call's arguments are not handed over as its input"
+	[ "$(jq -r '.toolConfig.tools[0].toolSpec | .name + " " + (.inputSchema.json.required | join(","))' "$s")" = "look command,why" ] ||
+		fail "the tools are not offered as Converse's toolSpecs: $(jq -c .toolConfig "$s")"
+	[ "$(field tool stop)" = '"tool"' ] && [ "$(field tool tokens_in)" = 1000 ] && [ "$(field tool tokens_out)" = 100 ] ||
+		fail "a Bedrock tool call is not read as one, with its tokens: $(head -3 "$t/tool/out" | tr '\n' ' ')"
+	[ "$(field tool message | jq -r '.tool_calls[0].function.arguments.why')" = "see where the flag is set" ] ||
+		fail "the tool call is not handed back in the conversation's own shape, with its why"
+	call end; [ "$(field end stop)" = '"end"' ] || fail "end_turn is read as $(field end stop)"
+	call cut; [ "$(field cut stop)" = '"max_tokens"' ] || fail "max_tokens is read as $(field cut stop)"
+	call full; [ "$(field full stop)" = '"context"' ] || fail "a full context is read as $(field full stop)"
+	# a key anyone can read is not used, and nothing is sent
+	chmod 644 "$t/aws"; call open
+	[ $rc -eq 1 ] && grep -q 'chmod 600' "$t/open/err" && [ ! -f "$t/open/sent-1.json" ] ||
+		fail "a key file others can read gave exit $rc, said $(head -1 "$t/open/err"), and sent $(ls "$t/open" | grep -c sent)"
+	echo "gear 2: one call to Converse in the key file's region, signed for bedrock; the system prompt, the reply's limit, turns that alternate, each tool answer handed back as the result of its own call and a note after it joined to the same turn, the tools as toolSpecs; a tool call read back with its why and tokens; end_turn, max_tokens and a full context told apart; a key others can read refused before anything is sent" ;;
+*)	fail "tests/programs/agent.sh needs a mode: note, plan, chat, build, direct or bedrock" ;;
+esac

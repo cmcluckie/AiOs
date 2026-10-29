@@ -331,3 +331,49 @@ exam.ollama@1 | red | jig/model | s/(if \$max > 0 and/(if true or/ | a reply sto
 fix.judged@1 | red | jig/fix | s/if \[ "\$stop" = model_context_window_exceeded \]; then/if false; then/ | a conversation that outgrew the context is taken for a model gone quiet, and reminded into a context with no room
 fix.judged@1 | red | jig/fix | s/if \[ -z "\$lwhy" \]; then/if false; then/ | a look that gives no reason is run anyway: the model may wander without saying why, as the 3090 did
 fix.judged@1 | red | jig/fix | s/-gt "\$FIX_LOOK_CHARS" \]; then/-gt 999999999 ]; then/ | a look's answer is never cut, so one read of a whole file fills a small model's memory
+exam.bench@1 | red | jig/runs | s/\[ -z "\$peak" \] [|][|] echo "peak_context/[ -n "$peak" ] [|][|] echo "peak_context/ | an agent run's peak context is not kept, so a run that died of room cannot be told from one that did not
+exam.bench@1 | red | jig/scorecard | s/if (\$11 + 0 > spk\[sk\]) spk\[sk\] = \$11 + 0;/spk[sk] = $11 + 0;/ | the card shows the last try's peak, not the most any call held
+exam.bench@1 | red | jig/runs | s/case "\$ended" in ''[|]pass[|]fail/case "$ended" in *[|]pass[|]fail/ | any word is taken as how a run ended
+agent.runtime@1 | red | agent/runtime/src/sigv4.rs | s/let k = hmac(\&k, "aws4_request");/let k = hmac(\&k, "aws4");/ | Bedrock's requests are signed wrong, and every paid call is refused
+agent.runtime@1 | red | agent/runtime/src/react.rs | s/if !nudged \&\& left > 0 {/if left > 0 {/ | a model that keeps stopping is reminded forever, and spends every call
+agent.runtime@1 | red | agent/runtime/src/money.rs | s/hit = v.trim_matches('"') == model;/hit = true;/ | a model is costed at another model's price
+agent.runtime@1 | red | agent/runtime/src/room.rs | s/(s.chars().count() as u64).div_ceil(4)/(s.chars().count() as u64) \/ 4/ | a short answer counts as no room at all
+agent.note@1 | red | agent/mechanic/src/note.rs | s/passed += 1;/passed += 0;/ | the passing tests are not counted, so every note says none passed
+agent.note@1 | red | agent/mechanic/src/note.rs | s/if failed == 0 \&\& passed > 0 { "pass" }/if passed > 0 { "pass" }/ | a run with a failing test is noted as a pass
+agent.note@1 | red | agent/mechanic/src/note.rs | s/pub const MAX_NAMES: usize = 20;/pub const MAX_NAMES: usize = 100;/ | every failing test is named, and none is counted as left out
+agent.note@1 | red | agent/mechanic/src/note.rs | s/pub const LINE: usize = 160;/pub const LINE: usize = 1000;/ | the first failure goes to the director whole, however long
+agent.note@1 | red | agent/mechanic/src/main.rs | s/fn number(what: \&str, s: \&str) -> Result<u64, i32> {/fn number(what: \&str, s: \&str) -> Result<u64, i32> { if !s.is_empty() { return Ok(s.parse().unwrap_or(0)); }/ | a try that is not a number is read as 0 and a note is written
+agent.plan@1 | red | agent/mechanic/src/plan.rs | s/if let Some(k) = r.unused() {/if let Some(k) = r.unused().filter(|_| false) {/ | a key no plan has is let through, so a typo in a limit silently leaves the default
+agent.plan@1 | red | agent/mechanic/src/plan.rs | s/r.whole("gear.tactical", None, 1, 2)/r.whole("gear.tactical", None, 1, 3)/ | a gear that does not exist is taken
+agent.plan@1 | red | agent/mechanic/src/plan.rs | s/Some(10), 1, 1000/Some(40), 1, 1000/ | a plan that names no try cap gets 40, not the 10 findings 0027 sets
+agent.plan@1 | red | agent/mechanic/src/plan.rs | s/if at.len() < 7 [|][|] !at.chars()/if false \&\& !at.chars()/ | the commit to start from may be a branch name, which moves
+agent.plan@1 | red | agent/mechanic/src/plan.rs | s/"a key given twice"/"not TOML the repo writes"/ | a key given twice is refused without saying so
+agent.chat@1 | red | agent/runtime/src/model.rs | s/msg.remove("thinking");/msg.remove("not-thinking");/ | the thinking stays in the conversation and fills the context a turn at a time
+agent.chat@1 | red | agent/runtime/src/model.rs | s/if tout >= m.max_tokens { Stop::MaxTokens }/if tout >= m.max_tokens.min(0) { Stop::MaxTokens }/ | a full context is called a cut at the reply limit, and the room it ran out of goes unseen
+agent.chat@1 | red | agent/runtime/src/model.rs | s/let mut all = vec!\[json!({"role": "system", "content": system})\];/let mut all: Vec<Value> = vec![]; let _ = system;/ | the system prompt is never sent, so the builder has no role and no rules
+agent.chat@1 | red | agent/runtime/src/model.rs | s/let stop = if calls {/let stop = if false \&\& calls {/ | a call for a tool is read as the model stopping
+agent.chat@1 | red | agent/runtime/src/model.rs | s/"options": {"num_ctx": m.num_ctx, "num_predict": m.max_tokens},/"options": {"num_predict": m.max_tokens},/ | the context is left to Ollama's default, a sixth of the card
+agent.build@1 | red | agent/mechanic/src/judge.rs | s/ \&\& rm -rf \\"\$d\/runs\\" \\"\$d\/out\\"//; | the jig's copy keeps runs/, so a builder's fix is judged beside the records of earlier ones
+agent.build@1 | red | agent/mechanic/src/build.rs | s/if why.is_empty() {/if false \&\& why.is_empty() {/ | a look with no why is run, and the builder reads without saying what it expects to learn
+agent.build@1 | red | agent/mechanic/src/build.rs | s/room::cap(\&answer, self.j.look_chars as usize)/room::cap(\&answer, self.j.look_chars as usize * 1000)/ | one read of a long file goes to the card whole and fills it
+agent.build@1 | red | agent/runtime/src/room.rs | s/let last = messages.len().saturating_sub(KEEP);/let last = messages.len();/ | the newest answers are dropped too, so the builder loses what it just read
+agent.build@1 | red | agent/mechanic/src/judge.rs | s/if !has(\&b, c, "FAIL") {/if c.is_empty() || true {/ | a fix is blamed for a test that was red before it
+agent.build@1 | red | agent/mechanic/src/judge.rs | s/parts\[0\] != "pool"/false/ | a builder may hand in a change to the test itself and have it judged
+agent.build@1 | red | agent/mechanic/src/judge.rs | s/if has(\&b, c, "PASS") \&\& !has(\&a, c, "FAIL") \&\& !has(\&a, c, "PASS") {/if false {/ | a fix that stops a green test from running gets past
+agent.build@1 | red | agent/mechanic/src/judge.rs | s/let green = has(\&a, code, "PASS") \&\& !has(\&a, code, "FAIL");/let green = has(\&a, code, "PASS");/ | a fix that prints its own PASS line beside the real FAIL is a pass
+agent.build@1 | red | agent/mechanic/src/build.rs | s/if let Err(why) = judge::check(\&self.base, \&paths) {/if let Err(why) = judge::check(\&self.base, \&paths).and(Err::<(), String>(String::new())).or(Ok::<(), String>(())) {/ | a hand-in's paths are not checked before they are written, so one can land outside the folder
+agent.build@1 | red | agent/mechanic/src/build.rs | s/self.jig_down = true;/self.jig_down = false;/ | a jig gone at a hand-in is taken for a failed fix, and the director spends a try on it
+agent.build@1 | red | agent/mechanic/src/build.rs | s/if spent + next > m {/if spent + next > m * 100.0 {/ | a paid builder spends past its share of the part's dollars
+agent.build@1 | red | agent/mechanic/src/build.rs | s/if let Err(why) = self.runs.room(spent + next) {/if let Err(why) = Ok::<(), String>(()) {/ | a paid builder never asks the month's cap
+agent.direct@1 | red | agent/mechanic/src/stuck.rs | s/if window.iter().all(|r| same(r, \&window\[0\])) {/if false \&\& window.iter().all(|r| same(r, \&window[0])) {/ | the same failure run after run never stops the part, and the tries are spent hoping
+agent.direct@1 | red | agent/mechanic/src/stuck.rs | s/if low_last >= low_before {/if low_last > low_before {/ | a failing count that holds steady is taken for progress
+agent.direct@1 | red | agent/mechanic/src/stuck.rs | s/a.test == b.test \&\& //; | jobs that move between tests and fail the same way are called stuck
+agent.direct@1 | red | agent/mechanic/src/direct.rs | s/if !not_yet.is_empty() {/if false \&\& !not_yet.is_empty() {/ | the director's word that the part is done is taken without the notes to show it
+agent.direct@1 | red | agent/mechanic/src/direct.rs | s/if self.jobs.len() as u64 >= self.p.max_tries {/if self.jobs.len() as u64 > self.p.max_tries {/ | one try more than the plan allows is run
+agent.direct@1 | red | agent/mechanic/src/direct.rs | s/pub const KEEP_NOTES: usize = 3;/pub const KEEP_NOTES: usize = 5;/ | the fold keeps more notes whole than findings 0027 says, and fills the room it was meant to free
+agent.direct@1 | red | agent/mechanic/src/direct.rs | s/job += \&format!("hint = /job += \&format!("ignored_hint = / | the director's hint never reaches the builder
+agent.direct@1 | red | agent/mechanic/src/direct.rs | s/(self.p.budget_usd - self.spent - self.mine)/(self.p.budget_usd - self.spent - self.mine * 0.0)/ | the director's own spending is left out of what the part has left
+agent.bedrock@1 | red | agent/mechanic/src/record.rs | s/if meta.permissions().mode() \& 0o077 != 0 {/if false \&\& meta.permissions().mode() \& 0o077 != 0 {/ | a key file anyone on the machine can read is used
+agent.bedrock@1 | red | agent/runtime/src/model.rs | s/let id = ids\[used\].clone();/let id = String::from("t-0-0");/ | a tool's answer is handed back against a call that was never made, and Bedrock refuses the turn
+agent.bedrock@1 | red | agent/runtime/src/model.rs | s/let last_is_user = out.last().map(|m| m\["role"\] == "user").unwrap_or(false);/let last_is_user = false;/ | two user turns in a row, which Converse refuses
+agent.bedrock@1 | red | agent/runtime/src/model.rs | s/"model_context_window_exceeded" => Stop::Context,/"model_context_window_exceeded" => Stop::End,/ | a full context on Sonnet reads as a plain stop, and room is never seen

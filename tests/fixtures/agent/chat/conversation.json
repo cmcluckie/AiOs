@@ -1,0 +1,8 @@
+{"system": "You are a builder.  One job, then submit.",
+ "messages": [
+  {"role": "user", "content": "TST.share.waits@1 is red at 9c6c852.  Make it green."},
+  {"role": "assistant", "content": "", "tool_calls": [{"function": {"name": "look", "arguments": {"command": "read pool/PART.loader@9/loader.c 1-40", "why": "find where the wait starts"}}}]},
+  {"role": "tool", "tool_name": "look", "content": "/* loader.c */"},
+  {"role": "user", "content": "Call 1 of 60 done; 59 left."}
+ ],
+ "tools": [{"type": "function", "function": {"name": "look", "description": "Read the source.", "parameters": {"type": "object", "properties": {"command": {"type": "string"}, "why": {"type": "string"}}, "required": ["command", "why"]}}}]}

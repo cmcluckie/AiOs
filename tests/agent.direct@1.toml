@@ -1,0 +1,10 @@
+code       = "TST.agent.direct@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+binds      = "SPEC.agent.5@1"
+red_when   = "with saved replies and a stand-in builder, a job with no why or for a test not in the plan starts a builder; a job does not carry the plan's commit, prompt or the hint; the director is not shown the note; done is taken before every test passed; three runs with the same failure, or a count that does not drop, do not stop the part as stuck before another call; a try past the plan's is run; a question does not stop the part with a note; or on a full card the older turns are not folded into a standing that names every job and test with the last three notes whole and the plan and last four messages kept"
+timeout_ms = 60000
+isolates   = "TOOL.agent@1"
+runner     = "jig/test cmd sh tests/programs/agent.sh direct"
+mutations  = 7

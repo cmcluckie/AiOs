@@ -1,0 +1,10 @@
+code       = "TST.agent.bedrock@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+binds      = "SPEC.agent.6@1"
+red_when   = "on saved Converse replies, a gear-2 call does not go to Converse in the key file's region signed for bedrock; the system prompt, the reply's limit, alternating turns, each tool answer as the result of its own call, a note joined to its turn or the toolSpecs are wrong; a tool call is not read back with its why and tokens; end_turn, max_tokens and a full context are not told apart; or a key others can read is used"
+timeout_ms = 60000
+isolates   = "TOOL.agent@1"
+runner     = "jig/test cmd sh tests/programs/agent.sh bedrock"
+mutations  = 4

@@ -6,7 +6,10 @@
 # cost, failed ones included; an item the model never sat is "not sat".  Each
 # start of the runner is a sitting and gets a line of its own, with the
 # fingerprint of the prompt it was given, so that two runs of one item are
-# never added together into one pass.  It decides nothing and invents nothing:
+# never added together into one pass.  A sitting on the layered agent's bench
+# (findings 0027) also shows the bench, the most context one call held, and how
+# its last try ended: a pass, out of room, stuck and the rest.  Dollars are shown
+# and never graded.  It decides nothing and invents nothing:
 # a number that is not in runs/ or in the hand lift's file is not on the card.
 #
 #   scorecard                 every model that has a run
@@ -35,15 +38,17 @@ while IFS="$(printf '\t')" read -r name hand; do
 	printf '%s\t%s\n' "$name" "$(sh "$repo/jig/runs" count $files)"
 done < "$tmp/items.raw" > "$tmp/items"
 
-# every run, one line each: model, version, item, sitting, try, result, lines, cost, prompt
+# every run, one line each: model, version, item, sitting, try, result, lines, cost, prompt,
+# and on the agent's bench, bench, peak context and how it ended
 for f in "$RUNS"/*/run.toml; do
 	[ -f "$f" ] || continue
 	awk 'function val(s) { sub(/^[^=]*= */, "", s); gsub(/"/, "", s); return s }
 		/^id *=/ { id = val($0) } /^sitting *=/ { st = val($0) } /^prompt *=/ { pr = val($0) }
 		/^model *=/ { m = val($0) } /^version *=/ { v = val($0) } /^item *=/ { i = val($0) }
 		/^try *=/ { t = val($0) } /^result *=/ { r = val($0) } /^lines *=/ { l = val($0) } /^cost_usd *=/ { c = val($0) }
+		/^bench *=/ { b = val($0) } /^peak_context *=/ { pk = val($0) } /^ended *=/ { e = val($0) }
 		END { if (st == "") { st = id; sub(/-.*/, "", st) } if (pr == "") pr = "-"
-			printf "%s\t%s\t%s\t%s\t%d\t%s\t%s\t%s\t%s\n", m, v, i, st, t, r, l, c, pr }' "$f"
+			printf "%s\t%s\t%s\t%s\t%d\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n", m, v, i, st, t, r, l, c, pr, b, pk, e }' "$f"
 done | sort -t"$(printf '\t')" -k1,1 -k2,2 -k3,3 -k4,4 -k5,5n > "$tmp/runs"
 [ -s "$tmp/runs" ] || { echo "no runs recorded in $RUNS"; exit 0; }
 
@@ -54,6 +59,7 @@ FILENAME == ITEMS { order[++n] = $1; hand[$1] = $2; next }
   k = key SUBSEP $3; sk = k SUBSEP $4
   if (!(sk in sn)) { ns[k]++; sid[k, ns[k]] = $4; spr[sk] = $9 }
   sn[sk]++; sc[sk] += $8
+  if ($10 != "") { sb[sk] = $10; if ($11 + 0 > spk[sk]) spk[sk] = $11 + 0; se[sk] = $12 }
   if ($6 == "pass" && !(sk in sp)) { sp[sk] = 1; sl[sk] = $7 } }
 END {
 	for (m = 1; m <= nm; m++) {
@@ -64,11 +70,12 @@ END {
 			for (j = 1; j <= ns[k]; j++) {
 				sk = k SUBSEP sid[k, j]; nsit++; total += sc[sk]
 				tries = sprintf("%d %s", sn[sk], (sn[sk] == 1 ? "try" : "tries"))
+				bench = (sk in sb) ? sprintf("  bench %s, peak context %d, ended %s", sb[sk], spk[sk], (se[sk] == "" ? "-" : se[sk])) : ""
 				if (sk in sp) {
 					npass++; passcost += sc[sk]; got = 1
-					printf "  %-7s PASS  %d lines (hand %d)  %s  $%.6f  prompt %s\n", order[i], sl[sk], hand[order[i]], tries, sc[sk], spr[sk]
+					printf "  %-7s PASS  %d lines (hand %d)  %s  $%.6f  prompt %s%s\n", order[i], sl[sk], hand[order[i]], tries, sc[sk], spr[sk], bench
 				} else
-					printf "  %-7s FAIL  %s  $%.6f  prompt %s\n", order[i], tries, sc[sk], spr[sk]
+					printf "  %-7s FAIL  %s  $%.6f  prompt %s%s\n", order[i], tries, sc[sk], spr[sk], bench
 			}
 			ok += got
 		}

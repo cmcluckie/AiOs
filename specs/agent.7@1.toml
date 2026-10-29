@@ -1,0 +1,7 @@
+code       = "SPEC.agent.7@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+component  = "TOOL.agent@1"
+clause     = "The agent is two parts: a runtime that knows nothing of AiOs (the ReAct loop, the prompts, room and folding, the model clients and what a call costs) and the director and builder program on top of it, the only part that knows about part plans, the jig and the run records (findings 0027 item 9).  The runtime's loop answers a call it cannot read with what was wrong and goes on, reminds a model that stops without a tool once, caps the calls, tells a full context from a reply cut at its limit, says when nothing answered on the first call, and lets its user stop a call before it is made.  Its Bedrock signing gives AWS's own published signatures for AWS's published examples."
+author     = "KEY.chris"
