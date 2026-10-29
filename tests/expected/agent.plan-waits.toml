@@ -4,7 +4,7 @@ tests               = ["share.waits@1"]
 at                  = "9c6c852"
 budget_usd          = 0.00
 max_tries           = 10
-max_minutes         = 120
+max_minutes         = 240
 stuck_same_failures = 3
 stuck_no_drop       = 5
 

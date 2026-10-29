@@ -1,0 +1,11 @@
+id      = "0103"
+date    = 2026-10-29
+kind    = "code"
+touches = ["agent/mechanic/src/plan.rs", "agent/plans/waits.toml", "agent/plans/waits-old.toml", "agent/plans/waits-new.toml", "specs/agent.2@1.toml", "tests/agent.plan@1.toml", "tests/expected/agent.plan-waits.toml", "tests/programs/agent.sh", "tests/mutations.txt"]
+asked   = "The sixth item from the waits run (findings 0029): waits passed in 113 minutes of a 120-minute cap, too close to learn from.  A part plan that names no time cap now gets 240 minutes, not 120, and every plan in agent/plans says max_minutes = 240 itself, with why.  The cap is there to stop a runaway, not to fail a run that is working.  SPEC.agent.2's defaults say 240; TST.agent.plan expects it and checks every plan says it (a sixth mutation, killed)."
+options = ["take it", "do not take it"]
+default = "take it"
+chose   = "take it"
+why     = "Chris, 2026-10-29: \"The 113 minutes against a 120 cap is too tight to learn anything from.  Raise max_minutes to 240 as the default for exam parts and say so in the part plan.  The cap is there to stop runaways, not to fail runs that are working.\""
+by      = "KEY.chris@1"
+drafted = "Claude"

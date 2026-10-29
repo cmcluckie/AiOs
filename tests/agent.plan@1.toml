@@ -7,4 +7,4 @@ red_when   = "a good part plan is refused, or is not read back with every defaul
 timeout_ms = 60000
 isolates   = "TOOL.agent@1"
 runner     = "jig/test cmd sh tests/programs/agent.sh plan"
-mutations  = 5
+mutations  = 6

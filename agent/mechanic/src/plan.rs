@@ -132,7 +132,7 @@ pub fn read(path: &str) -> Result<Plan, String> {
         Some(_) => return Err("budget_usd is a number of dollars, 0 or more".into()),
     };
     let max_tries = r.whole("max_tries", Some(10), 1, 1000)?;
-    let max_minutes = r.whole("max_minutes", Some(120), 1, 10080)?;
+    let max_minutes = r.whole("max_minutes", Some(240), 1, 10080)?;
     let stuck_same_failures = r.whole("stuck_same_failures", Some(3), 2, 100)?;
     let stuck_no_drop = r.whole("stuck_no_drop", Some(5), 1, 100)?;
     let prompt_director = r.text("prompts.director", true)?;

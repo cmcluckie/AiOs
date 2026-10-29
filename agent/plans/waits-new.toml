@@ -7,6 +7,9 @@ tests      = ["share.waits@1"]
 at         = "9c6c852"
 budget_usd = 0
 max_tries  = 10
+# the cap stops a runaway, not a run that is working: waits took 113 minutes of
+# 120 (findings 0029), so an exam part gets 240 (decision 0103)
+max_minutes = 240
 trial      = "prompts-2"
 
 [gear]

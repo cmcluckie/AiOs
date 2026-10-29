@@ -121,7 +121,9 @@ plan)
 	spoil "no try at all" 's/^budget_usd = 0/budget_usd = 0\nmax_tries = 0/' 'max_tries'
 	spoil "a string never closed" 's/director@1"/director@1/' 'not closed'
 	spoil "a key given twice" 's/^budget_usd = 0/budget_usd = 0\nbudget_usd = 1/' 'twice'
-	echo "a part plan read back with every default filled in: 10 tries, 120 minutes, stuck at 3 of the same or 5 with no drop; refused, naming the field, with no tests, an empty list, a third gear, a key no plan has, a commit that is not hex, a prompt with no version, a try cap as a word or 0, a string never closed, a key given twice" ;;
+	# the part plans in the repo say their time cap, 240 minutes, not leave it to the default
+	for p in agent/plans/*.toml; do grep -qx 'max_minutes = 240' "$p" || fail "$p does not say max_minutes = 240"; done
+	echo "a part plan read back with every default filled in: 10 tries, 240 minutes, stuck at 3 of the same or 5 with no drop; refused, naming the field, with no tests, an empty list, a third gear, a key no plan has, a commit that is not hex, a prompt with no version, a try cap as a word or 0, a string never closed, a key given twice; every plan in agent/plans says 240 minutes" ;;
 chat)
 	command -v jq > /dev/null || fail "no jq here to read what the agent sent"
 	# replies made up in Ollama's shape, one per way a call ends; each case gets its own
