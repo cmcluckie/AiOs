@@ -1,0 +1,11 @@
+id      = "0094"
+date    = 2026-10-29
+kind    = "rule"
+touches = ["CLAUDE.md", "design.md", "findings/0027.md", "decisions/0093.toml"]
+asked   = "Chris's stop-and-switch, 2026-10-29, sent after the agent's first piece was staged in C and before it was committed: the agent is Rust, not C.  Edit commit 1, don't revert it: findings 0027, decision 0093, CLAUDE.md and the tool table say Rust.  Drop libcurl and cJSON (cJSON's lift, staged, is never committed); reqwest and serde through cargo with the lockfile committed; one tool-table row for the Rust toolchain in WSL, with how it leaves.  The same shape: a runtime with no AiOs knowledge (the loop, the prompts, folding, the model clients, the ledger) with its own red tests, and the director and builder program on top, the only part that knows about part plans and the jig; still CivicCanada's logic, ported C# to Rust, still credited.  Whether Rust becomes the default for what replaces the jig is decision 0095, not this one."
+options = ["switch to Rust now, before any of the agent is committed", "keep C"]
+default = "switch to Rust now, before any of the agent is committed"
+chose   = "switch to Rust now, before any of the agent is committed"
+why     = "Chris, 2026-10-29: \"The agent is Rust, not C ... it is JSON, HTTP, strings and state handling untrusted model output, which is where C bites and Rust does not.\"  A cold review of the C version that night found the bite: a path the model chose could write a file outside the builder's folder."
+by      = "KEY.chris@1"
+drafted = "Claude"

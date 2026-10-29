@@ -68,7 +68,7 @@ why.  The full design is in design.md; read it before doing anything.
     flavors/        one TOML file per flavor: the petitions one machine runs
     findings/       what the schema or plan could not express, and what was decided
     plan/           the project plan, brief and full
-    agent/          the layered mechanic: director and builders, in C, run in WSL beside Ollama; the jig only runs its tests (findings 0027)
+    agent/          the layered mechanic: director and builders, in Rust, run in WSL beside Ollama; the jig only runs its tests (findings 0027)
     jig/            the gen-zero build host, declared before it existed; aios, the builder placeholder; test, mutate, upstream
     pi/             the bare repository that refuses unsigned pushes
     posts/          the LinkedIn series: per day, one HTML file to paste from and its image
@@ -320,6 +320,20 @@ exactly; when a new one is needed, add it here in the same commit.
   never drafts.  Chris is the committee until it exists (design.md).  Every petition it drafts goes to the
   committee (Chris until the committee exists), including a change to an
   existing one.
+- **Director, builder (of the layered mechanic), part plan, job, result note,
+  question note, stuck, fold.**  The layered mechanic in agent/ (findings 0027).
+  Strategic (Chris and Claude) writes a part plan: the tests that say a part is
+  done, the commit it starts from and its limits.  A director, one per part,
+  turns it into jobs, one red test each, for builders; a builder here is a fresh
+  model session that does one job and is gone, not the kernel's builder, which
+  never uses a model.  The program writes a result note from what the tests
+  printed on the jig, and the director sees only that.  Stuck is the program's
+  call, from the notes: the same failures, or no drop, run after run.  A stuck
+  part, one out of tries or time, or a question from the director stops with a
+  question note for strategic.  A fold is a conversation cut down to fit the card:
+  old answers dropped and said so, or a director's older turns made into one
+  standing that names every job and test.  Named by Chris on 2026-10-27 and
+  2026-10-28.
 - **Admission.**  Two signed commits that set an entry's status to admitted.
   Until then an entry is draft and a petition naming it is pending.
 - **Well-formed, buildable.**  The referee's two phases.  Well-formed: every

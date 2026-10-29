@@ -1,0 +1,11 @@
+id      = "0095"
+date    = 2026-10-29
+kind    = "tenet"
+touches = []
+asked   = "Should Rust be the default language for everything that replaces the jig, the scaffolding in jig/ and the tools the agents use (the referee is already C, in the pool), as the layered agent now is (findings 0027 item 9)?  Proposed by Chris on 2026-10-29 and kept apart from the agent's own switch on purpose: the pool and every petition so far are C, so this is a tenet change with its own story in the series.  Not acted on.  For: what replaces the jig mostly reads untrusted input (model replies, test output, petitions as TOML, JSON), which is where C bites and Rust does not; cargo's tests and its lockfile fit tests written to fail and a build that can be checked; one language for the agent and the tools beside it.  Against: the kernel, libc and every lifted part are C, so Linux is read in one language and the tools written in another; Rust's toolchain and crates are a large thing to admit and to strip at seal (88 crates for HTTP and JSON alone, findings 0027 item 10); the referee was rewritten in C on purpose and moving it would be churn; the series has told a C story so far; and a C program is what a CS student reading along is likeliest to follow."
+options = ["Rust is the default for what replaces the jig; C stays for the pool and what is lifted", "Rust only where the input is untrusted (model output, network); C everywhere else", "C stays the default; Rust is a per-component exception with its own reason, as the agent is", "decide later, after the race"]
+default = "decide later, after the race"
+chose   = ""
+why     = "PENDING: Chris to rule"
+by      = "KEY.chris@1"
+drafted = "Claude"
