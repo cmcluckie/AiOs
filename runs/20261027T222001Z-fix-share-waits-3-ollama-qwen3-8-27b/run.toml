@@ -1,0 +1,16 @@
+id            = "20261027T222001Z-fix-share-waits-3-ollama-qwen3-8-27b"
+date          = "2026-10-27T22:20:01Z"
+item          = "fix-share-waits"
+model         = "ollama:qwen3.8:27b"
+version       = "2026-10-27"
+sitting       = "20261027T222001Z"
+prompt        = "af214682"
+try           = 3
+input_tokens  = 436823
+output_tokens = 21700
+cache_read_tokens  = 0
+cache_write_tokens = 0
+cost_usd      = 0.000000
+result        = "pass"
+lines         = 37
+at            = "9c6c852"

@@ -68,6 +68,7 @@ why.  The full design is in design.md; read it before doing anything.
     flavors/        one TOML file per flavor: the petitions one machine runs
     findings/       what the schema or plan could not express, and what was decided
     plan/           the project plan, brief and full
+    agent/          the layered mechanic: director and builders, in C, run in WSL beside Ollama; the jig only runs its tests (findings 0027)
     jig/            the gen-zero build host, declared before it existed; aios, the builder placeholder; test, mutate, upstream
     pi/             the bare repository that refuses unsigned pushes
     posts/          the LinkedIn series: per day, one HTML file to paste from and its image
@@ -304,9 +305,11 @@ exactly; when a new one is needed, add it here in the same commit.
   application's, because no human could; a part's, when the builder sends
   it something missing; and one for every fix the mechanic proposes, which
   it reads as new code through the same source reader.  All code enters
-  through the quartermaster, whoever wrote it.  The mechanic and the
-  quartermaster never share a model or prompt, so no one reviews their own
-  work.  When a test fails, the mechanic proposes a fix to the code, never
+  through the quartermaster, whoever wrote it.  The mechanic never
+  shares a prompt with the quartermaster, the director or any builder, and its
+  prompt is written to find what theirs would miss; they may share a model
+  (decision 0057), and the scorecard says when they did, since the same model
+  checking its own work tends to share its blind spots (findings 0027).  When a test fails, the mechanic proposes a fix to the code, never
   to the test (tests are human-only).  It reads the test's red_when, the
   spec it binds and the part's as-built spec; the gap between the spec and
   the as-built is the bug.  If the test disagrees with its spec, the test is

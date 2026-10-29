@@ -1,0 +1,630 @@
+[
+  {
+    "role": "user",
+    "content": [
+      {
+        "text": "The red test, tests/share.waits@1.toml:\n\ncode       = \"TST.share.waits@1\"\nstatus     = \"draft\"\nadmitted   = \"\"\nretired_by = \"\"\nbinds      = \"SPEC.loader.16@1\"\nred_when   = \"on the gate's sharing kernel, the stopwatch next to a program waiting for a byte that never comes does not show every second once, in order, through 00:09 or 00:10\"\ntimeout_ms = 30000\nisolates   = \"PART.loader@9\"\nrunner     = \"jig/test cmd env AIOS_SHARE=gateshare sh tests/programs/waiter.sh\"\nmutations  = 0\n\nThe spec clause it checks, SPEC.loader.16@1:\n\nWhile a program waits in read for a byte, the timer still ticks and the other programs still get their turns (TECH-DEBT 2).\n\nWhat it printed when it ran:\n\nFAIL  TST.share.waits@1  12s  it never showed 00:00 \n"
+      }
+    ]
+  },
+  {
+    "role": "assistant",
+    "content": [
+      {
+        "toolUse": {
+          "toolUseId": "ollama-20261029035218028881964-0",
+          "name": "look",
+          "input": {
+            "why": "List the repo top level to find pool, tests, jig",
+            "command": "list",
+            "args": [
+              "."
+            ]
+          }
+        }
+      }
+    ]
+  },
+  {
+    "role": "user",
+    "content": [
+      {
+        "toolResult": {
+          "toolUseId": "ollama-20261029035218028881964-0",
+          "content": [
+            {
+              "text": "CLAUDE.md\nconstitution/\ndecisions/\ndesign.md\ndocs/\ndraft/\nexam/\nfindings/\nfix/\nflavors/\nindex/\njig/\nLICENSE\nlifted/\nout/\npetitions/\npi/\nplan/\npool/\nposts/\nREADME.md\nreviews/\nschema/\nsensors/\nspecs/\ntests/"
+            }
+          ],
+          "status": "success"
+        }
+      },
+      {
+        "text": "Call 1 of 60 done; 59 left."
+      }
+    ]
+  },
+  {
+    "role": "assistant",
+    "content": [
+      {
+        "toolUse": {
+          "toolUseId": "ollama-20261029035220246993588-0",
+          "name": "look",
+          "input": {
+            "why": "Read the waiter.sh test probe",
+            "command": "read",
+            "args": [
+              "tests/programs/waiter.sh"
+            ]
+          }
+        }
+      },
+      {
+        "toolUse": {
+          "toolUseId": "ollama-20261029035220246993588-1",
+          "name": "look",
+          "input": {
+            "why": "List the loader part",
+            "command": "list",
+            "args": [
+              "pool/PART.loader@9"
+            ]
+          }
+        }
+      }
+    ]
+  },
+  {
+    "role": "user",
+    "content": [
+      {
+        "toolResult": {
+          "toolUseId": "ollama-20261029035220246993588-0",
+          "content": [
+            {
+              "text": "tests/programs/waiter.sh, lines 1 to 20 of 20\n1\t#!/bin/sh\n2\t# Probe for TST.share.waits@1: tests/programs/waiter.c packed first and the\n3\t# stopwatch second, booted on the share machine and watched for 10 seconds by\n4\t# the host's clock, each line stamped as it arrives, with nothing ever typed.\n5\t# still showed every second once, in order, through 00:09 or 00:10, though the\n6\t# program before it in the archive is waiting for a byte that never comes\n7\t# (TECH-DEBT 2: a system call runs with interrupts off).\n8\tset -u\n9\tcd \"$(dirname \"$0\")/../..\"\n10\tsh jig/aios build ${AIOS_SHARE:-share} > /dev/null 2>&1 && sh jig/aios build stopwatch > /dev/null 2>&1 || { echo \"build failed\"; exit 1; }\n11\tt=$(mktemp -d); trap 'rm -rf \"$t\"' EXIT\n12\tCF=\"-m32 -std=c11 -ffreestanding -fno-pic -fno-pie -fno-stack-protector -fno-builtin -fno-asynchronous-unwind-tables -mno-sse -mno-mmx -mno-red-zone -mgeneral-regs-only -nostdlib -nostdinc -O2 -Wall -Wextra -Werror\"\n13\tgcc $CF -I pool/PART.loader@6 -c -o \"$t/waiter.o\" tests/programs/waiter.c &&\n14\tgcc $CF -static -no-pie -nostartfiles -Wl,--build-id=none -Wl,-z,noexecstack -T pool/PART.loader@6/program.ld -o \"$t/waiter.bin\" \"$t/waiter.o\" || { echo \"probe does not build\"; exit 1; }\n15\tsh jig/aios pack \"$t/both.bin\" waiter \"$t/waiter.bin\" stopwatch out/stopwatch/stopwatch.bin\n16\ttimeout 10 sh pool/MACHINE.serial-irq@1/machine.sh out/${AIOS_SHARE:-share}/loader.elf \"$t/both.bin\" < /dev/null 2> /dev/null |\n17\t\tstdbuf -o0 tr '\\r' '\\n' |\n18\t\twhile IFS= read -r l || [ -n \"$l\" ]; do echo \"$(date +%s%3N) $l\"; done > \"$t/out\"\n19\tsh tests/expected/stopwatch.ticks@1.check \"$t/out\" 10 || exit 1\n20\techo \"next to a program waiting for input: $(sh tests/expected/stopwatch.ticks@1.check \"$t/out\" 10)\""
+            }
+          ],
+          "status": "success"
+        }
+      },
+      {
+        "toolResult": {
+          "toolUseId": "ollama-20261029035220246993588-1",
+          "content": [
+            {
+              "text": "door.h\nkernel.h\nloader.c\nloader.ld\nprogram.ld\nstart.S"
+            }
+          ],
+          "status": "success"
+        }
+      },
+      {
+        "text": "Call 2 of 60 done; 58 left."
+      }
+    ]
+  },
+  {
+    "role": "assistant",
+    "content": [
+      {
+        "toolUse": {
+          "toolUseId": "ollama-20261029035224180558794-0",
+          "name": "look",
+          "input": {
+            "why": "Read loader.c to find read handling and timer",
+            "command": "read",
+            "args": [
+              "pool/PART.loader@9/loader.c"
+            ]
+          }
+        }
+      }
+    ]
+  },
+  {
+    "role": "user",
+    "content": [
+      {
+        "toolResult": {
+          "toolUseId": "ollama-20261029035224180558794-0",
+          "content": [
+            {
+              "text": "pool/PART.loader@9/loader.c, lines 1 to 400 of 440\n1\t/* SPDX-License-Identifier: GPL-2.0-only\n2\t *\n3\t * PART.loader@9: the kernel behind the gate (plan 9.13).  It is @8 with the\n4\t * program run in ring 3 by PART.gate@1: the program reaches the kernel only\n5\t * through int 0x80, and the processor stops it if it touches the kernel's\n6\t * memory, the screen's memory or an I/O port.  The system call table a\n7\t * program is handed is the same seven entries as before (door.h), so earlier\n8\t * programs run unchanged; each entry is a stub that does the int 0x80.\n9\t *\n10\t * Several programs at once are PART.share@2, on the gate; a program on its own\n11\t * is run by the gate directly.\n12\t *\n13\t * Everything below is as @8: one kernel source, every part behind a switch\n14\t * the builder sets from the flavor's petitions.\n15\t *\n16\t * Always here, because a kernel without them is not one: the serial console\n17\t * (PART.serial.8250@2), alloc, exit, and the system call table.  Each switch\n18\t * is HAVE_ and the part's name without its version, set by the builder:\n19\t *\n20\t *   HAVE_TIMER_KVMCLOCK   PART.timer.kvmclock@1   the hypervisor says how fast the counter ticks\n21\t *   HAVE_TIMER_TSC_PIT    PART.timer.tsc-pit@N    the counter timed against the 8254\n22\t *   HAVE_FS_MINIX         PART.fs.minix@N         load and save, on PART.disk.ata-pio@1\n23\t *   HAVE_SHARE            PART.share@2          more than one program at once, behind the gate\n24\t *   HAVE_SCREEN_VGA       PART.screen.vga@1       the screen, a second console\n25\t *\n26\t * With both clocks the kernel asks the hypervisor first and times the 8254 if\n27\t * there is no answer, as @7 did.  That is a choice made at run time between\n28\t * two parts, which plan 5.8 says only a petition-requested chooser may make\n29\t * (Linux's clock-source selection, lifted); it is not lifted yet, and the\n30\t * order is still ours (findings 0018 #2).\n31\t *\n32\t * Every console gets every byte written, the way Linux's printk goes to every\n33\t * console it has: the serial port always, and the screen when a petition names\n34\t * it.  The screen follows the few ANSI escapes a program may use for colour\n35\t * (ESC [ ... m), \"home\" (ESC [ H) and \"clear\" (ESC [ 2 J); the serial port is\n36\t * handed the escapes as they are, and a terminal on the other end follows them\n37\t * itself.  Anything else after an ESC is dropped from the screen.\n38\t *\n39\t * A system call whose part is absent answers the way it does when the hardware\n40\t * is missing: ms says 0 forever, load and save say -1.  The table itself never\n41\t * changes shape (door.h).\n42\t *\n43\t * Exposes CAP.proc.exit and CAP.mem.alloc.  Everything else a program may do\n44\t * is exposed by the part that does it.\n45\t */\n46\t\n47\t#include \"kernel.h\"\n48\t#include \"door.h\"\n49\t#include \"serial8250.h\"\n50\t#ifdef HAVE_TIMER_TSC_PIT\n51\t#include \"tsccal.h\"\n52\t#endif\n53\t#ifdef HAVE_TIMER_KVMCLOCK\n54\t#include \"kvmclock.h\"\n55\t#endif\n56\t#ifdef HAVE_FS_MINIX\n57\t#include \"minix.h\"\n58\t#endif\n59\t#ifdef HAVE_SHARE\n60\t#include \"share.h\"\n61\t#endif\n62\t#include \"gate.h\"\n63\t#ifdef HAVE_SCREEN_VGA\n64\t#include \"vga.h\"\n65\t#endif\n66\t\n67\t#define CONSOLE_PORT\t0x3f8\t\t/* CAP.dev.serial */\n68\t\n69\t/* the heap of the program */\n70\tstatic struct heap plain;\n71\t\n72\tstatic struct heap *heap(void)\n73\t{\n74\t#ifdef HAVE_SHARE\n75\t\tstruct heap *h = share_heap();\n76\t\n77\t\tif (h)\n78\t\t\treturn h;\n79\t#endif\n80\t\treturn &plain;\n81\t}\n82\t\n83\t/* Interrupts off for the length of a system call, so a tick never lands in the\n84\t * middle of one: one program's bytes never interleave with another's. */\n85\tstatic unsigned long irq_save(void)\n86\t{\n87\t\tunsigned long f;\n88\t\n89\t\t__asm__ volatile(\"pushfl; popl %0; cli\" : \"=r\"(f) : : \"memory\");\n90\t\treturn f;\n91\t}\n92\t\n93\tstatic void irq_restore(unsigned long f)\n94\t{\n95\t\t__asm__ volatile(\"pushl %0; popfl\" : : \"r\"(f) : \"memory\", \"cc\");\n96\t}\n97\t\n98\t/*\n99\t * The heap of a plain program: from its end to the end of the RAM region it\n100\t * lives in, from the firmware's memory map, as in @2.\n101\t */\n102\tstatic void heap_init(const struct hvm_start_info *si, unsigned long program_end)\n103\t{\n104\t\tconst struct hvm_memmap_table_entry *m = (const void *)(unsigned long)si->memmap_paddr;\n105\t\tunsigned int i;\n106\t\n107\t\tplain.next = (program_end + 15) & ~15UL;\n108\t\tplain.end = plain.next;\t/* no map, no memory: alloc refuses everything */\n109\t\tif (si->version < 1 || !si->memmap_entries)\n110\t\t\treturn;\n111\t\tfor (i = 0; i < si->memmap_entries; i++) {\n112\t\t\tunsigned long lo = (unsigned long)m[i].addr;\n113\t\t\tunsigned long hi = (unsigned long)(m[i].addr + m[i].size);\n114\t\n115\t\t\tif (m[i].type == MEMMAP_RAM && lo <= PROGRAM_BASE && PROGRAM_BASE < hi) {\n116\t\t\t\tplain.end = hi;\n117\t\t\t\tbreak;\n118\t\t\t}\n119\t\t}\n120\t}\n121\t\n122\t/* Is [lo, hi) all RAM, by the firmware's map? */\n123\tint kernel_is_ram(const struct hvm_start_info *si, unsigned long lo, unsigned long hi)\n124\t{\n125\t\tconst struct hvm_memmap_table_entry *m = (const void *)(unsigned long)si->memmap_paddr;\n126\t\tunsigned int i;\n127\t\n128\t\tfor (i = 0; si->version >= 1 && i < si->memmap_entries; i++)\n129\t\t\tif (m[i].type == MEMMAP_RAM && m[i].addr <= lo && hi <= m[i].addr + m[i].size)\n130\t\t\t\treturn 1;\n131\t\treturn 0;\n132\t}\n133\t\n134\tstatic void *door_alloc(unsigned long bytes)\n135\t{\n136\t\tunsigned long f = irq_save();\n137\t\tstruct heap *t = heap();\n138\t\tunsigned long p = t->next, n = (bytes + 15) & ~15UL;\n139\t\tvoid *r = 0;\n140\t\n141\t\tif (!(bytes == 0 || n < bytes || n > t->end - p)) {\n142\t\t\tt->next = p + n;\n143\t\t\tr = (void *)p;\n144\t\t}\n145\t\tirq_restore(f);\n146\t\treturn r;\t\t/* 0: refused; the program decides what that means */\n147\t}\n148\t\n149\t/*\n150\t * Halt.  The machine has no power-off device and no petition asks for one, so\n151\t * we ask for a reset the way a bare CPU can: a null IDT and an interrupt is a\n152\t * triple fault, the hypervisor sees a reset, and the machine (-no-reboot)\n153\t * exits instead.  Findings 0002 #6.\n154\t */\n155\tvoid __attribute__((noreturn)) kernel_halt(void)\n156\t{\n157\t\tstatic const struct { unsigned short limit; unsigned int base; } __attribute__((packed)) null_idt = { 0, 0 };\n158\t\n159\t\t__asm__ volatile(\"cli; lidt %0; int3\" : : \"m\"(null_idt));\n160\t\tfor (;;)\n161\t\t\t__asm__ volatile(\"cli; hlt\");\n162\t}\n163\t\n164\t#ifdef HAVE_SCREEN_VGA\n165\t/*\n166\t * The screen's half of the console: text straight to the screen part, and the\n167\t * escape sequences turned into its colour, home and clear.  An SGR parameter\n168\t * is 0 (light grey on black), 1 (bright), 30-37 (foreground) or 40-47\n169\t * (background), the ANSI colour numbers, which the screen part's table (from\n170\t * Linux's vt.c) turns into VGA's.  Ours.\n171\t */\n172\tstatic unsigned char con_attr = 0x07, con_state, con_np;\n173\tstatic unsigned int con_par[8];\n174\tstatic unsigned int con_col, con_wrapped;\t/* where the screen's cursor is in its line, and whether the last character filled it */\n175\t\n176\tstatic void con_sgr(unsigned int p)\n177\t{\n178\t\tif (p == 0)\n179\t\t\tcon_attr = 0x07;\n180\t\telse if (p == 1)\n181\t\t\tcon_attr |= 0x08;\n182\t\telse if (p >= 30 && p <= 37)\n183\t\t\tcon_attr = (unsigned char)((con_attr & 0xf8) | color_table[p - 30]);\n184\t\telse if (p >= 40 && p <= 47)\n185\t\t\tcon_attr = (unsigned char)((con_attr & 0x8f) | (color_table[p - 40] << 4));\n186\t\tvga_set_color(con_attr);\n187\t}\n188\t\n189\t/*\n190\t * A newline straight after the 80th character of a line ends that line; it\n191\t * does not start a blank one.  Every terminal since DEC's VT100 (1978) waits\n192\t * like that before wrapping; Linux's early VGA code wraps at once, so on its\n193\t * own a full 80-column line and its newline came out double-spaced (findings\n194\t * 0019 #3).  Ours.\n195\t */\n196\tstatic void screen_text(const char *s, unsigned long n)\n197\t{\n198\t\tunsigned long i, from = 0;\n199\t\n200\t\tfor (i = 0; i < n; i++) {\n201\t\t\tif (s[i] == '\\n') {\n202\t\t\t\tif (con_wrapped) {\n203\t\t\t\t\tif (i > from)\n204\t\t\t\t\t\tvga_write(s + from, (unsigned)(i - from));\n205\t\t\t\t\tfrom = i + 1;\t/* the line already ended at the edge */\n206\t\t\t\t}\n207\t\t\t\tcon_col = 0;\n208\t\t\t\tcon_wrapped = 0;\n209\t\t\t} else i\n[cut at 8000 characters: ask for fewer lines]"
+            }
+          ],
+          "status": "success"
+        }
+      },
+      {
+        "text": "Call 3 of 60 done; 57 left."
+      }
+    ]
+  },
+  {
+    "role": "assistant",
+    "content": [
+      {
+        "toolUse": {
+          "toolUseId": "ollama-2026102903522882890373-0",
+          "name": "look",
+          "input": {
+            "command": "read",
+            "args": [
+              "pool/PART.loader@9/loader.c"
+            ],
+            "start_line": 209,
+            "end_line": 440,
+            "why": "Read the rest of loader.c to see read/cons/tick handling"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "role": "user",
+    "content": [
+      {
+        "toolResult": {
+          "toolUseId": "ollama-2026102903522882890373-0",
+          "content": [
+            {
+              "text": "pool/PART.loader@9/loader.c, lines 209 to 440 of 440\n209\t\t\t} else if (s[i] != '\\r') {\n210\t\t\t\tcon_wrapped = 0;\n211\t\t\t\tif (++con_col == 80) {\n212\t\t\t\t\tcon_col = 0;\n213\t\t\t\t\tcon_wrapped = 1;\n214\t\t\t\t}\n215\t\t\t}\n216\t\t}\n217\t\tif (n > from)\n218\t\t\tvga_write(s + from, (unsigned)(n - from));\n219\t}\n220\t\n221\tstatic void screen_put(const char *s, unsigned long n)\n222\t{\n223\t\tunsigned long i, from = 0;\n224\t\tunsigned int k;\n225\t\n226\t\tfor (i = 0; i < n; i++) {\n227\t\t\tunsigned char c = (unsigned char)s[i];\n228\t\n229\t\t\tif (con_state == 0) {\n230\t\t\t\tif (c != 0x1b)\n231\t\t\t\t\tcontinue;\n232\t\t\t\tif (i > from)\n233\t\t\t\t\tscreen_text(s + from, i - from);\n234\t\t\t\tcon_state = 1;\n235\t\t\t} else if (con_state == 1) {\n236\t\t\t\tcon_state = c == '[' ? 2 : 0;\n237\t\t\t\tcon_np = 0;\n238\t\t\t\tcon_par[0] = 0;\n239\t\t\t} else if (c >= '0' && c <= '9') {\n240\t\t\t\tcon_par[con_np] = con_par[con_np] * 10 + (c - '0');\n241\t\t\t} else if (c == ';') {\n242\t\t\t\tif (con_np < 7)\n243\t\t\t\t\tcon_par[++con_np] = 0;\n244\t\t\t} else {\n245\t\t\t\tif (c == 'm')\n246\t\t\t\t\tfor (k = 0; k <= con_np; k++)\n247\t\t\t\t\t\tcon_sgr(con_par[k]);\n248\t\t\t\telse if (c == 'H') {\n249\t\t\t\t\tvga_home();\n250\t\t\t\t\tcon_col = con_wrapped = 0;\n251\t\t\t\t} else if (c == 'J' && con_par[0] == 2) {\n252\t\t\t\t\tvga_clear();\n253\t\t\t\t\tcon_col = con_wrapped = 0;\n254\t\t\t\t}\n255\t\t\t\tcon_state = 0;\n256\t\t\t}\n257\t\t\tif (con_state == 0)\n258\t\t\t\tfrom = i + 1;\n259\t\t}\n260\t\tif (con_state == 0 && n > from)\n261\t\t\tscreen_text(s + from, n - from);\n262\t}\n263\t#endif\n264\t\n265\t/* Every byte to every console. */\n266\tvoid kernel_say(const char *s, unsigned long n)\n267\t{\n268\t\tserial8250_write(CONSOLE_PORT, s, n);\n269\t#ifdef HAVE_SCREEN_VGA\n270\t\tscreen_put(s, n);\n271\t#endif\n272\t}\n273\t\n274\tvoid kernel_flush(void)\n275\t{\n276\t\tserial8250_flush(CONSOLE_PORT);\n277\t}\n278\t\n279\tstatic void door_write(const void *s, unsigned long n)\n280\t{\n281\t\tunsigned long f = irq_save();\n282\t\n283\t\tkernel_say(s, n);\n284\t\tirq_restore(f);\n285\t}\n286\t\n287\t/* Wait for one byte, then take whatever else has already arrived.  TECH-DEBT 2:\n288\t * a system call runs with interrupts off, so while a program waits here no\n289\t * other program gets a turn.  It goes in the mechanic, after the series. */\n290\tstatic unsigned long door_read(void *buf, unsigned long n)\n291\t{\n292\t\tunsigned char *p = buf;\n293\t\tunsigned long got = 0, f;\n294\t\n295\t\tif (n == 0)\n296\t\t\treturn 0;\n297\t\twhile (!serial8250_poll(CONSOLE_PORT))\n298\t\t\t;\n299\t\tf = irq_save();\n300\t\tp[got++] = serial8250_getc(CONSOLE_PORT);\n301\t\twhile (got < n && serial8250_poll(CONSOLE_PORT))\n302\t\t\tp[got++] = serial8250_getc(CONSOLE_PORT);\n303\t\tirq_restore(f);\n304\t\treturn got;\n305\t}\n306\t\n307\t/*\n308\t * The clock, as @4.  khz is how many counter ticks make a millisecond,\n309\t * measured once at boot; start is the counter then.  0 without a clock part.\n310\t */\n311\t#if defined(HAVE_TIMER_KVMCLOCK) || defined(HAVE_TIMER_TSC_PIT)\n312\tstatic unsigned long clock_khz;\n313\tstatic unsigned long long clock_start;\n314\t\n315\t/* the processor's counter, read the way Linux's rdtsc() reads it */\n316\tstatic unsigned long long cycles(void)\n317\t{\n318\t\tunsigned long lo, hi;\n319\t\n320\t\t__asm__ volatile(\"rdtsc\" : \"=a\"(lo), \"=d\"(hi));\n321\t\treturn ((unsigned long long)hi << 32) | lo;\n322\t}\n323\t#endif\n324\t\n325\tstatic unsigned long door_ms(void)\n326\t{\n327\t#if defined(HAVE_TIMER_KVMCLOCK) || defined(HAVE_TIMER_TSC_PIT)\n328\t\tunsigned long long t;\n329\t\tunsigned long hi, lo, q, r;\n330\t\n331\t\tif (!clock_khz)\n332\t\t\treturn 0;\n333\t\tt = cycles() - clock_start;\n334\t\thi = (unsigned long)(t >> 32);\n335\t\tlo = (unsigned long)t;\n336\t\tif (hi >= clock_khz)\n337\t\t\treturn 0xffffffffUL;\t/* 49 days and 17 hours: the call's last value, held */\n338\t\t__asm__(\"divl %4\" : \"=a\"(q), \"=d\"(r) : \"0\"(lo), \"1\"(hi), \"rm\"(clock_khz));\n339\t\t(void)r;\n340\t\treturn q;\n341\t#else\n342\t\treturn 0;\n343\t#endif\n344\t}\n345\t\n346\tstatic long door_load(const char *name, void *buf, unsigned long max)\n347\t{\n348\t#ifdef HAVE_FS_MINIX\n349\t\tunsigned long f = irq_save();\n350\t\tlong r = minix_load(name, buf, max);\n351\t\n352\t\tirq_restore(f);\n353\t\treturn r;\n354\t#else\n355\t\t(void)name; (void)buf; (void)max;\n356\t\treturn -1;\n357\t#endif\n358\t}\n359\t\n360\tstatic long door_save(const char *name, const void *buf, unsigned long n)\n361\t{\n362\t#ifdef HAVE_FS_MINIX\n363\t\tunsigned long f = irq_save();\n364\t\tlong r = minix_save(name, buf, n);\n365\t\n366\t\tirq_restore(f);\n367\t\treturn r;\n368\t#else\n369\t\t(void)name; (void)buf; (void)n;\n370\t\treturn -1;\n371\t#endif\n372\t}\n373\t\n374\tstatic void __attribute__((noreturn)) door_exit(int code)\n375\t{\n376\t\t(void)code;\t\t\t/* unobservable from outside the machine; findings 0000 #9 */\n377\t#ifdef HAVE_SHARE\n378\t\tshare_exit();\t\t\t/* resumes the next program, if there is one */\n379\t#endif\n380\t\t__asm__ volatile(\"cli\");\n381\t\tkernel_flush();\n382\t\tkernel_halt();\n383\t}\n384\t\n385\t/* what the kernel does for each system call; the gate (PART.gate@1) is the only caller */\n386\tstatic const struct door kernel_calls = { door_write, door_exit, door_alloc, door_read, door_ms, door_load, door_save };\n387\t\n388\tvoid __attribute__((noreturn)) loader_main(const struct hvm_start_info *si)\n389\t{\n390\t\tconst struct hvm_modlist_entry *mod;\n391\t\tconst unsigned char *src;\n392\t\tunsigned char *dst;\n393\t\tunsigned long n;\n394\t\n395\t\tserial8250_init(CONSOLE_PORT);\n396\t#ifdef HAVE_SCREEN_VGA\n397\t\tvga_clear();\t\t/* whatever the firmware left on the screen goes */\n398\t#endif\n399\t#ifdef HAVE_TIMER_KVMCLOCK\n400\t\tclock_khz = kvmclock_khz();\t/* KVM's word first, as Linux does under KVM; 0 if there is no KVM (findings 0012) */\n401\t#endif\n402\t#ifdef HAVE_TIMER_TSC_PIT\n403\t\t{\t/* Up to 150 ms against the 8254 per try (findings 0012), then never again.  Findings 0008. */\n404\t\t\tint tries;\n405\t\n406\t\t\tfor (tries = 0; tries < 5 && !clock_khz; tries++)\n407\t\t\t\tclock_khz = tsccal_khz();\n408\t\t}\n409\t#endif\n410\t#if defined(HAVE_TIMER_KVMCLOCK) || defined(HAVE_TIMER_TSC_PIT)\n411\t\tclock_start = cycles();\n412\t#endif\n413\t\n414\t\tif (si->magic != XEN_HVM_START_MAGIC_VALUE || si->nr_modules < 1)\n415\t\t\tkernel_halt();\t/* no program: nothing to say, nothing to do */\n416\t\n417\t\tmod = (const struct hvm_modlist_entry *)(unsigned long)si->modlist_paddr;\n418\t\tsrc = (const unsigned char *)(unsigned long)mod[0].paddr;\n419\t\n420\t\t/* An archive of programs (\"070701\", cpio's new ASCII header): share, if a\n421\t\t * petition asked to.  If none did, nothing here can run more than one\n422\t\t * program, and the machine stops without a word: the referee refuses\n423\t\t * such a flavor before it is built (rule 19). */\n424\t\tif (mod[0].size > 6 && src[0] == '0' && src[1] == '7' && src[2] == '0' &&\n425\t\t    src[3] == '7' && src[4] == '0' && src[5] == '1') {\n426\t#ifdef HAVE_SHARE\n427\t\t\tshare(si, (void *)src, (unsigned long)mod[0].size, &kernel_calls);\n428\t#else\n429\t\t\tkernel_halt();\n430\t#endif\n431\t\t}\n432\t\n433\t\t/* One plain program, as @5: copy it to PROGRAM_BASE.  Then the gate runs it in ring 3. */\n434\t\tdst = (unsigned char *)PROGRAM_BASE;\n435\t\tfor (n = (unsigned long)mod[0].size; n; n--)\n436\t\t\t*dst++ = *src++;\n437\t\theap_init(si, (unsigned long)dst);\n438\t\n439\t\tgate_run(PROGRAM_BASE, PROGRAM_BASE, plain.end, &kernel_calls);\n440\t}"
+            }
+          ],
+          "status": "success"
+        }
+      },
+      {
+        "text": "Call 4 of 60 done; 56 left."
+      }
+    ]
+  },
+  {
+    "role": "assistant",
+    "content": [
+      {
+        "text": "The busy-wait in `door_read` with interrupts off is the suspected cause. Let me look at the sharing part, which does the round-robin."
+      },
+      {
+        "toolUse": {
+          "toolUseId": "ollama-20261029035236502144116-0",
+          "name": "look",
+          "input": {
+            "why": "List the share part",
+            "command": "list",
+            "args": [
+              "pool/PART.share@2"
+            ]
+          }
+        }
+      }
+    ]
+  },
+  {
+    "role": "user",
+    "content": [
+      {
+        "toolResult": {
+          "toolUseId": "ollama-20261029035236502144116-0",
+          "content": [
+            {
+              "text": "share.c\nshare.h"
+            }
+          ],
+          "status": "success"
+        }
+      },
+      {
+        "text": "Call 5 of 60 done; 55 left."
+      }
+    ]
+  },
+  {
+    "role": "assistant",
+    "content": [
+      {
+        "toolUse": {
+          "toolUseId": "ollama-20261029035240233688765-0",
+          "name": "look",
+          "input": {
+            "why": "Read share.c to understand scheduling and how programs get turns",
+            "command": "read",
+            "args": [
+              "pool/PART.share@2/share.c"
+            ]
+          }
+        }
+      }
+    ]
+  },
+  {
+    "role": "user",
+    "content": [
+      {
+        "toolResult": {
+          "toolUseId": "ollama-20261029035240233688765-0",
+          "content": [
+            {
+              "text": "pool/PART.share@2/share.c, lines 1 to 177 of 177\n1\t/* SPDX-License-Identifier: GPL-2.0-only\n2\t *\n3\t * PART.share@2: the processor shared between programs, the way the Amiga did\n4\t * it in 1985, now behind the gate.  @1's page tables, interrupt table and\n5\t * register saving went to PART.gate@1, which runs every program in ring 3; what\n6\t * is left here is turn-taking: which program is next, what to do when one\n7\t * exits or is stopped, and the 8254's tick that takes the processor back.  Ours;\n8\t * the 8259, the 8254 tick and the cpio reader are lifted parts this one\n9\t * depends on.\n10\t *\n11\t * Each program gets its own 8 MiB of RAM, mapped by the gate to the same\n12\t * addresses every program is linked at (0x400000, stack at the top, heap\n13\t * between), so programs built for any earlier kernel run unchanged and cannot\n14\t * see each other's memory, the kernel's or the screen's.  The 8254's counter 0\n15\t * interrupts HZ (100) times a second through the 8259; on every tick the next\n16\t * program that is still running gets the processor: preemptive, so a program\n17\t * that never gives it back still gets only its turn.  A program the processor\n18\t * stops is stopped alone, with an Amiga-style \"Guru Meditation\" line on the\n19\t * console, and the others carry on.  When the last program exits, the machine\n20\t * halts.\n21\t *\n22\t * Depends on PART.gate@1, PART.irq.pic@1, PART.timer.pit-tick@1,\n23\t * PART.archive.cpio@1.  Exposes CAP.cpu.share@1.\n24\t */\n25\t\n26\t#include \"share.h\"\n27\t#include \"gate.h\"\n28\t#include \"pic.h\"\n29\t#include \"pittick.h\"\n30\t#include \"earlycpio.h\"\n31\t\n32\t#define MAX_TASKS\tGATE_MAX_SPACES\n33\t#define REGION_BASE\t0x800000\t/* physical: program i's RAM starts at 8 MiB + 8 MiB * i */\n34\t#define REGION_SIZE\t0x800000\t/* 8 MiB: two 4 MiB pages */\n35\t#define REGION_TOP\t(PROGRAM_BASE + REGION_SIZE)\t/* virtual: the end of every program's memory */\n36\t#define STACK_SIZE\t0x4000\t\t/* 16 KiB at the top of the region */\n37\t\n38\tstruct task {\n39\t\tstruct gate_space *space;\n40\t\tstruct heap heap;\n41\t\tint alive;\n42\t};\n43\t\n44\tstatic struct task tasks[MAX_TASKS];\n45\tstatic int ntasks;\t\t\t/* 0: nothing is being shared */\n46\tstatic int cur;\n47\t\n48\tstruct heap *share_heap(void)\n49\t{\n50\t\treturn ntasks ? &tasks[cur].heap : 0;\n51\t}\n52\t\n53\t/* The next program that is still running, after the current one; -1 if none. */\n54\tstatic int next_alive(void)\n55\t{\n56\t\tint i, n;\n57\t\n58\t\tfor (i = 1; i <= ntasks; i++) {\n59\t\t\tn = (cur + i) % ntasks;\n60\t\t\tif (tasks[n].alive)\n61\t\t\t\treturn n;\n62\t\t}\n63\t\treturn -1;\n64\t}\n65\t\n66\tvoid share_exit(void)\n67\t{\n68\t\tint n;\n69\t\n70\t\tif (!ntasks)\n71\t\t\treturn;\n72\t\ttasks[cur].alive = 0;\n73\t\tn = next_alive();\n74\t\tif (n >= 0) {\n75\t\t\tcur = n;\n76\t\t\tgate_resume(tasks[n].space);\n77\t\t}\n78\t}\n79\t\n80\tstatic void hex8(char *p, unsigned long v)\n81\t{\n82\t\tint i;\n83\t\n84\t\tfor (i = 7; i >= 0; i--, v >>= 4)\n85\t\t\tp[i] = \"0123456789ABCDEF\"[v & 15];\n86\t}\n87\t\n88\t/* A hardware interrupt arrived: the tick gives the processor to the next program. */\n89\tstatic struct gate_space *on_irq(unsigned long vec, struct gate_space *was)\n90\t{\n91\t\tint n;\n92\t\n93\t\tif (vec == (unsigned long)PIC_VECTOR(PIT_IRQ)) {\n94\t\t\tpic_eoi(PIT_IRQ);\n95\t\t\tn = next_alive();\n96\t\t\tif (n >= 0)\n97\t\t\t\tcur = n;\n98\t\t\treturn tasks[cur].space;\n99\t\t}\n100\t\treturn was;\t/* spurious (the 8259's IRQ 7, the APIC's vector): nothing happened, and no EOI is owed */\n101\t}\n102\t\n103\t/* The processor stopped the running program.  Stop that program alone.  The two\n104\t * numbers are the vector and the address: the one it touched (page faults) or\n105\t * the instruction it was on. */\n106\tstatic struct gate_space *on_fault(unsigned long vec, unsigned long addr, struct gate_space *was)\n107\t{\n108\t\tstatic char msg[] = \"\\nGuru Meditation #XXXXXXXX.XXXXXXXX  program X stopped\\n\";\n109\t\tint n;\n110\t\n111\t\t(void)was;\n112\t\thex8(msg + 18, vec);\n113\t\thex8(msg + 27, addr);\n114\t\tmsg[45] = (char)('1' + cur);\n115\t\tkernel_say(msg, sizeof msg - 1);\n116\t\ttasks[cur].alive = 0;\n117\t\tn = next_alive();\n118\t\tif (n < 0) {\n119\t\t\tkernel_flush();\n120\t\t\tkernel_halt();\n121\t\t}\n122\t\tcur = n;\n123\t\treturn tasks[cur].space;\n124\t}\n125\t\n126\tstatic const struct gate_sched sched = { on_irq, on_fault };\n127\t\n128\t/*\n129\t * Set up program i from a cpio member: copy it into its region and make its\n130\t * space.  Paging is still off: physical addresses.\n131\t */\n132\tstatic int task_init(const struct hvm_start_info *si, int i, const void *data, unsigned long size)\n133\t{\n134\t\tunsigned long base = REGION_BASE + (unsigned long)i * REGION_SIZE, k;\n135\t\tconst unsigned char *src = data;\n136\t\tunsigned char *dst = (unsigned char *)base;\n137\t\n138\t\tif (size > REGION_SIZE - STACK_SIZE || !kernel_is_ram(si, base, base + REGION_SIZE))\n139\t\t\treturn -1;\n140\t\tfor (k = 0; k < size; k++)\n141\t\t\tdst[k] = src[k];\n142\t\n143\t\ttasks[i].space = gate_space_new(base, PROGRAM_BASE, REGION_SIZE, PROGRAM_BASE, REGION_TOP);\n144\t\tif (!tasks[i].space)\n145\t\t\treturn -1;\n146\t\ttasks[i].heap.next = (PROGRAM_BASE + size + 15) & ~15UL;\n147\t\ttasks[i].heap.end = REGION_TOP - STACK_SIZE;\n148\t\ttasks[i].alive = 1;\n149\t\treturn 0;\n150\t}\n151\t\n152\tvoid __attribute__((noreturn)) share(const struct hvm_start_info *si, void *archive, unsigned long len,\n153\t\tconst struct door *door)\n154\t{\n155\t\tstruct cpio_data cd;\n156\t\tlong next = 0, at = 0;\n157\t\n158\t\tgate_share_calls(door);\n159\t\twhile (ntasks < MAX_TASKS) {\n160\t\t\tcd = find_cpio_data(\"\", (char *)archive + at, len - (unsigned long)at, &next);\n161\t\t\tif (!cd.data)\n162\t\t\t\tbreak;\n163\t\t\tif (task_init(si, ntasks, cd.data, cd.size))\n164\t\t\t\tbreak;\n165\t\t\tntasks++;\n166\t\t\tat += next;\n167\t\t}\n168\t\tif (!ntasks)\n169\t\t\tkernel_halt();\t/* an archive with nothing runnable in it */\n170\t\n171\t\tgate_schedule(&sched);\n172\t\tpic_init();\n173\t\tpit_tick_start();\n174\t\tpic_unmask(PIT_IRQ);\n175\t\tcur = 0;\n176\t\tgate_start(tasks[0].space);\n177\t}"
+            }
+          ],
+          "status": "success"
+        }
+      },
+      {
+        "text": "Call 6 of 60 done; 54 left."
+      }
+    ]
+  },
+  {
+    "role": "assistant",
+    "content": [
+      {
+        "text": "The busy-wait at line 297 with interrupts off is the prime suspect. Before changing it, let me understand the gate's IRQ handling and re-entrancy."
+      },
+      {
+        "toolUse": {
+          "toolUseId": "ollama-20261029035258496176554-0",
+          "name": "look",
+          "input": {
+            "why": "List gate part",
+            "command": "list",
+            "args": [
+              "pool/PART.gate@1"
+            ]
+          }
+        }
+      }
+    ]
+  },
+  {
+    "role": "user",
+    "content": [
+      {
+        "toolResult": {
+          "toolUseId": "ollama-20261029035258496176554-0",
+          "content": [
+            {
+              "text": "gate.c\ngate_entry.S\ngate.h\ngate_user.S"
+            }
+          ],
+          "status": "success"
+        }
+      },
+      {
+        "text": "Call 7 of 60 done; 53 left."
+      }
+    ]
+  },
+  {
+    "role": "assistant",
+    "content": [
+      {
+        "toolUse": {
+          "toolUseId": "ollama-20261029035304941358757-0",
+          "name": "look",
+          "input": {
+            "why": "Read the ticks check to understand expected output",
+            "command": "read",
+            "args": [
+              "tests/expected/stopwatch.ticks@1.check"
+            ]
+          }
+        }
+      }
+    ]
+  },
+  {
+    "role": "user",
+    "content": [
+      {
+        "toolResult": {
+          "toolUseId": "ollama-20261029035304941358757-0",
+          "content": [
+            {
+              "text": "tests/expected/stopwatch.ticks@1.check, lines 1 to 17 of 17\n1\t# TST.stopwatch.ticks@1, run by jig/test as: sh this STAMPED-CAPTURE SECONDS\n2\t# Green when the stopwatch showed 00:00, 00:01, 00:02 ... each once and in order,\n3\t# and after SECONDS seconds by the host's clock the last value was SECONDS or\n4\t# SECONDS-1 (the machine takes a moment to boot before 00:00).\n5\tawk -v secs=\"$2\" '\n6\t$2 ~ /^[0-9][0-9]:[0-9][0-9]$/ {\n7\t\tv = substr($2, 1, 2) * 60 + substr($2, 4, 2)\n8\t\tif (v != n) { printf \"expected %02d:%02d, saw %s\\n\", int(n / 60), n % 60, $2; bad = 1; exit 1 }\n9\t\tn++\n10\t}\n11\tEND {\n12\t\tif (bad) exit 1\n13\t\tif (n == 0) { print \"it never showed 00:00\"; exit 1 }\n14\t\tlast = n - 1\n15\t\tif (last != secs && last != secs - 1) { printf \"after %d s it showed %d s\\n\", secs, last; exit 1 }\n16\t\tprintf \"00:00 to %02d:%02d, every second once, in order, in %d s by the host\\n\", int(last / 60), last % 60, secs\n17\t}' \"$1\""
+            }
+          ],
+          "status": "success"
+        }
+      },
+      {
+        "text": "Call 8 of 60 done; 52 left."
+      }
+    ]
+  },
+  {
+    "role": "assistant",
+    "content": [
+      {
+        "text": "The failure \"it never showed 00:00\" means the stopwatch printed nothing — the waiting program is blocking all ticks. Let me understand the gate's context switching to see what happens on a tick during a kernel syscall."
+      },
+      {
+        "toolUse": {
+          "toolUseId": "ollama-2026102903533991063533-0",
+          "name": "look",
+          "input": {
+            "why": "Read gate.c to understand how syscalls and ticks interleave",
+            "command": "read",
+            "args": [
+              "pool/PART.gate@1/gate.c"
+            ]
+          }
+        }
+      }
+    ]
+  },
+  {
+    "role": "user",
+    "content": [
+      {
+        "toolResult": {
+          "toolUseId": "ollama-2026102903533991063533-0",
+          "content": [
+            {
+              "text": "pool/PART.gate@1/gate.c, lines 1 to 395 of 395\n1\t/* SPDX-License-Identifier: GPL-2.0-only\n2\t *\n3\t * PART.gate@1: the gate.  Programs run in ring 3, the processor's least\n4\t * privileged level, and the only way they reach the kernel is a trap\n5\t * instruction, int 0x80, with the call's number in eax.  A program that\n6\t * touches anything else (the kernel's memory, the screen's, an I/O port) is\n7\t * stopped by the processor itself, and the kernel says so on the console.\n8\t * Plan 9.13, findings 0021.  Ours; nothing lifted.  The descriptor, page-table\n9\t * and task-state-segment bits are the Intel SDM's; the register convention of\n10\t * int 0x80 and the numbers of write, read and exit are Linux's 32-bit x86 ABI.\n11\t *\n12\t * Memory: every address maps to itself.  The kernel's pages, and every page\n13\t * outside the program's window, are closed to ring 3; only the window, the\n14\t * program's stack and the page of system call stubs (gate_user.S) are open.\n15\t * The kernel obeys read-only pages too (CR0.WP).\n16\t *\n17\t * Several programs (PART.share@2): each gets a space, its own page directory\n18\t * that maps the same virtual window to its own physical RAM, and its own kernel\n19\t * stack, where the processor puts a trap's frame.  The gate saves and resumes\n20\t * the frames; who runs next is decided by the scheduler the sharing part\n21\t * registers (gate_schedule), not here.\n22\t *\n23\t * TECH-DEBT 1: alloc, ms, load and save have no Linux number yet, so they use\n24\t * AiOs-only numbers from 1000 (findings 0021 #5).  They go when Linux's program\n25\t * files can be loaded (part 20): alloc becomes brk, ms becomes clock_gettime,\n26\t * load and save become open, read, write and close.\n27\t */\n28\t\n29\t#include \"gate.h\"\n30\t\n31\t#define SEL_KCODE\t0x08\n32\t#define SEL_KDATA\t0x10\n33\t#define SEL_UCODE\t0x18\t\t/* with RPL 3: 0x1b */\n34\t#define SEL_UDATA\t0x20\t\t/* with RPL 3: 0x23 */\n35\t#define SEL_TSS\t\t0x28\n36\t\n37\t#define NR_EXIT\t\t1\t\t/* Linux i386 */\n38\t#define NR_READ\t\t3\n39\t#define NR_WRITE\t4\n40\t#define NR_ALLOC\t1000\t\t/* TECH-DEBT 1 */\n41\t#define NR_MS\t\t1001\t\t/* TECH-DEBT 1 */\n42\t#define NR_LOAD\t\t1002\t\t/* TECH-DEBT 1 */\n43\t#define NR_SAVE\t\t1003\t\t/* TECH-DEBT 1 */\n44\t\n45\t#define EFAULT\t\t14\n46\t#define EBADF\t\t9\n47\t#define ENOSYS\t\t38\n48\t#define NAME_MAX_LEN\t256\t\t/* the longest file name the kernel will read from a program */\n49\t\n50\textern char kernel_end[], stack_top[];\n51\textern char gate_user_start[], gate_stack_lo[], gate_stack_hi[];\n52\textern char gate_door[], gate_return[];\n53\t\n54\t#define KSTACK_WORDS\t4096\t\t/* 16 KiB of kernel stack for each space */\n55\t\n56\tstruct gate_space {\n57\t\tunsigned long cr3;\t\t/* its page directory */\n58\t\tunsigned long *frame;\t\t/* where its registers were saved, on its kernel stack */\n59\t\tunsigned long kstack_top;\t/* where a trap from ring 3 lands (the TSS's esp0) */\n60\t\tint user_stack;\t\t\t/* ring 3 stands on the gate's own stack (one program, no sharing) */\n61\t};\n62\t\n63\tstatic unsigned long long gdt[6];\n64\tstatic unsigned int tss[26];\n65\tstatic unsigned long long idt[256];\n66\tstatic unsigned long pds[GATE_MAX_SPACES][1024] __attribute__((aligned(4096)));\n67\tstatic unsigned long pt0[1024] __attribute__((aligned(4096)));\n68\tstatic unsigned long kstacks[GATE_MAX_SPACES][KSTACK_WORDS] __attribute__((aligned(16)));\n69\tstatic struct gate_space spaces[GATE_MAX_SPACES];\n70\tstatic int nspaces;\n71\tstatic struct gate_space *cur;\n72\tstatic const struct gate_sched *sched;\n73\t\n74\tstatic unsigned long win_lo, win_hi;\t/* the same virtual window in every space */\n75\tstatic const struct door *calls;\n76\t\n77\t/* Is [p, p+n) all inside what ring 3 may touch? */\n78\tstatic int user_ok(unsigned long p, unsigned long n)\n79\t{\n80\t\tunsigned long e = p + n;\n81\t\n82\t\tif (n == 0)\n83\t\t\treturn 1;\n84\t\tif (e < p)\n85\t\t\treturn 0;\n86\t\tif (p >= win_lo && e <= win_hi)\n87\t\t\treturn 1;\n88\t\treturn cur->user_stack && p >= (unsigned long)gate_stack_lo && e <= (unsigned long)gate_stack_hi;\n89\t}\n90\t\n91\t/* Is the NUL-terminated string at p entirely inside what ring 3 may touch? */\n92\tstatic int user_name_ok(const char *s)\n93\t{\n94\t\tunsigned long i;\n95\t\n96\t\tfor (i = 0; i < NAME_MAX_LEN; i++) {\n97\t\t\tif (!user_ok((unsigned long)s + i, 1))\n98\t\t\t\treturn 0;\n99\t\t\tif (!s[i])\n100\t\t\t\treturn 1;\n101\t\t}\n102\t\treturn 0;\n103\t}\n104\t\n105\t/* frame: what trap_common saved (gate_entry.S).  Returns the call's answer. */\n106\tstatic long syscall(const unsigned long *frame)\n107\t{\n108\t\tunsigned long nr = frame[7], a = frame[4], b = frame[6], c = frame[5];\t/* eax; ebx, ecx, edx */\n109\t\n110\t\tswitch (nr) {\n111\t\tcase NR_EXIT:\n112\t\t\tcalls->exit((int)a);\n113\t\tcase NR_WRITE:\n114\t\t\tif (a != 1 && a != 2)\n115\t\t\t\treturn -EBADF;\n116\t\t\tif (!user_ok(b, c))\n117\t\t\t\treturn -EFAULT;\n118\t\t\tcalls->write((const void *)b, c);\n119\t\t\treturn (long)c;\n120\t\tcase NR_READ:\n121\t\t\tif (a != 0)\n122\t\t\t\treturn -EBADF;\n123\t\t\tif (!user_ok(b, c))\n124\t\t\t\treturn -EFAULT;\n125\t\t\treturn (long)calls->read((void *)b, c);\n126\t\tcase NR_ALLOC:\n127\t\t\treturn (long)calls->alloc(a);\n128\t\tcase NR_MS:\n129\t\t\treturn (long)calls->ms();\n130\t\tcase NR_LOAD:\n131\t\t\tif (!user_name_ok((const char *)a) || !user_ok(b, c))\n132\t\t\t\treturn -EFAULT;\n133\t\t\treturn calls->load((const char *)a, (void *)b, c);\n134\t\tcase NR_SAVE:\n135\t\t\tif (!user_name_ok((const char *)a) || !user_ok(b, c))\n136\t\t\t\treturn -EFAULT;\n137\t\t\treturn calls->save((const char *)a, (const void *)b, c);\n138\t\t}\n139\t\treturn -ENOSYS;\n140\t}\n141\t\n142\tstatic void hex8(char *p, unsigned long v)\n143\t{\n144\t\tint i;\n145\t\n146\t\tfor (i = 7; i >= 0; i--, v >>= 4)\n147\t\t\tp[i] = \"0123456789ABCDEF\"[v & 15];\n148\t}\n149\t\n150\t/*\n151\t * Every trap.  frame points at what trap_common saved: eight registers (popal\n152\t * order, edi first), es, ds, the vector, the error code, then what the\n153\t * processor pushed.  Returns the frame to resume.\n154\t */\n155\tunsigned long *gate_trap(unsigned long *frame)\n156\t{\n157\t\tunsigned long vec = frame[10], addr;\n158\t\tstruct gate_space *next = cur;\n159\t\tstatic char msg[] = \"\\nGuru Meditation #XXXXXXXX.XXXXXXXX  program 1 stopped\\n\";\n160\t\n161\t\tcur->frame = frame;\n162\t\tif (vec == 0x80) {\n163\t\t\tframe[7] = (unsigned long)syscall(frame);\n164\t\t\treturn frame;\n165\t\t}\n166\t\tif (sched && ((vec & ~0xfUL) == 0x30 || vec == 0xff)) {\n167\t\t\t/* a hardware interrupt: the scheduler may take the processor away */\n168\t\t\tnext = sched->irq(vec, cur);\n169\t\t} else {\n170\t\t\t/* The processor refused something.  The two numbers are the vector and the\n171\t\t\t * address: the one it touched (page faults) or the instruction it was on. */\n172\t\t\tif (vec == 14)\n173\t\t\t\t__asm__ volatile(\"movl %%cr2, %0\" : \"=r\"(addr));\n174\t\t\telse\n175\t\t\t\taddr = frame[12];\n176\t\t\tif (sched && (frame[13] & 3) == 3) {\n177\t\t\t\tnext = sched->fault(vec, addr, cur);\n178\t\t\t} else {\n179\t\t\t\thex8(msg + 18, vec);\n180\t\t\t\thex8(msg + 27, addr);\n181\t\t\t\tkernel_say(msg, sizeof msg - 1);\n182\t\t\t\tkernel_flush();\n183\t\t\t\tkernel_halt();\n184\t\t\t}\n185\t\t}\n186\t\tif (next != cur) {\n187\t\t\tcur = next;\n188\t\t\ttss[1] = (unsigned int)next->kstack_top;\n189\t\t\t__asm__ volatile(\"movl %0, %%cr3\" : : \"r\"(next->cr3) : \"memory\");\n190\t\t}\n191\t\treturn next->frame;\n192\t}\n193\t\n194\tstatic void set_gate(int v, const char *handler, unsigned int dpl)\n195\t{\n196\t\tunsigned long h = (unsigned long)handler;\n197\t\n198\t\t/* present, 32-bit interrupt gate (interrupts off on entry), code selector 0x08 */\n199\t\tidt[v] = (h & 0xffff) | ((unsigned long long)SEL_KCODE << 16) |\n200\t\t\t((unsigned long long)(0x8e00 | (dpl << 13) | (h & 0xffff0000)) << 32);\n201\t}\n202\t\n203\tstatic void tables_init(void)\n204\t{\n205\t\tstatic struct { unsigned short limit; unsigned int base; } __attribute__((packed)) gd, id;\n206\t\textern char trap0[], trap1[], trap2[], trap3[], trap4[], trap5[], trap6[], trap7[],\n207\t\t\ttrap8[], trap9[], trap10[], trap11[], trap12[], trap13[], trap14[], trap15[],\n208\t\t\ttrap16[], trap17[], trap18[], trap19[], trap20[], trap21[], trap22[], trap23[],\n209\t\t\ttrap24[], trap25[], trap26[], trap27[], trap28[], trap29[], trap30[], trap31[],\n210\t\t\ttrap0x80[];\n211\t\tchar *t[32] = { trap0, trap1, trap2, trap3, trap4, trap5, trap6, trap7,\n212\t\t\ttrap8, trap9, trap\n[cut at 8000 characters: ask for fewer lines]"
+            }
+          ],
+          "status": "success"
+        }
+      },
+      {
+        "text": "Call 9 of 60 done; 51 left."
+      }
+    ]
+  },
+  {
+    "role": "assistant",
+    "content": [
+      {
+        "toolUse": {
+          "toolUseId": "ollama-20261029035347809449186-0",
+          "name": "look",
+          "input": {
+            "why": "Read spec clause loader.16",
+            "command": "find",
+            "args": [
+              "SPEC.loader.16"
+            ]
+          }
+        }
+      }
+    ]
+  },
+  {
+    "role": "user",
+    "content": [
+      {
+        "toolResult": {
+          "toolUseId": "ollama-20261029035347809449186-0",
+          "content": [
+            {
+              "text": "specs/loader.16@1.toml:1:code       = \"SPEC.loader.16@1\"\ntests/share.waits@1.toml:5:binds      = \"SPEC.loader.16@1\"\nfindings/0024.md:99:    window and carries on.  (e) TST.share.waits@1 (SPEC.loader.16): on the gate's"
+            }
+          ],
+          "status": "success"
+        }
+      },
+      {
+        "text": "Call 10 of 60 done; 50 left."
+      }
+    ]
+  },
+  {
+    "role": "assistant",
+    "content": [
+      {
+        "text": "Let me look at the waiter program and how it starts, plus check the findings note about this test."
+      },
+      {
+        "toolUse": {
+          "toolUseId": "ollama-20261029035400620607964-0",
+          "name": "look",
+          "input": {
+            "why": "Read waiter.c",
+            "command": "read",
+            "args": [
+              "tests/programs/waiter.c"
+            ]
+          }
+        }
+      },
+      {
+        "toolUse": {
+          "toolUseId": "ollama-20261029035400620607964-1",
+          "name": "look",
+          "input": {
+            "why": "Read findings 0024 around this test",
+            "command": "read",
+            "args": [
+              "findings/0024.md"
+            ],
+            "start_line": 80,
+            "end_line": 130
+          }
+        }
+      }
+    ]
+  },
+  {
+    "role": "user",
+    "content": [
+      {
+        "toolResult": {
+          "toolUseId": "ollama-20261029035400620607964-0",
+          "content": [
+            {
+              "text": "tests/programs/waiter.c, lines 1 to 18 of 18\n1\t/* SPDX-License-Identifier: GPL-2.0-only\n2\t *\n3\t * Probe for TST.share.waits@1: a program that asks for one byte from the console\n4\t * and waits for it.  Nothing is ever typed.  It runs beside the stopwatch, which\n5\t * should keep its time while this one waits (TECH-DEBT 2).\n6\t * Boots on: share, gateshare.\n7\t */\n8\t#include \"door.h\"\n9\t\n10\tvoid __attribute__((section(\".text.start\"))) _start(const struct door *d)\n11\t{\n12\t\tchar c;\n13\t\n14\t\td->write(\"waiting\\n\", 8);\n15\t\td->read(&c, 1);\n16\t\td->write(\"got a byte\\n\", 11);\n17\t\td->exit(0);\n18\t}"
+            }
+          ],
+          "status": "success"
+        }
+      },
+      {
+        "toolResult": {
+          "toolUseId": "ollama-20261029035400620607964-1",
+          "content": [
+            {
+              "text": "findings/0024.md, lines 80 to 130 of 433\n80\t    stock class, Dave Plummer's PrimeC/solution_1 from PlummersSoftwareLLC/Primes\n81\t    (BSD-3) unchanged, one static file on the jig's Linux and on AiOs, which first\n82\t    needs a clock for programs (clock_gettime); and the unlimited class, AiOs\n83\t    tuned for the race and labelled so.  And the dispatcher: which model gets\n84\t    which job, and when work goes from the 3090 to Claude, from the numbers of\n85\t    this part.\n86\t\n87\t11. **The five tests, red (2026-10-22, in Claude's workspace, under software\n88\t    emulation, not the jig).**  Each drafted for Chris to decide; each red on\n89\t    AiOs as it is, for the reason it names.\n90\t    (a) TST.gate.linux-only@1 (SPEC.gate.10): a Linux program calling 1000 to\n91\t    1003 under the cat flavor's kernel is answered 0, 0, -14, -14, not Linux's\n92\t    -38.  (b) TST.loader.random@1 (SPEC.loader.15): three boots, and two\n93\t    AT_RANDOMs agree in 8 of their 16 bytes; the last eight are the counter's\n94\t    high half, the same on every boot.  (c) TST.gate.sse@1 (SPEC.gate.11): a\n95\t    program built with -msse2 stops with Guru Meditation #00000006, as cat's\n96\t    probe did on the jig in part 20.  (d) TST.gate.window-end@1 (SPEC.gate.12):\n97\t    on the cat flavor's machine given 62 MiB instead of 64, so the window does\n98\t    not end on a 4 MiB line, a plain program reads the first byte past its\n99\t    window and carries on.  (e) TST.share.waits@1 (SPEC.loader.16): on the gate's\n100\t    sharing kernel, a program waiting for a byte that never comes freezes the\n101\t    stopwatch beside it before 00:00.  On the sharing kernel from before the gate\n102\t    the same probe is green: there a call is a plain function call with\n103\t    interrupts on, so TECH-DEBT 2 is the gate's alone.\n104\t    Where each debt is fixed follows from where its test sees it: (a) to (d) in\n105\t    PART.gate@2 and PART.loader@10, (e) in PART.loader@9 (the gate's sharing\n106\t    kernel).  The older copies (PART.gate@1's numbers and window, PART.loader@10's\n107\t    door_read) keep their marks and their entries until a test sees them.\n108\t    Not part of the tests: building the gateshare flavor prints \"sed: can't read\n109\t    : No such file or directory\" from jig/aios; the build succeeds.  Noted, not\n110\t    yet traced.\n111\t\n112\t12. **The bench, built (2026-10-22, in Claude's workspace).**  jig/fix (decision\n113\t    0059): one red test to one model, a look tool that answers from a copy of the\n114\t    repo and refuses anything outside it, one whole file under pool/ handed in\n115\t    through submit_fix, judged by every test in its own copy, the run recorded with\n116\t    every call's tokens, the result and the lines changed (removed plus added).\n117\t    The first prompt is fix/prompt.txt, written by Claude.  TST.fix.judged boots\n118\t    nothing (a made-up part and two made-up tests, only in its copy): red before\n119\t    jig/fix existed, green after, seven mutations killed.  Not yet run with a real\n120\t    model, on the jig or on the card.\n121\t\n122\t13. **The judge's rule, corrected (2026-10-22, decision 0060).**  With five tests\n123\t    red on purpose, \"every test passes\" meant no single fix could pass.  A fix now\n124\t    passes when its own red test turns green and nothing that was green goes red;\n125\t    the tests already red are the other jobs.  Ruled by Chris the same evening.\n126\t    Both pieces checked on the jig at 8ae364b before this: TST.fix.judged and\n127\t    TST.exam.ollama green, eleven mutations killed.\n128\t\n129\t14. **Try 1: Sonnet and a bug in the bench (2026-10-22, on the jig at 2a35b7e).**\n130\t    jig/fix gate.linux-only@1 with Sonnet 4.6 and fix/prompt.txt (ad43d5b5): no"
+            }
+          ],
+          "status": "success"
+        }
+      },
+      {
+        "text": "Call 11 of 60 done; 49 left."
+      }
+    ]
+  },
+  {
+    "role": "assistant",
+    "content": [
+      {
+        "text": "Let me look at how the machine drives this and compare with the working pre-gate share kernel."
+      },
+      {
+        "toolUse": {
+          "toolUseId": "ollama-20261029035452744007795-0",
+          "name": "look",
+          "input": {
+            "why": "Find the pre-gate sharing kernel door_read that works",
+            "command": "find",
+            "args": [
+              "door_read"
+            ]
+          }
+        }
+      },
+      {
+        "toolUse": {
+          "toolUseId": "ollama-20261029035452744007795-1",
+          "name": "look",
+          "input": {
+            "why": "List the pit tick part",
+            "command": "list",
+            "args": [
+              "pool/PART.timer.pit-tick@1"
+            ]
+          }
+        }
+      }
+    ]
+  },
+  {
+    "role": "user",
+    "content": [
+      {
+        "toolResult": {
+          "toolUseId": "ollama-20261029035452744007795-0",
+          "content": [
+            {
+              "text": "pool/PART.loader@5/loader.c:139:static unsigned long door_read(void *buf, unsigned long n)\npool/PART.loader@5/loader.c:190:static const struct door door = { door_write, door_exit, door_alloc, door_read, door_ms, door_load, door_save };\npool/PART.loader@6/loader.c:209:static unsigned long door_read(void *buf, unsigned long n)\npool/PART.loader@6/loader.c:369:static const struct door door = { door_write, door_exit, door_alloc, door_read, door_ms, door_load, door_save };\npool/PART.loader@8/loader.c:288:static unsigned long door_read(void *buf, unsigned long n)\npool/PART.loader@8/loader.c:383:static const struct door door = { door_write, door_exit, door_alloc, door_read, door_ms, door_load, door_save };\npool/PART.loader@7/loader.c:216:static unsigned long door_read(void *buf, unsigned long n)\npool/PART.loader@7/loader.c:376:static const struct door door = { door_write, door_exit, door_alloc, door_read, door_ms, door_load, door_save };\npool/PART.loader@4/loader.c:132:static unsigned long door_read(void *buf, unsigned long n)\npool/PART.loader@4/loader.c:171:static const struct door door = { door_write, door_exit, door_alloc, door_read, door_ms };\npool/PART.loader@9/loader.c:290:static unsigned long door_read(void *buf, unsigned long n)\npool/PART.loader@9/loader.c:386:static const struct door kernel_calls = { door_write, door_exit, door_alloc, door_read, door_ms, door_load, door_save };\npool/PART.loader@10/loader.c:305:static unsigned long door_read(void *buf, unsigned long n)\npool/PART.loader@10/loader.c:401:static const struct door kernel_calls = { door_write, door_exit, door_alloc, door_read, door_ms, door_load, door_save };\npool/PART.loader@3/loader.c:125:static unsigned long door_read(void *buf, unsigned long n)\npool/PART.loader@3/loader.c:138:static const struct door door = { door_write, door_exit, door_alloc, door_read };\nfindings/0024.md:107:    door_read) keep their marks and their entries until a test sees them."
+            }
+          ],
+          "status": "success"
+        }
+      },
+      {
+        "toolResult": {
+          "toolUseId": "ollama-20261029035452744007795-1",
+          "content": [
+            {
+              "text": "no folder pool/PART.timer.pit-tick@1"
+            }
+          ],
+          "status": "error"
+        }
+      },
+      {
+        "text": "Call 12 of 60 done; 48 left."
+      }
+    ]
+  },
+  {
+    "role": "assistant",
+    "content": [
+      {
+        "toolUse": {
+          "toolUseId": "ollama-20261029035457375300286-0",
+          "name": "look",
+          "input": {
+            "why": "Read the pre-gate working door_read",
+            "command": "read",
+            "args": [
+              "pool/PART.loader@7/loader.c"
+            ],
+            "start_line": 216,
+            "end_line": 240
+          }
+        }
+      },
+      {
+        "toolUse": {
+          "toolUseId": "ollama-20261029035457375300286-1",
+          "name": "look",
+          "input": {
+            "why": "Find pit tick part",
+            "command": "find",
+            "args": [
+              "pittick"
+            ]
+          }
+        }
+      }
+    ]
+  },
+  {
+    "role": "user",
+    "content": [
+      {
+        "toolResult": {
+          "toolUseId": "ollama-20261029035457375300286-0",
+          "content": [
+            {
+              "text": "pool/PART.loader@7/loader.c, lines 216 to 240 of 523\n216\tstatic unsigned long door_read(void *buf, unsigned long n)\n217\t{\n218\t\tunsigned char *p = buf;\n219\t\tunsigned long got = 0, f;\n220\t\n221\t\tif (n == 0)\n222\t\t\treturn 0;\n223\t\twhile (!serial8250_poll(CONSOLE_PORT))\n224\t\t\t;\n225\t\tf = irq_save();\n226\t\tp[got++] = serial8250_getc(CONSOLE_PORT);\n227\t\twhile (got < n && serial8250_poll(CONSOLE_PORT))\n228\t\t\tp[got++] = serial8250_getc(CONSOLE_PORT);\n229\t\tirq_restore(f);\n230\t\treturn got;\n231\t}\n232\t\n233\t/*\n234\t * The clock, as @4.  khz is how many counter ticks make a millisecond,\n235\t * measured once at boot; start is the counter then.\n236\t */\n237\tstatic unsigned long clock_khz;\n238\tstatic unsigned long long clock_start;\n239\t\n240\tstatic unsigned long door_ms(void)"
+            }
+          ],
+          "status": "success"
+        }
+      },
+      {
+        "toolResult": {
+          "toolUseId": "ollama-20261029035457375300286-1",
+          "content": [
+            {
+              "text": "pool/PART.share@2/share.c:29:#include \"pittick.h\"\npool/PART.loader@6/loader.c:53:#include \"../../lifted/PART.timer.pit-tick@1/pittick.h\"\npool/PART.loader@7/loader.c:60:#include \"../../lifted/PART.timer.pit-tick@1/pittick.h\"\npool/PART.share@1/share.c:30:#include \"pittick.h\"\ntests/mutations.txt:65:tick.rate@1             | red      | lifted/PART.timer.pit-tick@1/pittick.c | s/#define __USER_HZ\\t100/#define __USER_HZ\\t50/                         | the tick at 50 a second instead of 100\nindex/part/timer.pit-tick@1.as-built.md:24:Listed in pittick.c and origin.toml."
+            }
+          ],
+          "status": "success"
+        }
+      },
+      {
+        "text": "Call 13 of 60 done; 47 left."
+      }
+    ]
+  },
+  {
+    "role": "assistant",
+    "content": [
+      {
+        "text": "I found it. In `door_read` (loader.c line 297), the busy-wait `while (!serial8250_poll(...)) ;` runs with interrupts off (the gate's `int 0x80` trap clears IF). So the 8254 tick never fires, `on_irq` never switches to the stopwatch, and it prints nothing → \"it never showed 00:00.\" The pre-gate green kernel (PART.loader@7) had the same loop but with interrupts on, so ticks still switched programs.\n\nThe fix: run only the *wait* with interrupts enabled (so ticks can schedule other programs), then copy the byte(s) with interrupts off as before."
+      },
+      {
+        "toolUse": {
+          "toolUseId": "ollama-20261029035654230550504-0",
+          "name": "submit_fix",
+          "input": {
+            "files": [
+              {
+                "content": "/* SPDX-License-Identifier: GPL-2.0-only\n *\n * PART.loader@9: the kernel behind the gate (plan 9.13).  It is @8 with the\n * program run in ring 3 by PART.gate@1: the program reaches the kernel only\n * through int 0x80, and the processor stops it if it touches the kernel's\n * memory, the screen's memory or an I/O port.  The system call table a\n * program is handed is the same seven entries as before (door.h), so earlier\n * programs run unchanged; each entry is a stub that does the int 0x80.\n *\n * Several programs at once is PART.share@2, on the gate; a program on its own\n * is run by the gate directly.\n *\n * Everything below is as @8: one kernel source, every part behind a switch\n * the builder sets from the flavor's petitions.\n *\n * Always here, because a kernel without them is not one: the serial console\n * (PART.serial.8250@2), alloc, exit, and the system call table.  Each switch\n * is HAVE_ and the part's name without its version, set by the builder:\n *\n *   HAVE_TIMER_KVMCLOCK   PART.timer.kvmclock@1   the hypervisor says how fast the counter ticks\n *   HAVE_TIMER_TSC_PIT    PART.timer.tsc-pit@N    the counter timed against the 8254\n *   HAVE_FS_MINIX         PART.fs.minix@N         load and save, on PART.disk.ata-pio@1\n *   HAVE_SHARE            PART.share@2          more than one program at once, behind the gate\n *   HAVE_SCREEN_VGA       PART.screen.vga@1       the screen, a second console\n *\n * With both clocks the kernel asks the hypervisor first and times the 8254 if\n * there is no answer, as @7 did.  That is a choice made at run time between\n * two parts, which plan 5.8 says only a petition-requested chooser may make\n * (Linux's clock-source selection, lifted); it is not lifted yet, and the\n * order is still ours (findings 0018 #2).\n *\n * Every console gets every byte written, the way Linux's printk goes to every\n * console it has: the serial port always, and the screen when a petition names\n * it.  The screen follows the few ANSI escapes a program may use for colour\n * (ESC [ ... m), \"home\" (ESC [ H) and \"clear\" (ESC [ 2 J); the serial port is\n * handed the escapes as they are, and a terminal on the other end follows them\n * itself.  Anything else after an ESC is dropped from the screen.\n *\n * A system call whose part is absent answers the way it does when the hardware\n * is missing: ms says 0 forever, load and save say -1.  The table itself never\n * changes shape (door.h).\n *\n * Exposes CAP.proc.exit and CAP.mem.alloc.  Everything else a program may do\n * is exposed by the part that does it.\n */\n\n#include \"kernel.h\"\n#include \"door.h\"\n#include \"serial8250.h\"\n#ifdef HAVE_TIMER_TSC_PIT\n#include \"tsccal.h\"\n#endif\n#ifdef HAVE_TIMER_KVMCLOCK\n#include \"kvmclock.h\"\n#endif\n#ifdef HAVE_FS_MINIX\n#include \"minix.h\"\n#endif\n#ifdef HAVE_SHARE\n#include \"share.h\"\n#endif\n#include \"gate.h\"\n#ifdef HAVE_SCREEN_VGA\n#include \"vga.h\"\n#endif\n\n#define CONSOLE_PORT\t0x3f8\t\t/* CAP.dev.serial */\n\n/* the heap of the program */\nstatic struct heap plain;\n\nstatic struct heap *heap(void)\n{\n#ifdef HAVE_SHARE\n\tstruct heap *h = share_heap();\n\n\tif (h)\n\t\treturn h;\n#endif\n\treturn &plain;\n}\n\n/* Interrupts off for the length of a system call, so a tick never lands in the\n * middle of one: one program's bytes never interleave with another's. */\nstatic unsigned long irq_save(void)\n{\n\tunsigned long f;\n\n\t__asm__ volatile(\"pushfl; popl %0; cli\" : \"=r\"(f) : : \"memory\");\n\treturn f;\n}\n\nstatic void irq_restore(unsigned long f)\n{\n\t__asm__ volatile(\"pushl %0; popfl\" : : \"r\"(f) : \"memory\", \"cc\");\n}\n\n/*\n * The heap of a plain program: from its end to the end of the RAM region it\n * lives in, from the firmware's memory map, as in @2.\n */\nstatic void heap_init(const struct hvm_start_info *si, unsigned long program_end)\n{\n\tconst struct hvm_memmap_table_entry *m = (const void *)(unsigned long)si->memmap_paddr;\n\tunsigned int i;\n\n\tplain.next = (program_end + 15) & ~15UL;\n\tplain.end = plain.next;\t/* no map, no memory: alloc refuses everything */\n\tif (si->version < 1 || !si->memmap_entries)\n\t\treturn;\n\tfor (i = 0; i < si->memmap_entries; i++) {\n\t\tunsigned long lo = (unsigned long)m[i].addr;\n\t\tunsigned long hi = (unsigned long)(m[i].addr + m[i].size);\n\n\t\tif (m[i].type == MEMMAP_RAM && lo <= PROGRAM_BASE && PROGRAM_BASE < hi) {\n\t\t\tplain.end = hi;\n\t\t\tbreak;\n\t\t}\n\t}\n}\n\n/* Is [lo, hi) all RAM, by the firmware's map? */\nint kernel_is_ram(const struct hvm_start_info *si, unsigned long lo, unsigned long hi)\n{\n\tconst struct hvm_memmap_table_entry *m = (const void *)(unsigned long)si->memmap_paddr;\n\tunsigned int i;\n\n\tfor (i = 0; si->version >= 1 && i < si->memmap_entries; i++)\n\t\tif (m[i].type == MEMMAP_RAM && m[i].addr <= lo && hi <= m[i].addr + m[i].size)\n\t\t\treturn 1;\n\treturn 0;\n}\n\nstatic void *door_alloc(unsigned long bytes)\n{\n\tunsigned long f = irq_save();\n\tstruct heap *t = heap();\n\tunsigned long p = t->next, n = (bytes + 15) & ~15UL;\n\tvoid *r = 0;\n\n\tif (!(bytes == 0 || n < bytes || n > t->end - p)) {\n\t\tt->next = p + n;\n\t\tr = (void *)p;\n\t}\n\tirq_restore(f);\n\treturn r;\t\t/* 0: refused; the program decides what that means */\n}\n\n/*\n * Halt.  The machine has no power-off device and no petition asks for one, so\n * we ask for a reset the way a bare CPU can: a null IDT and an interrupt is a\n * triple fault, the hypervisor sees a reset, and the machine (-no-reboot)\n * exits instead.  Findings 0002 #6.\n */\nvoid __attribute__((noreturn)) kernel_halt(void)\n{\n\tstatic const struct { unsigned short limit; unsigned int base; } __attribute__((packed)) null_idt = { 0, 0 };\n\n\t__asm__ volatile(\"cli; lidt %0; int3\" : : \"m\"(null_idt));\n\tfor (;;)\n\t\t__asm__ volatile(\"cli; hlt\");\n}\n\n#ifdef HAVE_SCREEN_VGA\n/*\n * The screen's half of the console: text straight to the screen part, and the\n * escape sequences turned into its colour, home and clear.  An SGR parameter\n * is 0 (light grey on black), 1 (bright), 30-37 (foreground) or 40-47\n * (background), the ANSI colour numbers, which the screen part's table (from\n * Linux's vt.c) turns into VGA's.  Ours.\n */\nstatic unsigned char con_attr = 0x07, con_state, con_np;\nstatic unsigned int con_par[8];\nstatic unsigned int con_col, con_wrapped;\t/* where the screen's cursor is in its line, and whether the last character filled it */\n\nstatic void con_sgr(unsigned int p)\n{\n\tif (p == 0)\n\t\tcon_attr = 0x07;\n\telse if (p == 1)\n\t\tcon_attr |= 0x08;\n\telse if (p >= 30 && p <= 37)\n\t\tcon_attr = (unsigned char)((con_attr & 0xf8) | color_table[p - 30]);\n\telse if (p >= 40 && p <= 47)\n\t\tcon_attr = (unsigned char)((con_attr & 0x8f) | (color_table[p - 40] << 4));\n\tvga_set_color(con_attr);\n}\n\n/*\n * A newline straight after the 80th character of a line ends that line; it\n * does not start a blank one.  Every terminal since DEC's VT100 (1978) waits\n * like that before wrapping; Linux's early VGA code wraps at once, so on its\n * own a full 80-column line and its newline came out double-spaced (findings\n * 0019 #3).  Ours.\n */\nstatic void screen_text(const char *s, unsigned long n)\n{\n\tunsigned long i, from = 0;\n\n\tfor (i = 0; i < n; i++) {\n\t\tif (s[i] == '\\n') {\n\t\t\tif (con_wrapped) {\n\t\t\t\tif (i > from)\n\t\t\t\t\tvga_write(s + from, (unsigned)(i - from));\n\t\t\t\tfrom = i + 1;\t/* the line already ended at the edge */\n\t\t\t}\n\t\t\tcon_col = 0;\n\t\t\tcon_wrapped = 0;\n\t\t} else if (s[i] != '\\r') {\n\t\t\tcon_wrapped = 0;\n\t\t\tif (++con_col == 80) {\n\t\t\t\tcon_col = 0;\n\t\t\t\tcon_wrapped = 1;\n\t\t\t}\n\t\t}\n\t}\n\tif (n > from)\n\t\tvga_write(s + from, (unsigned)(n - from));\n}\n\nstatic void screen_put(const char *s, unsigned long n)\n{\n\tunsigned long i, from = 0;\n\tunsigned int k;\n\n\tfor (i = 0; i < n; i++) {\n\t\tunsigned char c = (unsigned char)s[i];\n\n\t\tif (con_state == 0) {\n\t\t\tif (c != 0x1b)\n\t\t\t\tcontinue;\n\t\t\tif (i > from)\n\t\t\t\tscreen_text(s + from, i - from);\n\t\t\tcon_state = 1;\n\t\t} else if (con_state == 1) {\n\t\t\tcon_state = c == '[' ? 2 : 0;\n\t\t\tcon_np = 0;\n\t\t\tcon_par[0] = 0;\n\t\t} else if (c >= '0' && c <= '9') {\n\t\t\tcon_par[con_np] = con_par[con_np] * 10 + (c - '0');\n\t\t} else if (c == ';') {\n\t\t\tif (con_np < 7)\n\t\t\t\tcon_par[++con_np] = 0;\n\t\t} else {\n\t\t\tif (c == 'm')\n\t\t\t\tfor (k = 0; k <= con_np; k++)\n\t\t\t\t\tcon_sgr(con_par[k]);\n\t\t\telse if (c == 'H') {\n\t\t\t\tvga_home();\n\t\t\t\tcon_col = con_wrapped = 0;\n\t\t\t} else if (c == 'J' && con_par[0] == 2) {\n\t\t\t\tvga_clear();\n\t\t\t\tcon_col = con_wrapped = 0;\n\t\t\t}\n\t\t\tcon_state = 0;\n\t\t}\n\t\tif (con_state == 0)\n\t\t\tfrom = i + 1;\n\t}\n\tif (con_state == 0 && n > from)\n\t\tscreen_text(s + from, n - from);\n}\n#endif\n\n/* Every byte to every console. */\nvoid kernel_say(const char *s, unsigned long n)\n{\n\tserial8250_write(CONSOLE_PORT, s, n);\n#ifdef HAVE_SCREEN_VGA\n\tscreen_put(s, n);\n#endif\n}\n\nvoid kernel_flush(void)\n{\n\tserial8250_flush(CONSOLE_PORT);\n}\n\nstatic void door_write(const void *s, unsigned long n)\n{\n\tunsigned long f = irq_save();\n\n\tkernel_say(s, n);\n\tirq_restore(f);\n}\n\n/* Wait for one byte, then take whatever else has already arrived.  The wait\n * runs with interrupts on, so the 8254 tick still switches to the other\n * programs while we wait for a byte (TECH-DEBT 2, SPEC.loader.16); the copy\n * below runs with them off, as before, so one program's bytes never interleave\n * with another's.  The pre-gate kernel (@7) left interrupts on the whole way\n * through this call, which is why the same probe was green there. */\nstatic unsigned long door_read(void *buf, unsigned long n)\n{\n\tunsigned char *p = buf;\n\tunsigned long got = 0, f;\n\n\tif (n == 0)\n\t\treturn 0;\n\tf = irq_save();\n\t__asm__ volatile(\"sti\" ::: \"memory\");\n\twhile (!serial8250_poll(CONSOLE_PORT))\n\t\t;\n\t__asm__ volatile(\"cli\" ::: \"memory\");\n\tp[got++] = serial8250_getc(CONSOLE_PORT);\n\twhile (got < n && serial8250_poll(CONSOLE_PORT))\n\t\tp[got++] = serial8250_getc(CONSOLE_PORT);\n\tirq_restore(f);\n\treturn got;\n}\n\n/*\n * The clock, as @4.  khz is how many counter ticks make a millisecond,\n * measured once at boot; start is the counter then.  0 without a clock part.\n */\n#if defined(HAVE_TIMER_KVMCLOCK) || defined(HAVE_TIMER_TSC_PIT)\nstatic unsigned long clock_khz;\nstatic unsigned long long clock_start;\n\n/* the processor's counter, read the way Linux's rdtsc() reads it */\nstatic unsigned long long cycles(void)\n{\n\tunsigned long lo, hi;\n\n\t__asm__ volatile(\"rdtsc\" : \"=a\"(lo), \"=d\"(hi));\n\treturn ((unsigned long long)hi << 32) | lo;\n}\n#endif\n\nstatic unsigned long door_ms(void)\n{\n#if defined(HAVE_TIMER_KVMCLOCK) || defined(HAVE_TIMER_TSC_PIT)\n\tunsigned long long t;\n\tunsigned long hi, lo, q, r;\n\n\tif (!clock_khz)\n\t\treturn 0;\n\tt = cycles() - clock_start;\n\thi = (unsigned long)(t >> 32);\n\tlo = (unsigned long)t;\n\tif (hi >= clock_khz)\n\t\treturn 0xffffffffUL;\t/* 49 days and 17 hours: the call's last value, held */\n\t__asm__(\"divl %4\" : \"=a\"(q), \"=d\"(r) : \"0\"(lo), \"1\"(hi), \"rm\"(clock_khz));\n\t(void)r;\n\treturn q;\n#else\n\treturn 0;\n#endif\n}\n\nstatic long door_load(const char *name, void *buf, unsigned long max)\n{\n#ifdef HAVE_FS_MINIX\n\tunsigned long f = irq_save();\n\tlong r = minix_load(name, buf, max);\n\n\tirq_restore(f);\n\treturn r;\n#else\n\t(void)name; (void)buf; (void)max;\n\treturn -1;\n#endif\n}\n\nstatic long door_save(const char *name, const void *buf, unsigned long n)\n{\n#ifdef HAVE_FS_MINIX\n\tunsigned long f = irq_save();\n\tlong r = minix_save(name, buf, n);\n\n\tirq_restore(f);\n\treturn r;\n#else\n\t(void)name; (void)buf; (void)n;\n\treturn -1;\n#endif\n}\n\nstatic void __attribute__((noreturn)) door_exit(int code)\n{\n\t(void)code;\t\t\t/* unobservable from outside the machine; findings 0000 #9 */\n#ifdef HAVE_SHARE\n\tshare_exit();\t\t/* resumes the next program, if there is one */\n#endif\n\t__asm__ volatile(\"cli\");\n\tkernel_flush();\n\tkernel_halt();\n}\n\n/* what the kernel does for each system call; the gate (PART.gate@1) is the only caller */\nstatic const struct door kernel_calls = { door_write, door_exit, door_alloc, door_read, door_ms, door_load, door_save };\n\nvoid __attribute__((noreturn)) loader_main(const struct hvm_start_info *si)\n{\n\tconst struct hvm_modlist_entry *mod;\n\tconst unsigned char *src;\n\tunsigned char *dst;\n\tunsigned long n;\n\n\tserial8250_init(CONSOLE_PORT);\n#ifdef HAVE_SCREEN_VGA\n\tvga_clear();\t\t/* whatever the firmware left on the screen goes */\n#endif\n#ifdef HAVE_TIMER_KVMCLOCK\n\tclock_khz = kvmclock_khz();\t/* KVM's word first, as Linux does under KVM; 0 if there is no KVM (findings 0012) */\n#endif\n#ifdef HAVE_TIMER_TSC_PIT\n\t{\t/* Up to 150 ms against the 8254 per try (findings 0012), then never again.  Findings 0008. */\n\t\tint tries;\n\n\t\tfor (tries = 0; tries < 5 && !clock_khz; tries++)\n\t\t\tclock_khz = tsccal_khz();\n\t}\n#endif\n#if defined(HAVE_TIMER_KVMCLOCK) || defined(HAVE_TIMER_TSC_PIT)\n\tclock_start = cycles();\n#endif\n\n\tif (si->magic != XEN_HVM_START_MAGIC_VALUE || si->nr_modules < 1)\n\t\tkernel_halt();\t/* no program: nothing to say, nothing to do */\n\n\tmod = (const struct hvm_modlist_entry *)(unsigned long)si->modlist_paddr;\n\tsrc = (const unsigned char *)(unsigned long)mod[0].paddr;\n\n\t/* An archive of programs (\"070701\", cpio's new ASCII header): share, if a\n\t * petition asked to.  If none did, nothing here can run more than one\n\t * program, and the machine stops without a word: the referee refuses\n\t * such a flavor before it is built (rule 19). */\n\tif (mod[0].size > 6 && src[0] == '0' && src[1] == '7' && src[2] == '0' &&\n\t    src[3] == '7' && src[4] == '0' && src[5] == '1') {\n#ifdef HAVE_SHARE\n\t\tshare(si, (void *)src, (unsigned long)mod[0].size, &kernel_calls);\n#else\n\t\tkernel_halt();\n#endif\n\t}\n\n\t/* One plain program, as @5: copy it to PROGRAM_BASE.  Then the gate runs it in ring 3. */\n\tdst = (unsigned char *)PROGRAM_BASE;\n\tfor (n = (unsigned long)mod[0].size; n; n--)\n\t\t*dst++ = *src++;\n\theap_init(si, (unsigned long)dst);\n\n\tgate_run(PROGRAM_BASE, PROGRAM_BASE, plain.end, &kernel_calls);\n}\n",
+                "path": "pool/PART.loader@9/loader.c"
+              }
+            ]
+          }
+        }
+      }
+    ]
+  }
+]

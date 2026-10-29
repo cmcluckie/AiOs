@@ -1,0 +1,1242 @@
+[
+  {
+    "role": "user",
+    "content": [
+      {
+        "text": "The red test, tests/share.waits@1.toml:\n\ncode       = \"TST.share.waits@1\"\nstatus     = \"draft\"\nadmitted   = \"\"\nretired_by = \"\"\nbinds      = \"SPEC.loader.16@1\"\nred_when   = \"on the gate's sharing kernel, the stopwatch next to a program waiting for a byte that never comes does not show every second once, in order, through 00:09 or 00:10\"\ntimeout_ms = 30000\nisolates   = \"PART.loader@9\"\nrunner     = \"jig/test cmd env AIOS_SHARE=gateshare sh tests/programs/waiter.sh\"\nmutations  = 0\n\nThe spec clause it checks, SPEC.loader.16@1:\n\nWhile a program waits in read for a byte, the timer still ticks and the other programs still get their turns (TECH-DEBT 2).\n\nWhat it printed when it ran:\n\nFAIL  TST.share.waits@1  12s  it never showed 00:00 \n"
+      }
+    ]
+  },
+  {
+    "role": "assistant",
+    "content": [
+      {
+        "toolUse": {
+          "toolUseId": "ollama-20261027220649402326751-0",
+          "name": "look",
+          "input": {
+            "command": "list",
+            "args": [
+              ""
+            ]
+          }
+        }
+      },
+      {
+        "toolUse": {
+          "toolUseId": "ollama-20261027220649402326751-1",
+          "name": "look",
+          "input": {
+            "command": "read",
+            "args": [
+              "tests/programs/waiter.sh"
+            ]
+          }
+        }
+      }
+    ]
+  },
+  {
+    "role": "user",
+    "content": [
+      {
+        "toolResult": {
+          "toolUseId": "ollama-20261027220649402326751-0",
+          "content": [
+            {
+              "text": "CLAUDE.md\nconstitution/\ndecisions/\ndesign.md\ndocs/\ndraft/\nexam/\nfindings/\nfix/\nflavors/\nindex/\njig/\nLICENSE\nlifted/\nout/\npetitions/\npi/\nplan/\npool/\nposts/\nREADME.md\nreviews/\nschema/\nsensors/\nspecs/\ntests/"
+            }
+          ],
+          "status": "success"
+        }
+      },
+      {
+        "toolResult": {
+          "toolUseId": "ollama-20261027220649402326751-1",
+          "content": [
+            {
+              "text": "tests/programs/waiter.sh, lines 1 to 20 of 20\n1\t#!/bin/sh\n2\t# Probe for TST.share.waits@1: tests/programs/waiter.c packed first and the\n3\t# stopwatch second, booted on the share machine and watched for 10 seconds by\n4\t# the host's clock, each line stamped as it arrives, with nothing ever typed.\n5\t# still showed every second once, in order, through 00:09 or 00:10, though the\n6\t# program before it in the archive is waiting for a byte that never comes\n7\t# (TECH-DEBT 2: a system call runs with interrupts off).\n8\tset -u\n9\tcd \"$(dirname \"$0\")/../..\"\n10\tsh jig/aios build ${AIOS_SHARE:-share} > /dev/null 2>&1 && sh jig/aios build stopwatch > /dev/null 2>&1 || { echo \"build failed\"; exit 1; }\n11\tt=$(mktemp -d); trap 'rm -rf \"$t\"' EXIT\n12\tCF=\"-m32 -std=c11 -ffreestanding -fno-pic -fno-pie -fno-stack-protector -fno-builtin -fno-asynchronous-unwind-tables -mno-sse -mno-mmx -mno-red-zone -mgeneral-regs-only -nostdlib -nostdinc -O2 -Wall -Wextra -Werror\"\n13\tgcc $CF -I pool/PART.loader@6 -c -o \"$t/waiter.o\" tests/programs/waiter.c &&\n14\tgcc $CF -static -no-pie -nostartfiles -Wl,--build-id=none -Wl,-z,noexecstack -T pool/PART.loader@6/program.ld -o \"$t/waiter.bin\" \"$t/waiter.o\" || { echo \"probe does not build\"; exit 1; }\n15\tsh jig/aios pack \"$t/both.bin\" waiter \"$t/waiter.bin\" stopwatch out/stopwatch/stopwatch.bin\n16\ttimeout 10 sh pool/MACHINE.serial-irq@1/machine.sh out/${AIOS_SHARE:-share}/loader.elf \"$t/both.bin\" < /dev/null 2> /dev/null |\n17\t\tstdbuf -o0 tr '\\r' '\\n' |\n18\t\twhile IFS= read -r l || [ -n \"$l\" ]; do echo \"$(date +%s%3N) $l\"; done > \"$t/out\"\n19\tsh tests/expected/stopwatch.ticks@1.check \"$t/out\" 10 || exit 1\n20\techo \"next to a program waiting for input: $(sh tests/expected/stopwatch.ticks@1.check \"$t/out\" 10)\""
+            }
+          ],
+          "status": "success"
+        }
+      },
+      {
+        "text": "Call 1 of 60 done; 59 left."
+      }
+    ]
+  },
+  {
+    "role": "assistant",
+    "content": [
+      {
+        "toolUse": {
+          "toolUseId": "ollama-20261027220651598519566-0",
+          "name": "look",
+          "input": {
+            "command": "read",
+            "args": [
+              "tests/expected/stopwatch.ticks@1.check"
+            ]
+          }
+        }
+      },
+      {
+        "toolUse": {
+          "toolUseId": "ollama-20261027220651598519566-1",
+          "name": "look",
+          "input": {
+            "command": "find",
+            "args": [
+              "TECH-DEBT"
+            ]
+          }
+        }
+      }
+    ]
+  },
+  {
+    "role": "user",
+    "content": [
+      {
+        "toolResult": {
+          "toolUseId": "ollama-20261027220651598519566-0",
+          "content": [
+            {
+              "text": "tests/expected/stopwatch.ticks@1.check, lines 1 to 17 of 17\n1\t# TST.stopwatch.ticks@1, run by jig/test as: sh this STAMPED-CAPTURE SECONDS\n2\t# Green when the stopwatch showed 00:00, 00:01, 00:02 ... each once and in order,\n3\t# and after SECONDS seconds by the host's clock the last value was SECONDS or\n4\t# SECONDS-1 (the machine takes a moment to boot before 00:00).\n5\tawk -v secs=\"$2\" '\n6\t$2 ~ /^[0-9][0-9]:[0-9][0-9]$/ {\n7\t\tv = substr($2, 1, 2) * 60 + substr($2, 4, 2)\n8\t\tif (v != n) { printf \"expected %02d:%02d, saw %s\\n\", int(n / 60), n % 60, $2; bad = 1; exit 1 }\n9\t\tn++\n10\t}\n11\tEND {\n12\t\tif (bad) exit 1\n13\t\tif (n == 0) { print \"it never showed 00:00\"; exit 1 }\n14\t\tlast = n - 1\n15\t\tif (last != secs && last != secs - 1) { printf \"after %d s it showed %d s\\n\", secs, last; exit 1 }\n16\t\tprintf \"00:00 to %02d:%02d, every second once, in order, in %d s by the host\\n\", int(last / 60), last % 60, secs\n17\t}' \"$1\""
+            }
+          ],
+          "status": "success"
+        }
+      },
+      {
+        "toolResult": {
+          "toolUseId": "ollama-20261027220651598519566-1",
+          "content": [
+            {
+              "text": "pool/PART.gate@2/gate.c:45: * TECH-DEBT 1: alloc, ms, load and save keep their AiOs-only numbers 1000 to\npool/PART.gate@2/gate.c:64:#define NR_ALLOC\t1000\t\t/* TECH-DEBT 1: old table only */\npool/PART.gate@2/gate.c:65:#define NR_MS\t\t1001\t\t/* TECH-DEBT 1: old table only */\npool/PART.gate@2/gate.c:66:#define NR_LOAD\t\t1002\t\t/* TECH-DEBT 1: old table only */\npool/PART.gate@2/gate.c:67:#define NR_SAVE\t\t1003\t\t/* TECH-DEBT 1: old table only */\npool/PART.gate@2/gate.c:394:\t\t\treturn -ENOSYS;\t\t/* TECH-DEBT 1: old table only; a Linux program gets -38 */\npool/PART.gate@2/gate.c:398:\t\t\treturn -ENOSYS;\t\t/* TECH-DEBT 1: old table only; a Linux program gets -38 */\npool/PART.gate@2/gate.c:402:\t\t\treturn -ENOSYS;\t\t/* TECH-DEBT 1: old table only; a Linux program gets -38 */\npool/PART.gate@2/gate.c:408:\t\t\treturn -ENOSYS;\t\t/* TECH-DEBT 1: old table only; a Linux program gets -38 */\npool/PART.gate@2/gate.c:579: * Paid TECH-DEBT 3: the window is now exact, not rounded up to a 4 MiB line.\npool/PART.gate@2/gate_user.S:10: * TECH-DEBT 1: alloc (1000), ms (1001), load (1002) and save (1003) use\npool/PART.loader@9/loader.c:287:/* Wait for one byte, then take whatever else has already arrived.  TECH-DEBT 2:\npool/PART.gate@1/gate.c:23: * TECH-DEBT 1: alloc, ms, load and save have no Linux number yet, so they use\npool/PART.gate@1/gate.c:40:#define NR_ALLOC\t1000\t\t/* TECH-DEBT 1 */\npool/PART.gate@1/gate.c:41:#define NR_MS\t\t1001\t\t/* TECH-DEBT 1 */\npool/PART.gate@1/gate.c:42:#define NR_LOAD\t\t1002\t\t/* TECH-DEBT 1 */\npool/PART.gate@1/gate.c:43:#define NR_SAVE\t\t1003\t\t/* TECH-DEBT 1 */\npool/PART.gate@1/gate.c:267: * TECH-DEBT 3: the window is rounded up to whole 4 MiB pages, so a program can\npool/PART.gate@1/gate_user.S:10: * TECH-DEBT 1: alloc (1000), ms (1001), load (1002) and save (1003) use\npool/PART.loader@10/loader.c:302:/* Wait for one byte, then take whatever else has already arrived.  TECH-DEBT 2:\npool/PART.loader@10/loader.c:486: * (RDRAND_RETRY_LOOPS, arch/x86/include/asm/archrandom.h); TECH-DEBT 4: where\npool/PART.loader@10/loader.c:547:\t\t * the cycle counter for that word.  TECH-DEBT 4: the cycle counter is\npool/PART.loader@10/loader.c:569:\t\t\t\t/* TECH-DEBT 4: fallback to cycle counter, not random (decision 0046) */\nspecs/loader.15@1.toml:6:clause     = \"The 16 bytes a Linux program is handed as AT_RANDOM are random: from the processor's random-number instruction where it has one, and the as-built spec says where they come from otherwise (TECH-DEBT 4, decision 0046).\"\nspecs/gate.10@1.toml:6:clause     = \"A Linux program sees Linux's table alone: every system call the gate answers it is at Linux's 32-bit x86 number for that call, and at a number Linux has no call for, 1000 to 1003 among them, it answers what Linux does, -38 (ENOSYS).  Programs written for the old table keep its own numbers, 1000 to 1003, as a second table, the way Linux keeps one table for each kind of program, and keep working through it; no old call is answered at a Linux number (TECH-DEBT 1, findings 0021 item 5, as decision 0074 reads it).\"\nspecs/loader.16@1.toml:6:clause     = \"While a program waits in read for a byte, the timer still ticks and the other programs still get their turns (TECH-DEBT 2).\"\nspecs/gate.4@1.toml:6:clause     = \"Every line of source marked TECH-DEBT has an entry in findings 0021 saying what replaces it and when it goes; an entry whose marks are all gone is paid, and its own test says whether it is (decision 0076).\"\nspecs/gate.12@1.toml:6:clause     = \"A program's window is exactly the memory it was given: an address past its end is closed to it even when the end is not on a 4 MiB line, and the program is stopped there with a page fault (TECH-DEBT 3).\"\ntests/results.txt:38:PASS  TST.gate.debt-listed@1  0s  every TECH-DEBT mark is listed in findings/0021.md: 1 2 3 4\ntests/programs/debt.c:5: *            TECH-DEBT 1; Linux has no call there, so each should be -38 (ENOSYS)\ntests/programs/debt.c:6: *   random   the 16 bytes AT_RANDOM points at, in hex (TECH-DEBT 4)\ntests/programs/gate-debt.sh:2:# Probe for TST.gate.debt-listed@1: every number after TECH-DEBT in pool/ is the\ntests/programs/gate-debt.sh:3:# number of an entry in findings/0021.md (\"   TECH-DEBT n.\").  Green when it is;\ntests/programs/gate-debt.sh:8:marked=$(grep -rhoE 'TECH-DEBT [0-9]+' pool 2> /dev/null | sed 's/TECH-DEBT //' | sort -un)\ntests/programs/gate-debt.sh:9:listed=$(grep -oE '^ +TECH-DEBT [0-9]+\\.' findings/0021.md | grep -oE '[0-9]+' | sort -un)\ntests/programs/gate-debt.sh:10:[ -n \"$listed\" ] || { echo \"findings/0021.md lists no TECH-DEBT entry\"; exit 1; }\ntests/programs/gate-debt.sh:12:\tprintf '%s\\n' \"$listed\" | grep -qx \"$n\" || { echo \"TECH-DEBT $n is marked in the source and not listed in findings/0021.md\"; exit 1; }\ntests/programs/gate-debt.sh:20:echo \"every TECH-DEBT mark is listed in findings/0021.md: $(echo $marked)${paid:+; paid, to be closed there:$paid}\"\ntests/programs/pastend.c:6: * which it was never given (TECH-DEBT 3).  A kernel that maps only the window\ntests/programs/waiter.c:5: * should keep its time while this one waits (TECH-DEBT 2).\ntests/programs/debt.sh:6:#   numbers  TECH-DEBT 1, as decision 0074 reads it: at 1000 to 1003, the old\ntests/programs/debt.sh:13:#   random   TECH-DEBT 4: three boots give three AT_RANDOMs, each pair differing\ntests/programs/waiter.sh:7:# (TECH-DEBT 2: a system call runs with interrupts off).\ntests/gate.debt-listed@1.toml:6:red_when   = \"a line marked TECH-DEBT in pool/ has no entry in findings/0021.md\"\ntests/mutations.txt:214:gate.debt-listed@1      | red      | pool/PART.gate@1/gate.c               | s/NR_MS\\t\\t1001\\t\\t\\/\\* TECH-DEBT 1/NR_MS\\t\\t1001\\t\\t\\/* TECH-DEBT 9/       | a debt mark in the source with no entry in the findings\ntests/mutations.txt:309:gate.linux-only@1 | red | pool/PART.gate@2/gate.c | s/^\\t\\t\\treturn -ENOSYS;\\t\\t\\/\\* TECH-DEBT 1: old table only; a Linux program gets -38 \\*\\//\\t\\t\\t(void)0;/ | the fix taken out again: a Linux program reaches the old table at 1000 to 1003\nindex/part/gate@1.as-built.md:27:Ours, TECH-DEBT 1 (findings 0021 #5): alloc 1000, ms 1001, load 1002, save\nindex/part/loader@10.as-built.md:25:0078, part 21).  TECH-DEBT 4: on a processor without rdrand, or when a word fails\nfindings/0023.md:68:   TECH-DEBT 1 for every call cat uses.\nfindings/0023.md:156:    (d) TECH-DEBT 1 is not retired: cat uses none of the AiOs-only numbers, and the\nfindings/0023.md:157:    programs that do still run unchanged under the new kernel; (e) TECH-DEBT 4 is\nfindings/0021.md:46:   marked `TECH-DEBT n` in a comment, with what replaces it and when it goes,\nfindings/0021.md:51:   TECH-DEBT 1.  The system call numbers 1000 (alloc), 1001 (ms), 1002 (load)\nfindings/0021.md:66:   TECH-DEBT 2.  A system call runs with interrupts off, so a program waiting\nfindings/0021.md:72:   TECH-DEBT 3.  A program's window is rounded up to whole 4 MiB pages, so when\nfindings/0021.md:80:   TECH-DEBT 4.  (Added in part 20, findings 0023 item 10, decision 0046.)  The\nfindings/0024.md:23:   0057).  (d) Fix everything left broken on purpose, not one thing: TECH-DEBT 1\nfindings/0024.md:38:3. **The five fixes, in plain words.**  TECH-DEBT 1: alloc, ms, load and save use\nfindings/0024.md:41:   in the kernel and no program is rebuilt.  TECH-DEBT 2: a program waiting in\nfindings/0024.md:42:   read stops every other program, the stopwatch with it.  TECH-DEBT 3: a\nfindings/0024.md:44:   was never given.  TECH-DEBT 4: AT_RANDOM's 16 bytes are the cycle counter; the\nfindings/0024.md:50:   (findings 0021 says so for TECH-DEBT 2), so a model could change nothing and\nfindings/0024.md:103:    interrupts on, so TECH-DEBT 2 is the gate's alone.\nfindings/0024.md:139:    that TST.gate.debt-listed holds every TECH-DEBT mark to findings 0021.  Also:\nfindings/0024.md:170:    behavior\"); its comment in the file, \"TECH-DEBT 1 (fixed here ...)\", claimed\nfindings/0024.md:184:    TECH-DEBT 1's places to the spec, the NR_ defines in gate.c and the stubs in\nfindings/0024.md:194:    lines changed.  TECH-DEBT 1's own test went green; five cat tests that were\nfindings/0024.md:232:    AiOs's own call, renamed.  Its comment said \"TECH-DEBT 1 paid\".  The\nfindings/0024.md:337:    Decision 0074: SPEC.gate.10 says so, TECH-DEBT 1 in findings 0021 is read\nfindings/0024.md:358:    TECH-DEBT 1 is paid in PART.gate@2.\nfindings/0024.md:360:27. **TECH-DEBT 4, try 1: right idea, two flaws, and a test no honest fix could\nfindings/0024.md:365:    went red, because the fix took out the TECH-DEBT 4 mark and findings 0021,\nfindings/0024.md:377:28. **TECH-DEBT 4, try 2: it did not build, and then it went quiet (2026-10-25, on\nfindings/0024.md:426:    inside the window are open to ring 3.  TECH-DEBT 3 paid (findings 0021)."
+            }
+          ],
+          "status": "success"
+        }
+      },
+      {
+        "text": "Call 2 of 60 done; 58 left."
+      }
+    ]
+  },
+  {
+    "role": "assistant",
+    "content": [
+      {
+        "toolUse": {
+          "toolUseId": "ollama-20261027220656884164514-0",
+          "name": "look",
+          "input": {
+            "command": "list",
+            "args": [
+              "pool/PART.loader@9"
+            ]
+          }
+        }
+      },
+      {
+        "toolUse": {
+          "toolUseId": "ollama-20261027220656884164514-1",
+          "name": "look",
+          "input": {
+            "command": "read",
+            "args": [
+              "findings/0021.md",
+              "60",
+              "80"
+            ],
+            "start_line": 60,
+            "end_line": 80
+          }
+        }
+      }
+    ]
+  },
+  {
+    "role": "user",
+    "content": [
+      {
+        "toolResult": {
+          "toolUseId": "ollama-20261027220656884164514-0",
+          "content": [
+            {
+              "text": "door.h\nkernel.h\nloader.c\nloader.ld\nprogram.ld\nstart.S"
+            }
+          ],
+          "status": "success"
+        }
+      },
+      {
+        "toolResult": {
+          "toolUseId": "ollama-20261027220656884164514-1",
+          "content": [
+            {
+              "text": "findings/0021.md, lines 60 to 80 of 104\n60\t   PART.gate@2 a Linux program can reach them; it goes when a Linux program\n61\t   gets -38 at 1000 to 1003 and old programs work as before.\n62\t   Paid in PART.gate@2 on 2026-10-24 by the mechanic's try 13 (decision 0075,\n63\t   findings 0024 item 26).  The marks stay in PART.gate@1, which runs no Linux\n64\t   program, until paid debt has a way to leave this list.\n65\t\n66\t   TECH-DEBT 2.  A system call runs with interrupts off, so a program waiting\n67\t   inside `read` for a byte stops every other program too, and the stopwatch\n68\t   freezes with it.  Left on purpose.  The fix (let the timer tick in while the\n69\t   read waits) is already written and is the first post of the mechanic, after\n70\t   the series.  No test runs two programs with one of them waiting for input.\n71\t\n72\t   TECH-DEBT 3.  A program's window is rounded up to whole 4 MiB pages, so when\n73\t   the end of its memory is not on a 4 MiB line, the rest of that page is open\n74\t   to it as well: memory it was never given.  Left on purpose.  The mechanic\n75\t   closes it, after the series, by aligning the window or using 4 KiB pages at\n76\t   the edge.\n77\t   Paid in PART.gate@2 on 2026-10-25 by the mechanic's window-end try 1\n78\t   (decision 0081, findings 0024 item 32): 4 KiB pages at the edge.  The mark\n79\t   stays in PART.gate@1 until paid debt has a way to leave this list.\n80\t   TECH-DEBT 4.  (Added in part 20, findings 0023 item 10, decision 0046.)  The"
+            }
+          ],
+          "status": "success"
+        }
+      },
+      {
+        "text": "Call 3 of 60 done; 57 left."
+      }
+    ]
+  },
+  {
+    "role": "assistant",
+    "content": [
+      {
+        "toolUse": {
+          "toolUseId": "ollama-20261027220701903151295-0",
+          "name": "look",
+          "input": {
+            "command": "read",
+            "args": [
+              "pool/PART.loader@9/loader.c"
+            ]
+          }
+        }
+      },
+      {
+        "toolUse": {
+          "toolUseId": "ollama-20261027220701903151295-1",
+          "name": "look",
+          "input": {
+            "command": "find",
+            "args": [
+              "gateshare"
+            ]
+          }
+        }
+      }
+    ]
+  },
+  {
+    "role": "user",
+    "content": [
+      {
+        "toolResult": {
+          "toolUseId": "ollama-20261027220701903151295-0",
+          "content": [
+            {
+              "text": "pool/PART.loader@9/loader.c, lines 1 to 400 of 440\n1\t/* SPDX-License-Identifier: GPL-2.0-only\n2\t *\n3\t * PART.loader@9: the kernel behind the gate (plan 9.13).  It is @8 with the\n4\t * program run in ring 3 by PART.gate@1: the program reaches the kernel only\n5\t * through int 0x80, and the processor stops it if it touches the kernel's\n6\t * memory, the screen's memory or an I/O port.  The system call table a\n7\t * program is handed is the same seven entries as before (door.h), so earlier\n8\t * programs run unchanged; each entry is a stub that does the int 0x80.\n9\t *\n10\t * Several programs at once are PART.share@2, on the gate; a program on its own\n11\t * is run by the gate directly.\n12\t *\n13\t * Everything below is as @8: one kernel source, every part behind a switch\n14\t * the builder sets from the flavor's petitions.\n15\t *\n16\t * Always here, because a kernel without them is not one: the serial console\n17\t * (PART.serial.8250@2), alloc, exit, and the system call table.  Each switch\n18\t * is HAVE_ and the part's name without its version, set by the builder:\n19\t *\n20\t *   HAVE_TIMER_KVMCLOCK   PART.timer.kvmclock@1   the hypervisor says how fast the counter ticks\n21\t *   HAVE_TIMER_TSC_PIT    PART.timer.tsc-pit@N    the counter timed against the 8254\n22\t *   HAVE_FS_MINIX         PART.fs.minix@N         load and save, on PART.disk.ata-pio@1\n23\t *   HAVE_SHARE            PART.share@2          more than one program at once, behind the gate\n24\t *   HAVE_SCREEN_VGA       PART.screen.vga@1       the screen, a second console\n25\t *\n26\t * With both clocks the kernel asks the hypervisor first and times the 8254 if\n27\t * there is no answer, as @7 did.  That is a choice made at run time between\n28\t * two parts, which plan 5.8 says only a petition-requested chooser may make\n29\t * (Linux's clock-source selection, lifted); it is not lifted yet, and the\n30\t * order is still ours (findings 0018 #2).\n31\t *\n32\t * Every console gets every byte written, the way Linux's printk goes to every\n33\t * console it has: the serial port always, and the screen when a petition names\n34\t * it.  The screen follows the few ANSI escapes a program may use for colour\n35\t * (ESC [ ... m), \"home\" (ESC [ H) and \"clear\" (ESC [ 2 J); the serial port is\n36\t * handed the escapes as they are, and a terminal on the other end follows them\n37\t * itself.  Anything else after an ESC is dropped from the screen.\n38\t *\n39\t * A system call whose part is absent answers the way it does when the hardware\n40\t * is missing: ms says 0 forever, load and save say -1.  The table itself never\n41\t * changes shape (door.h).\n42\t *\n43\t * Exposes CAP.proc.exit and CAP.mem.alloc.  Everything else a program may do\n44\t * is exposed by the part that does it.\n45\t */\n46\t\n47\t#include \"kernel.h\"\n48\t#include \"door.h\"\n49\t#include \"serial8250.h\"\n50\t#ifdef HAVE_TIMER_TSC_PIT\n51\t#include \"tsccal.h\"\n52\t#endif\n53\t#ifdef HAVE_TIMER_KVMCLOCK\n54\t#include \"kvmclock.h\"\n55\t#endif\n56\t#ifdef HAVE_FS_MINIX\n57\t#include \"minix.h\"\n58\t#endif\n59\t#ifdef HAVE_SHARE\n60\t#include \"share.h\"\n61\t#endif\n62\t#include \"gate.h\"\n63\t#ifdef HAVE_SCREEN_VGA\n64\t#include \"vga.h\"\n65\t#endif\n66\t\n67\t#define CONSOLE_PORT\t0x3f8\t\t/* CAP.dev.serial */\n68\t\n69\t/* the heap of the program */\n70\tstatic struct heap plain;\n71\t\n72\tstatic struct heap *heap(void)\n73\t{\n74\t#ifdef HAVE_SHARE\n75\t\tstruct heap *h = share_heap();\n76\t\n77\t\tif (h)\n78\t\t\treturn h;\n79\t#endif\n80\t\treturn &plain;\n81\t}\n82\t\n83\t/* Interrupts off for the length of a system call, so a tick never lands in the\n84\t * middle of one: one program's bytes never interleave with another's. */\n85\tstatic unsigned long irq_save(void)\n86\t{\n87\t\tunsigned long f;\n88\t\n89\t\t__asm__ volatile(\"pushfl; popl %0; cli\" : \"=r\"(f) : : \"memory\");\n90\t\treturn f;\n91\t}\n92\t\n93\tstatic void irq_restore(unsigned long f)\n94\t{\n95\t\t__asm__ volatile(\"pushl %0; popfl\" : : \"r\"(f) : \"memory\", \"cc\");\n96\t}\n97\t\n98\t/*\n99\t * The heap of a plain program: from its end to the end of the RAM region it\n100\t * lives in, from the firmware's memory map, as in @2.\n101\t */\n102\tstatic void heap_init(const struct hvm_start_info *si, unsigned long program_end)\n103\t{\n104\t\tconst struct hvm_memmap_table_entry *m = (const void *)(unsigned long)si->memmap_paddr;\n105\t\tunsigned int i;\n106\t\n107\t\tplain.next = (program_end + 15) & ~15UL;\n108\t\tplain.end = plain.next;\t/* no map, no memory: alloc refuses everything */\n109\t\tif (si->version < 1 || !si->memmap_entries)\n110\t\t\treturn;\n111\t\tfor (i = 0; i < si->memmap_entries; i++) {\n112\t\t\tunsigned long lo = (unsigned long)m[i].addr;\n113\t\t\tunsigned long hi = (unsigned long)(m[i].addr + m[i].size);\n114\t\n115\t\t\tif (m[i].type == MEMMAP_RAM && lo <= PROGRAM_BASE && PROGRAM_BASE < hi) {\n116\t\t\t\tplain.end = hi;\n117\t\t\t\tbreak;\n118\t\t\t}\n119\t\t}\n120\t}\n121\t\n122\t/* Is [lo, hi) all RAM, by the firmware's map? */\n123\tint kernel_is_ram(const struct hvm_start_info *si, unsigned long lo, unsigned long hi)\n124\t{\n125\t\tconst struct hvm_memmap_table_entry *m = (const void *)(unsigned long)si->memmap_paddr;\n126\t\tunsigned int i;\n127\t\n128\t\tfor (i = 0; si->version >= 1 && i < si->memmap_entries; i++)\n129\t\t\tif (m[i].type == MEMMAP_RAM && m[i].addr <= lo && hi <= m[i].addr + m[i].size)\n130\t\t\t\treturn 1;\n131\t\treturn 0;\n132\t}\n133\t\n134\tstatic void *door_alloc(unsigned long bytes)\n135\t{\n136\t\tunsigned long f = irq_save();\n137\t\tstruct heap *t = heap();\n138\t\tunsigned long p = t->next, n = (bytes + 15) & ~15UL;\n139\t\tvoid *r = 0;\n140\t\n141\t\tif (!(bytes == 0 || n < bytes || n > t->end - p)) {\n142\t\t\tt->next = p + n;\n143\t\t\tr = (void *)p;\n144\t\t}\n145\t\tirq_restore(f);\n146\t\treturn r;\t\t/* 0: refused; the program decides what that means */\n147\t}\n148\t\n149\t/*\n150\t * Halt.  The machine has no power-off device and no petition asks for one, so\n151\t * we ask for a reset the way a bare CPU can: a null IDT and an interrupt is a\n152\t * triple fault, the hypervisor sees a reset, and the machine (-no-reboot)\n153\t * exits instead.  Findings 0002 #6.\n154\t */\n155\tvoid __attribute__((noreturn)) kernel_halt(void)\n156\t{\n157\t\tstatic const struct { unsigned short limit; unsigned int base; } __attribute__((packed)) null_idt = { 0, 0 };\n158\t\n159\t\t__asm__ volatile(\"cli; lidt %0; int3\" : : \"m\"(null_idt));\n160\t\tfor (;;)\n161\t\t\t__asm__ volatile(\"cli; hlt\");\n162\t}\n163\t\n164\t#ifdef HAVE_SCREEN_VGA\n165\t/*\n166\t * The screen's half of the console: text straight to the screen part, and the\n167\t * escape sequences turned into its colour, home and clear.  An SGR parameter\n168\t * is 0 (light grey on black), 1 (bright), 30-37 (foreground) or 40-47\n169\t * (background), the ANSI colour numbers, which the screen part's table (from\n170\t * Linux's vt.c) turns into VGA's.  Ours.\n171\t */\n172\tstatic unsigned char con_attr = 0x07, con_state, con_np;\n173\tstatic unsigned int con_par[8];\n174\tstatic unsigned int con_col, con_wrapped;\t/* where the screen's cursor is in its line, and whether the last character filled it */\n175\t\n176\tstatic void con_sgr(unsigned int p)\n177\t{\n178\t\tif (p == 0)\n179\t\t\tcon_attr = 0x07;\n180\t\telse if (p == 1)\n181\t\t\tcon_attr |= 0x08;\n182\t\telse if (p >= 30 && p <= 37)\n183\t\t\tcon_attr = (unsigned char)((con_attr & 0xf8) | color_table[p - 30]);\n184\t\telse if (p >= 40 && p <= 47)\n185\t\t\tcon_attr = (unsigned char)((con_attr & 0x8f) | (color_table[p - 40] << 4));\n186\t\tvga_set_color(con_attr);\n187\t}\n188\t\n189\t/*\n190\t * A newline straight after the 80th character of a line ends that line; it\n191\t * does not start a blank one.  Every terminal since DEC's VT100 (1978) waits\n192\t * like that before wrapping; Linux's early VGA code wraps at once, so on its\n193\t * own a full 80-column line and its newline came out double-spaced (findings\n194\t * 0019 #3).  Ours.\n195\t */\n196\tstatic void screen_text(const char *s, unsigned long n)\n197\t{\n198\t\tunsigned long i, from = 0;\n199\t\n200\t\tfor (i = 0; i < n; i++) {\n201\t\t\tif (s[i] == '\\n') {\n202\t\t\t\tif (con_wrapped) {\n203\t\t\t\t\tif (i > from)\n204\t\t\t\t\t\tvga_write(s + from, (unsigned)(i - from));\n205\t\t\t\t\tfrom = i + 1;\t/* the line already ended at the edge */\n206\t\t\t\t}\n207\t\t\t\tcon_col = 0;\n208\t\t\t\tcon_wrapped = 0;\n209\t\t\t} else if (s[i] != '\\r') {\n210\t\t\t\tcon_wrapped = 0;\n211\t\t\t\tif (++con_col == 80) {\n212\t\t\t\t\tcon_col = 0;\n213\t\t\t\t\tcon_wrapped = 1;\n214\t\t\t\t}\n215\t\t\t}\n216\t\t}\n217\t\tif (n > from)\n218\t\t\tvga_write(s + from, (unsigned)(n - from));\n219\t}\n220\t\n221\tstatic void screen_put(const char *s, unsigned long n)\n222\t{\n223\t\tunsigned long i, from = 0;\n224\t\tunsigned int k;\n225\t\n226\t\tfor (i = 0; i < n; i++) {\n227\t\t\tunsigned char c = (unsigned char)s[i];\n228\t\n229\t\t\tif (con_state == 0) {\n230\t\t\t\tif (c != 0x1b)\n231\t\t\t\t\tcontinue;\n232\t\t\t\tif (i > from)\n233\t\t\t\t\tscreen_text(s + from, i - from);\n234\t\t\t\tcon_state = 1;\n235\t\t\t} else if (con_state == 1) {\n236\t\t\t\tcon_state = c == '[' ? 2 : 0;\n237\t\t\t\tcon_np = 0;\n238\t\t\t\tcon_par[0] = 0;\n239\t\t\t} else if (c >= '0' && c <= '9') {\n240\t\t\t\tcon_par[con_np] = con_par[con_np] * 10 + (c - '0');\n241\t\t\t} else if (c == ';') {\n242\t\t\t\tif (con_np < 7)\n243\t\t\t\t\tcon_par[++con_np] = 0;\n244\t\t\t} else {\n245\t\t\t\tif (c == 'm')\n246\t\t\t\t\tfor (k = 0; k <= con_np; k++)\n247\t\t\t\t\t\tcon_sgr(con_par[k]);\n248\t\t\t\telse if (c == 'H') {\n249\t\t\t\t\tvga_home();\n250\t\t\t\t\tcon_col = con_wrapped = 0;\n251\t\t\t\t} else if (c == 'J' && con_par[0] == 2) {\n252\t\t\t\t\tvga_clear();\n253\t\t\t\t\tcon_col = con_wrapped = 0;\n254\t\t\t\t}\n255\t\t\t\tcon_state = 0;\n256\t\t\t}\n257\t\t\tif (con_state == 0)\n258\t\t\t\tfrom = i + 1;\n259\t\t}\n260\t\tif (con_state == 0 && n > from)\n261\t\t\tscreen_text(s + from, n - from);\n262\t}\n263\t#endif\n264\t\n265\t/* Every byte to every console. */\n266\tvoid kernel_say(const char *s, unsigned long n)\n267\t{\n268\t\tserial8250_write(CONSOLE_PORT, s, n);\n269\t#ifdef HAVE_SCREEN_VGA\n270\t\tscreen_put(s, n);\n271\t#endif\n272\t}\n273\t\n274\tvoid kernel_flush(void)\n275\t{\n276\t\tserial8250_flush(CONSOLE_PORT);\n277\t}\n278\t\n279\tstatic void door_write(const void *s, unsigned long n)\n280\t{\n281\t\tunsigned long f = irq_save();\n282\t\n283\t\tkernel_say(s, n);\n284\t\tirq_restore(f);\n285\t}\n286\t\n287\t/* Wait for one byte, then take whatever else has already arrived.  TECH-DEBT 2:\n288\t * a system call runs with interrupts off, so while a program waits here no\n289\t * other program gets a turn.  It goes in the mechanic, after the series. */\n290\tstatic unsigned long door_read(void *buf, unsigned long n)\n291\t{\n292\t\tunsigned char *p = buf;\n293\t\tunsigned long got = 0, f;\n294\t\n295\t\tif (n == 0)\n296\t\t\treturn 0;\n297\t\twhile (!serial8250_poll(CONSOLE_PORT))\n298\t\t\t;\n299\t\tf = irq_save();\n300\t\tp[got++] = serial8250_getc(CONSOLE_PORT);\n301\t\twhile (got < n && serial8250_poll(CONSOLE_PORT))\n302\t\t\tp[got++] = serial8250_getc(CONSOLE_PORT);\n303\t\tirq_restore(f);\n304\t\treturn got;\n305\t}\n306\t\n307\t/*\n308\t * The clock, as @4.  khz is how many counter ticks make a millisecond,\n309\t * measured once at boot; start is the counter then.  0 without a clock part.\n310\t */\n311\t#if defined(HAVE_TIMER_KVMCLOCK) || defined(HAVE_TIMER_TSC_PIT)\n312\tstatic unsigned long clock_khz;\n313\tstatic unsigned long long clock_start;\n314\t\n315\t/* the processor's counter, read the way Linux's rdtsc() reads it */\n316\tstatic unsigned long long cycles(void)\n317\t{\n318\t\tunsigned long lo, hi;\n319\t\n320\t\t__asm__ volatile(\"rdtsc\" : \"=a\"(lo), \"=d\"(hi));\n321\t\treturn ((unsigned long long)hi << 32) | lo;\n322\t}\n323\t#endif\n324\t\n325\tstatic unsigned long door_ms(void)\n326\t{\n327\t#if defined(HAVE_TIMER_KVMCLOCK) || defined(HAVE_TIMER_TSC_PIT)\n328\t\tunsigned long long t;\n329\t\tunsigned long hi, lo, q, r;\n330\t\n331\t\tif (!clock_khz)\n332\t\t\treturn 0;\n333\t\tt = cycles() - clock_start;\n334\t\thi = (unsigned long)(t >> 32);\n335\t\tlo = (unsigned long)t;\n336\t\tif (hi >= clock_khz)\n337\t\t\treturn 0xffffffffUL;\t/* 49 days and 17 hours: the call's last value, held */\n338\t\t__asm__(\"divl %4\" : \"=a\"(q), \"=d\"(r) : \"0\"(lo), \"1\"(hi), \"rm\"(clock_khz));\n339\t\t(void)r;\n340\t\treturn q;\n341\t#else\n342\t\treturn 0;\n343\t#endif\n344\t}\n345\t\n346\tstatic long door_load(const char *name, void *buf, unsigned long max)\n347\t{\n348\t#ifdef HAVE_FS_MINIX\n349\t\tunsigned long f = irq_save();\n350\t\tlong r = minix_load(name, buf, max);\n351\t\n352\t\tirq_restore(f);\n353\t\treturn r;\n354\t#else\n355\t\t(void)name; (void)buf; (void)max;\n356\t\treturn -1;\n357\t#endif\n358\t}\n359\t\n360\tstatic long door_save(const char *name, const void *buf, unsigned long n)\n361\t{\n362\t#ifdef HAVE_FS_MINIX\n363\t\tunsigned long f = irq_save();\n364\t\tlong r = minix_save(name, buf, n);\n365\t\n366\t\tirq_restore(f);\n367\t\treturn r;\n368\t#else\n369\t\t(void)name; (void)buf; (void)n;\n370\t\treturn -1;\n371\t#endif\n372\t}\n373\t\n374\tstatic void __attribute__((noreturn)) door_exit(int code)\n375\t{\n376\t\t(void)code;\t\t\t/* unobservable from outside the machine; findings 0000 #9 */\n377\t#ifdef HAVE_SHARE\n378\t\tshare_exit();\t\t\t/* resumes the next program, if there is one */\n379\t#endif\n380\t\t__asm__ volatile(\"cli\");\n381\t\tkernel_flush();\n382\t\tkernel_halt();\n383\t}\n384\t\n385\t/* what the kernel does for each system call; the gate (PART.gate@1) is the only caller */\n386\tstatic const struct door kernel_calls = { door_write, door_exit, door_alloc, door_read, door_ms, door_load, door_save };\n387\t\n388\tvoid __attribute__((noreturn)) loader_main(const struct hvm_start_info *si)\n389\t{\n390\t\tconst struct hvm_modlist_entry *mod;\n391\t\tconst unsigned char *src;\n392\t\tunsigned char *dst;\n393\t\tunsigned long n;\n394\t\n395\t\tserial8250_init(CONSOLE_PORT);\n396\t#ifdef HAVE_SCREEN_VGA\n397\t\tvga_clear();\t\t/* whatever the firmware left on the screen goes */\n398\t#endif\n399\t#ifdef HAVE_TIMER_KVMCLOCK\n400\t\tclock_khz = kvmclock_khz();\t/* KVM's word first, as Linux does under KVM; 0 if there is no KVM (findings 0012) */"
+            }
+          ],
+          "status": "success"
+        }
+      },
+      {
+        "toolResult": {
+          "toolUseId": "ollama-20261027220701903151295-1",
+          "content": [
+            {
+              "text": "tests/gate.separate@1.toml:9:runner     = \"jig/test cmd env AIOS_SHARE=gateshare sh tests/programs/separate.sh\"\ntests/share.waits@1.toml:9:runner     = \"jig/test cmd env AIOS_SHARE=gateshare sh tests/programs/waiter.sh\"\ntests/gate.share-ladder@1.toml:6:red_when   = \"hello, hanoi, life or calc, each built for its own loader and booted unchanged on the kernel behind the gate as built for the gateshare flavor's petitions, differs by one byte from its own expected output\"\ntests/gate.share-ladder@1.toml:9:runner     = \"jig/test ladder gateshare\"\ntests/gate.on-time@1.toml:9:runner     = \"jig/test cmd env AIOS_SHARE=gateshare sh tests/programs/hog.sh\"\ntests/programs/gate-port.c:6: * Boots on: gate, gateshare.\ntests/programs/vandal.c:6: * Boots on: share, gateshare.\ntests/programs/waiter.c:6: * Boots on: share, gateshare.\ntests/programs/hog.c:6: * Boots on: share, gateshare.\ntests/programs/gate-shared-port.sh:10:sh jig/aios build gateshare > /dev/null && sh jig/aios build stopwatch > /dev/null || { echo \"build failed\"; exit 1; }\ntests/programs/gate-shared-port.sh:16:timeout 6 sh pool/MACHINE.serial-irq@1/machine.sh out/gateshare/loader.elf \"$t/both.bin\" < /dev/null 2> /dev/null | tr '\\r' '\\n' > \"$t/out\"\ntests/gate.all-exit@1.toml:9:runner     = \"jig/test cmd env AIOS_SHARE=gateshare sh tests/programs/allexit.sh\"\nindex/part/gate@1.as-built.md:79:code and table (gate_return is at offset 0x96).  For the gateshare flavor: 21,028 bytes (text 11,169).\nindex/part/loader@9.as-built.md:41:flavor 20,232 bytes; for the gateshare flavor 21,028 (@8's share flavor was\nfindings/0021.md:97:   exits or is stopped, and the cpio reader.  A new flavor, gateshare\nfindings/0024.md:108:    Not part of the tests: building the gateshare flavor prints \"sed: can't read"
+            }
+          ],
+          "status": "success"
+        }
+      },
+      {
+        "text": "Call 4 of 60 done; 56 left."
+      }
+    ]
+  },
+  {
+    "role": "assistant",
+    "content": [
+      {
+        "toolUse": {
+          "toolUseId": "ollama-20261027220715347217832-0",
+          "name": "look",
+          "input": {
+            "command": "list",
+            "args": [
+              "pool/PART.share@2"
+            ]
+          }
+        }
+      },
+      {
+        "toolUse": {
+          "toolUseId": "ollama-20261027220715347217832-1",
+          "name": "look",
+          "input": {
+            "command": "read",
+            "args": [
+              "pool/PART.loader@9/loader.c",
+              "400",
+              "440"
+            ],
+            "start_line": 400,
+            "end_line": 440
+          }
+        }
+      }
+    ]
+  },
+  {
+    "role": "user",
+    "content": [
+      {
+        "toolResult": {
+          "toolUseId": "ollama-20261027220715347217832-0",
+          "content": [
+            {
+              "text": "share.c\nshare.h"
+            }
+          ],
+          "status": "success"
+        }
+      },
+      {
+        "toolResult": {
+          "toolUseId": "ollama-20261027220715347217832-1",
+          "content": [
+            {
+              "text": "pool/PART.loader@9/loader.c, lines 400 to 440 of 440\n400\t\tclock_khz = kvmclock_khz();\t/* KVM's word first, as Linux does under KVM; 0 if there is no KVM (findings 0012) */\n401\t#endif\n402\t#ifdef HAVE_TIMER_TSC_PIT\n403\t\t{\t/* Up to 150 ms against the 8254 per try (findings 0012), then never again.  Findings 0008. */\n404\t\t\tint tries;\n405\t\n406\t\t\tfor (tries = 0; tries < 5 && !clock_khz; tries++)\n407\t\t\t\tclock_khz = tsccal_khz();\n408\t\t}\n409\t#endif\n410\t#if defined(HAVE_TIMER_KVMCLOCK) || defined(HAVE_TIMER_TSC_PIT)\n411\t\tclock_start = cycles();\n412\t#endif\n413\t\n414\t\tif (si->magic != XEN_HVM_START_MAGIC_VALUE || si->nr_modules < 1)\n415\t\t\tkernel_halt();\t/* no program: nothing to say, nothing to do */\n416\t\n417\t\tmod = (const struct hvm_modlist_entry *)(unsigned long)si->modlist_paddr;\n418\t\tsrc = (const unsigned char *)(unsigned long)mod[0].paddr;\n419\t\n420\t\t/* An archive of programs (\"070701\", cpio's new ASCII header): share, if a\n421\t\t * petition asked to.  If none did, nothing here can run more than one\n422\t\t * program, and the machine stops without a word: the referee refuses\n423\t\t * such a flavor before it is built (rule 19). */\n424\t\tif (mod[0].size > 6 && src[0] == '0' && src[1] == '7' && src[2] == '0' &&\n425\t\t    src[3] == '7' && src[4] == '0' && src[5] == '1') {\n426\t#ifdef HAVE_SHARE\n427\t\t\tshare(si, (void *)src, (unsigned long)mod[0].size, &kernel_calls);\n428\t#else\n429\t\t\tkernel_halt();\n430\t#endif\n431\t\t}\n432\t\n433\t\t/* One plain program, as @5: copy it to PROGRAM_BASE.  Then the gate runs it in ring 3. */\n434\t\tdst = (unsigned char *)PROGRAM_BASE;\n435\t\tfor (n = (unsigned long)mod[0].size; n; n--)\n436\t\t\t*dst++ = *src++;\n437\t\theap_init(si, (unsigned long)dst);\n438\t\n439\t\tgate_run(PROGRAM_BASE, PROGRAM_BASE, plain.end, &kernel_calls);\n440\t}"
+            }
+          ],
+          "status": "success"
+        }
+      },
+      {
+        "text": "Call 5 of 60 done; 55 left."
+      }
+    ]
+  },
+  {
+    "role": "assistant",
+    "content": [
+      {
+        "toolUse": {
+          "toolUseId": "ollama-20261027220720880136386-0",
+          "name": "look",
+          "input": {
+            "command": "read",
+            "args": [
+              "pool/PART.share@2/share.c"
+            ]
+          }
+        }
+      },
+      {
+        "toolUse": {
+          "toolUseId": "ollama-20261027220720880136386-1",
+          "name": "look",
+          "input": {
+            "command": "list",
+            "args": [
+              "pool/MACHINE.serial-irq@1"
+            ]
+          }
+        }
+      }
+    ]
+  },
+  {
+    "role": "user",
+    "content": [
+      {
+        "toolResult": {
+          "toolUseId": "ollama-20261027220720880136386-0",
+          "content": [
+            {
+              "text": "pool/PART.share@2/share.c, lines 1 to 177 of 177\n1\t/* SPDX-License-Identifier: GPL-2.0-only\n2\t *\n3\t * PART.share@2: the processor shared between programs, the way the Amiga did\n4\t * it in 1985, now behind the gate.  @1's page tables, interrupt table and\n5\t * register saving went to PART.gate@1, which runs every program in ring 3; what\n6\t * is left here is turn-taking: which program is next, what to do when one\n7\t * exits or is stopped, and the 8254's tick that takes the processor back.  Ours;\n8\t * the 8259, the 8254 tick and the cpio reader are lifted parts this one\n9\t * depends on.\n10\t *\n11\t * Each program gets its own 8 MiB of RAM, mapped by the gate to the same\n12\t * addresses every program is linked at (0x400000, stack at the top, heap\n13\t * between), so programs built for any earlier kernel run unchanged and cannot\n14\t * see each other's memory, the kernel's or the screen's.  The 8254's counter 0\n15\t * interrupts HZ (100) times a second through the 8259; on every tick the next\n16\t * program that is still running gets the processor: preemptive, so a program\n17\t * that never gives it back still gets only its turn.  A program the processor\n18\t * stops is stopped alone, with an Amiga-style \"Guru Meditation\" line on the\n19\t * console, and the others carry on.  When the last program exits, the machine\n20\t * halts.\n21\t *\n22\t * Depends on PART.gate@1, PART.irq.pic@1, PART.timer.pit-tick@1,\n23\t * PART.archive.cpio@1.  Exposes CAP.cpu.share@1.\n24\t */\n25\t\n26\t#include \"share.h\"\n27\t#include \"gate.h\"\n28\t#include \"pic.h\"\n29\t#include \"pittick.h\"\n30\t#include \"earlycpio.h\"\n31\t\n32\t#define MAX_TASKS\tGATE_MAX_SPACES\n33\t#define REGION_BASE\t0x800000\t/* physical: program i's RAM starts at 8 MiB + 8 MiB * i */\n34\t#define REGION_SIZE\t0x800000\t/* 8 MiB: two 4 MiB pages */\n35\t#define REGION_TOP\t(PROGRAM_BASE + REGION_SIZE)\t/* virtual: the end of every program's memory */\n36\t#define STACK_SIZE\t0x4000\t\t/* 16 KiB at the top of the region */\n37\t\n38\tstruct task {\n39\t\tstruct gate_space *space;\n40\t\tstruct heap heap;\n41\t\tint alive;\n42\t};\n43\t\n44\tstatic struct task tasks[MAX_TASKS];\n45\tstatic int ntasks;\t\t\t/* 0: nothing is being shared */\n46\tstatic int cur;\n47\t\n48\tstruct heap *share_heap(void)\n49\t{\n50\t\treturn ntasks ? &tasks[cur].heap : 0;\n51\t}\n52\t\n53\t/* The next program that is still running, after the current one; -1 if none. */\n54\tstatic int next_alive(void)\n55\t{\n56\t\tint i, n;\n57\t\n58\t\tfor (i = 1; i <= ntasks; i++) {\n59\t\t\tn = (cur + i) % ntasks;\n60\t\t\tif (tasks[n].alive)\n61\t\t\t\treturn n;\n62\t\t}\n63\t\treturn -1;\n64\t}\n65\t\n66\tvoid share_exit(void)\n67\t{\n68\t\tint n;\n69\t\n70\t\tif (!ntasks)\n71\t\t\treturn;\n72\t\ttasks[cur].alive = 0;\n73\t\tn = next_alive();\n74\t\tif (n >= 0) {\n75\t\t\tcur = n;\n76\t\t\tgate_resume(tasks[n].space);\n77\t\t}\n78\t}\n79\t\n80\tstatic void hex8(char *p, unsigned long v)\n81\t{\n82\t\tint i;\n83\t\n84\t\tfor (i = 7; i >= 0; i--, v >>= 4)\n85\t\t\tp[i] = \"0123456789ABCDEF\"[v & 15];\n86\t}\n87\t\n88\t/* A hardware interrupt arrived: the tick gives the processor to the next program. */\n89\tstatic struct gate_space *on_irq(unsigned long vec, struct gate_space *was)\n90\t{\n91\t\tint n;\n92\t\n93\t\tif (vec == (unsigned long)PIC_VECTOR(PIT_IRQ)) {\n94\t\t\tpic_eoi(PIT_IRQ);\n95\t\t\tn = next_alive();\n96\t\t\tif (n >= 0)\n97\t\t\t\tcur = n;\n98\t\t\treturn tasks[cur].space;\n99\t\t}\n100\t\treturn was;\t/* spurious (the 8259's IRQ 7, the APIC's vector): nothing happened, and no EOI is owed */\n101\t}\n102\t\n103\t/* The processor stopped the running program.  Stop that program alone.  The two\n104\t * numbers are the vector and the address: the one it touched (page faults) or\n105\t * the instruction it was on. */\n106\tstatic struct gate_space *on_fault(unsigned long vec, unsigned long addr, struct gate_space *was)\n107\t{\n108\t\tstatic char msg[] = \"\\nGuru Meditation #XXXXXXXX.XXXXXXXX  program X stopped\\n\";\n109\t\tint n;\n110\t\n111\t\t(void)was;\n112\t\thex8(msg + 18, vec);\n113\t\thex8(msg + 27, addr);\n114\t\tmsg[45] = (char)('1' + cur);\n115\t\tkernel_say(msg, sizeof msg - 1);\n116\t\ttasks[cur].alive = 0;\n117\t\tn = next_alive();\n118\t\tif (n < 0) {\n119\t\t\tkernel_flush();\n120\t\t\tkernel_halt();\n121\t\t}\n122\t\tcur = n;\n123\t\treturn tasks[cur].space;\n124\t}\n125\t\n126\tstatic const struct gate_sched sched = { on_irq, on_fault };\n127\t\n128\t/*\n129\t * Set up program i from a cpio member: copy it into its region and make its\n130\t * space.  Paging is still off: physical addresses.\n131\t */\n132\tstatic int task_init(const struct hvm_start_info *si, int i, const void *data, unsigned long size)\n133\t{\n134\t\tunsigned long base = REGION_BASE + (unsigned long)i * REGION_SIZE, k;\n135\t\tconst unsigned char *src = data;\n136\t\tunsigned char *dst = (unsigned char *)base;\n137\t\n138\t\tif (size > REGION_SIZE - STACK_SIZE || !kernel_is_ram(si, base, base + REGION_SIZE))\n139\t\t\treturn -1;\n140\t\tfor (k = 0; k < size; k++)\n141\t\t\tdst[k] = src[k];\n142\t\n143\t\ttasks[i].space = gate_space_new(base, PROGRAM_BASE, REGION_SIZE, PROGRAM_BASE, REGION_TOP);\n144\t\tif (!tasks[i].space)\n145\t\t\treturn -1;\n146\t\ttasks[i].heap.next = (PROGRAM_BASE + size + 15) & ~15UL;\n147\t\ttasks[i].heap.end = REGION_TOP - STACK_SIZE;\n148\t\ttasks[i].alive = 1;\n149\t\treturn 0;\n150\t}\n151\t\n152\tvoid __attribute__((noreturn)) share(const struct hvm_start_info *si, void *archive, unsigned long len,\n153\t\tconst struct door *door)\n154\t{\n155\t\tstruct cpio_data cd;\n156\t\tlong next = 0, at = 0;\n157\t\n158\t\tgate_share_calls(door);\n159\t\twhile (ntasks < MAX_TASKS) {\n160\t\t\tcd = find_cpio_data(\"\", (char *)archive + at, len - (unsigned long)at, &next);\n161\t\t\tif (!cd.data)\n162\t\t\t\tbreak;\n163\t\t\tif (task_init(si, ntasks, cd.data, cd.size))\n164\t\t\t\tbreak;\n165\t\t\tntasks++;\n166\t\t\tat += next;\n167\t\t}\n168\t\tif (!ntasks)\n169\t\t\tkernel_halt();\t/* an archive with nothing runnable in it */\n170\t\n171\t\tgate_schedule(&sched);\n172\t\tpic_init();\n173\t\tpit_tick_start();\n174\t\tpic_unmask(PIT_IRQ);\n175\t\tcur = 0;\n176\t\tgate_start(tasks[0].space);\n177\t}"
+            }
+          ],
+          "status": "success"
+        }
+      },
+      {
+        "toolResult": {
+          "toolUseId": "ollama-20261027220720880136386-1",
+          "content": [
+            {
+              "text": "machine.sh"
+            }
+          ],
+          "status": "success"
+        }
+      },
+      {
+        "text": "Call 6 of 60 done; 54 left."
+      }
+    ]
+  },
+  {
+    "role": "assistant",
+    "content": [
+      {
+        "toolUse": {
+          "toolUseId": "ollama-20261027220727095677491-0",
+          "name": "look",
+          "input": {
+            "command": "list",
+            "args": [
+              "pool/PART.gate@1"
+            ]
+          }
+        }
+      },
+      {
+        "toolUse": {
+          "toolUseId": "ollama-20261027220727095677491-1",
+          "name": "look",
+          "input": {
+            "command": "find",
+            "args": [
+              "serial8250_poll",
+              "pool/PART.serial.8250@2"
+            ]
+          }
+        }
+      }
+    ]
+  },
+  {
+    "role": "user",
+    "content": [
+      {
+        "toolResult": {
+          "toolUseId": "ollama-20261027220727095677491-0",
+          "content": [
+            {
+              "text": "gate.c\ngate_entry.S\ngate.h\ngate_user.S"
+            }
+          ],
+          "status": "success"
+        }
+      },
+      {
+        "toolResult": {
+          "toolUseId": "ollama-20261027220727095677491-1",
+          "content": [
+            {
+              "text": "no folder or file pool/PART.serial.8250@2"
+            }
+          ],
+          "status": "error"
+        }
+      },
+      {
+        "text": "Call 7 of 60 done; 53 left."
+      }
+    ]
+  },
+  {
+    "role": "assistant",
+    "content": [
+      {
+        "toolUse": {
+          "toolUseId": "ollama-20261027220729408980916-0",
+          "name": "look",
+          "input": {
+            "command": "find",
+            "args": [
+              "serial8250_poll"
+            ]
+          }
+        }
+      },
+      {
+        "toolUse": {
+          "toolUseId": "ollama-20261027220729408980916-1",
+          "name": "look",
+          "input": {
+            "command": "read",
+            "args": [
+              "pool/PART.gate@1/gate.c",
+              "1",
+              "120"
+            ],
+            "start_line": 1,
+            "end_line": 120
+          }
+        }
+      }
+    ]
+  },
+  {
+    "role": "user",
+    "content": [
+      {
+        "toolResult": {
+          "toolUseId": "ollama-20261027220729408980916-0",
+          "content": [
+            {
+              "text": "pool/PART.loader@5/loader.c:147:\twhile (got < n && serial8250_poll(CONSOLE_PORT))\npool/PART.loader@6/loader.c:216:\twhile (!serial8250_poll(CONSOLE_PORT))\npool/PART.loader@6/loader.c:220:\twhile (got < n && serial8250_poll(CONSOLE_PORT))\npool/PART.loader@8/loader.c:295:\twhile (!serial8250_poll(CONSOLE_PORT))\npool/PART.loader@8/loader.c:299:\twhile (got < n && serial8250_poll(CONSOLE_PORT))\npool/PART.loader@7/loader.c:223:\twhile (!serial8250_poll(CONSOLE_PORT))\npool/PART.loader@7/loader.c:227:\twhile (got < n && serial8250_poll(CONSOLE_PORT))\npool/PART.loader@4/loader.c:140:\twhile (got < n && serial8250_poll(CONSOLE_PORT))\npool/PART.loader@9/loader.c:297:\twhile (!serial8250_poll(CONSOLE_PORT))\npool/PART.loader@9/loader.c:301:\twhile (got < n && serial8250_poll(CONSOLE_PORT))\npool/PART.loader@10/loader.c:312:\twhile (!serial8250_poll(CONSOLE_PORT))\npool/PART.loader@10/loader.c:316:\twhile (got < n && serial8250_poll(CONSOLE_PORT))\npool/PART.loader@3/loader.c:133:\twhile (got < n && serial8250_poll(CONSOLE_PORT))"
+            }
+          ],
+          "status": "success"
+        }
+      },
+      {
+        "toolResult": {
+          "toolUseId": "ollama-20261027220729408980916-1",
+          "content": [
+            {
+              "text": "pool/PART.gate@1/gate.c, lines 1 to 120 of 395\n1\t/* SPDX-License-Identifier: GPL-2.0-only\n2\t *\n3\t * PART.gate@1: the gate.  Programs run in ring 3, the processor's least\n4\t * privileged level, and the only way they reach the kernel is a trap\n5\t * instruction, int 0x80, with the call's number in eax.  A program that\n6\t * touches anything else (the kernel's memory, the screen's, an I/O port) is\n7\t * stopped by the processor itself, and the kernel says so on the console.\n8\t * Plan 9.13, findings 0021.  Ours; nothing lifted.  The descriptor, page-table\n9\t * and task-state-segment bits are the Intel SDM's; the register convention of\n10\t * int 0x80 and the numbers of write, read and exit are Linux's 32-bit x86 ABI.\n11\t *\n12\t * Memory: every address maps to itself.  The kernel's pages, and every page\n13\t * outside the program's window, are closed to ring 3; only the window, the\n14\t * program's stack and the page of system call stubs (gate_user.S) are open.\n15\t * The kernel obeys read-only pages too (CR0.WP).\n16\t *\n17\t * Several programs (PART.share@2): each gets a space, its own page directory\n18\t * that maps the same virtual window to its own physical RAM, and its own kernel\n19\t * stack, where the processor puts a trap's frame.  The gate saves and resumes\n20\t * the frames; who runs next is decided by the scheduler the sharing part\n21\t * registers (gate_schedule), not here.\n22\t *\n23\t * TECH-DEBT 1: alloc, ms, load and save have no Linux number yet, so they use\n24\t * AiOs-only numbers from 1000 (findings 0021 #5).  They go when Linux's program\n25\t * files can be loaded (part 20): alloc becomes brk, ms becomes clock_gettime,\n26\t * load and save become open, read, write and close.\n27\t */\n28\t\n29\t#include \"gate.h\"\n30\t\n31\t#define SEL_KCODE\t0x08\n32\t#define SEL_KDATA\t0x10\n33\t#define SEL_UCODE\t0x18\t\t/* with RPL 3: 0x1b */\n34\t#define SEL_UDATA\t0x20\t\t/* with RPL 3: 0x23 */\n35\t#define SEL_TSS\t\t0x28\n36\t\n37\t#define NR_EXIT\t\t1\t\t/* Linux i386 */\n38\t#define NR_READ\t\t3\n39\t#define NR_WRITE\t4\n40\t#define NR_ALLOC\t1000\t\t/* TECH-DEBT 1 */\n41\t#define NR_MS\t\t1001\t\t/* TECH-DEBT 1 */\n42\t#define NR_LOAD\t\t1002\t\t/* TECH-DEBT 1 */\n43\t#define NR_SAVE\t\t1003\t\t/* TECH-DEBT 1 */\n44\t\n45\t#define EFAULT\t\t14\n46\t#define EBADF\t\t9\n47\t#define ENOSYS\t\t38\n48\t#define NAME_MAX_LEN\t256\t\t/* the longest file name the kernel will read from a program */\n49\t\n50\textern char kernel_end[], stack_top[];\n51\textern char gate_user_start[], gate_stack_lo[], gate_stack_hi[];\n52\textern char gate_door[], gate_return[];\n53\t\n54\t#define KSTACK_WORDS\t4096\t\t/* 16 KiB of kernel stack for each space */\n55\t\n56\tstruct gate_space {\n57\t\tunsigned long cr3;\t\t/* its page directory */\n58\t\tunsigned long *frame;\t\t/* where its registers were saved, on its kernel stack */\n59\t\tunsigned long kstack_top;\t/* where a trap from ring 3 lands (the TSS's esp0) */\n60\t\tint user_stack;\t\t\t/* ring 3 stands on the gate's own stack (one program, no sharing) */\n61\t};\n62\t\n63\tstatic unsigned long long gdt[6];\n64\tstatic unsigned int tss[26];\n65\tstatic unsigned long long idt[256];\n66\tstatic unsigned long pds[GATE_MAX_SPACES][1024] __attribute__((aligned(4096)));\n67\tstatic unsigned long pt0[1024] __attribute__((aligned(4096)));\n68\tstatic unsigned long kstacks[GATE_MAX_SPACES][KSTACK_WORDS] __attribute__((aligned(16)));\n69\tstatic struct gate_space spaces[GATE_MAX_SPACES];\n70\tstatic int nspaces;\n71\tstatic struct gate_space *cur;\n72\tstatic const struct gate_sched *sched;\n73\t\n74\tstatic unsigned long win_lo, win_hi;\t/* the same virtual window in every space */\n75\tstatic const struct door *calls;\n76\t\n77\t/* Is [p, p+n) all inside what ring 3 may touch? */\n78\tstatic int user_ok(unsigned long p, unsigned long n)\n79\t{\n80\t\tunsigned long e = p + n;\n81\t\n82\t\tif (n == 0)\n83\t\t\treturn 1;\n84\t\tif (e < p)\n85\t\t\treturn 0;\n86\t\tif (p >= win_lo && e <= win_hi)\n87\t\t\treturn 1;\n88\t\treturn cur->user_stack && p >= (unsigned long)gate_stack_lo && e <= (unsigned long)gate_stack_hi;\n89\t}\n90\t\n91\t/* Is the NUL-terminated string at p entirely inside what ring 3 may touch? */\n92\tstatic int user_name_ok(const char *s)\n93\t{\n94\t\tunsigned long i;\n95\t\n96\t\tfor (i = 0; i < NAME_MAX_LEN; i++) {\n97\t\t\tif (!user_ok((unsigned long)s + i, 1))\n98\t\t\t\treturn 0;\n99\t\t\tif (!s[i])\n100\t\t\t\treturn 1;\n101\t\t}\n102\t\treturn 0;\n103\t}\n104\t\n105\t/* frame: what trap_common saved (gate_entry.S).  Returns the call's answer. */\n106\tstatic long syscall(const unsigned long *frame)\n107\t{\n108\t\tunsigned long nr = frame[7], a = frame[4], b = frame[6], c = frame[5];\t/* eax; ebx, ecx, edx */\n109\t\n110\t\tswitch (nr) {\n111\t\tcase NR_EXIT:\n112\t\t\tcalls->exit((int)a);\n113\t\tcase NR_WRITE:\n114\t\t\tif (a != 1 && a != 2)\n115\t\t\t\treturn -EBADF;\n116\t\t\tif (!user_ok(b, c))\n117\t\t\t\treturn -EFAULT;\n118\t\t\tcalls->write((const void *)b, c);\n119\t\t\treturn (long)c;\n120\t\tcase NR_READ:"
+            }
+          ],
+          "status": "success"
+        }
+      },
+      {
+        "text": "Call 8 of 60 done; 52 left."
+      }
+    ]
+  },
+  {
+    "role": "assistant",
+    "content": [
+      {
+        "toolUse": {
+          "toolUseId": "ollama-20261027220735814834386-0",
+          "name": "look",
+          "input": {
+            "command": "find",
+            "args": [
+              "serial8250.h"
+            ]
+          }
+        }
+      },
+      {
+        "toolUse": {
+          "toolUseId": "ollama-20261027220735814834386-1",
+          "name": "look",
+          "input": {
+            "command": "find",
+            "args": [
+              "serial8250_getc"
+            ]
+          }
+        }
+      }
+    ]
+  },
+  {
+    "role": "user",
+    "content": [
+      {
+        "toolResult": {
+          "toolUseId": "ollama-20261027220735814834386-0",
+          "content": [
+            {
+              "text": "pool/PART.loader@1/loader.c:17:#include \"../../lifted/PART.serial.8250@1/serial8250.h\"\npool/PART.loader@5/loader.c:33:#include \"../../lifted/PART.serial.8250@2/serial8250.h\"\npool/PART.loader@2/loader.c:21:#include \"../../lifted/PART.serial.8250@1/serial8250.h\"\npool/PART.loader@6/loader.c:48:#include \"../../lifted/PART.serial.8250@2/serial8250.h\"\npool/PART.loader@8/loader.c:49:#include \"serial8250.h\"\npool/PART.loader@7/loader.c:55:#include \"../../lifted/PART.serial.8250@2/serial8250.h\"\npool/PART.loader@4/loader.c:27:#include \"../../lifted/PART.serial.8250@2/serial8250.h\"\npool/PART.loader@9/loader.c:49:#include \"serial8250.h\"\npool/PART.loader@10/loader.c:64:#include \"serial8250.h\"\npool/PART.loader@3/loader.c:22:#include \"../../lifted/PART.serial.8250@2/serial8250.h\""
+            }
+          ],
+          "status": "success"
+        }
+      },
+      {
+        "toolResult": {
+          "toolUseId": "ollama-20261027220735814834386-1",
+          "content": [
+            {
+              "text": "pool/PART.loader@5/loader.c:146:\tp[got++] = serial8250_getc(CONSOLE_PORT);\npool/PART.loader@5/loader.c:148:\t\tp[got++] = serial8250_getc(CONSOLE_PORT);\npool/PART.loader@6/loader.c:219:\tp[got++] = serial8250_getc(CONSOLE_PORT);\npool/PART.loader@6/loader.c:221:\t\tp[got++] = serial8250_getc(CONSOLE_PORT);\npool/PART.loader@8/loader.c:298:\tp[got++] = serial8250_getc(CONSOLE_PORT);\npool/PART.loader@8/loader.c:300:\t\tp[got++] = serial8250_getc(CONSOLE_PORT);\npool/PART.loader@7/loader.c:226:\tp[got++] = serial8250_getc(CONSOLE_PORT);\npool/PART.loader@7/loader.c:228:\t\tp[got++] = serial8250_getc(CONSOLE_PORT);\npool/PART.loader@4/loader.c:139:\tp[got++] = serial8250_getc(CONSOLE_PORT);\npool/PART.loader@4/loader.c:141:\t\tp[got++] = serial8250_getc(CONSOLE_PORT);\npool/PART.loader@9/loader.c:300:\tp[got++] = serial8250_getc(CONSOLE_PORT);\npool/PART.loader@9/loader.c:302:\t\tp[got++] = serial8250_getc(CONSOLE_PORT);\npool/PART.loader@10/loader.c:315:\tp[got++] = serial8250_getc(CONSOLE_PORT);\npool/PART.loader@10/loader.c:317:\t\tp[got++] = serial8250_getc(CONSOLE_PORT);\npool/PART.loader@3/loader.c:132:\tp[got++] = serial8250_getc(CONSOLE_PORT);\npool/PART.loader@3/loader.c:134:\t\tp[got++] = serial8250_getc(CONSOLE_PORT);\ntests/mutations.txt:24:loader.read@1           | red      | pool/PART.loader@3/loader.c           | s/p\\[got++\\] = serial8250_getc(CONSOLE_PORT);/p[got++] = (unsigned char)(serial8250_getc(CONSOLE_PORT) ^ 1);/ | the read door flips the low bit of every byte it hands over\ntests/mutations.txt:45:loader.ladder-4@1       | red      | pool/PART.loader@4/loader.c           | s/p\\[got++\\] = serial8250_getc(CONSOLE_PORT);/p[got++] = (unsigned char)(serial8250_getc(CONSOLE_PORT) ^ 1);/ | loader@4 breaks the read door the calculator, built for loader@3, relies on\ntests/mutations.txt:57:loader.ladder-8-sort@1  | red      | pool/PART.loader@8/loader.c           | s/p\\[got++\\] = serial8250_getc(CONSOLE_PORT);/p[got++] = (unsigned char)(serial8250_getc(CONSOLE_PORT) ^ 1);/ | the sort flavor's kernel breaks the read system call the calculator relies on\ntests/mutations.txt:69:loader.ladder-8-share@1 | red      | pool/PART.loader@8/loader.c           | s/p\\[got++\\] = serial8250_getc(CONSOLE_PORT);/p[got++] = (unsigned char)(serial8250_getc(CONSOLE_PORT) ^ 1);/ | the share flavor's kernel breaks the read system call the calculator relies on\ntests/mutations.txt:87:loader.ladder-8-editor@1 | red      | pool/PART.loader@8/loader.c           | s/p\\[got++\\] = serial8250_getc(CONSOLE_PORT);/p[got++] = (unsigned char)(serial8250_getc(CONSOLE_PORT) ^ 1);/ | the editor flavor's kernel breaks the read system call the calculator relies on\ntests/mutations.txt:129:loader.ladder-8-screen@1 | red     | pool/PART.loader@8/loader.c           | s/p\\[got++\\] = serial8250_getc(CONSOLE_PORT);/p[got++] = (unsigned char)(serial8250_getc(CONSOLE_PORT) ^ 1);/ | the screen flavor's kernel breaks the read system call the calculator relies on"
+            }
+          ],
+          "status": "success"
+        }
+      },
+      {
+        "text": "Call 9 of 60 done; 51 left."
+      }
+    ]
+  },
+  {
+    "role": "assistant",
+    "content": [
+      {
+        "toolUse": {
+          "toolUseId": "ollama-20261027220744643598768-0",
+          "name": "look",
+          "input": {
+            "command": "list",
+            "args": [
+              "fix"
+            ]
+          }
+        }
+      },
+      {
+        "toolUse": {
+          "toolUseId": "ollama-20261027220744643598768-1",
+          "name": "look",
+          "input": {
+            "command": "list",
+            "args": [
+              "posts"
+            ]
+          }
+        }
+      }
+    ]
+  },
+  {
+    "role": "user",
+    "content": [
+      {
+        "toolResult": {
+          "toolUseId": "ollama-20261027220744643598768-0",
+          "content": [
+            {
+              "text": "notes/\nprompt.txt"
+            }
+          ],
+          "status": "success"
+        }
+      },
+      {
+        "toolResult": {
+          "toolUseId": "ollama-20261027220744643598768-1",
+          "content": [
+            {
+              "text": "2026-10-11.html\n2026-10-11.png\n2026-10-11.story.md\n2026-10-12.html\n2026-10-12.png\n2026-10-13.html\n2026-10-13.png\n2026-10-14.html\n2026-10-14.png\n2026-10-15.html\n2026-10-15.png\n2026-10-16.html\n2026-10-16.png\n2026-10-18.html\n2026-10-18.png\n2026-10-20.html\n2026-10-20.png\n2026-10-22.html\n2026-10-22.png\n2026-10-24.html\n2026-10-24.png\n2026-10-26.html\n2026-10-26.png\n2026-10-28.html\n2026-10-28.png\n2026-10-30.html\n2026-10-30.png\n2026-11-01.html\n2026-11-01.png\n2026-11-03-flow-1.png\n2026-11-03-flow-2.png\n2026-11-03.html\n2026-11-03-lookup-1.png\n2026-11-03-lookup-2.png\n2026-11-03.png\n2026-11-05.html\n2026-11-05.png\n2026-11-07.html\n2026-11-07.png\n2026-11-09.html\n2026-11-09.png\n2026-11-11.html\n2026-11-11.png\n2026-11-13.html\n2026-11-13.png\ncommits.md\ndrafts/\ntemplate.html\nupcoming.md\nvoice-claude.md\nvoice.md"
+            }
+          ],
+          "status": "success"
+        }
+      },
+      {
+        "text": "Call 10 of 60 done; 50 left."
+      }
+    ]
+  },
+  {
+    "role": "assistant",
+    "content": [
+      {
+        "toolUse": {
+          "toolUseId": "ollama-20261027220747329393611-0",
+          "name": "look",
+          "input": {
+            "command": "list",
+            "args": [
+              "posts/drafts"
+            ]
+          }
+        }
+      },
+      {
+        "toolUse": {
+          "toolUseId": "ollama-20261027220747329393611-1",
+          "name": "look",
+          "input": {
+            "command": "read",
+            "args": [
+              "fix/notes/"
+            ]
+          }
+        }
+      }
+    ]
+  },
+  {
+    "role": "user",
+    "content": [
+      {
+        "toolResult": {
+          "toolUseId": "ollama-20261027220747329393611-0",
+          "content": [
+            {
+              "text": "linkedin-posts.md\npart-10-article.md\npart-10-chris.md\npart-11-article.md\npart-11-chris.md\npart-12-article.md\npart-13-article.md\npart-13-chris.md\npart-14-article.md\npart-14-chris.md\npart-15-article.md\npart-15-chris.md\npart-15-referee-questions.md\npart-16-article.md\npart-16-chris.md\npart-17-article.md\npart-17-chris.md\npart-18-article.md\npart-19-article.md\npart-20-article.md\npart-21-article.md\npart-8-article.md\npart-8-chris.md\npart-8-rewrite.md\npart-9-article.md\npart-9-chris.md\nupcoming.md"
+            }
+          ],
+          "status": "success"
+        }
+      },
+      {
+        "toolResult": {
+          "toolUseId": "ollama-20261027220747329393611-1",
+          "content": [
+            {
+              "text": "no file fix/notes/"
+            }
+          ],
+          "status": "error"
+        }
+      },
+      {
+        "text": "Call 11 of 60 done; 49 left."
+      }
+    ]
+  },
+  {
+    "role": "assistant",
+    "content": [
+      {
+        "toolUse": {
+          "toolUseId": "ollama-20261027220753399247082-0",
+          "name": "look",
+          "input": {
+            "command": "list",
+            "args": [
+              "flavors"
+            ]
+          }
+        }
+      },
+      {
+        "toolUse": {
+          "toolUseId": "ollama-20261027220753399247082-1",
+          "name": "look",
+          "input": {
+            "command": "list",
+            "args": [
+              "pool"
+            ]
+          }
+        }
+      }
+    ]
+  },
+  {
+    "role": "user",
+    "content": [
+      {
+        "toolResult": {
+          "toolUseId": "ollama-20261027220753399247082-0",
+          "content": [
+            {
+              "text": "both.toml\ncalc.toml\ncat.toml\neditor.toml\ngateshare.toml\ngate.toml\nhanoi.toml\nhello.toml\nlife.toml\nscreen.toml\nshare.toml\nsort.toml\nstopwatch.toml"
+            }
+          ],
+          "status": "success"
+        }
+      },
+      {
+        "toolResult": {
+          "toolUseId": "ollama-20261027220753399247082-1",
+          "content": [
+            {
+              "text": "AGT.referee@1/\nMACHINE.serial-disk@1/\nMACHINE.serial-disk@2/\nMACHINE.serial-irq@1/\nMACHINE.serial-only@1/\nMACHINE.serial-timer@1/\nMACHINE.serial-vga@1/\nPART.calc@1/\nPART.divide64@1/\nPART.editor@1/\nPART.gate@1/\nPART.gate@2/\nPART.hanoi@1/\nPART.hello@1/\nPART.life@1/\nPART.life@2/\nPART.loader@1/\nPART.loader@10/\nPART.loader@2/\nPART.loader@3/\nPART.loader@4/\nPART.loader@5/\nPART.loader@6/\nPART.loader@7/\nPART.loader@8/\nPART.loader@9/\nPART.share@1/\nPART.share@2/\nPART.sieve@1/\nPART.sort@1/\nPART.stopwatch@1/\nREADME.md"
+            }
+          ],
+          "status": "success"
+        }
+      },
+      {
+        "text": "Call 12 of 60 done; 48 left."
+      }
+    ]
+  },
+  {
+    "role": "assistant",
+    "content": [
+      {
+        "toolUse": {
+          "toolUseId": "ollama-20261027220806108072696-0",
+          "name": "look",
+          "input": {
+            "command": "read",
+            "args": [
+              "pool/PART.gate@1/gate.c",
+              "120",
+              "240"
+            ],
+            "start_line": 120,
+            "end_line": 240
+          }
+        }
+      },
+      {
+        "toolUse": {
+          "toolUseId": "ollama-20261027220806108072696-1",
+          "name": "look",
+          "input": {
+            "command": "read",
+            "args": [
+              "pool/PART.gate@1/gate_entry.S"
+            ]
+          }
+        }
+      }
+    ]
+  },
+  {
+    "role": "user",
+    "content": [
+      {
+        "toolResult": {
+          "toolUseId": "ollama-20261027220806108072696-0",
+          "content": [
+            {
+              "text": "pool/PART.gate@1/gate.c, lines 120 to 240 of 395\n120\t\tcase NR_READ:\n121\t\t\tif (a != 0)\n122\t\t\t\treturn -EBADF;\n123\t\t\tif (!user_ok(b, c))\n124\t\t\t\treturn -EFAULT;\n125\t\t\treturn (long)calls->read((void *)b, c);\n126\t\tcase NR_ALLOC:\n127\t\t\treturn (long)calls->alloc(a);\n128\t\tcase NR_MS:\n129\t\t\treturn (long)calls->ms();\n130\t\tcase NR_LOAD:\n131\t\t\tif (!user_name_ok((const char *)a) || !user_ok(b, c))\n132\t\t\t\treturn -EFAULT;\n133\t\t\treturn calls->load((const char *)a, (void *)b, c);\n134\t\tcase NR_SAVE:\n135\t\t\tif (!user_name_ok((const char *)a) || !user_ok(b, c))\n136\t\t\t\treturn -EFAULT;\n137\t\t\treturn calls->save((const char *)a, (const void *)b, c);\n138\t\t}\n139\t\treturn -ENOSYS;\n140\t}\n141\t\n142\tstatic void hex8(char *p, unsigned long v)\n143\t{\n144\t\tint i;\n145\t\n146\t\tfor (i = 7; i >= 0; i--, v >>= 4)\n147\t\t\tp[i] = \"0123456789ABCDEF\"[v & 15];\n148\t}\n149\t\n150\t/*\n151\t * Every trap.  frame points at what trap_common saved: eight registers (popal\n152\t * order, edi first), es, ds, the vector, the error code, then what the\n153\t * processor pushed.  Returns the frame to resume.\n154\t */\n155\tunsigned long *gate_trap(unsigned long *frame)\n156\t{\n157\t\tunsigned long vec = frame[10], addr;\n158\t\tstruct gate_space *next = cur;\n159\t\tstatic char msg[] = \"\\nGuru Meditation #XXXXXXXX.XXXXXXXX  program 1 stopped\\n\";\n160\t\n161\t\tcur->frame = frame;\n162\t\tif (vec == 0x80) {\n163\t\t\tframe[7] = (unsigned long)syscall(frame);\n164\t\t\treturn frame;\n165\t\t}\n166\t\tif (sched && ((vec & ~0xfUL) == 0x30 || vec == 0xff)) {\n167\t\t\t/* a hardware interrupt: the scheduler may take the processor away */\n168\t\t\tnext = sched->irq(vec, cur);\n169\t\t} else {\n170\t\t\t/* The processor refused something.  The two numbers are the vector and the\n171\t\t\t * address: the one it touched (page faults) or the instruction it was on. */\n172\t\t\tif (vec == 14)\n173\t\t\t\t__asm__ volatile(\"movl %%cr2, %0\" : \"=r\"(addr));\n174\t\t\telse\n175\t\t\t\taddr = frame[12];\n176\t\t\tif (sched && (frame[13] & 3) == 3) {\n177\t\t\t\tnext = sched->fault(vec, addr, cur);\n178\t\t\t} else {\n179\t\t\t\thex8(msg + 18, vec);\n180\t\t\t\thex8(msg + 27, addr);\n181\t\t\t\tkernel_say(msg, sizeof msg - 1);\n182\t\t\t\tkernel_flush();\n183\t\t\t\tkernel_halt();\n184\t\t\t}\n185\t\t}\n186\t\tif (next != cur) {\n187\t\t\tcur = next;\n188\t\t\ttss[1] = (unsigned int)next->kstack_top;\n189\t\t\t__asm__ volatile(\"movl %0, %%cr3\" : : \"r\"(next->cr3) : \"memory\");\n190\t\t}\n191\t\treturn next->frame;\n192\t}\n193\t\n194\tstatic void set_gate(int v, const char *handler, unsigned int dpl)\n195\t{\n196\t\tunsigned long h = (unsigned long)handler;\n197\t\n198\t\t/* present, 32-bit interrupt gate (interrupts off on entry), code selector 0x08 */\n199\t\tidt[v] = (h & 0xffff) | ((unsigned long long)SEL_KCODE << 16) |\n200\t\t\t((unsigned long long)(0x8e00 | (dpl << 13) | (h & 0xffff0000)) << 32);\n201\t}\n202\t\n203\tstatic void tables_init(void)\n204\t{\n205\t\tstatic struct { unsigned short limit; unsigned int base; } __attribute__((packed)) gd, id;\n206\t\textern char trap0[], trap1[], trap2[], trap3[], trap4[], trap5[], trap6[], trap7[],\n207\t\t\ttrap8[], trap9[], trap10[], trap11[], trap12[], trap13[], trap14[], trap15[],\n208\t\t\ttrap16[], trap17[], trap18[], trap19[], trap20[], trap21[], trap22[], trap23[],\n209\t\t\ttrap24[], trap25[], trap26[], trap27[], trap28[], trap29[], trap30[], trap31[],\n210\t\t\ttrap0x80[];\n211\t\tchar *t[32] = { trap0, trap1, trap2, trap3, trap4, trap5, trap6, trap7,\n212\t\t\ttrap8, trap9, trap10, trap11, trap12, trap13, trap14, trap15,\n213\t\t\ttrap16, trap17, trap18, trap19, trap20, trap21, trap22, trap23,\n214\t\t\ttrap24, trap25, trap26, trap27, trap28, trap29, trap30, trap31 };\n215\t\tunsigned long base = (unsigned long)tss, limit = sizeof tss - 1;\n216\t\tint i;\n217\t\n218\t\tgdt[0] = 0;\n219\t\tgdt[1] = 0x00cf9a000000ffffULL;\t\t/* kernel code: base 0, 4 GiB, ring 0 */\n220\t\tgdt[2] = 0x00cf92000000ffffULL;\t\t/* kernel data */\n221\t\tgdt[3] = 0x00cffa000000ffffULL;\t\t/* user code: the same, ring 3 */\n222\t\tgdt[4] = 0x00cff2000000ffffULL;\t\t/* user data */\n223\t\tgdt[5] = (limit & 0xffff) | ((unsigned long long)(base & 0xffffffUL) << 16) | (0x89ULL << 40) |\n224\t\t\t((unsigned long long)(limit >> 16) << 48) | ((unsigned long long)(base >> 24) << 56);\n225\t\n226\t\ttss[1] = (unsigned int)stack_top;\t/* esp0: where a trap from ring 3 lands */\n227\t\ttss[2] = SEL_KDATA;\t\t\t/* ss0 */\n228\t\ttss[25] = sizeof tss << 16;\t\t/* no I/O bitmap: every port is closed to ring 3 */\n229\t\n230\t\tgd.limit = sizeof gdt - 1;\n231\t\tgd.base = (unsigned int)gdt;\n232\t\t__asm__ volatile(\"lgdt %0; movl %1, %%eax; movl %%eax, %%ds; movl %%eax, %%es; movl %%eax, %%ss; \"\n233\t\t\t\"movl %%eax, %%fs; movl %%eax, %%gs; ljmp %2, $1f; 1:\"\n234\t\t\t: : \"m\"(gd), \"i\"(SEL_KDATA), \"i\"(SEL_KCODE) : \"eax\", \"memory\");\n235\t\t__asm__ volatile(\"ltr %%ax\" : : \"a\"(SEL_TSS));\n236\t\n237\t\tfor (i = 0; i < 32; i++)\n238\t\t\tset_gate(i, t[i], 0);\n239\t\tset_gate(0x80, trap0x80, 3);\t\t/* the one gate a program may knock on */\n240\t\tif (sched) {"
+            }
+          ],
+          "status": "success"
+        }
+      },
+      {
+        "toolResult": {
+          "toolUseId": "ollama-20261027220806108072696-1",
+          "content": [
+            {
+              "text": "pool/PART.gate@1/gate_entry.S, lines 1 to 131 of 131\n1\t/* SPDX-License-Identifier: GPL-2.0-only\n2\t *\n3\t * PART.gate@1: the way in when the processor is trapped or faults, and the way\n4\t * out into ring 3.  Ours; nothing lifted.  Every entry leaves the same frame on\n5\t * the stack so one path saves and one path resumes: ds, es, eight registers\n6\t * (popal order), the vector and an error code first, and what the processor\n7\t * pushed (eip, cs, eflags, and esp and ss when it came from ring 3).  The\n8\t * kernel's data segments are reloaded here, because a program may leave\n9\t * anything in its own.\n10\t */\n11\t\n12\t\t.text\n13\t\t.code32\n14\t\n15\t.macro TRAP vec, errcode=0\n16\t\t.globl\ttrap\\vec\n17\ttrap\\vec:\n18\t\t.if \\errcode == 0\n19\t\tpushl\t$0\n20\t\t.endif\n21\t\tpushl\t$\\vec\n22\t\tjmp\ttrap_common\n23\t.endm\n24\t\n25\t\t/* the processor's own exceptions; 8, 10-14, 17, 21, 29, 30 push an error code */\n26\t\tTRAP 0\n27\t\tTRAP 1\n28\t\tTRAP 2\n29\t\tTRAP 3\n30\t\tTRAP 4\n31\t\tTRAP 5\n32\t\tTRAP 6\n33\t\tTRAP 7\n34\t\tTRAP 8, 1\n35\t\tTRAP 9\n36\t\tTRAP 10, 1\n37\t\tTRAP 11, 1\n38\t\tTRAP 12, 1\n39\t\tTRAP 13, 1\n40\t\tTRAP 14, 1\n41\t\tTRAP 15\n42\t\tTRAP 16\n43\t\tTRAP 17, 1\n44\t\tTRAP 18\n45\t\tTRAP 19\n46\t\tTRAP 20\n47\t\tTRAP 21, 1\n48\t\tTRAP 22\n49\t\tTRAP 23\n50\t\tTRAP 24\n51\t\tTRAP 25\n52\t\tTRAP 26\n53\t\tTRAP 27\n54\t\tTRAP 28\n55\t\tTRAP 29, 1\n56\t\tTRAP 30, 1\n57\t\tTRAP 31\n58\t\tTRAP 0x80\n59\t\t/* hardware interrupts, when a sharing part asks for them (gate_schedule): the\n60\t\t * 8259's sixteen from 0x30, and the APIC's spurious vector */\n61\t\t.irp v, 0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x3a, 0x3b, 0x3c, 0x3d, 0x3e, 0x3f, 0xff\n62\t\tTRAP \\v\n63\t\t.endr\n64\t\n65\t\t.data\n66\t\t.globl\ttrap_irq_table\n67\ttrap_irq_table:\n68\t\t.long\ttrap0x30, trap0x31, trap0x32, trap0x33, trap0x34, trap0x35, trap0x36, trap0x37\n69\t\t.long\ttrap0x38, trap0x39, trap0x3a, trap0x3b, trap0x3c, trap0x3d, trap0x3e, trap0x3f\n70\t\t.long\ttrap0xff\n71\t\t.text\n72\t\n73\ttrap_common:\n74\t\tpushl\t%ds\n75\t\tpushl\t%es\n76\t\tpushal\n77\t\tmovl\t$0x10, %eax\n78\t\tmovl\t%eax, %ds\n79\t\tmovl\t%eax, %es\n80\t\tcld\n81\t\tpushl\t%esp\n82\t\tcall\tgate_trap\n83\t\taddl\t$4, %esp\n84\t\tmovl\t%eax, %esp\n85\t\tpopal\n86\t\tpopl\t%es\n87\t\tpopl\t%ds\n88\t\taddl\t$8, %esp\n89\t\tiret\n90\t\n91\t/* gate_resume_frame(cr3, frame): switch to that address space, and return into\n92\t * the program whose registers were saved at FRAME as if from a trap.  Never returns. */\n93\t\t.globl\tgate_resume_frame\n94\tgate_resume_frame:\n95\t\tmovl\t4(%esp), %ecx\n96\t\tmovl\t8(%esp), %eax\n97\t\tmovl\t%ecx, %cr3\n98\t\tmovl\t%eax, %esp\n99\t\tpopal\n100\t\tpopl\t%es\n101\t\tpopl\t%ds\n102\t\taddl\t$8, %esp\n103\t\tiret\n104\t\n105\t/* gate_enter(eip, esp, eflags): drop to ring 3 at eip with that stack and those\n106\t * flags, every register clear.  Never returns. */\n107\t\t.globl\tgate_enter\n108\tgate_enter:\n109\t\tmovl\t4(%esp), %eax\n110\t\tmovl\t8(%esp), %ecx\n111\t\tmovl\t12(%esp), %edx\n112\t\tmovl\t$0x23, %ebx\n113\t\tmovl\t%ebx, %ds\n114\t\tmovl\t%ebx, %es\n115\t\tmovl\t%ebx, %fs\n116\t\tmovl\t%ebx, %gs\n117\t\tpushl\t$0x23\t\t\t/* ss */\n118\t\tpushl\t%ecx\t\t\t/* esp */\n119\t\tpushl\t%edx\t\t\t/* eflags */\n120\t\tpushl\t$0x1b\t\t\t/* cs */\n121\t\tpushl\t%eax\t\t\t/* eip */\n122\t\txorl\t%eax, %eax\n123\t\txorl\t%ebx, %ebx\n124\t\txorl\t%ecx, %ecx\n125\t\txorl\t%edx, %edx\n126\t\txorl\t%esi, %esi\n127\t\txorl\t%edi, %edi\n128\t\txorl\t%ebp, %ebp\n129\t\tiret\n130\t\n131\t\t.section .note.GNU-stack, \"\", @progbits"
+            }
+          ],
+          "status": "success"
+        }
+      },
+      {
+        "text": "Call 13 of 60 done; 47 left."
+      }
+    ]
+  },
+  {
+    "role": "assistant",
+    "content": [
+      {
+        "toolUse": {
+          "toolUseId": "ollama-20261027220821253593006-0",
+          "name": "look",
+          "input": {
+            "command": "read",
+            "args": [
+              "pool/PART.gate@1/gate.c",
+              "240",
+              "395"
+            ],
+            "start_line": 240,
+            "end_line": 395
+          }
+        }
+      },
+      {
+        "toolUse": {
+          "toolUseId": "ollama-20261027220821253593006-1",
+          "name": "look",
+          "input": {
+            "command": "read",
+            "args": [
+              "tests/programs/waiter.c"
+            ]
+          }
+        }
+      }
+    ]
+  },
+  {
+    "role": "user",
+    "content": [
+      {
+        "toolResult": {
+          "toolUseId": "ollama-20261027220821253593006-0",
+          "content": [
+            {
+              "text": "pool/PART.gate@1/gate.c, lines 240 to 395 of 395\n240\t\tif (sched) {\n241\t\t\t/* hardware interrupts: the 8259's sixteen vectors from 0x30, and the APIC's spurious one */\n242\t\t\textern char *trap_irq_table[17];\n243\t\t\tfor (i = 0; i < 16; i++)\n244\t\t\t\tset_gate(0x30 + i, trap_irq_table[i], 0);\n245\t\t\tset_gate(0xff, trap_irq_table[16], 0);\n246\t\t}\n247\t\tid.limit = sizeof idt - 1;\n248\t\tid.base = (unsigned int)idt;\n249\t\t__asm__ volatile(\"lidt %0\" : : \"m\"(id));\n250\t}\n251\t\n252\t/* The first 4 MiB, page by page: the kernel, closed to ring 3, but for the stub page. */\n253\tstatic void base_init(int user_stack)\n254\t{\n255\t\tunsigned long i, stub = (unsigned long)gate_user_start >> 12;\n256\t\n257\t\tfor (i = 0; i < 1024; i++)\n258\t\t\tpt0[i] = (i << 12) | 0x3;\t/* present, writable, kernel only */\n259\t\tpt0[stub] = (stub << 12) | 0x5;\t\t/* present, read-only, ring 3 may read and run it */\n260\t\tif (user_stack)\n261\t\t\tfor (i = (unsigned long)gate_stack_lo >> 12; i < (unsigned long)gate_stack_hi >> 12; i++)\n262\t\t\t\tpt0[i] |= 0x4;\t\t/* ring 3's stack, when it stands on the gate's */\n263\t}\n264\t\n265\t/* A page directory: every address maps to itself, closed to ring 3, except that\n266\t * the window [virt, virt + len) maps to physical memory from PHYS and is open.\n267\t * TECH-DEBT 3: the window is rounded up to whole 4 MiB pages, so a program can\n268\t * reach the tail past its end.  It goes in the mechanic, after the series. */\n269\tstatic void space_map(unsigned long *pd, unsigned long phys, unsigned long virt, unsigned long len)\n270\t{\n271\t\tunsigned long i, n = (len + 0x3fffffUL) >> 22;\n272\t\n273\t\tpd[0] = (unsigned long)pt0 | 0x7;\t/* the first 4 MiB: page by page */\n274\t\tfor (i = 1; i < 1024; i++)\n275\t\t\tpd[i] = (i << 22) | 0x83;\t/* 4 MiB pages, present, writable, kernel only */\n276\t\tfor (i = 0; i < n; i++)\n277\t\t\tpd[(virt >> 22) + i] = (phys + (i << 22)) | 0x87;\t/* the program's window: ring 3 may use it */\n278\t}\n279\t\n280\tstatic void paging_on(unsigned long cr3)\n281\t{\n282\t\t__asm__ volatile(\"movl %%cr4, %%eax; orl $0x10, %%eax; movl %%eax, %%cr4\" : : : \"eax\");\n283\t\t__asm__ volatile(\"movl %0, %%cr3\" : : \"r\"(cr3));\n284\t\t__asm__ volatile(\"movl %%cr0, %%eax; orl $0x80010000, %%eax; movl %%eax, %%cr0\" : : : \"eax\");\n285\t}\n286\t\n287\tvoid __attribute__((noreturn)) gate_enter(unsigned long eip, unsigned long esp, unsigned long eflags);\n288\tvoid __attribute__((noreturn)) gate_resume_frame(unsigned long cr3, unsigned long *frame);\n289\t\n290\t/* the kernel and the stub page must fit under the first 4 MiB, and the window must start above it */\n291\tstatic int window_ok(unsigned long lo, unsigned long hi)\n292\t{\n293\t\treturn (unsigned long)kernel_end <= 0x400000 && lo >= 0x400000 && hi >= lo && hi <= 0xffc00000UL;\n294\t}\n295\t\n296\tvoid __attribute__((noreturn)) gate_run(unsigned long entry, unsigned long lo, unsigned long hi,\n297\t\tconst struct door *kernel_calls)\n298\t{\n299\t\tunsigned long *sp, top = (unsigned long)gate_stack_hi;\n300\t\tstruct gate_space *s = &spaces[0];\n301\t\n302\t\tif (!window_ok(lo, hi))\n303\t\t\tkernel_halt();\n304\t\tcalls = kernel_calls;\n305\t\twin_lo = lo;\n306\t\twin_hi = hi;\n307\t\tnspaces = 1;\n308\t\tbase_init(1);\n309\t\tspace_map(pds[0], lo, lo, hi - lo);\n310\t\ts->cr3 = (unsigned long)pds[0];\n311\t\ts->kstack_top = (unsigned long)stack_top;\n312\t\ts->user_stack = 1;\n313\t\tcur = s;\n314\t\ttables_init();\n315\t\tpaging_on(s->cr3);\n316\t\n317\t\t__asm__(\"\" : \"+r\"(top));\t\t/* the stack is a place the linker chose, not an object the compiler may reason about */\n318\t\tsp = (unsigned long *)top;\n319\t\t*--sp = (unsigned long)gate_door;\t/* _start's argument */\n320\t\t*--sp = (unsigned long)gate_return;\t/* where _start returns to: exit */\n321\t\tgate_enter(entry, (unsigned long)sp, 0x002);\t/* interrupts off, I/O privilege 0 */\n322\t}\n323\t\n324\tvoid gate_share_calls(const struct door *kernel_calls)\n325\t{\n326\t\tcalls = kernel_calls;\n327\t}\n328\t\n329\tvoid gate_schedule(const struct gate_sched *s)\n330\t{\n331\t\tsched = s;\n332\t}\n333\t\n334\tstruct gate_space *gate_space_new(unsigned long phys, unsigned long virt, unsigned long len,\n335\t\tunsigned long entry, unsigned long stack_top_virt)\n336\t{\n337\t\tstruct gate_space *s;\n338\t\tunsigned long *f, *us;\n339\t\n340\t\tif (nspaces >= GATE_MAX_SPACES || !window_ok(virt, virt + len))\n341\t\t\treturn 0;\n342\t\tif (nspaces && (virt != win_lo || virt + len != win_hi))\n343\t\t\treturn 0;\t\t\t/* one window for every space */\n344\t\tif (!nspaces) {\n345\t\t\twin_lo = virt;\n346\t\t\twin_hi = virt + len;\n347\t\t\tbase_init(0);\n348\t\t}\n349\t\ts = &spaces[nspaces];\n350\t\tspace_map(pds[nspaces], phys, virt, len);\n351\t\ts->cr3 = (unsigned long)pds[nspaces];\n352\t\ts->kstack_top = (unsigned long)&kstacks[nspaces][KSTACK_WORDS];\n353\t\ts->user_stack = 0;\n354\t\n355\t\t/* the program's stack, written through its physical address (paging is off): _start's argument and return */\n356\t\tus = (unsigned long *)(phys + (stack_top_virt - virt));\n357\t\t*--us = (unsigned long)gate_door;\n358\t\t*--us = (unsigned long)gate_return;\n359\t\n360\t\t/* and the frame that resumes it, as if it had been trapped just before its first instruction */\n361\t\tf = (unsigned long *)s->kstack_top;\n362\t\t*--f = 0x23;\t\t\t\t/* ss */\n363\t\t*--f = stack_top_virt - 8;\t\t/* esp */\n364\t\t*--f = 0x202;\t\t\t\t/* eflags: interrupts on, I/O privilege 0 */\n365\t\t*--f = 0x1b;\t\t\t\t/* cs */\n366\t\t*--f = entry;\t\t\t\t/* eip */\n367\t\t*--f = 0;\t\t\t\t/* error code */\n368\t\t*--f = 0;\t\t\t\t/* vector */\n369\t\t*--f = 0x23;\t\t\t\t/* ds */\n370\t\t*--f = 0x23;\t\t\t\t/* es */\n371\t\t{\n372\t\t\tint k;\n373\t\n374\t\t\tfor (k = 0; k < 8; k++)\n375\t\t\t\t*--f = 0;\t\t/* edi esi ebp esp ebx edx ecx eax */\n376\t\t}\n377\t\ts->frame = f;\n378\t\tnspaces++;\n379\t\treturn s;\n380\t}\n381\t\n382\tvoid __attribute__((noreturn)) gate_resume(struct gate_space *s)\n383\t{\n384\t\tcur = s;\n385\t\ttss[1] = (unsigned int)s->kstack_top;\n386\t\tgate_resume_frame(s->cr3, s->frame);\n387\t}\n388\t\n389\tvoid __attribute__((noreturn)) gate_start(struct gate_space *first)\n390\t{\n391\t\tcur = first;\n392\t\ttables_init();\n393\t\tpaging_on(first->cr3);\n394\t\tgate_resume(first);\n395\t}"
+            }
+          ],
+          "status": "success"
+        }
+      },
+      {
+        "toolResult": {
+          "toolUseId": "ollama-20261027220821253593006-1",
+          "content": [
+            {
+              "text": "tests/programs/waiter.c, lines 1 to 18 of 18\n1\t/* SPDX-License-Identifier: GPL-2.0-only\n2\t *\n3\t * Probe for TST.share.waits@1: a program that asks for one byte from the console\n4\t * and waits for it.  Nothing is ever typed.  It runs beside the stopwatch, which\n5\t * should keep its time while this one waits (TECH-DEBT 2).\n6\t * Boots on: share, gateshare.\n7\t */\n8\t#include \"door.h\"\n9\t\n10\tvoid __attribute__((section(\".text.start\"))) _start(const struct door *d)\n11\t{\n12\t\tchar c;\n13\t\n14\t\td->write(\"waiting\\n\", 8);\n15\t\td->read(&c, 1);\n16\t\td->write(\"got a byte\\n\", 11);\n17\t\td->exit(0);\n18\t}"
+            }
+          ],
+          "status": "success"
+        }
+      },
+      {
+        "text": "Call 14 of 60 done; 46 left."
+      }
+    ]
+  },
+  {
+    "role": "assistant",
+    "content": [
+      {
+        "toolUse": {
+          "toolUseId": "ollama-20261027220941374574421-0",
+          "name": "look",
+          "input": {
+            "command": "read",
+            "args": [
+              "flavors/gateshare.toml"
+            ]
+          }
+        }
+      },
+      {
+        "toolUse": {
+          "toolUseId": "ollama-20261027220941374574421-1",
+          "name": "look",
+          "input": {
+            "command": "list",
+            "args": [
+              "lifted"
+            ]
+          }
+        }
+      }
+    ]
+  },
+  {
+    "role": "user",
+    "content": [
+      {
+        "toolResult": {
+          "toolUseId": "ollama-20261027220941374574421-0",
+          "content": [
+            {
+              "text": "flavors/gateshare.toml, lines 1 to 5 of 5\n1\t# Two programs at once behind the gate (petition 0011, part 18): the share flavor's\n2\t# programs and machine, on the kernel that runs every program in ring 3.\n3\tname      = \"gateshare\"\n4\tmachine   = \"MACHINE.serial-irq@1\"\n5\tpetitions = [\"0004\", \"0006\", \"0011\"]"
+            }
+          ],
+          "status": "success"
+        }
+      },
+      {
+        "toolResult": {
+          "toolUseId": "ollama-20261027220941374574421-1",
+          "content": [
+            {
+              "text": "PART.archive.cpio@1/\nPART.cat@1/\nPART.disk.ata-pio@1/\nPART.fs.minix@1/\nPART.fs.minix@2/\nPART.irq.pic@1/\nPART.libc.musl@1/\nPART.screen.vga@1/\nPART.serial.8250@1/\nPART.serial.8250@2/\nPART.timer.kvmclock@1/\nPART.timer.pit-tick@1/\nPART.timer.tsc-pit@1/\nPART.timer.tsc-pit@2/"
+            }
+          ],
+          "status": "success"
+        }
+      },
+      {
+        "text": "Call 15 of 60 done; 45 left."
+      }
+    ]
+  },
+  {
+    "role": "assistant",
+    "content": [
+      {
+        "toolUse": {
+          "toolUseId": "ollama-20261027220955876515633-0",
+          "name": "look",
+          "input": {
+            "command": "list",
+            "args": [
+              "fix/notes"
+            ]
+          }
+        }
+      },
+      {
+        "toolUse": {
+          "toolUseId": "ollama-20261027220955876515633-1",
+          "name": "look",
+          "input": {
+            "command": "read",
+            "args": [
+              "pool/PART.loader@10/loader.c",
+              "290",
+              "330"
+            ],
+            "start_line": 290,
+            "end_line": 330
+          }
+        }
+      }
+    ]
+  },
+  {
+    "role": "user",
+    "content": [
+      {
+        "toolResult": {
+          "toolUseId": "ollama-20261027220955876515633-0",
+          "content": [
+            {
+              "text": "gate.sse@1-2.txt\nloader.random@1-2.txt"
+            }
+          ],
+          "status": "success"
+        }
+      },
+      {
+        "toolResult": {
+          "toolUseId": "ollama-20261027220955876515633-1",
+          "content": [
+            {
+              "text": "pool/PART.loader@10/loader.c, lines 290 to 330 of 676\n290\t{\n291\t\tserial8250_flush(CONSOLE_PORT);\n292\t}\n293\t\n294\tstatic void door_write(const void *s, unsigned long n)\n295\t{\n296\t\tunsigned long f = irq_save();\n297\t\n298\t\tkernel_say(s, n);\n299\t\tirq_restore(f);\n300\t}\n301\t\n302\t/* Wait for one byte, then take whatever else has already arrived.  TECH-DEBT 2:\n303\t * a system call runs with interrupts off, so while a program waits here no\n304\t * other program gets a turn.  It goes in the mechanic, after the series. */\n305\tstatic unsigned long door_read(void *buf, unsigned long n)\n306\t{\n307\t\tunsigned char *p = buf;\n308\t\tunsigned long got = 0, f;\n309\t\n310\t\tif (n == 0)\n311\t\t\treturn 0;\n312\t\twhile (!serial8250_poll(CONSOLE_PORT))\n313\t\t\t;\n314\t\tf = irq_save();\n315\t\tp[got++] = serial8250_getc(CONSOLE_PORT);\n316\t\twhile (got < n && serial8250_poll(CONSOLE_PORT))\n317\t\t\tp[got++] = serial8250_getc(CONSOLE_PORT);\n318\t\tirq_restore(f);\n319\t\treturn got;\n320\t}\n321\t\n322\t/*\n323\t * The clock, as @4.  khz is how many counter ticks make a millisecond,\n324\t * measured once at boot; start is the counter then.  0 without a clock part.\n325\t */\n326\t#if defined(HAVE_TIMER_KVMCLOCK) || defined(HAVE_TIMER_TSC_PIT)\n327\tstatic unsigned long clock_khz;\n328\tstatic unsigned long long clock_start;\n329\t\n330\t/* the processor's counter, read the way Linux's rdtsc() reads it */"
+            }
+          ],
+          "status": "success"
+        }
+      },
+      {
+        "text": "Call 16 of 60 done; 44 left."
+      }
+    ]
+  },
+  {
+    "role": "assistant",
+    "content": [
+      {
+        "toolUse": {
+          "toolUseId": "ollama-20261027220959875827901-0",
+          "name": "look",
+          "input": {
+            "command": "find",
+            "args": [
+              "interrupts off",
+              "posts"
+            ]
+          }
+        }
+      },
+      {
+        "toolUse": {
+          "toolUseId": "ollama-20261027220959875827901-1",
+          "name": "look",
+          "input": {
+            "command": "read",
+            "args": [
+              "pool/PART.gate@1/gate.h"
+            ]
+          }
+        }
+      }
+    ]
+  },
+  {
+    "role": "user",
+    "content": [
+      {
+        "toolResult": {
+          "toolUseId": "ollama-20261027220959875827901-0",
+          "content": [
+            {
+              "text": ""
+            }
+          ],
+          "status": "success"
+        }
+      },
+      {
+        "toolResult": {
+          "toolUseId": "ollama-20261027220959875827901-1",
+          "content": [
+            {
+              "text": "pool/PART.gate@1/gate.h, lines 1 to 57 of 57\n1\t/* PART.gate@1: programs run in ring 3 and reach the kernel only by int 0x80.  Ours. */\n2\t#ifndef AIOS_GATE_H\n3\t#define AIOS_GATE_H\n4\t\n5\t#include \"kernel.h\"\n6\t#include \"door.h\"\n7\t\n8\t/*\n9\t * Take the machine over from the loader's first moments and give it to the\n10\t * program: new descriptor table with ring 3 segments, the task state segment,\n11\t * the interrupt table, page tables that close everything to the program but\n12\t * its own window, and then ring 3, at ENTRY.  The program is handed the system\n13\t * call table that is built into this part (stubs that run int 0x80), never the\n14\t * kernel's own.  Its window is [LO, HI): every address it may touch besides its\n15\t * stack and that table.  KERNEL_CALLS is what the kernel does for each call.\n16\t * Never returns: the program exits through the exit call, or is stopped.\n17\t */\n18\tvoid __attribute__((noreturn)) gate_run(unsigned long entry, unsigned long lo, unsigned long hi,\n19\t\tconst struct door *kernel_calls);\n20\t\n21\t\n22\t/*\n23\t * Several programs (PART.share@2).  A space is one program's view of the\n24\t * machine: the same virtual window in every space, mapped to its own physical\n25\t * RAM, and a kernel stack of its own.  All of this is done before the gate\n26\t * starts, with paging off, so PHYS is an address the kernel can write.\n27\t */\n28\t#define GATE_MAX_SPACES 4\n29\t\n30\tstruct gate_space;\n31\t\n32\t/* The sharing part's two decisions.  Each is told which space was running and\n33\t * returns the one to run next (the same one to carry on).  irq: a hardware\n34\t * interrupt arrived; fault: the processor stopped the program (the vector and the\n35\t * address that caused it); it must not return the stopped space. */\n36\tstruct gate_sched {\n37\t\tstruct gate_space *(*irq)(unsigned long vec, struct gate_space *cur);\n38\t\tstruct gate_space *(*fault)(unsigned long vec, unsigned long addr, struct gate_space *cur);\n39\t};\n40\t\n41\t/* Register the scheduler, and what the kernel does for each call.  Before gate_start. */\n42\tvoid gate_schedule(const struct gate_sched *s);\n43\tvoid gate_share_calls(const struct door *kernel_calls);\n44\t\n45\t/* A space whose window [VIRT, VIRT + LEN) is the physical RAM from PHYS, entered\n46\t * at ENTRY with its stack growing down from STACK_TOP (inside the window).  Null\n47\t * if it does not fit or the window differs from the first space's. */\n48\tstruct gate_space *gate_space_new(unsigned long phys, unsigned long virt, unsigned long len,\n49\t\tunsigned long entry, unsigned long stack_top);\n50\t\n51\t/* Take the machine over (tables, paging) and run FIRST in ring 3.  Never returns. */\n52\tvoid __attribute__((noreturn)) gate_start(struct gate_space *first);\n53\t\n54\t/* Run that space now, from its saved registers.  Never returns. */\n55\tvoid __attribute__((noreturn)) gate_resume(struct gate_space *s);\n56\t\n57\t#endif"
+            }
+          ],
+          "status": "success"
+        }
+      },
+      {
+        "text": "Call 17 of 60 done; 43 left."
+      }
+    ]
+  },
+  {
+    "role": "assistant",
+    "content": [
+      {
+        "text": "Let me run the probe to see the actual output and check the test runner."
+      },
+      {
+        "toolUse": {
+          "toolUseId": "ollama-20261027221037359730907-0",
+          "name": "look",
+          "input": {
+            "command": "read",
+            "args": [
+              "jig/test"
+            ]
+          }
+        }
+      },
+      {
+        "toolUse": {
+          "toolUseId": "ollama-20261027221037359730907-1",
+          "name": "look",
+          "input": {
+            "command": "read",
+            "args": [
+              "pool/MACHINE.serial-irq@1/machine.sh"
+            ]
+          }
+        }
+      }
+    ]
+  },
+  {
+    "role": "user",
+    "content": [
+      {
+        "toolResult": {
+          "toolUseId": "ollama-20261027221037359730907-0",
+          "content": [
+            {
+              "text": "jig/test, lines 1 to 283 of 283\n1\t#!/bin/sh\n2\t# test: the tester's runner (plan 4.1).  Runs every test in tests/ that has a\n3\t# runner, prints PASS, FAIL or SKIP for each, and writes the same to\n4\t# tests/results.txt, which gets committed: that file is the record the post\n5\t# addenda and jig/donecheck read.  A test with no runner is SKIP, never PASS.\n6\t#\n7\t#   sh jig/test                  every test\n8\t#   sh jig/test calc.transcript  only the tests whose file name starts with that\n9\t#\n10\t# Each test's TOML says how it runs, in its runner field:\n11\t#   boot FLAVOR [INPUT]          boot the flavor, INPUT typed into the serial port;\n12\t#                                the capture must equal tests/expected/<test>.out\n13\t#   ladder FLAVOR                every program on the ladder, built for its own\n14\t#                                loader, booted unchanged under FLAVOR's loader;\n15\t#                                each must equal its own expected output\n16\t#   same-loader A B              the loaders built for A and B are byte-identical,\n17\t#                                and each program runs under the other's loader\n18\t#   program SRC FLAVOR [INPUT]   a probe program from tests/programs, built against\n19\t#                                FLAVOR's loader and booted; checked like boot\n20\t#   trace FLAVOR [INPUT]         boot with QEMU's serial register trace on; the\n21\t#                                check reads every register access the driver made\n22\t#   strace FLAVOR [SECS]         boot under strace (for SECS seconds, if the machine\n23\t#                                never halts); the check reads the syscalls\n24\t#   qtree FLAVOR                 start the machine paused, list its devices, stop\n25\t#   timed FLAVOR SECS [PROBE]    for a machine that never halts: boot it (or a probe\n26\t#                                built against its loader), watch for exactly SECS\n27\t#                                seconds by the host's clock, each line stamped with\n28\t#                                the host's milliseconds as it arrives; the .check\n29\t#                                gets the stamped capture and SECS\n30\t#   disk FLAVOR BOOTS [INPUT...] a fresh empty disk, made the way the machine makes\n31\t#                                one, then the flavor booted BOOTS times in a row on\n32\t#                                it, boot n with the nth INPUT typed in (none if there\n33\t#                                are fewer); the captures are joined, and a .check\n34\t#                                also gets the disk image\n35\t#   cmd COMMAND...               any command; exit 0 is green, exit 2 means it\n36\t#                                cannot run on this host (SKIP), anything else red\n37\t#   nokvm KIND ARGS...           the run KIND ARGS describes, with KVM's CPUID leaves\n38\t#                                hidden (-cpu host,kvm=off), so the loader cannot ask\n39\t#                                KVM and has to measure against the 8254; without\n40\t#                                KVM it is the plain run, which measures anyway\n41\t#   nopit KIND ARGS...           the run KIND ARGS describes, on the same machine\n42\t#                                without the 8254 (-M microvm,pit=off), so only KVM\n43\t#                                can say the rate; SKIP without KVM\n44\t# Where tests/expected/<test>.check exists it decides instead of the .out file:\n45\t# it is run as  sh <test>.check CAPTURE EXTRA BINARY  and exit 0 is green.\n46\t#\n47\t# The machine is always the flavor's own machine component, unchanged, except\n48\t# under nokvm and nopit, which each take one named thing away (findings 0012).\n49\t# trace, strace and qtree add observation flags through a stand-in for\n50\t# qemu-system-x86_64 on PATH that appends them; nothing else differs.\n51\t#\n52\t# Expected outputs are files, made once by the reference programs in\n53\t# tests/fixtures on a normal computer (tests/expected/README.md says how), so\n54\t# the jig needs no Python.  Timeouts are the tests' own timeout_ms.\n55\tset -u\n56\trepo=$(cd \"$(dirname \"$0\")/..\" && pwd); cd \"$repo\"\n57\ttmp=$(mktemp -d); trap 'rm -rf \"$tmp\"' EXIT\n58\tfield() { sed -n \"s/^$2 *= *\\\"\\([^\\\"]*\\)\\\".*/\\1/p\" \"$1\" | head -1; }\n59\tnum()   { sed -n \"s/^$2 *= *\\([0-9][0-9]*\\).*/\\1/p\" \"$1\" | head -1; }\n60\t# the machine a flavor runs on: its machine component's machine.sh, unchanged\n61\tmachine_of() {\n62\t\tm=$(field \"flavors/$1.toml\" machine)\n63\t\techo \"$(field \"index/machine/${m#MACHINE.}.toml\" source)machine.sh\"\n64\t}\n65\t[ -w /dev/kvm ] && accel=kvm || accel=\"software emulation (tcg)\"\n66\t\n67\t# the referee first, on every commit since the last recorded run (the commit\n68\t# in tests/results.txt's header), as the second lock: a check skipped on a PC\n69\t# with --no-verify is refused here, where nobody types, and no test runs on\n70\t# that commit.  A filtered run (one test) skips this; jig/mutate runs those.\n71\tif [ -z \"${1:-}\" ] && git rev-parse HEAD >/dev/null 2>&1; then\n72\t\tlast=$(sed -n '2s/.*at commit \\([0-9a-f]*\\).*/\\1/p' tests/results.txt 2>/dev/null)\n73\t\tif [ -n \"$last\" ] && git rev-parse -q --verify \"$last^{commit}\" >/dev/null 2>&1; then revs=$(git rev-list --reverse \"$last..HEAD\"); else revs=$(git rev-parse HEAD); fi\n74\t\tfor rev in $revs; do\n75\t\t\tsh jig/ledger --commit \"$rev\" >/dev/null 2>\"$tmp/ledger\" || { echo \"referee: commit $(git rev-parse --short \"$rev\") refused, no test runs on it: $(cat \"$tmp/ledger\")\"; exit 1; }\n76\t\tdone\n77\t\t[ -n \"$revs\" ] && echo \"referee: $(echo $revs | wc -w) commit(s) since $( [ -n \"$last\" ] && echo \"$last\" || echo \"the start\"), every human-only change named by a decision\"\n78\tfi\n79\t\n80\t# the stand-in: real QEMU plus whatever AIOS_QEMU_EXTRA says\n81\treal=$(command -v qemu-system-x86_64) || { echo \"no qemu-system-x86_64\"; exit 2; }\n82\tmkdir -p \"$tmp/bin\"\n83\tprintf '#!/bin/sh\\nexec %s \"$@\" $AIOS_QEMU_EXTRA\\n' \"$real\" > \"$tmp/bin/qemu-system-x86_64\"\n84\tchmod +x \"$tmp/bin/qemu-system-x86_64\"\n85\texport AIOS_QEMU_EXTRA=\"\"\n86\t\n87\tbuilt=\"\"\n88\tloader_of() { echo \"out/$1/loader.elf\"; }\n89\tprogram_of() { echo \"out/$1/$(cat \"out/$1/program\").bin\"; }\n90\t\n91\t# boot LOADER BIN INPUT CAPTURE SECONDS: 0 = halted in time, 124 = still running\n92\tboot() {\n93\t\tinp=${3:-/dev/null}\n94\t\tPATH=\"$tmp/bin:$PATH\" timeout \"$5\" sh \"$machine\" \"$1\" \"$2\" < \"$inp\" > \"$4\" 2> \"$tmp/machine.err\"\n95\t}\n96\t\n97\t# compare CAPTURE STEM [EXTRA BINARY]: the .check decides if there is one, else the .out\n98\tjudge() {\n99\t\tif [ -f \"tests/expected/$2.check\" ]; then\n100\t\t\tsh \"tests/expected/$2.check\" \"$1\" \"${3:-}\" \"${4:-}\" > \"$tmp/why\" 2>&1 && { why=$(tail -1 \"$tmp/why\"); return 0; }\n101\t\t\twhy=$(head -3 \"$tmp/why\" | tr '\\n' ' '); return 1\n102\t\tfi\n103\t\t[ -f \"tests/expected/$2.out\" ] || { why=\"no tests/expected/$2.out or .check\"; return 1; }\n104\t\tif cmp -s \"$1\" \"tests/expected/$2.out\"; then why=\"$(wc -c < \"$1\" | tr -d ' ') bytes, exact\"; return 0; fi\n105\t\twhy=$(cmp \"$1\" \"tests/expected/$2.out\" 2>&1 | sed 's/^[^ ]* [^ ]* //' | head -1)\n106\t\twhy=\"$why ($(wc -c < \"$1\") bytes, expected $(wc -c < \"tests/expected/$2.out\"))\"\n107\t\treturn 1\n108\t}\n109\t\n110\t# the ladder: program, the flavor that builds it, its loader version, its input\n111\tladder=\"hello:hello:1: hanoi:hanoi:1: life:life:2: calc:calc:3:tests/fixtures/calc.in\"\n112\texpected_of() {\t# a ladder program's own exact-output test\n113\t\tcase \"$1\" in hello) echo hello.exact-bytes@1 ;; hanoi) echo hanoi.exact-moves@1 ;;\n114\t\t             life) echo life.exact-output@1 ;; calc) echo calc.transcript@1 ;; esac\n115\t}\n116\t\n117\trun_one() {\t# t secs kind args... ; sets why\n118\t\tt=$1; secs=$2; kind=$3; shift 3\n119\t\tcap=\"$tmp/capture\"; why=\"\"\n120\t\tcase \"$kind\" in\n121\t\tboot)\n122\t\t\tbuild \"$1\" || { why=\"build of $1 failed\"; return 1; }\n123\t\t\tmachine=$(machine_of \"$1\")\n124\t\t\tboot \"$(loader_of \"$1\")\" \"$(program_of \"$1\")\" \"${2:-}\" \"$cap\" \"$secs\"\n125\t\t\t[ $? -eq 124 ] && { why=\"still running after ${secs}s\"; return 1; }\n126\t\t\tjudge \"$cap\" \"$t\" \"\" \"$(program_of \"$1\")\" ;;\n127\t\tladder)\n128\t\t\tbuild \"$1\" || { why=\"build of $1 failed\"; return 1; }\n129\t\t\tmachine=$(machine_of \"$1\")\n130\t\t\ttop=$(lv \"$1\"); n=0\n131\t\t\tfor e in $ladder; do\n132\t\t\t\tp=${e%%:*}; r=${e#*:}; f=${r%%:*}; r=${r#*:}; v=${r%%:*}; inp=${r#*:}\n133\t\t\t\t[ \"$v\" -le \"$top\" ] || continue\n134\t\t\t\tbuild \"$f\" || { why=\"build of $f failed\"; return 1; }\n135\t\t\t\tboot \"$(loader_of \"$1\")\" \"$(program_of \"$f\")\" \"$inp\" \"$cap\" \"$secs\"\n136\t\t\t\t[ $? -eq 124 ] && { why=\"$p under loader@$top: still running after ${secs}s\"; return 1; }\n137\t\t\t\tjudge \"$cap\" \"$(expected_of \"$p\")\" || { why=\"$p under loader@$top: $why\"; return 1; }\n138\t\t\t\tn=$((n + 1))\n139\t\t\tdone\n140\t\t\twhy=\"$n programs byte-identical under loader@$top\" ;;\n141\t\tsame-loader)\n142\t\t\tbuild \"$1\" && build \"$2\" || { why=\"build failed\"; return 1; }\n143\t\t\tcmp -s \"$(loader_of \"$1\")\" \"$(loader_of \"$2\")\" || { why=\"loaders built for $1 and $2 differ\"; return 1; }\n144\t\t\tmachine=$(machine_of \"$1\")\n145\t\t\tfor pair in \"$1:$2\" \"$2:$1\"; do\n146\t\t\t\ta=${pair%:*}; b=${pair#*:}\n147\t\t\t\tboot \"$(loader_of \"$b\")\" \"$(program_of \"$a\")\" \"\" \"$cap\" \"$secs\"\n148\t\t\t\tjudge \"$cap\" \"$(expected_of \"$a\")\" || { why=\"$a under $b's loader: $why\"; return 1; }\n149\t\t\tdone\n150\t\t\twhy=\"one loader, $(sha256sum < \"$(loader_of \"$1\")\" | cut -c1-16)\" ;;\n151\t\tprogram)\n152\t\t\tbuild \"$2\" || { why=\"build of $2 failed\"; return 1; }\n153\t\t\tmachine=$(machine_of \"$2\")\n154\t\t\tprobe \"$1\" \"$2\" || return 1; pb=\"$tmp/probe.bin\"\n155\t\t\tboot \"$(loader_of \"$2\")\" \"$pb\" \"${3:-}\" \"$cap\" \"$secs\"\n156\t\t\t[ $? -eq 124 ] && { why=\"still running after ${secs}s\"; return 1; }\n157\t\t\tjudge \"$cap\" \"$t\" \"\" \"$pb\" ;;\n158\t\ttrace)\n159\t\t\tbuild \"$1\" || { why=\"build of $1 failed\"; return 1; }\n160\t\t\tmachine=$(machine_of \"$1\")\n161\t\t\tAIOS_QEMU_EXTRA=\"-trace serial_read -trace serial_write -trace serial_update_parameters -D $tmp/trace\"\n162\t\t\tboot \"$(loader_of \"$1\")\" \"$(program_of \"$1\")\" \"${2:-}\" \"$cap\" \"$secs\"; rc=$?\n163\t\t\tAIOS_QEMU_EXTRA=\"\"\n164\t\t\t[ $rc -eq 124 ] && { why=\"still running after ${secs}s\"; return 1; }\n165\t\t\tjudge \"$cap\" \"$t\" \"$tmp/trace\" \"$(program_of \"$1\")\" ;;\n166\t\tstrace)\n167\t\t\tbuild \"$1\" || { why=\"build of $1 failed\"; return 1; }\n168\t\t\tmachine=$(machine_of \"$1\")\n169\t\t\tcommand -v strace > /dev/null || { why=\"SKIP: strace is not on this host\"; return 2; }\n170\t\t\t# a machine that never halts is watched for SECS seconds instead (strace FLAVOR SECS)\n171\t\t\tPATH=\"$tmp/bin:$PATH\" timeout \"${2:-$secs}\" strace -f -qq -o \"$tmp/strace\" sh \"$machine\" \"$(loader_of \"$1\")\" \"$(program_of \"$1\")\" < /dev/null > \"$cap\" 2> /dev/null\n172\t\t\t[ $? -eq 124 ] && [ -z \"${2:-}\" ] && { why=\"still running after ${secs}s\"; return 1; }\n173\t\t\tjudge \"$cap\" \"$t\" \"$tmp/strace\" ;;\n174\t\tqtree)\n175\t\t\tbuild \"$1\" || { why=\"build of $1 failed\"; return 1; }\n176\t\t\tmachine=$(machine_of \"$1\")\n177\t\t\tmkfifo \"$tmp/mon.in\" \"$tmp/mon.out\"\n178\t\t\tAIOS_QEMU_EXTRA=\"-S -chardev pipe,id=aiosmon,path=$tmp/mon -mon chardev=aiosmon,mode=readline\"\n179\t\t\tPATH=\"$tmp/bin:$PATH\" timeout \"$secs\" sh \"$machine\" \"$(loader_of \"$1\")\" \"$(program_of \"$1\")\" < /dev/null > /dev/null 2>&1 &\n180\t\t\tqpid=$!\n181\t\t\tAIOS_QEMU_EXTRA=\"\"\n182\t\t\texec 8> \"$tmp/mon.in\"; exec 9< \"$tmp/mon.out\"\n183\t\t\tprintf 'info qtree\\nquit\\n' >&8\n184\t\t\ttimeout \"$secs\" cat <&9 | tr -d '\\r' > \"$cap\"\n185\t\t\texec 8>&- 9<&-\n186\t\t\twait $qpid 2> /dev/null\n187\t\t\trm -f \"$tmp/mon.in\" \"$tmp/mon.out\"\n188\t\t\tjudge \"$cap\" \"$t\" ;;\n189\t\ttimed)\n190\t\t\tbuild \"$1\" || { why=\"build of $1 failed\"; return 1; }\n191\t\t\tmachine=$(machine_of \"$1\")\n192\t\t\tbin=$(program_of \"$1\")\n193\t\t\tif [ -n \"${3:-}\" ]; then\n194\t\t\t\tprobe \"$3\" \"$1\" || return 1; bin=\"$tmp/probe.bin\"\n195\t\t\tfi\n196\t\t\t# the machine never halts: watch it for exactly $2 seconds by the host's\n197\t\t\t# clock, stamping every line (and every \\r-redrawn value) as it arrives\n198\t\t\tPATH=\"$tmp/bin:$PATH\" timeout \"$2\" sh \"$machine\" \"$(loader_of \"$1\")\" \"$bin\" < /dev/null 2> \"$tmp/machine.err\" |\n199\t\t\t\tstdbuf -o0 tr '\\r' '\\n' |\n200\t\t\t\twhile IFS= read -r l || [ -n \"$l\" ]; do echo \"$(date +%s%3N) $l\"; done > \"$cap\"\n201\t\t\tjudge \"$cap\" \"$t\" \"$2\" \"$bin\" ;;\n202\t\tdisk)\n203\t\t\tbuild \"$1\" || { why=\"build of $1 failed\"; return 1; }\n204\t\t\tmachine=$(machine_of \"$1\")\n205\t\t\trm -f \"$tmp/disk\"; : > \"$cap\"; i=0\n206\t\t\texport AIOS_DISK=\"$tmp/disk\"\n207\t\t\twhile [ $i -lt \"$2\" ]; do\n208\t\t\t\tinp=\"\"; [ $# -gt $((i + 2)) ] && eval \"inp=\\${$((i + 3))}\"\n209\t\t\t\tboot \"$(loader_of \"$1\")\" \"$(program_of \"$1\")\" \"$inp\" \"$tmp/one\" \"$secs\"; rc=$?\n210\t\t\t\t[ $rc -eq 124 ] && { unset AIOS_DISK; why=\"boot $((i + 1)): still running after ${secs}s\"; return 1; }\n211\t\t\t\tcat \"$tmp/one\" >> \"$cap\"; i=$((i + 1))\n212\t\t\tdone\n213\t\t\tunset AIOS_DISK\n214\t\t\tjudge \"$cap\" \"$t\" \"$tmp/disk\" \"$(program_of \"$1\")\" ;;\n215\t\tcmd)\n216\t\t\ttimeout \"$secs\" \"$@\" > \"$cap\" 2>&1; rc=$?\n217\t\t\t[ $rc -eq 0 ] && { why=$(tail -1 \"$cap\"); return 0; }\n218\t\t\t[ $rc -eq 2 ] && { why=\"SKIP: $(tail -1 \"$cap\")\"; return 2; }\t# exit 2: cannot run on this host\n219\t\t\t[ $rc -eq 124 ] && why=\"still running after ${secs}s\" || why=$(tail -2 \"$cap\" | tr '\\n' ' ')\n220\t\t\treturn 1 ;;\n221\t\tnokvm)\n222\t\t\t[ -w /dev/kvm ] && AIOS_QEMU_EXTRA=\"-cpu host,kvm=off\"\n223\t\t\trun_one \"$t\" \"$secs\" \"$@\"; rc=$?\n224\t\t\tAIOS_QEMU_EXTRA=\"\"; return $rc ;;\n225\t\tnopit)\n226\t\t\t[ -w /dev/kvm ] || { why=\"SKIP: needs KVM; without it only the 8254 can say the rate\"; return 2; }\n227\t\t\tAIOS_QEMU_EXTRA=\"-M microvm,pit=off\"\n228\t\t\trun_one \"$t\" \"$secs\" \"$@\"; rc=$?\n229\t\t\tAIOS_QEMU_EXTRA=\"\"; return $rc ;;\n230\t\t*)\twhy=\"runner kind '$kind' unknown\"; return 1 ;;\n231\t\tesac\n232\t}\n233\t# probe SRC FLAVOR: build a probe program from tests/programs against the flavor's loader\n234\tprobe() {\n235\t\tldir=$(field \"index/part/loader@$(lv \"$2\").toml\" source)\n236\t\tCF=\"-m32 -std=c11 -ffreestanding -fno-pic -fno-pie -fno-stack-protector -fno-builtin -fno-asynchronous-unwind-tables -mno-sse -mno-mmx -mno-red-zone -mgeneral-regs-only -nostdlib -nostdinc -O2 -Wall -Wextra -Werror\"\n237\t\tgcc $CF -I \"$ldir\" -c -o \"$tmp/probe.o\" \"$1\" 2> \"$tmp/cc.err\" &&\n238\t\tgcc $CF -static -no-pie -nostartfiles -Wl,--build-id=none -Wl,-z,noexecstack -T \"$ldir/program.ld\" -o \"$tmp/probe.bin\" \"$tmp/probe.o\" 2>> \"$tmp/cc.err\" \\\n239\t\t\t|| { why=\"probe $1 does not build: $(head -1 \"$tmp/cc.err\")\"; return 1; }\n240\t}\n241\tlv() { sed -n 's/^built flavor [a-z]*: PART\\.loader@\\([0-9]*\\).*/\\1/p' \"out/$1/build.txt\"; }\n242\t\n243\t# build a flavor once per run, keeping aios's summary line: it names the loader\n244\tbuild() {\n245\t\tcase \" $built \" in *\" $1 \"*) return 0 ;; esac\n246\t\tsh jig/aios build \"$1\" > \"$tmp/build.$1\" 2>&1 || { cat \"$tmp/build.$1\"; return 1; }\n247\t\tcp \"$tmp/build.$1\" \"out/$1/build.txt\"\n248\t\tbuilt=\"$built $1\"\n249\t}\n250\t\n251\tfilter=\"$*\"\n252\tcommit=$(git rev-parse --short HEAD 2>/dev/null || echo \"${AIOS_COMMIT:-not a git checkout}\")\n253\tdirty=$(git status --porcelain 2>/dev/null | grep -v '^??' | grep -q . && echo \", with uncommitted changes\" || true)\n254\tpass=0; fail=0; skip=0\n255\tout=\"$tmp/results\"\n256\t{\n257\t\techo \"# tests/results.txt, written by jig/test.  Do not edit by hand.\"\n258\t\techo \"# run $(date -u +%Y-%m-%dT%H:%MZ) at commit $commit$dirty, $accel\"\n259\t} > \"$out\"\n260\tfor f in tests/*.toml; do\n261\t\tstem=$(basename \"$f\" .toml)\n262\t\tif [ -n \"$filter\" ]; then m=0; for a in $filter; do case \"$stem\" in \"$a\"*) m=1 ;; esac; done; [ $m -eq 1 ] || continue; fi\n263\t\tcode=$(field \"$f\" code); r=$(field \"$f\" runner)\n264\t\tms=$(num \"$f\" timeout_ms); secs=$(( (${ms:-10000} + 999) / 1000 ))\n265\t\tret=$(field \"$f\" retired_by)\n266\t\tif [ -n \"$ret\" ]; then line=\"SKIP  $code  retired by $ret\"; skip=$((skip + 1))\n267\t\telif [ -z \"$r\" ]; then line=\"SKIP  $code  no runner yet\"; skip=$((skip + 1))\n268\t\telse\n269\t\t\tset -- $r; [ \"$1\" = \"jig/test\" ] && shift\n270\t\t\tstart=$(date +%s)\n271\t\t\trun_one \"$stem\" \"$secs\" \"$@\"; rc=$?\n272\t\t\tel=$(( $(date +%s) - start ))s\n273\t\t\tcase $rc in\n274\t\t\t\t0) line=\"PASS  $code  $el  $why\"; pass=$((pass + 1)) ;;\n275\t\t\t\t2) line=\"SKIP  $code  ${why#SKIP: }\"; skip=$((skip + 1)) ;;\n276\t\t\t\t*) line=\"FAIL  $code  $el  $why\"; fail=$((fail + 1)) ;;\n277\t\t\tesac\n278\t\tfi\n279\t\techo \"$line\"; echo \"$line\" >> \"$out\"\n280\tdone\n281\techo \"# $pass passed, $fail failed, $skip skipped\" | tee -a \"$out\"\n282\t[ -z \"$filter\" ] && cp \"$out\" tests/results.txt\n283\t[ $fail -eq 0 ]"
+            }
+          ],
+          "status": "success"
+        }
+      },
+      {
+        "toolResult": {
+          "toolUseId": "ollama-20261027221037359730907-1",
+          "content": [
+            {
+              "text": "pool/MACHINE.serial-irq@1/machine.sh, lines 1 to 19 of 19\n1\t#!/bin/sh\n2\t# SPDX-License-Identifier: GPL-2.0-only\n3\t# MACHINE.serial-irq@1: the machine petition 0006 runs on.\n4\t# MACHINE.serial-timer@1 plus the device that lets the timer interrupt: the\n5\t# PC's pair of 8259A interrupt controllers (pic=on).  The 8254's counter 0\n6\t# ticks through the 8259 to the processor, and that tick is what lets the\n7\t# kernel take the processor back from a program.  Counter 2 is still measured\n8\t# against at boot, as for the stopwatch.  Everything else is as serial-only@1:\n9\t# one CPU, 64 MiB, one ISA serial port on stdio, no PCI, no ACPI, no RTC, no\n10\t# option ROMs, no NIC, no disk, no display.\n11\t# usage: machine.sh <loader.elf> <program.bin or archive of programs>\n12\tset -eu\n13\tif [ -w /dev/kvm ]; then accel=\"-enable-kvm -cpu host\"; else accel=\"-accel tcg\"; echo \"machine: no /dev/kvm, software emulation\" >&2; fi\n14\texec qemu-system-x86_64 \\\n15\t  -M microvm,x-option-roms=off,pic=on,pit=on,rtc=off,acpi=off,isa-serial=on,auto-kernel-cmdline=off \\\n16\t  $accel -smp 1 -m 64M \\\n17\t  -nodefaults -no-user-config -display none -nic none -monitor none -no-reboot \\\n18\t  -serial stdio \\\n19\t  -kernel \"$1\" -initrd \"$2\""
+            }
+          ],
+          "status": "success"
+        }
+      },
+      {
+        "text": "Call 18 of 60 done; 42 left."
+      }
+    ]
+  },
+  {
+    "role": "assistant",
+    "content": [
+      {
+        "toolUse": {
+          "toolUseId": "ollama-202610272211329680314-0",
+          "name": "look",
+          "input": {
+            "command": "list",
+            "args": [
+              "lifted/PART.irq.pic@1"
+            ]
+          }
+        }
+      },
+      {
+        "toolUse": {
+          "toolUseId": "ollama-202610272211329680314-1",
+          "name": "look",
+          "input": {
+            "command": "list",
+            "args": [
+              "lifted/PART.timer.pit-tick@1"
+            ]
+          }
+        }
+      }
+    ]
+  },
+  {
+    "role": "user",
+    "content": [
+      {
+        "toolResult": {
+          "toolUseId": "ollama-202610272211329680314-0",
+          "content": [
+            {
+              "text": "origin.toml\npic.c\npic.h"
+            }
+          ],
+          "status": "success"
+        }
+      },
+      {
+        "toolResult": {
+          "toolUseId": "ollama-202610272211329680314-1",
+          "content": [
+            {
+              "text": "origin.toml\npittick.c\npittick.h"
+            }
+          ],
+          "status": "success"
+        }
+      },
+      {
+        "text": "Call 19 of 60 done; 41 left."
+      }
+    ]
+  },
+  {
+    "role": "assistant",
+    "content": [
+      {
+        "text": "I now understand the bug. Let me verify the two key facts: the waiter is task 0 that spins in `door_read` with interrupts off (IF cleared on the `int 0x80` gate), so the 8254 tick can never fire to switch to the stopwatch. Enabling interrupts during the wait is the fix described by the spec (\"let the timer tick in while the read waits\"). Let me confirm there's no other yield path and that the PIT is only unmasked in the share path."
+      },
+      {
+        "toolUse": {
+          "toolUseId": "ollama-20261027221327063555879-0",
+          "name": "look",
+          "input": {
+            "command": "find",
+            "args": [
+              "pit_tick_start",
+              "pittick.c"
+            ]
+          }
+        }
+      },
+      {
+        "toolUse": {
+          "toolUseId": "ollama-20261027221327063555879-1",
+          "name": "look",
+          "input": {
+            "command": "read",
+            "args": [
+              "lifted/PART.timer.pit-tick@1/pittick.c"
+            ]
+          }
+        }
+      }
+    ]
+  },
+  {
+    "role": "user",
+    "content": [
+      {
+        "toolResult": {
+          "toolUseId": "ollama-20261027221327063555879-0",
+          "content": [
+            {
+              "text": "no folder or file pittick.c"
+            }
+          ],
+          "status": "error"
+        }
+      },
+      {
+        "toolResult": {
+          "toolUseId": "ollama-20261027221327063555879-1",
+          "content": [
+            {
+              "text": "lifted/PART.timer.pit-tick@1/pittick.c, lines 1 to 56 of 56\n1\t/* SPDX-License-Identifier: GPL-2.0-only\n2\t *\n3\t * PART.timer.pit-tick@1: the 8254's counter 0 in periodic mode, raising IRQ 0\n4\t * HZ times a second: the tick a scheduler takes turns on.  HZ is 100, Linux's\n5\t * user-visible default since the beginning.  Requires CAP.dev.pit.\n6\t *\n7\t * Lifted from Linux, commit a5ebb76233b79db01e82e061173cb73c6d2b5c6b (2026-10-10).\n8\t * The machine-readable record is origin.toml beside this file; jig/upstream reads it.\n9\t *   drivers/clocksource/i8253.c        pit_set_periodic, its three writes 158-161\n10\t *   include/linux/i8253.h              PIT_MODE 17, PIT_CH0 18, PIT_LATCH 21\n11\t *   include/linux/timex.h              PIT_TICK_RATE 160\n12\t *   include/uapi/asm-generic/param.h   __USER_HZ and HZ 5-11\n13\t *   arch/x86/include/asm/shared/io.h   BUILDIO 7-20: the outb instruction\n14\t *\n15\t * Cut, and why:\n16\t *   i8253_lock                         one processor, interrupts off at start\n17\t *   outb_p's slow-down                 no clock to slow down by (findings 0011)\n18\t *   the clockevent framework           one tick, one handler, nothing to choose\n19\t *   oneshot mode, shutdown             periodic only, never stopped\n20\t */\n21\t\n22\t#include \"pittick.h\"\n23\t\n24\t/* arch/x86/include/asm/shared/io.h */\n25\tstatic inline void outb(unsigned char v, unsigned short port)\n26\t{\n27\t\t__asm__ volatile(\"outb %b0, %w1\" : : \"a\"(v), \"Nd\"(port));\n28\t}\n29\t#define outb_p outb\n30\t\n31\t/* include/uapi/asm-generic/param.h */\n32\t#ifndef __USER_HZ\n33\t#define __USER_HZ\t100\n34\t#endif\n35\t\n36\t#ifndef HZ\n37\t#define HZ __USER_HZ\n38\t#endif\n39\t\n40\t/* include/linux/timex.h */\n41\t#define PIT_TICK_RATE 1193182ul\n42\t\n43\t/* include/linux/i8253.h */\n44\t#define PIT_MODE\t0x43\n45\t#define PIT_CH0\t\t0x40\n46\t#define PIT_LATCH\t((PIT_TICK_RATE + HZ/2) / HZ)\n47\t\n48\tunsigned int pit_tick_start(void)\n49\t{\n50\t\t/* i8253.c pit_set_periodic */\n51\t\t/* binary, mode 2, LSB/MSB, ch 0 */\n52\t\toutb_p(0x34, PIT_MODE);\n53\t\toutb_p(PIT_LATCH & 0xff, PIT_CH0);\t/* LSB */\n54\t\toutb_p(PIT_LATCH >> 8, PIT_CH0);\t/* MSB */\n55\t\treturn HZ;\n56\t}"
+            }
+          ],
+          "status": "success"
+        }
+      },
+      {
+        "text": "Call 20 of 60 done; 40 left."
+      }
+    ]
+  },
+  {
+    "role": "assistant",
+    "content": [
+      {
+        "toolUse": {
+          "toolUseId": "ollama-20261027221452484782127-0",
+          "name": "submit_fix",
+          "input": {
+            "files": [
+              {
+                "content": "/* SPDX-License-Identifier: GPL-2.0-only\n *\n * PART.loader@9: the kernel behind the gate (plan 9.13).  It is @8 with the\n * program run in ring 3 by PART.gate@1: the program reaches the kernel only\n * through int 0x80, and the processor stops it if it touches the kernel's\n * memory, the screen's memory or an I/O port.  The system call table a\n * program is handed is the same seven entries as before (door.h), so earlier\n * programs run unchanged; each entry is a stub that does the int 0x80.\n *\n * Several programs at once are PART.share@2, on the gate; a program on its own\n * is run by the gate directly.\n *\n * Everything below is as @8: one kernel source, every part behind a switch\n * the builder sets from the flavor's petitions.\n *\n * Always here, because a kernel without them is not one: the serial console\n * (PART.serial.8250@2), alloc, exit, and the system call table.  Each switch\n * is HAVE_ and the part's name without its version, set by the builder:\n *\n *   HAVE_TIMER_KVMCLOCK   PART.timer.kvmclock@1   the hypervisor says how fast the counter ticks\n *   HAVE_TIMER_TSC_PIT    PART.timer.tsc-pit@N    the counter timed against the 8254\n *   HAVE_FS_MINIX         PART.fs.minix@N         load and save, on PART.disk.ata-pio@1\n *   HAVE_SHARE            PART.share@2          more than one program at once, behind the gate\n *   HAVE_SCREEN_VGA       PART.screen.vga@1       the screen, a second console\n *\n * With both clocks the kernel asks the hypervisor first and times the 8254 if\n * there is no answer, as @7 did.  That is a choice made at run time between\n * two parts, which plan 5.8 says only a petition-requested chooser may make\n * (Linux's clock-source selection, lifted); it is not lifted yet, and the\n * order is still ours (findings 0018 #2).\n *\n * Every console gets every byte written, the way Linux's printk goes to every\n * console it has: the serial port always, and the screen when a petition names\n * it.  The screen follows the few ANSI escapes a program may use for colour\n * (ESC [ ... m), \"home\" (ESC [ H) and \"clear\" (ESC [ 2 J); the serial port is\n * handed the escapes as they are, and a terminal on the other end follows them\n * itself.  Anything else after an ESC is dropped from the screen.\n *\n * A system call whose part is absent answers the way it does when the hardware\n * is missing: ms says 0 forever, load and save say -1.  The table itself never\n * changes shape (door.h).\n *\n * Exposes CAP.proc.exit and CAP.mem.alloc.  Everything else a program may do\n * is exposed by the part that does it.\n */\n\n#include \"kernel.h\"\n#include \"door.h\"\n#include \"serial8250.h\"\n#ifdef HAVE_TIMER_TSC_PIT\n#include \"tsccal.h\"\n#endif\n#ifdef HAVE_TIMER_KVMCLOCK\n#include \"kvmclock.h\"\n#endif\n#ifdef HAVE_FS_MINIX\n#include \"minix.h\"\n#endif\n#ifdef HAVE_SHARE\n#include \"share.h\"\n#endif\n#include \"gate.h\"\n#ifdef HAVE_SCREEN_VGA\n#include \"vga.h\"\n#endif\n\n#define CONSOLE_PORT\t0x3f8\t\t/* CAP.dev.serial */\n\n/* the heap of the program */\nstatic struct heap plain;\n\nstatic struct heap *heap(void)\n{\n#ifdef HAVE_SHARE\n\tstruct heap *h = share_heap();\n\n\tif (h)\n\t\treturn h;\n#endif\n\treturn &plain;\n}\n\n/*\n * Interrupts off for the short, unshareable part of a system call (the write\n * to the console, the handing over of a byte, the heap): a tick must never\n * land in the middle of one, so one program's bytes never interleave with\n * another's.  Everywhere else, and in particular while a program waits for a\n * byte, the processor's interrupt flag is left as it was: with it on, the\n * 8254's tick can take the processor away in the middle of the wait and the\n * other programs get their turns (findings 0021 #6, TECH-DEBT 2, paid here).\n */\nstatic unsigned long irq_save(void)\n{\n\tunsigned long f;\n\n\t__asm__ volatile(\"pushfl; popl %0; cli\" : \"=r\"(f) : : \"memory\");\n\treturn f;\n}\n\nstatic void irq_restore(unsigned long f)\n{\n\t__asm__ volatile(\"pushl %0; popfl\" : : \"r\"(f) : \"memory\", \"cc\");\n}\n\nstatic void irq_enable(void)\n{\n\t__asm__ volatile(\"sti\" ::: \"memory\", \"cc\");\n}\n\n/*\n * The heap of a plain program: from its end to the end of the RAM region it\n * lives in, from the firmware's memory map, as in @2.\n */\nstatic void heap_init(const struct hvm_start_info *si, unsigned long program_end)\n{\n\tconst struct hvm_memmap_table_entry *m = (const void *)(unsigned long)si->memmap_paddr;\n\tunsigned int i;\n\n\tplain.next = (program_end + 15) & ~15UL;\n\tplain.end = plain.next;\t/* no map, no memory: alloc refuses everything */\n\tif (si->version < 1 || !si->memmap_entries)\n\t\treturn;\n\tfor (i = 0; i < si->memmap_entries; i++) {\n\t\tunsigned long lo = (unsigned long)m[i].addr;\n\t\tunsigned long hi = (unsigned long)(m[i].addr + m[i].size);\n\n\t\tif (m[i].type == MEMMAP_RAM && lo <= PROGRAM_BASE && PROGRAM_BASE < hi) {\n\t\t\tplain.end = hi;\n\t\t\tbreak;\n\t\t}\n\t}\n}\n\n/* Is [lo, hi) all RAM, by the firmware's map? */\nint kernel_is_ram(const struct hvm_start_info *si, unsigned long lo, unsigned long hi)\n{\n\tconst struct hvm_memmap_table_entry *m = (const void *)(unsigned long)si->memmap_paddr;\n\tunsigned int i;\n\n\tfor (i = 0; si->version >= 1 && i < si->memmap_entries; i++)\n\t\tif (m[i].type == MEMMAP_RAM && m[i].addr <= lo && hi <= m[i].addr + m[i].size)\n\t\t\treturn 1;\n\treturn 0;\n}\n\nstatic void *door_alloc(unsigned long bytes)\n{\n\tunsigned long f = irq_save();\n\tstruct heap *t = heap();\n\tunsigned long p = t->next, n = (bytes + 15) & ~15UL;\n\tvoid *r = 0;\n\n\tif (!(bytes == 0 || n < bytes || n > t->end - p)) {\n\t\tt->next = p + n;\n\t\tr = (void *)p;\n\t}\n\tirq_restore(f);\n\treturn r;\t\t/* 0: refused; the program decides what that means */\n}\n\n/*\n * Halt.  The machine has no power-off device and no petition asks for one, so\n * we ask for a reset the way a bare CPU can: a null IDT and an interrupt is a\n * triple fault, the hypervisor sees a reset, and the machine (-no-reboot)\n * exits instead.  Findings 0002 #6.\n */\nvoid __attribute__((noreturn)) kernel_halt(void)\n{\n\tstatic const struct { unsigned short limit; unsigned int base; } __attribute__((packed)) null_idt = { 0, 0 };\n\n\t__asm__ volatile(\"cli; lidt %0; int3\" : : \"m\"(null_idt));\n\tfor (;;)\n\t\t__asm__ volatile(\"cli; hlt\");\n}\n\n#ifdef HAVE_SCREEN_VGA\n/*\n * The screen's half of the console: text straight to the screen part, and the\n * escape sequences turned into its colour, home and clear.  An SGR parameter\n * is 0 (light grey on black), 1 (bright), 30-37 (foreground) or 40-47\n * (background), the ANSI colour numbers, which the screen part's table (from\n * Linux's vt.c) turns into VGA's.  Ours.\n */\nstatic unsigned char con_attr = 0x07, con_state, con_np;\nstatic unsigned int con_par[8];\nstatic unsigned int con_col, con_wrapped;\t/* where the screen's cursor is in its line, and whether the last character filled it */\n\nstatic void con_sgr(unsigned int p)\n{\n\tif (p == 0)\n\t\tcon_attr = 0x07;\n\telse if (p == 1)\n\t\tcon_attr |= 0x08;\n\telse if (p >= 30 && p <= 37)\n\t\tcon_attr = (unsigned char)((con_attr & 0xf8) | color_table[p - 30]);\n\telse if (p >= 40 && p <= 47)\n\t\tcon_attr = (unsigned char)((con_attr & 0x8f) | (color_table[p - 40] << 4));\n\tvga_set_color(con_attr);\n}\n\n/*\n * A newline straight after the 80th character of a line ends that line; it\n * does not start a blank one.  Every terminal since DEC's VT100 (1978) waits\n * like that before wrapping; Linux's early VGA code wraps at once, so on its\n * own a full 80-column line and its newline came out double-spaced (findings\n * 0019 #3).  Ours.\n */\nstatic void screen_text(const char *s, unsigned long n)\n{\n\tunsigned long i, from = 0;\n\n\tfor (i = 0; i < n; i++) {\n\t\tif (s[i] == '\\n') {\n\t\t\tif (con_wrapped) {\n\t\t\t\tif (i > from)\n\t\t\t\t\tvga_write(s + from, (unsigned)(i - from));\n\t\t\t\tfrom = i + 1;\t/* the line already ended at the edge */\n\t\t\t}\n\t\t\tcon_col = 0;\n\t\t\tcon_wrapped = 0;\n\t\t} else if (s[i] != '\\r') {\n\t\t\tcon_wrapped = 0;\n\t\t\tif (++con_col == 80) {\n\t\t\t\tcon_col = 0;\n\t\t\t\tcon_wrapped = 1;\n\t\t\t}\n\t\t}\n\t}\n\tif (n > from)\n\t\tvga_write(s + from, (unsigned)(n - from));\n}\n\nstatic void screen_put(const char *s, unsigned long n)\n{\n\tunsigned long i, from = 0;\n\tunsigned int k;\n\n\tfor (i = 0; i < n; i++) {\n\t\tunsigned char c = (unsigned char)s[i];\n\n\t\tif (con_state == 0) {\n\t\t\tif (c != 0x1b)\n\t\t\t\tcontinue;\n\t\t\tif (i > from)\n\t\t\t\tscreen_text(s + from, i - from);\n\t\t\tcon_state = 1;\n\t\t} else if (con_state == 1) {\n\t\t\tcon_state = c == '[' ? 2 : 0;\n\t\t\tcon_np = 0;\n\t\t\tcon_par[0] = 0;\n\t\t} else if (c >= '0' && c <= '9') {\n\t\t\tcon_par[con_np] = con_par[con_np] * 10 + (c - '0');\n\t\t} else if (c == ';') {\n\t\t\tif (con_np < 7)\n\t\t\t\tcon_par[++con_np] = 0;\n\t\t} else {\n\t\t\tif (c == 'm')\n\t\t\t\tfor (k = 0; k <= con_np; k++)\n\t\t\t\t\tcon_sgr(con_par[k]);\n\t\t\telse if (c == 'H') {\n\t\t\t\tvga_home();\n\t\t\t\tcon_col = con_wrapped = 0;\n\t\t\t} else if (c == 'J' && con_par[0] == 2) {\n\t\t\t\tvga_clear();\n\t\t\t\tcon_col = con_wrapped = 0;\n\t\t\t}\n\t\t\tcon_state = 0;\n\t\t}\n\t\tif (con_state == 0)\n\t\t\tfrom = i + 1;\n\t}\n\tif (con_state == 0 && n > from)\n\t\tscreen_text(s + from, n - from);\n}\n#endif\n\n/* Every byte to every console. */\nvoid kernel_say(const char *s, unsigned long n)\n{\n\tserial8250_write(CONSOLE_PORT, s, n);\n#ifdef HAVE_SCREEN_VGA\n\tscreen_put(s, n);\n#endif\n}\n\nvoid kernel_flush(void)\n{\n\tserial8250_flush(CONSOLE_PORT);\n}\n\nstatic void door_write(const void *s, unsigned long n)\n{\n\tunsigned long f = irq_save();\n\n\tkernel_say(s, n);\n\tirq_restore(f);\n}\n\n/*\n * Wait for one byte, then take whatever else has already arrived.  The wait\n * runs with the processor's interrupt flag on (not as it was: the gate\n * arrived with it off), so on a sharing kernel the 8254's tick lands in the\n * middle of the wait, takes the processor to the next program, and comes back\n * here when this program is next: the stopwatch keeps its time next to a\n * program waiting for a byte that never comes (findings 0021 #6, the debt's\n * fix).  The byte itself is still taken with interrupts off, so one program's\n * bytes never interleave with another's.\n */\nstatic unsigned long door_read(void *buf, unsigned long n)\n{\n\tunsigned char *p = buf;\n\tunsigned long got = 0, f;\n\n\tif (n == 0)\n\t\treturn 0;\n\tirq_enable();\n\twhile (!serial8250_poll(CONSOLE_PORT))\n\t\t;\n\tirq_save();\n\tp[got++] = serial8250_getc(CONSOLE_PORT);\n\twhile (got < n && serial8250_poll(CONSOLE_PORT))\n\t\tp[got++] = serial8250_getc(CONSOLE_PORT);\n\tf = irq_save();\n\t(void)f;\n\treturn got;\n}\n\n/*\n * The clock, as @4.  khz is how many counter ticks make a millisecond,\n * measured once at boot; start is the counter then.  0 without a clock part.\n */\n#if defined(HAVE_TIMER_KVMCLOCK) || defined(HAVE_TIMER_TSC_PIT)\nstatic unsigned long clock_khz;\nstatic unsigned long long clock_start;\n\n/* the processor's counter, read the way Linux's rdtsc() reads it */\nstatic unsigned long long cycles(void)\n{\n\tunsigned long lo, hi;\n\n\t__asm__ volatile(\"rdtsc\" : \"=a\"(lo), \"=d\"(hi));\n\treturn ((unsigned long long)hi << 32) | lo;\n}\n#endif\n\nstatic unsigned long door_ms(void)\n{\n#if defined(HAVE_TIMER_KVMCLOCK) || defined(HAVE_TIMER_TSC_PIT)\n\tunsigned long long t;\n\tunsigned long hi, lo, q, r;\n\n\tif (!clock_khz)\n\t\treturn 0;\n\tt = cycles() - clock_start;\n\thi = (unsigned long)(t >> 32);\n\tlo = (unsigned long)t;\n\tif (hi >= clock_khz)\n\t\treturn 0xffffffffUL;\t/* 49 days and 17 hours: the call's last value, held */\n\t__asm__(\"divl %4\" : \"=a\"(q), \"=d\"(r) : \"0\"(lo), \"1\"(hi), \"rm\"(clock_khz));\n\t(void)r;\n\treturn q;\n#else\n\treturn 0;\n#endif\n}\n\nstatic long door_load(const char *name, void *buf, unsigned long max)\n{\n#ifdef HAVE_FS_MINIX\n\tunsigned long f = irq_save();\n\tlong r = minix_load(name, buf, max);\n\n\tirq_restore(f);\n\treturn r;\n#else\n\t(void)name; (void)buf; (void)max;\n\treturn -1;\n#endif\n}\n\nstatic long door_save(const char *name, const void *buf, unsigned long n)\n{\n#ifdef HAVE_FS_MINIX\n\tunsigned long f = irq_save();\n\tlong r = minix_save(name, buf, n);\n\n\tirq_restore(f);\n\treturn r;\n#else\n\t(void)name; (void)buf; (void)n;\n\treturn -1;\n#endif\n}\n\nstatic void __attribute__((noreturn)) door_exit(int code)\n{\n\t(void)code;\t\t\t/* unobservable from outside the machine; findings 0000 #9 */\n#ifdef HAVE_SHARE\n\tshare_exit();\t\t/* resumes the next program, if there is one */\n#endif\n\t__asm__ volatile(\"cli\");\n\tkernel_flush();\n\tkernel_halt();\n}\n\n/* what the kernel does for each system call; the gate (PART.gate@1) is the only caller */\nstatic const struct door kernel_calls = { door_write, door_exit, door_alloc, door_read, door_ms, door_load, door_save };\n\nvoid __attribute__((noreturn)) loader_main(const struct hvm_start_info *si)\n{\n\tconst struct hvm_modlist_entry *mod;\n\tconst unsigned char *src;\n\tunsigned char *dst;\n\tunsigned long n;\n\n\tserial8250_init(CONSOLE_PORT);\n#ifdef HAVE_SCREEN_VGA\n\tvga_clear();\t\t/* whatever the firmware left on the screen goes */\n#endif\n#ifdef HAVE_TIMER_KVMCLOCK\n\tclock_khz = kvmclock_khz();\t/* KVM's word first, as Linux does under KVM; 0 if there is no KVM (findings 0012) */\n#endif\n#ifdef HAVE_TIMER_TSC_PIT\n\t{\t/* Up to 150 ms against the 8254 per try (findings 0012), then never again.  Findings 0008. */\n\t\tint tries;\n\n\t\tfor (tries = 0; tries < 5 && !clock_khz; tries++)\n\t\t\tclock_khz = tsccal_khz();\n\t}\n#endif\n#if defined(HAVE_TIMER_KVMCLOCK) || defined(HAVE_TIMER_TSC_PIT)\n\tclock_start = cycles();\n#endif\n\n\tif (si->magic != XEN_HVM_START_MAGIC_VALUE || si->nr_modules < 1)\n\t\tkernel_halt();\t/* no program: nothing to say, nothing to do */\n\n\tmod = (const struct hvm_modlist_entry *)(unsigned long)si->modlist_paddr;\n\tsrc = (const unsigned char *)(unsigned long)mod[0].paddr;\n\n\t/* An archive of programs (\"070701\", cpio's new ASCII header): share, if a\n\t * petition asked to.  If none did, nothing here can run more than one\n\t * program, and the machine stops without a word: the referee refuses\n\t * such a flavor before it is built (rule 19). */\n\tif (mod[0].size > 6 && src[0] == '0' && src[1] == '7' && src[2] == '0' &&\n\t    src[3] == '7' && src[4] == '0' && src[5] == '1') {\n#ifdef HAVE_SHARE\n\t\tshare(si, (void *)src, (unsigned long)mod[0].size, &kernel_calls);\n#else\n\t\tkernel_halt();\n#endif\n\t}\n\n\t/* One plain program, as @5: copy it to PROGRAM_BASE.  Then the gate runs it in ring 3. */\n\tdst = (unsigned char *)PROGRAM_BASE;\n\tfor (n = (unsigned long)mod[0].size; n; n--)\n\t\t*dst++ = *src++;\n\theap_init(si, (unsigned long)dst);\n\n\tgate_run(PROGRAM_BASE, PROGRAM_BASE, plain.end, &kernel_calls);\n}\n",
+                "path": "pool/PART.loader@9/loader.c"
+              }
+            ]
+          }
+        }
+      }
+    ]
+  }
+]

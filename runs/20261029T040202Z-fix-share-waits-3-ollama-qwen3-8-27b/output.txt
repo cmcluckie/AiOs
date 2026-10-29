@@ -1,0 +1,27 @@
+=== pool/PART.loader@9/loader.c
+10c10
+<  * Several programs at once are PART.share@2, on the gate; a program on its own
+---
+>  * Several programs at once is PART.share@2, on the gate; a program on its own
+287,289c287,292
+< /* Wait for one byte, then take whatever else has already arrived.  TECH-DEBT 2:
+<  * a system call runs with interrupts off, so while a program waits here no
+<  * other program gets a turn.  It goes in the mechanic, after the series. */
+---
+> /* Wait for one byte, then take whatever else has already arrived.  The wait
+>  * runs with interrupts on, so the 8254 tick still switches to the other
+>  * programs while we wait for a byte (TECH-DEBT 2, SPEC.loader.16); the copy
+>  * below runs with them off, as before, so one program's bytes never interleave
+>  * with another's.  The pre-gate kernel (@7) left interrupts on the whole way
+>  * through this call, which is why the same probe was green there. */
+296a300,301
+> 	f = irq_save();
+> 	__asm__ volatile("sti" ::: "memory");
+299c304
+< 	f = irq_save();
+---
+> 	__asm__ volatile("cli" ::: "memory");
+378c383
+< 	share_exit();			/* resumes the next program, if there is one */
+---
+> 	share_exit();		/* resumes the next program, if there is one */

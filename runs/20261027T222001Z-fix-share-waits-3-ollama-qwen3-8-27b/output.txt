@@ -1,0 +1,50 @@
+=== pool/PART.loader@9/loader.c
+83,84c83,91
+< /* Interrupts off for the length of a system call, so a tick never lands in the
+<  * middle of one: one program's bytes never interleave with another's. */
+---
+> /*
+>  * Interrupts off for the short, unshareable part of a system call (the write
+>  * to the console, the handing over of a byte, the heap): a tick must never
+>  * land in the middle of one, so one program's bytes never interleave with
+>  * another's.  Everywhere else, and in particular while a program waits for a
+>  * byte, the processor's interrupt flag is left as it was: with it on, the
+>  * 8254's tick can take the processor away in the middle of the wait and the
+>  * other programs get their turns (findings 0021 #6, TECH-DEBT 2, paid here).
+>  */
+97a105,109
+> static void irq_enable(void)
+> {
+> 	__asm__ volatile("sti" ::: "memory", "cc");
+> }
+> 
+287,289c299,308
+< /* Wait for one byte, then take whatever else has already arrived.  TECH-DEBT 2:
+<  * a system call runs with interrupts off, so while a program waits here no
+<  * other program gets a turn.  It goes in the mechanic, after the series. */
+---
+> /*
+>  * Wait for one byte, then take whatever else has already arrived.  The wait
+>  * runs with the processor's interrupt flag on (not as it was: the gate
+>  * arrived with it off), so on a sharing kernel the 8254's tick lands in the
+>  * middle of the wait, takes the processor to the next program, and comes back
+>  * here when this program is next: the stopwatch keeps its time next to a
+>  * program waiting for a byte that never comes (findings 0021 #6, the debt's
+>  * fix).  The byte itself is still taken with interrupts off, so one program's
+>  * bytes never interleave with another's.
+>  */
+296a316
+> 	irq_enable();
+299c319
+< 	f = irq_save();
+---
+> 	irq_save();
+303c323,324
+< 	irq_restore(f);
+---
+> 	f = irq_save();
+> 	(void)f;
+378c399
+< 	share_exit();			/* resumes the next program, if there is one */
+---
+> 	share_exit();		/* resumes the next program, if there is one */
