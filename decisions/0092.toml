@@ -1,0 +1,11 @@
+id      = "0092"
+date    = 2026-10-28
+kind    = "code"
+touches = ["jig/fix", "specs/fix.1@1.toml", "tests/fix.judged@1.toml", "tests/programs/fix.sh", "tests/mutations.txt", "index/tool/fix@1.as-built.md"]
+asked   = "Two ideas from CivicCanada's agent loop, rewritten in shell, nothing copied: every look says why, what it expects to learn, or is refused and not run (ReAct), and a look's answer is cut at 8,000 characters with a marker (it was 30,000).  Try 3 of waits runs with both, at 98,304 tokens, labelled as a different bench from Sonnet's.  Red first, two mutations, killed (findings 0026 item 10)."
+options = ["take it", "do not take it"]
+default = "take it"
+chose   = "take it"
+why     = "Chris, 2026-10-28: \"Go\", after pointing to CivicCanada's split of system and user prompts and its ReAct loop."
+by      = "KEY.chris@1"
+drafted = "Claude"

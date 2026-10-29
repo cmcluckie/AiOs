@@ -53,6 +53,11 @@ repo, instead of skipping.
   max_tokens, as Bedrock's does (decision 0086).  One stopped short of the limit
   because the conversation filled the model's context comes back as
   model_context_window_exceeded, and the run ends there, said as that (decision 0090).
+- Reason, then act (ReAct): the look tool requires why, what the model expects to
+  learn; a look without one is refused and not run, and each why is said on stderr
+  with its call.  Every look's answer is cut at FIX_LOOK_CHARS (8000 characters),
+  with a marker saying so; it was 30,000 (decision 0092, from CivicCanada's agent
+  loop, the ideas only).
 - FIX_AT=COMMIT: the model's copy and the judge's are the repo as it was at that
   commit (git archive), with runs/ and out/ left out, so a fix already taken can be
   made again from where it started, with no record of how it was done; the run

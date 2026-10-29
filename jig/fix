@@ -19,14 +19,15 @@
 # (60 calls; every answer tells the model how many it has left, decision 0067), FIX_MAXTOKENS (16000 per reply), FIX_SUITE (the tests the judge runs,
 # as jig/test's prefixes; empty, the default, is every test), FIX_OUT (out/fix),
 # FIX_NOTE (a file: a reviewer's note on an earlier fix, handed over with the test,
-# decision 0076), FIX_AT (a commit: the model looks at, and the judge runs, the repo
+# decision 0076), FIX_LOOK_CHARS (8000: a look's answer is cut there, with a marker; every
+# look also says why, or it is refused, decision 0092), FIX_AT (a commit: the model looks at, and the judge runs, the repo
 # as it was at that commit instead of as it is, runs/ left out, so a fix already
 # taken can be made again from where it started; recorded in the run as at, decision
 # 0086), MODEL_NAME and MODEL_ID (see jig/model).  Needs jq.
 set -u
 repo=$(cd "$(dirname "$0")/.." && pwd)
 FIX_PROMPT=${FIX_PROMPT:-$repo/fix/prompt.txt}
-FIX_TRY=${FIX_TRY:-1}; FIX_TURNS=${FIX_TURNS:-60}; FIX_MAXTOKENS=${FIX_MAXTOKENS:-16000}
+FIX_TRY=${FIX_TRY:-1}; FIX_TURNS=${FIX_TURNS:-60}; FIX_MAXTOKENS=${FIX_MAXTOKENS:-16000}; FIX_LOOK_CHARS=${FIX_LOOK_CHARS:-8000}
 FIX_SUITE=${FIX_SUITE:-}; FIX_OUT=${FIX_OUT:-$repo/out/fix}
 MODEL_NAME=${MODEL_NAME:-bedrock:global.anthropic.claude-sonnet-4-6}
 MODEL_MAX_COST=${MODEL_MAX_COST:-0.50}
@@ -121,7 +122,7 @@ look() {	# look COMMAND ARG...
 }
 
 cp='{"cachePoint":{"type":"default"}}'
-tools='{"tools":[{"toolSpec":{"name":"look","description":"Look at the repo, as it stands with the test red. command is list (args: a folder), read (args: a file, then optionally the first and last line to show, or give them as start_line and end_line; at most 400 lines at a time; it answers with the file, the lines shown and how many it has, then each line with its number) or find (args: a word, then optionally a folder or file to look in; otherwise pool, specs, tests, index, findings and jig).","inputSchema":{"json":{"type":"object","properties":{"command":{"type":"string","enum":["list","read","find"]},"args":{"type":"array","items":{"type":"string"}},"start_line":{"type":"integer"},"end_line":{"type":"integer"}},"required":["command","args"]}}}},{"toolSpec":{"name":"submit_fix","description":"Hand in the fix: files, a list of the files you changed, each its path (an existing file under pool/, all in the same part, e.g. pool/PART.gate@2/) and its whole new content. The fix is then judged by every test: a pass ends the run; otherwise you are told what the tests printed, and may hand in again while you have calls left.","inputSchema":{"json":{"type":"object","properties":{"files":{"type":"array","items":{"type":"object","properties":{"path":{"type":"string"},"content":{"type":"string"}},"required":["path","content"]}}},"required":["files"]}}}},{"cachePoint":{"type":"default"}}]}'
+tools='{"tools":[{"toolSpec":{"name":"look","description":"Look at the repo, as it stands with the test red. command is list (args: a folder), read (args: a file, then optionally the first and last line to show, or give them as start_line and end_line; at most 400 lines at a time; it answers with the file, the lines shown and how many it has, then each line with its number) or find (args: a word, then optionally a folder or file to look in; otherwise pool, specs, tests, index, findings and jig).","inputSchema":{"json":{"type":"object","properties":{"why":{"type":"string","description":"What you expect to learn from this look, in one sentence. A look without it is refused."},"command":{"type":"string","enum":["list","read","find"]},"args":{"type":"array","items":{"type":"string"}},"start_line":{"type":"integer"},"end_line":{"type":"integer"}},"required":["why","command","args"]}}}},{"toolSpec":{"name":"submit_fix","description":"Hand in the fix: files, a list of the files you changed, each its path (an existing file under pool/, all in the same part, e.g. pool/PART.gate@2/) and its whole new content. The fix is then judged by every test: a pass ends the run; otherwise you are told what the tests printed, and may hand in again while you have calls left.","inputSchema":{"json":{"type":"object","properties":{"files":{"type":"array","items":{"type":"object","properties":{"path":{"type":"string"},"content":{"type":"string"}},"required":["path","content"]}}},"required":["files"]}}}},{"cachePoint":{"type":"default"}}]}'
 { printf 'The red test, tests/%s.toml:\n\n' "$test"; cat "$tf"
   printf '\nThe spec clause it checks, %s:\n\n%s\n\nWhat it printed when it ran:\n\n%s\n' "$binds" "$clause" "$redline"
   # a reviewer's note on an earlier fix of this test, when there is one (decision 0076)
@@ -266,9 +267,21 @@ EOT
 		set --; while IFS= read -r a; do [ -n "$a" ] && set -- "$@" "$a"; done <<ARGS
 $(printf '%s' "$tu" | jq -r '((.input.args // []) + (if .input.start_line then [.input.start_line, (.input.end_line // empty)] else [] end))[] | tostring')
 ARGS
-		say "call $turn of $FIX_TURNS: $cmd $(printf '%s ' "$@" | cut -c1-100)"
-		out=$(look "$cmd" "$@" 2>&1) && st=success || st=error
-		results=$(printf '%s' "$results" | jq --arg id "$id" --arg t "$(printf '%s' "$out" | head -c 30000)" --arg st "$st" '. + [{toolResult:{toolUseId:$id,content:[{text:$t}],status:$st}}]')
+		# reason, then act: a look says why, or it is refused and not run (ReAct, decision 0092)
+		lwhy=$(printf '%s' "$tu" | jq -r '.input.why // ""' | tr '\n' ' ' | sed 's/^ *//; s/ *$//')
+		say "call $turn of $FIX_TURNS: $cmd $(printf '%s ' "$@" | cut -c1-100)${lwhy:+; why: $(printf '%s' "$lwhy" | cut -c1-120)}"
+		if [ -z "$lwhy" ]; then
+			out="refused: say why you are looking, in why: what you expect to learn from this look, in one sentence.  Nothing was looked at."; st=error
+		else
+			out=$(look "$cmd" "$@" 2>&1) && st=success || st=error
+		fi
+		# an answer is cut at FIX_LOOK_CHARS, and says so, so one read cannot fill the
+		# model's memory (the 3090's first two tries, decision 0092)
+		if [ "$(printf '%s' "$out" | wc -c)" -gt "$FIX_LOOK_CHARS" ]; then
+			out="$(printf '%s' "$out" | head -c "$FIX_LOOK_CHARS")
+[cut at $FIX_LOOK_CHARS characters: ask for fewer lines]"
+		fi
+		results=$(printf '%s' "$results" | jq --arg id "$id" --arg t "$out" --arg st "$st" '. + [{toolResult:{toolUseId:$id,content:[{text:$t}],status:$st}}]')
 	done <<EOT
 $(jq -c '.output.message.content[] | select(.toolUse) | .toolUse' "$d/reply.json")
 EOT

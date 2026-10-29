@@ -49,11 +49,11 @@ stop() {	# stop FILE: a saved reply that says something and hands in nothing
 fakes() {	# fakes DIR CONTENT [PATH]: look at f.c, look outside, read lines 2 to 2 given as
 	# two numbers, find a word in one folder, then hand in CONTENT
 	mkdir -p "$1"
-	reply "$1/1.json" look '{"command":"read","args":["pool/PART.fixprobe@1/f.c"]}'
-	reply "$1/2.json" look '{"command":"read","args":["../../etc/passwd"]}'
-	reply "$1/3.json" look '{"command":"read","args":["tests/programs/fixprobe-red.sh","2","2"]}'
-	reply "$1/4.json" look '{"command":"find","args":["broken","pool/PART.fixprobe@1"]}'
-	reply "$1/5.json" look '{"command":"read","args":["tests/programs/fixprobe-red.sh"],"start_line":3,"end_line":3}'
+	reply "$1/1.json" look '{"why":"to see what is there","command":"read","args":["pool/PART.fixprobe@1/f.c"]}'
+	reply "$1/2.json" look '{"why":"to see what is there","command":"read","args":["../../etc/passwd"]}'
+	reply "$1/3.json" look '{"why":"to see what is there","command":"read","args":["tests/programs/fixprobe-red.sh","2","2"]}'
+	reply "$1/4.json" look '{"why":"to see what is there","command":"find","args":["broken","pool/PART.fixprobe@1"]}'
+	reply "$1/5.json" look '{"why":"to see what is there","command":"read","args":["tests/programs/fixprobe-red.sh"],"start_line":3,"end_line":3}'
 	reply "$1/6.json" submit_fix "$(jq -cn --arg p "${3:-pool/PART.fixprobe@1/f.c}" --arg c "$2" '{path:$p,content:$c}')"
 	stop "$1/7.json"	# if the hand-in is sent back, it stops there
 }
@@ -132,7 +132,7 @@ FIX_NOTE="$t/no-such-note" MODEL_FAKE="$t/f-nonote" run fixprobe.red@1 && fail "
 [ ! -e "$t/f-nonote/.n" ] || fail "a run with a missing note made a call"
 # the model cannot be reached after the first call: the calls already paid for are recorded
 rm -rf "$t/runs"; mkdir -p "$t/f-gone"
-reply "$t/f-gone/1.json" look '{"command":"read","args":["pool/PART.fixprobe@1/f.c"]}'
+reply "$t/f-gone/1.json" look '{"why":"to see what is there","command":"read","args":["pool/PART.fixprobe@1/f.c"]}'
 MODEL_FAKE="$t/f-gone" run fixprobe.red@1; rc=$?
 [ $rc -eq 1 ] && grep -q '^result *= "refused"' "$t/runs"/*/run.toml 2> /dev/null && grep -q 'could not be reached on call 2' "$t/said" || fail "a model lost after one call was not recorded as refused with the calls it cost ($rc): $(tail -1 "$t/said")"
 grep -q '^input_tokens *= 100$' "$t/runs"/*/run.toml || fail "the call made before the model was lost was not counted"
@@ -150,12 +150,25 @@ MODEL_FAKE="$t/f-cut" run fixprobe.red@1 || fail "a model whose first reply was 
 grep -q 'the reply was cut off at 16000 tokens' "$t/said" && grep -q 'Your reply was cut off at 16000 tokens' "$t/runs"/*/input.txt || fail "a reply cut off at the limit was not said to be, or the model was not told why it was reminded"
 # a conversation that outgrew the model's context ends the run, said as that, not as a cut-off reply (decision 0090)
 rm -rf "$t/runs"; mkdir -p "$t/f-full"
-reply "$t/f-full/1.json" look '{"command":"read","args":["pool/PART.fixprobe@1/f.c"]}'
+reply "$t/f-full/1.json" look '{"why":"to see what is there","command":"read","args":["pool/PART.fixprobe@1/f.c"]}'
 printf '{"output":{"message":{"role":"assistant","content":[]}},"stopReason":"model_context_window_exceeded","usage":{"inputTokens":49000,"outputTokens":150}}\n' > "$t/f-full/2.json"
 reply "$t/f-full/3.json" submit_fix '{"path":"pool/PART.fixprobe@1/f.c","content":"fixed\n"}'
 MODEL_FAKE="$t/f-full" run fixprobe.red@1 && fail "a run whose conversation outgrew the context went on to a pass"
 grep -q "the conversation outgrew the model's context" "$t/said" && ! grep -q 'cut off at' "$t/said" && ! grep -q 'reminded once' "$t/said" || fail "a full context was not said as that, or was taken for a cut-off reply, or reminded: $(tail -3 "$t/said" | tr '\n' ' ')"
 grep -q '^result *= "refused"' "$t/runs"/*/run.toml || fail "a run ended by a full context was not recorded as refused"
+# ReAct: a look must say why, or it is refused and not run; the why is said as it goes.
+# A look's answer is cut at FIX_LOOK_CHARS (8000), with a marker that says so (decision 0092)
+rm -rf "$t/runs"; mkdir -p "$t/f-why"
+awk 'BEGIN { for (i = 1; i <= 400; i++) printf "line %04d of a long file, padded out to sixty characters...\n", i }' > "$r/pool/PART.fixprobe@1/long.c"
+reply "$t/f-why/1.json" look '{"command":"read","args":["pool/PART.fixprobe@1/f.c"]}'
+reply "$t/f-why/2.json" look '{"why":"to find the broken word","command":"read","args":["pool/PART.fixprobe@1/long.c"]}'
+reply "$t/f-why/3.json" submit_fix '{"path":"pool/PART.fixprobe@1/f.c","content":"fixed\n"}'
+MODEL_FAKE="$t/f-why" run fixprobe.red@1 || fail "a run with a look that gave no why did not go on to its fix: $(tail -1 "$t/said")"
+in=$(ls -d "$t/runs"/*/ | head -1)
+grep -q '"text": *"refused: say why you are looking' "$in/input.txt" && ! grep -q '"text": *"pool/PART.fixprobe@1/f.c, lines 1 to 1 of 1' "$in/input.txt" || fail "a look with no why was answered, or not refused with a reason"
+grep -q 'why: to find the broken word' "$t/said" || fail "the why of a look was not said as it went"
+grep -q 'cut at 8000 characters' "$in/input.txt" && ! grep -q 'line 0400 of a long file' "$in/input.txt" || fail "a long read was not cut at 8000 characters with a marker that says so"
+rm -f "$r/pool/PART.fixprobe@1/long.c"
 # FIX_AT: the repo as it was at a commit, not as it is; nothing in runs/ or added later is there to read
 rm -rf "$t/runs"
 printf 'broken\n' > "$r/pool/PART.fixprobe@1/f.c"; mkdir -p "$r/runs/old"; printf 'the answer was fixed\n' > "$r/runs/old/output.txt"
@@ -169,9 +182,9 @@ before=$(git -C "$r" rev-parse --short HEAD)
 printf 'fixed\n' > "$r/pool/PART.fixprobe@1/f.c"; printf 'the answer is fixed\n' > "$r/findings/fixprobe-answer.md"
 git -C "$r" add -A && git -C "$r" -c user.name=p -c user.email=p@p commit -qm after || fail "could not make the probe's history"
 mkdir -p "$t/f-at"
-reply "$t/f-at/1.json" look '{"command":"read","args":["pool/PART.fixprobe@1/f.c"]}'
-reply "$t/f-at/2.json" look '{"command":"read","args":["runs/old/output.txt"]}'
-reply "$t/f-at/3.json" look '{"command":"read","args":["findings/fixprobe-answer.md"]}'
+reply "$t/f-at/1.json" look '{"why":"to see what is there","command":"read","args":["pool/PART.fixprobe@1/f.c"]}'
+reply "$t/f-at/2.json" look '{"why":"to see what is there","command":"read","args":["runs/old/output.txt"]}'
+reply "$t/f-at/3.json" look '{"why":"to see what is there","command":"read","args":["findings/fixprobe-answer.md"]}'
 reply "$t/f-at/4.json" submit_fix '{"path":"pool/PART.fixprobe@1/f.c","content":"fixed\n"}'
 FIX_AT=$before FIX_OUT="$r/out/fix" MODEL_FAKE="$t/f-at" run fixprobe.red@1 || fail "a fix made again from the commit before it was not judged a pass: $(tail -1 "$t/said")"
 grep -q "as it was at $before" "$t/said" && grep -q "at $before:" "$t/said" || fail "the run did not say it worked from $before: $(tail -1 "$t/said")"
@@ -180,4 +193,4 @@ grep -q '"text": *"pool/PART.fixprobe@1/f.c, lines 1 to 1 of 1\\n1\\tbroken' "$t
 grep -q '"text": *"no file runs/old/output.txt"' "$t/runs"/*/input.txt && grep -q '"text": *"no file findings/fixprobe-answer.md"' "$t/runs"/*/input.txt || fail "the model could read a run record, or a file added after $before"
 ! grep -q 'FAIL  TST.fixprobe.git@1' "$t/said" || fail "a copy at FIX_AT, inside the repo's folder, could see the repo's history: $(grep 'fixprobe.git' "$t/said" | head -1)"
 grep -qx fixed "$r/pool/PART.fixprobe@1/f.c" || fail "the repo itself was changed"
-echo "a green test refused before any call; a fix in two files of one part a pass with both files' 4 lines, one across two parts refused; a test already red before the fix not held against it; the look answered from the repo and refused outside it; a read given as two numbers, or as start_line and end_line, headed with where it is; a find kept to one folder; a good fix a pass with its 2 lines and 600 in, 120 out, 6000 from the cache, on its summary line; nothing skipped in the judge's copy that runs beside the clones; a fix that broke another test a fail; a fix outside pool/ refused unjudged; a fix that broke a test sent back with what it printed, and a second hand-in judged a pass; the model's copy untouched; after every call the model told how many it has left, and with ten left asked for its fix; each call and hand-in said as it went; a model lost after its first call recorded with what it cost; a reviewer's note handed over with the test, a missing one refused before any call; a model that stops without a fix reminded once; a reply cut off at the limit said to be, and the model told why; a conversation that outgrew the context ended and said as that; a fix made again from the commit before it, the model shown that commit and no run record or later file, nor the repo's history, and the commit recorded"
+echo "a green test refused before any call; a fix in two files of one part a pass with both files' 4 lines, one across two parts refused; a test already red before the fix not held against it; the look answered from the repo and refused outside it; a read given as two numbers, or as start_line and end_line, headed with where it is; a find kept to one folder; a good fix a pass with its 2 lines and 600 in, 120 out, 6000 from the cache, on its summary line; nothing skipped in the judge's copy that runs beside the clones; a fix that broke another test a fail; a fix outside pool/ refused unjudged; a fix that broke a test sent back with what it printed, and a second hand-in judged a pass; the model's copy untouched; after every call the model told how many it has left, and with ten left asked for its fix; each call and hand-in said as it went; a model lost after its first call recorded with what it cost; a reviewer's note handed over with the test, a missing one refused before any call; a model that stops without a fix reminded once; a reply cut off at the limit said to be, and the model told why; a conversation that outgrew the context ended and said as that; a look with no why refused, a why said as it went, a long read cut at 8000 characters with a marker; a fix made again from the commit before it, the model shown that commit and no run record or later file, nor the repo's history, and the commit recorded"

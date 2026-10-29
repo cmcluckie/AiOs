@@ -329,3 +329,5 @@ fix.judged@1 | red | jig/fix | s/^\[ -z "\$at" \] || { GIT_CEILING_DIRECTORIES=\
 fix.judged@1 | red | jig/fix | s/env -u MODEL_NAME -u MODEL_ID/env -u MODEL_ID/ | the model the bench calls leaks into the suite it runs, and the tests of the model tools call it, as on the 3090's second run
 exam.ollama@1 | red | jig/model | s/(if \$max > 0 and/(if true or/ | a reply stopped by a full context is taken for one cut off at its limit, as on the 3090's first try
 fix.judged@1 | red | jig/fix | s/if \[ "\$stop" = model_context_window_exceeded \]; then/if false; then/ | a conversation that outgrew the context is taken for a model gone quiet, and reminded into a context with no room
+fix.judged@1 | red | jig/fix | s/if \[ -z "\$lwhy" \]; then/if false; then/ | a look that gives no reason is run anyway: the model may wander without saying why, as the 3090 did
+fix.judged@1 | red | jig/fix | s/-gt "\$FIX_LOOK_CHARS" \]; then/-gt 999999999 ]; then/ | a look's answer is never cut, so one read of a whole file fills a small model's memory
