@@ -392,3 +392,5 @@ agent.columns@1 | red | agent/mechanic/src/direct.rs | s/self.peak = peak;/self.
 agent.columns@1 | red | jig/scorecard | s/c\[\$3\] += \$9/c[$3] += 0/ | the card shows no calls for any part's builders
 agent.columns@1 | red | jig/scorecard | s/int((\$10 + 59) \/ 60)/int($10 \/ 600)/ | the card's wall minutes are a tenth of the real ones
 agent.plan@1 | red | agent/mechanic/src/plan.rs | s/Some(240), 1, 10080/Some(120), 1, 10080/ | a plan that names no time cap gets the 120 minutes waits nearly ran out of, not 240
+exam.control@1 | red | jig/sit | s/^set -u$/set -u # moved/ | the exam's runner changes under the race, and the control is no longer the control
+exam.control@1 | red | jig/fix | s/^set -u$/set -u # moved/ | the fix runner changes under the race, and the waits runs are no longer comparable

@@ -1,0 +1,10 @@
+code       = "TST.exam.control@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+binds      = "SPEC.exam.11@1"
+red_when   = "jig/sit's git fingerprint is not cbb7bdd1, the one it had on 2026-10-29, or jig/fix's is not 7d2f7acd, the one it had at a8bfd5a"
+timeout_ms = 5000
+isolates   = "TOOL.exam@1"
+runner     = "jig/test cmd sh tests/programs/control.sh"
+mutations  = 2

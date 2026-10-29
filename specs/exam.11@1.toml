@@ -1,0 +1,7 @@
+code       = "SPEC.exam.11@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+component  = "TOOL.exam@1"
+clause     = "The race's control does not move: jig/sit, the old bench's runner for exam parts, stays as it stood on 2026-10-29, and jig/fix, its runner for fixes, as it stood at a8bfd5a (findings 0027 item 2d, decision 0104)."
+author     = "KEY.chris"

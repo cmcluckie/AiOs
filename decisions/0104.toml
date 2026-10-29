@@ -1,0 +1,11 @@
+id      = "0104"
+date    = 2026-10-29
+kind    = "plan"
+touches = ["specs/exam.11@1.toml", "tests/exam.control@1.toml", "tests/programs/control.sh", "tests/mutations.txt"]
+asked   = "The race (findings 0027 item 2g): the three exam parts on both benches, the same model on the card, the same pinned source, the same caps, graded on ceiling.  Its control: jig/sit, the old bench's runner for exam parts, frozen as it stood on 2026-10-29 (git fingerprint cbb7bdd1, unchanged since 42d248d's base, 1948db0); nothing changes in it from here.  jig/fix, the old bench's runner for fixes, stays frozen as findings 0027 already set it, at a8bfd5a (7d2f7acd).  TST.exam.control holds both fingerprints and goes red when either file changes (two mutations, killed).  Not frozen by this: what jig/sit runs, jig/model, jig/reader, jig/judge, jig/runs and exam/prompt.txt.  jig/runs only adds fields (decision 0102); the others have not changed since a8bfd5a.  A change to any of them changes the control's behaviour without changing jig/sit, so it needs its own decision that says so."
+options = ["freeze jig/sit only, as ruled", "freeze jig/sit and everything it runs"]
+default = "freeze jig/sit only, as ruled"
+chose   = "freeze jig/sit only, as ruled"
+why     = "Chris, 2026-10-29: \"Control for the race: jig/sit, frozen as of today's commit, nothing changes in it from here.  Record that in the race's decision file.\""
+by      = "KEY.chris@1"
+drafted = "Claude"
