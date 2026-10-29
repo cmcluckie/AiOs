@@ -1,0 +1,7 @@
+code       = "SPEC.loader.17@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+component  = "PART.loader@9"
+clause     = "Interrupts are on only while read waits for a byte: every system call goes back out through the gate with them off, as it came in, so no tick lands between a call's answer and the program."
+author     = "KEY.chris"

@@ -1,0 +1,11 @@
+id      = "0101"
+date    = 2026-10-29
+kind    = "code"
+touches = ["specs/loader.17@1.toml", "tests/loader.quiet-exit@1.toml", "tests/programs/quietexit.sh", "design.md"]
+asked   = "The fourth item from the waits run (findings 0029): the waits fix turns interrupts on for the wait and leaves them on through the gate's way out, so a tick can land between a call's answer and the program.  A test, not a fix; the fix is a job for the race.  TST.loader.quiet-exit runs the waiter beside the stopwatch on the gate's sharing kernel, types one byte, and has QEMU log the flags each time the processor starts on the gate's way out, from after the call to gate_trap through the iret; the interrupt flag must be off at every one.  Software emulation, because KVM's processor cannot be logged; the design's QEMU row says so.  Red on the repo as it stands: the committed fix (Sonnet's, 3dafa0d) leaves them on too, 3 passes in about 285,000 with the flag on, the waiter's read.  Checked green by hand with the flag saved before the sti and a cli after the wait (not kept).  No mutations: it is red now, and its going green is the race's to show."
+options = ["take it", "do not take it"]
+default = "take it"
+chose   = "take it"
+why     = "Chris, 2026-10-29: \"The waits fix leaves interrupts on through the gate.  Write a test that fails if a tick lands on the way out.  Don't fix it yet ... the fix is a job for the race.\""
+by      = "KEY.chris@1"
+drafted = "Claude"

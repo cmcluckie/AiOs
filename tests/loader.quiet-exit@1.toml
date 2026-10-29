@@ -1,0 +1,10 @@
+code       = "TST.loader.quiet-exit@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+binds      = "SPEC.loader.17@1"
+red_when   = "on the gate's sharing kernel, with one byte typed to a program waiting in read, the processor is on the gate's way out (after the call to gate_trap, through the iret) with the interrupt flag on, or never gets there"
+timeout_ms = 30000
+isolates   = "PART.loader@9"
+runner     = "jig/test cmd env AIOS_SHARE=gateshare sh tests/programs/quietexit.sh"
+mutations  = 0
