@@ -18,9 +18,10 @@ The runtime (agent/runtime), ported from CivicCanada as logic (agent/origin.toml
   in Converse's shape and back in Ollama's.
 - sigv4: AWS Signature Version 4 for Bedrock, checked against AWS's published
   examples.
-- room: tokens as characters over four; a tool answer cut at a limit with
-  CivicCanada's marker; the oldest tool answers dropped past a budget, the newest
-  four kept.
+- room: tokens as characters over four, calibrated after each call by the
+  model's own count of what was sent (SPEC.agent.9); a tool answer cut at a limit
+  with CivicCanada's marker; the oldest tool answers dropped past a budget that
+  counts the system prompt and tools too, the newest four kept.
 - prompts: the prompt library, NAME@N.txt, with git's fingerprint for each.
 - money: prices per million tokens from a price list, and the month's room asked
   of a command the caller names.
@@ -47,6 +48,8 @@ The program (agent/mechanic, the `agent` command):
   paid builder asks the job's share and the month's cap before each call; a job
   stops at its deadline.  Writes out/agent/JOB-tryN/ and records the run with
   jig/runs (bench, peak context, ended).
+- `agent count MODEL FILE...`: the model's own count of each file, from Ollama;
+  `agent estimate CALIBRATION COUNTED FILE`: the calibrated estimate (SPEC.agent.9).
 - `agent direct PLAN` (SPEC.agent.5): one director.  Tools job, search_log,
   search_prompts, ask, done.  The program keeps the tries, the minutes (passed to
   each builder as its deadline), the part's dollars and the stuck rule (the same

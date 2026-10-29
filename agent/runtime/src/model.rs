@@ -220,6 +220,27 @@ fn ollama(m: &Model, system: &str, messages: &[Value], tools: &[Value]) -> Reply
     }
 }
 
+/// How many tokens the model counts for text, as a user message: its
+/// prompt_eval_count with the text, less with nothing.  For calibrating the
+/// estimate (room.rs) against the model itself.
+pub fn count(m: &Model, text: &str) -> Result<u64, String> {
+    let one = |t: &str| -> Result<u64, String> {
+        let mut quick = m.clone();
+        quick.max_tokens = 1;
+        let body = ollama_request(&quick, "", &[json!({"role": "user", "content": t})], &[], false).to_string();
+        match stream(&quick, &body, 0) {
+            Streamed::Whole(text) => {
+                let v: Value = serde_json::from_str(&text).map_err(|e| e.to_string())?;
+                Ok(number(&v, "prompt_eval_count"))
+            }
+            Streamed::Failed(r) => Err(r.error),
+            Streamed::ThoughtTooLong(_) => Err("thought with thinking off".into()),
+        }
+    };
+    let (with, without) = (one(text)?, one("")?);
+    Ok(with.saturating_sub(without))
+}
+
 pub fn cut(s: &str, n: usize) -> String {
     s.chars().take(n).collect()
 }

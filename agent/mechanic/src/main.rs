@@ -16,6 +16,11 @@
 //!       (SPEC.agent.4)
 //!   agent direct PLAN
 //!       one director on the part plan in the file PLAN (SPEC.agent.5)
+//!   agent count MODEL FILE...
+//!       how many tokens the model counts for each file, asked of Ollama
+//!   agent estimate CALIBRATION COUNTED FILE
+//!       the estimate for FILE once calibrated by CALIBRATION, which the model
+//!       counted as COUNTED tokens (SPEC.agent.9)
 //!
 //! Exit 0 done, 1 failed or not a pass, 2 asked wrongly or cannot run here.
 
@@ -132,6 +137,52 @@ fn cmd_chat(a: &[String]) -> i32 {
     0
 }
 
+fn cmd_count(a: &[String]) -> i32 {
+    if a.len() < 2 {
+        eprintln!("agent: count needs MODEL FILE...");
+        return 2;
+    }
+    let m = Model {
+        gear: 1,
+        name: a[0].clone(),
+        url: std::env::var("OLLAMA_URL").ok().filter(|v| !v.is_empty()).unwrap_or_else(|| "http://localhost:11434".into()),
+        num_ctx: 32768,
+        max_tokens: 1,
+        think_cap: 0,
+        timeout: Duration::from_secs(600),
+    };
+    for f in &a[1..] {
+        let Ok(text) = std::fs::read_to_string(f) else {
+            eprintln!("agent: no file {f}");
+            return 2;
+        };
+        match model::count(&m, &text) {
+            Ok(n) => println!("{f}  {n} tokens counted by {}; characters over four says {}", a[0], runtime::room::tokens(&text)),
+            Err(e) => {
+                eprintln!("agent: {e}");
+                return 1;
+            }
+        }
+    }
+    0
+}
+
+fn cmd_estimate(a: &[String]) -> i32 {
+    if a.len() != 3 {
+        eprintln!("agent: estimate needs CALIBRATION COUNTED FILE");
+        return 2;
+    }
+    let (Ok(cal), Ok(text)) = (std::fs::read_to_string(&a[0]), std::fs::read_to_string(&a[2])) else {
+        eprintln!("agent: no file {} or {}", a[0], a[2]);
+        return 2;
+    };
+    let Ok(counted) = number("counted", &a[1]) else { return 2 };
+    let mut est = runtime::room::Estimate::default();
+    est.calibrate(counted, runtime::room::tokens(&cal));
+    println!("{}", est.tokens(&text));
+    0
+}
+
 fn main() {
     let args: Vec<String> = std::env::args().collect();
     let rest = if args.len() > 2 { &args[2..] } else { &[][..] };
@@ -141,8 +192,10 @@ fn main() {
         Some("chat") => cmd_chat(rest),
         Some("build") if rest.len() == 1 => build::run(&rest[0]),
         Some("direct") if rest.len() == 1 => direct::run(&rest[0]),
+        Some("count") => cmd_count(rest),
+        Some("estimate") => cmd_estimate(rest),
         _ => {
-            eprintln!("agent: needs a command: note, plan, chat, build or direct");
+            eprintln!("agent: needs a command: note, plan, chat, build, direct, count or estimate");
             2
         }
     };

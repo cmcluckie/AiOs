@@ -1,0 +1,2 @@
+calibrate.c  2246 tokens counted by qwen3.8:27b; characters over four says 1663
+check.c  1686 tokens counted by qwen3.8:27b; characters over four says 1190

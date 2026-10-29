@@ -69,7 +69,9 @@ struct Director {
     spent: f64, // the builders' dollars so far
     mine: f64,  // the director's own, as of its last call
     deadline: u64,
-    budget: u64,
+    budget: u64,            // the conversation's share of the card, system prompt and tools included
+    est: room::Estimate,
+    system: String,
     quiet: bool,
     words: String, // the director's own words at the end: a report or a question
 }
@@ -111,7 +113,8 @@ impl Director {
     /// test must be in it, or the director would forget work it gave (CivicCanada's
     /// fidelity check, with what must be kept decided here).
     fn fold(&self, messages: &mut Vec<Value>) -> Result<bool, String> {
-        if room::size(messages) <= self.budget || messages.len() <= room::KEEP + 2 {
+        let fixed = self.est.tokens(&self.system) + self.est.tokens(TOOLS);
+        if self.est.size(messages) + fixed <= self.budget || messages.len() <= room::KEEP + 2 {
             return Ok(false);
         }
         let mut cut = messages.len() - room::KEEP;
@@ -311,6 +314,11 @@ impl Hooks for Director {
         "You stopped without a tool.  Give a job, search, ask strategic, or report done.".into()
     }
 
+    fn sent(&mut self, counted: u64, messages: &[Value]) {
+        let plain = room::tokens(&self.system) + room::tokens(TOOLS) + room::size(messages);
+        self.est.calibrate(counted, plain);
+    }
+
     fn tally(&mut self, tin: u64, tout: u64) {
         // the director's own dollars, as of the reply it is acting on
         self.mine = self.runs.cost(&self.recorded, tin, tout).unwrap_or(0.0);
@@ -393,7 +401,7 @@ pub fn run(planpath: &str) -> i32 {
     let stamp = runtime::sigv4::now();
     let plan_text = fs::read_to_string(planpath).unwrap_or_default();
     let first = format!("The part plan, {id}:\n\n{plan_text}");
-    let budget = (num_ctx * 60 / 100).saturating_sub(room::tokens(&system));
+    let budget = num_ctx * 60 / 100;
     let mut d = Director {
         passed: vec![false; p.tests.len()],
         deadline: started + p.max_minutes * 60,
@@ -412,6 +420,8 @@ pub fn run(planpath: &str) -> i32 {
         spent: 0.0,
         mine: 0.0,
         budget,
+        est: room::Estimate::default(),
+        system: system.clone(),
         quiet,
         words: String::new(),
     };

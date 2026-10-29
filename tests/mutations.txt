@@ -381,3 +381,6 @@ agent.limit@1 | red | agent/runtime/src/model.rs | s/if cap > 0 \&\& thinking > 
 agent.limit@1 | red | agent/runtime/src/model.rs | s/req\["think"\] = json!(false);/let _ = 0;/ | the turn asked again after too much thinking thinks again
 agent.limit@1 | red | agent/mechanic/src/build.rs | s/if ended != "pass" \&\& !b.jig_down/if false \&\& ended != "pass" \&\& !b.jig_down/ | a builder that ends without handing in hands in nothing, and the director gets no note of its work
 agent.limit@1 | red | agent/mechanic/src/build.rs | s/if let Err(why) = self.may_change(\&\[p.to_string()\]) {/if let Err(why) = Ok::<(), String>(()) {/ | an edit may change a test, or a file outside pool/
+agent.tokens@1 | red | agent/runtime/src/room.rs | s/self.ratio = counted as f64 \/ estimated as f64;/self.ratio = 1.0;/ | the model's count is read and thrown away, and code is undercounted as it was on waits
+agent.tokens@1 | red | agent/mechanic/src/build.rs | s/self.est.calibrate(counted, plain);/let _ = (counted, plain);/ | a builder never learns how the model counts, and old answers stay until the card is full
+agent.tokens@1 | red | agent/runtime/src/react.rs | s/hooks.sent(reply.tokens_in, \&r.messages);/let _ = \&r.messages;/ | the loop never passes on what the model counted

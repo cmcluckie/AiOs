@@ -33,6 +33,9 @@ pub trait Hooks {
     fn nudge(&mut self, stop: Stop, turn: u32, left: u32) -> String;
     /// after each reply, the run's tokens so far, before its tools are called
     fn tally(&mut self, _tokens_in: u64, _tokens_out: u64) {}
+    /// after each reply, what the model counted for what was sent: the system
+    /// prompt, these messages and the tools (prompt_eval_count)
+    fn sent(&mut self, _prompt_tokens: u64, _messages: &[Value]) {}
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -100,6 +103,9 @@ pub fn run(
         r.tokens_out += reply.tokens_out;
         r.peak = r.peak.max(reply.tokens_in + reply.tokens_out);
         hooks.tally(r.tokens_in, r.tokens_out);
+        if reply.tokens_in > 0 && !reply.thought_cut {
+            hooks.sent(reply.tokens_in, &r.messages);
+        }
         match reply.stop {
             Stop::Unreachable => {
                 r.ended = Ended::Unreachable { first_call: turn == 1, why: reply.error };

@@ -10,6 +10,7 @@
 #   sh tests/programs/agent.sh chat    TST.agent.chat@1: one call to the model
 #   sh tests/programs/agent.sh build   TST.agent.build@1: one builder, its fix judged
 #   sh tests/programs/agent.sh limit   TST.agent.limit@1: a builder's limits; what is on disk handed in
+#   sh tests/programs/agent.sh tokens  TST.agent.tokens@1: the estimate, calibrated by the model's count
 #   sh tests/programs/agent.sh direct  TST.agent.direct@1: a director and its limits
 #   sh tests/programs/agent.sh bedrock TST.agent.bedrock@1: gear 2, and what it may spend
 #
@@ -65,7 +66,7 @@ TOY
 	# with JIGDOWN set to a file, the jig answers once, then is gone
 	printf '#!/bin/sh\nshift\nif [ -n "${JIGDOWN:-}" ]; then [ -f "$JIGDOWN" ] && { echo "ssh: connect to host jig port 22: Connection refused" >&2; exit 255; }; : > "$JIGDOWN"; fi\nHOME=%s exec sh -c "$1"\n' "$h" > "$t/ssh"
 	job() {	# job FILE [EXTRA-LINE [TRY]]: the job to fix toy.answer at the toy's commit
-		printf 'job = "toy"\ntest = "toy.answer@1"\nat = "%s"\ntry = %s\nprompt = "builder@1"\nmodel = "%s"\nnum_ctx = 2048\nroom_share = 50\n%s\n' "$at" "${3:-1}" "${JOBMODEL:-qwen3.8:27b}" "${2:-}" > "$1"
+		printf 'job = "toy"\ntest = "toy.answer@1"\nat = "%s"\ntry = %s\nprompt = "builder@1"\nmodel = "%s"\nnum_ctx = %s\nroom_share = 50\n%s\n' "$at" "${3:-1}" "${JOBMODEL:-qwen3.8:27b}" "${JOBCTX:-2048}" "${2:-}" > "$1"
 	}
 	run() {	# run CASE [EXTRA-LINE [TRY]]: the builder on the job, the replies in $t/CASE
 		job "$t/$1.toml" "${2:-}" "${3:-1}"
@@ -191,7 +192,8 @@ build)
 	# notes are dropped once four newer messages are in, and the builder is told so
 	ans 8 2 | grep -q '^\[dropped to make room: this answer was 80[0-9][0-9] characters; look again if you need it\]$' ||
 		fail "an old answer was not dropped to make room, nor said so: $(ans 8 2 | head -c 120)"
-	ans 8 4 | grep -q 'could not be read' || fail "a recent answer was dropped; the last four are kept word for word"
+	[ "$(jq '[.messages[-4:][] | select(.role == "tool") | select(.content | startswith("[dropped"))] | length' "$t/whole/sent-8.json")" -eq 0 ] &&
+		[ "$(jq '[.messages[-4:][] | select(.role == "tool")] | length' "$t/whole/sent-8.json")" -ge 1 ] || fail "an answer in the last four messages was dropped; they are kept word for word"
 	[ "$(sed -n 's/^status *= *//p' "$o/note.toml")" = '"fail"' ] && grep -q '^tests_failed  = 1$' "$o/note.toml" && grep -q '"pool/PART.toy@1/toy.c"' "$o/note.toml" ||
 		fail "the note from the last suite run is not the one the jig printed: $(tr '\n' ' ' < "$o/note.toml" | cut -c1-200)"
 	grep -q '^=== pool/PART.toy@1/toy.c$' "$o/output.txt" && [ "$(rt lines)" = 2 ] || fail "the change is not kept with the lines it changed: $(rt lines)"
@@ -266,6 +268,35 @@ build)
 		fail "the paid run is not in runs/ with its cost"
 	unset AIOS_AWS JOBMODEL
 	echo "a builder on a toy repo: a look with no why refused, one with a why answered from its copy, 400 lines cut at 8000 characters with the marker, a look outside refused, a call it could not read answered, a fix that broke a green test shown what it broke and not blamed for one red before, a fix to the test refused, a fix that makes a green test skip or prints its own PASS beside the FAIL failed, a hand-in path climbing out or through . refused before anything is written, the right fix a pass on call 8, also with the out folder given from here; a jig gone at the hand-in is cannot-run, with the note from the suite before; told its calls left, thinking dropped, an old answer dropped to make room and the last four kept; peak context, tokens, the note and the change recorded, and the run in runs/ with its bench and ending; the repo untouched; a full card ends as room, no model is cannot-run, and a job with a key no job has is refused; on gear 2 a call the month's cap has no room for is not sent, and a job stops before a call that could pass its share of the part's dollars, recorded with its cost" ;;
+tokens)
+	tf="$fx/tokens"
+	# the model's own count of a file: its count with the file, less its count with nothing
+	mkdir "$t/count"; cp "$tf/count-1.json" "$t/count/1.json"; cp "$tf/count-2.json" "$t/count/2.json"
+	AGENT_FAKE="$t/count" "$t/agent" count qwen3.8:27b "$tf/check.c" > "$t/count.out" 2> "$t/count.err" || fail "count failed: $(head -1 "$t/count.err")"
+	grep -q "check.c  1552 tokens counted by qwen3.8:27b" "$t/count.out" || fail "the count is not 1563 less 11: $(cat "$t/count.out")"
+	[ "$(jq '.think' "$t/count/sent-1.json")" = false ] && [ "$(jq '.options.num_predict' "$t/count/sent-1.json")" = 1 ] ||
+		fail "counting asked the model to think or to say more than one token"
+	# in a builder: once the model's count says the conversation is past its share, old
+	# answers are dropped, though characters over four says there is room
+	toy
+	for c in heavy light; do mkdir "$t/$c"; for n in 1 2 3; do cp "$tf/$c-$n.json" "$t/$c/$n.json"; done; done
+	JOBCTX=8192 run heavy '' 15; JOBCTX=8192 run light '' 16
+	jq -r '[.messages[] | select(.role == "tool")][0].content' "$t/heavy/sent-3.json" | grep -q '^\[dropped to make room' ||
+		fail "the model counted 5200 tokens against a share of 4096 and nothing was dropped"
+	jq -r '[.messages[] | select(.role == "tool")][0].content' "$t/light/sent-3.json" | grep -q '^\[dropped' &&
+		fail "with the model's count under the share, an answer was dropped anyway"
+	# a known code block: calibrated on another, the estimate is within 10 percent of what
+	# the model counts; characters over four alone is not (both counts measured on the card)
+	[ -f "$tf/counted.txt" ] || fail "no counts measured on the card yet in $tf/counted.txt"
+	cal=$(sed -n 's/^calibrate.c  *\([0-9]*\) .*/\1/p' "$tf/counted.txt"); chk=$(sed -n 's/^check.c  *\([0-9]*\) .*/\1/p' "$tf/counted.txt")
+	[ -n "$cal" ] && [ -n "$chk" ] || fail "counted.txt does not give both files' counts"
+	est=$("$t/agent" estimate "$tf/calibrate.c" "$cal" "$tf/check.c") || fail "estimate failed"
+	plain=$(( ($(wc -m < "$tf/check.c") + 3) / 4 ))
+	awk -v e="$est" -v c="$chk" 'BEGIN { exit !((e - c) * (e - c) <= (c * 0.10) * (c * 0.10)) }' ||
+		fail "the calibrated estimate for check.c is $est, more than 10 percent from the $chk the model counted"
+	awk -v e="$plain" -v c="$chk" 'BEGIN { exit !((e - c) * (e - c) > (c * 0.10) * (c * 0.10)) }' ||
+		fail "characters over four alone, $plain, is within 10 percent of $chk: the test no longer shows the undercount"
+	echo "the model's count of a file is its count with it less its count without, asked with no thinking and one token; calibrated on one code block, the estimate for another is $est against the $chk the model counted, within 10 percent, where characters over four says $plain; a builder drops old answers when the model's count says the share is passed, not when the plain estimate does" ;;
 limit)
 	toy
 	# thinking past its cap is stopped there, and the turn asked again with no thinking,

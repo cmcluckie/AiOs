@@ -1,0 +1,7 @@
+code       = "SPEC.agent.9@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+component  = "TOOL.agent@1"
+clause     = "Room is measured the way the model counts it.  Before the first call the estimate is characters over four; after each call the model's own count of what was sent (Ollama's prompt_eval_count) calibrates it, and the system prompt and tools count against the conversation's share as well as the messages.  Calibrated on one code block, the estimate for another is within 10 percent of the model's count.  agent count asks the model for its count of a file: its count with the file less its count with nothing (findings 0029)."
+author     = "KEY.chris"

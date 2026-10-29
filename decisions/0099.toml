@@ -1,0 +1,11 @@
+id      = "0099"
+date    = 2026-10-29
+kind    = "code"
+touches = ["agent/runtime/src/room.rs", "agent/runtime/src/react.rs", "agent/runtime/src/model.rs", "agent/mechanic/src/build.rs", "agent/mechanic/src/direct.rs", "agent/mechanic/src/main.rs", "specs/agent.9@1.toml", "tests/agent.tokens@1.toml", "tests/programs/agent.sh", "tests/fixtures/agent/tokens/calibrate.c", "tests/fixtures/agent/tokens/check.c", "tests/fixtures/agent/tokens/counted.txt", "tests/fixtures/agent/tokens/count-1.json", "tests/fixtures/agent/tokens/count-2.json", "tests/fixtures/agent/tokens/heavy-1.json", "tests/fixtures/agent/tokens/heavy-2.json", "tests/fixtures/agent/tokens/heavy-3.json", "tests/fixtures/agent/tokens/light-1.json", "tests/fixtures/agent/tokens/light-2.json", "tests/fixtures/agent/tokens/light-3.json", "tests/mutations.txt", "index/tool/agent@1.as-built.md"]
+asked   = "The second fix from the waits run (findings 0029): characters over four undercounts code, so builder 1 reached 74,727 tokens with the estimate still under its budget and no old answer was ever dropped.  After each call the model's own count of what was sent (prompt_eval_count) calibrates the estimate, and the system prompt and tools now count against the share too.  agent count asks the model for its count of a file; the two code blocks in tests/fixtures/agent/tokens were counted on the card: calibrate.c 2,246 tokens where characters over four says 1,663, check.c 1,686 where it says 1,190; calibrated on the first, the estimate for the second is 1,608, 4.6 percent under.  SPEC.agent.9, TST.agent.tokens (red on the agent as committed, which has no calibration and no count; three mutations, killed)."
+options = ["take it", "do not take it"]
+default = "take it"
+chose   = "take it"
+why     = "Chris, 2026-10-29: \"Count tokens the way the model does (Ollama reports prompt_eval_count; use it after the first call, and calibrate the estimate from it).  Add a test that feeds a known code block and asserts the estimate is within 10 percent.\""
+by      = "KEY.chris@1"
+drafted = "Claude"

@@ -14,9 +14,42 @@ use serde_json::Value;
 /// The newest messages, always kept word for word (CivicCanada's KeepMessages).
 pub const KEEP: usize = 4;
 
-/// Characters over four, rounded up.
+/// Characters over four, rounded up: CivicCanada's estimate, before any measure.
 pub fn tokens(s: &str) -> u64 {
     (s.chars().count() as u64).div_ceil(4)
+}
+
+/// The estimate, calibrated by what the model itself counted.  Characters over
+/// four undercounts code: on waits the conversation reached 74,727 tokens with the
+/// estimate under its budget, so old answers were never dropped (findings 0029).
+/// After a call, Ollama's prompt_eval_count is the true size of what was sent;
+/// the ratio of that to the estimate is applied from then on.
+#[derive(Clone, Copy, Debug)]
+pub struct Estimate {
+    pub ratio: f64,
+}
+
+impl Default for Estimate {
+    fn default() -> Self {
+        Estimate { ratio: 1.0 }
+    }
+}
+
+impl Estimate {
+    pub fn tokens(&self, s: &str) -> u64 {
+        (tokens(s) as f64 * self.ratio).ceil() as u64
+    }
+
+    pub fn size(&self, messages: &[Value]) -> u64 {
+        (size(messages) as f64 * self.ratio).ceil() as u64
+    }
+
+    /// what the model counted for text the plain estimate made `estimated`
+    pub fn calibrate(&mut self, counted: u64, estimated: u64) {
+        if counted > 0 && estimated > 0 {
+            self.ratio = counted as f64 / estimated as f64;
+        }
+    }
 }
 
 /// Cuts text at max characters, saying how many more there were.
@@ -45,6 +78,12 @@ pub fn size(messages: &[Value]) -> u64 {
 /// Over budget, the content of each tool answer but the newest KEEP messages is
 /// dropped, oldest first, until it fits; each says it was.  The characters dropped.
 pub fn drop_old(messages: &mut [Value], budget: u64) -> usize {
+    drop_old_measured(messages, budget, &Estimate::default())
+}
+
+/// drop_old, with sizes as the calibrated estimate gives them
+pub fn drop_old_measured(messages: &mut [Value], budget: u64, est: &Estimate) -> usize {
+    let budget = (budget as f64 / est.ratio).floor() as u64;
     let mut size = size(messages);
     let mut dropped = 0;
     let last = messages.len().saturating_sub(KEEP);

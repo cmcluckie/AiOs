@@ -148,7 +148,9 @@ struct Builder<'a> {
     judged: String,    // what was on disk at the last hand-in
     by_program: bool,  // the last hand-in was the program's, at the end
     code: String,
-    budget: u64,
+    budget: u64,            // the conversation's share of the card, system prompt and tools included
+    est: room::Estimate,    // characters over four, calibrated by what the model counts
+    system: String,
     jig: &'a Jig,
     runs: &'a Runs,
     recorded: String,
@@ -316,7 +318,9 @@ impl Hooks for Builder<'_> {
                 return Err(("time".into(), format!("before call {turn}: the part's minutes are used")));
             }
         }
-        let dropped = room::drop_old(messages, self.budget);
+        // what is left for the messages once the system prompt and the tools are sent
+        let fixed = self.est.tokens(&self.system) + self.est.tokens(TOOLS);
+        let dropped = room::drop_old_measured(messages, self.budget.saturating_sub(fixed), &self.est);
         if dropped > 0 {
             self.folded += dropped;
             say(self.quiet, &format!("call {turn}: {dropped} characters of old answers dropped to make room"));
@@ -378,6 +382,12 @@ impl Hooks for Builder<'_> {
             n += "  Ten or fewer left: hand in your fix with submit_fix now.  A run that ends without one has only what is on disk handed in for it.";
         }
         Some(n)
+    }
+
+    fn sent(&mut self, counted: u64, messages: &[Value]) {
+        // the model's own count of what was sent sets the estimate from then on
+        let plain = room::tokens(&self.system) + room::tokens(TOOLS) + room::size(messages);
+        self.est.calibrate(counted, plain);
     }
 
     fn nudge(&mut self, stop: Stop, turn: u32, left: u32) -> String {
@@ -509,7 +519,7 @@ pub fn run(jobpath: &str) -> i32 {
         timeout: Duration::from_secs(1800),
     };
     // the conversation's share of the window, less the system prompt; the rest is the reply
-    let budget = (j.num_ctx * j.room_share / 100).saturating_sub(room::tokens(&system));
+    let budget = j.num_ctx * j.room_share / 100;
     let mut b = Builder {
         j: &j,
         dir: dir.clone(),
@@ -520,6 +530,8 @@ pub fn run(jobpath: &str) -> i32 {
         by_program: false,
         code,
         budget,
+        est: room::Estimate::default(),
+        system: system.clone(),
         jig: &jig,
         runs: &runs,
         recorded: recorded.clone(),

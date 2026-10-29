@@ -1,0 +1,10 @@
+code       = "TST.agent.tokens@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+binds      = "SPEC.agent.9@1"
+red_when   = "the model's count of a file is not its count with the file less its count without, or is asked with thinking; a builder does not drop old answers when the model's count says the share is passed, or drops them when it does not; or, calibrated on one code block measured on the card, the estimate for another is more than 10 percent from the model's count of it"
+timeout_ms = 120000
+isolates   = "TOOL.agent@1"
+runner     = "jig/test cmd sh tests/programs/agent.sh tokens"
+mutations  = 3
