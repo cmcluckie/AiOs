@@ -26,6 +26,13 @@ pub enum Failure {
     Other(String),
 }
 
+/// POSTs body to url and hands each line of the reply to on_line as it arrives,
+/// for a streamed reply; on_line returns false to stop reading, which drops the
+/// connection, and the server stops writing.  The status.
+pub fn post_lines(url: &str, body: &str, timeout: Duration, on_line: &mut dyn FnMut(&str) -> bool) -> Result<u16, Failure> {
+    imp::post_lines(url, body, timeout, on_line)
+}
+
 /// POSTs body to url; the status and the body that came back.
 pub fn post(url: &str, body: &str, sign: Option<&Signing>, timeout: Duration) -> Result<(u16, String), Failure> {
     imp::post(url, body, sign, timeout)
@@ -61,6 +68,29 @@ mod imp {
         let text = resp.text().map_err(|e| Failure::Other(e.to_string()))?;
         Ok((status, text))
     }
+
+    pub fn post_lines(url: &str, body: &str, timeout: Duration, on_line: &mut dyn FnMut(&str) -> bool) -> Result<u16, Failure> {
+        use std::io::BufRead;
+        let client = reqwest::blocking::Client::builder()
+            .timeout(timeout)
+            .connect_timeout(Duration::from_secs(10))
+            .build()
+            .map_err(|e| Failure::Other(e.to_string()))?;
+        let resp = client
+            .post(url)
+            .header("content-type", "application/json")
+            .body(body.to_string())
+            .send()
+            .map_err(|e| if e.is_connect() { Failure::Unreachable(e.to_string()) } else { Failure::Other(e.to_string()) })?;
+        let status = resp.status().as_u16();
+        for line in std::io::BufReader::new(resp).lines() {
+            let line = line.map_err(|e| Failure::Other(e.to_string()))?;
+            if !line.trim().is_empty() && !on_line(&line) {
+                break;
+            }
+        }
+        Ok(status)
+    }
 }
 
 #[cfg(feature = "fake")]
@@ -80,5 +110,22 @@ mod imp {
             Ok(text) => Ok((200, text)),
             Err(_) => Err(Failure::Unreachable(format!("no saved reply {n}"))),
         }
+    }
+
+    /// a saved reply of one JSON object per line is handed over line by line; how
+    /// many lines were read before the reader stopped is kept as sent-N.read
+    pub fn post_lines(url: &str, body: &str, timeout: Duration, on_line: &mut dyn FnMut(&str) -> bool) -> Result<u16, Failure> {
+        let dir = std::env::var("AGENT_FAKE").unwrap_or_default();
+        let (status, text) = post(url, body, None, timeout)?;
+        let n: u32 = fs::read_to_string(format!("{dir}/calls")).ok().and_then(|s| s.trim().parse().ok()).unwrap_or(0);
+        let mut read = 0;
+        for line in text.lines().filter(|l| !l.trim().is_empty()) {
+            read += 1;
+            if !on_line(line) {
+                break;
+            }
+        }
+        let _ = fs::write(format!("{dir}/sent-{n}.read"), format!("{read}\n"));
+        Ok(status)
     }
 }

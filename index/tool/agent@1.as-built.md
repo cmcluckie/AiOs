@@ -12,8 +12,10 @@ The runtime (agent/runtime), ported from CivicCanada as logic (agent/origin.toml
   reminder on a stop without a tool; a full context told from a reply cut at its
   limit; hooks before each call (room, money, time), for each tool, after each
   turn, and with the tokens after each reply.
-- model: one call.  Gear 1 is Ollama's chat API; gear 2 is Bedrock's Converse
-  API, the conversation handed over in Converse's shape and back in Ollama's.
+- model: one call.  Gear 1 is Ollama's chat API, the reply read as it streams so
+  thinking past its cap is stopped and the turn asked again with thinking off
+  (SPEC.agent.8); gear 2 is Bedrock's Converse API, the conversation handed over
+  in Converse's shape and back in Ollama's.
 - sigv4: AWS Signature Version 4 for Bedrock, checked against AWS's published
   examples.
 - room: tokens as characters over four; a tool answer cut at a limit with
@@ -33,10 +35,13 @@ The program (agent/mechanic, the `agent` command):
   AGENT_GEAR=2 for Bedrock.
 - `agent build JOB` (SPEC.agent.4): one builder.  A copy of the repo at the job's
   commit (git archive, without runs/ and out/); the suite run on the jig first and
-  the test must be red; then the loop with look (list, read, find; every look
-  says why; answers cut at 8000 characters) and submit_fix (the paths checked
-  before anything is written: existing files of one part under pool/, every part
-  of the path a name).  The judge sends the fix to the jig as a tar into one ssh
+  the test must be red; then the loop with look (list, read, find, on its own
+  working copy; every look says why; answers cut at 8000 characters), edit_file
+  (one exact edit on disk) and submit_fix (what is on disk, and any whole files
+  given; the paths checked before anything is written: existing files of one
+  part under pool/, every part of the path a name).  However the run ends
+  without a pass, the program hands in what is on disk and runs the tests, so
+  every run has a result note (SPEC.agent.8).  The judge sends the fix to the jig as a tar into one ssh
   command and takes the suite's output back; a pass needs the red test to print
   PASS and no FAIL, and every test green before to print PASS and no FAIL.  A
   paid builder asks the job's share and the month's cap before each call; a job

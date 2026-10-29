@@ -35,6 +35,7 @@ pub struct Job {
     pub item: String,
     pub max_turns: u64,
     pub max_tokens: u64,
+    pub think_tokens: u64,
     pub look_chars: u64,
     pub room_share: u64,
     pub gear: u8,
@@ -46,7 +47,7 @@ fn read_job(path: &str) -> Result<Job, String> {
     let text = fs::read_to_string(path).map_err(|_| format!("{path} could not be read"))?;
     let t: toml::Table = toml::from_str(&text).map_err(|e| crate::plan::toml_error(path, &text, &e))?;
     let known = [
-        "job", "test", "at", "try", "prompt", "model", "num_ctx", "suite", "hint", "item", "max_turns", "max_tokens",
+        "job", "test", "at", "try", "prompt", "model", "num_ctx", "suite", "hint", "item", "max_turns", "max_tokens", "think_tokens",
         "look_chars", "room_share", "gear", "max_usd", "deadline",
     ];
     if let Some(k) = t.keys().find(|k| !known.contains(&k.as_str())) {
@@ -89,7 +90,10 @@ fn read_job(path: &str) -> Result<Job, String> {
         hint: s("hint", false)?,
         item: s("item", false)?,
         max_turns: n("max_turns", Some(60), 1, 500)?,
-        max_tokens: n("max_tokens", Some(16000), 256, 200_000)?,
+        // what a reply may say and call, and apart from it, what it may think first:
+        // two builders on waits died thinking past one shared limit (findings 0029)
+        max_tokens: n("max_tokens", Some(12000), 256, 200_000)?,
+        think_tokens: n("think_tokens", Some(8000), 0, 200_000)?,
         look_chars: n("look_chars", Some(8000), 500, 100_000)?,
         room_share: n("room_share", Some(60), 10, 90)?,
         gear: n("gear", Some(1), 1, 2)? as u8,
@@ -132,13 +136,17 @@ fn now() -> u64 {
     SystemTime::now().duration_since(UNIX_EPOCH).map(|d| d.as_secs()).unwrap_or(0)
 }
 
-const TOOLS: &str = r#"[{"type":"function","function":{"name":"look","description":"Look at the repo, as it stands with the test red. command is list (args: a folder), read (args: a file, then optionally the first and last line to show, or give them as start_line and end_line; at most 400 lines at a time; it answers with the file, the lines shown and how many it has, then each line with its number) or find (args: a word, then optionally a folder or file to look in; otherwise pool, specs, tests, index, findings and jig).","parameters":{"type":"object","properties":{"why":{"type":"string","description":"What you expect to learn from this look, in one sentence. A look without it is refused."},"command":{"type":"string","enum":["list","read","find"]},"args":{"type":"array","items":{"type":"string"}},"start_line":{"type":"integer"},"end_line":{"type":"integer"}},"required":["why","command","args"]}}},{"type":"function","function":{"name":"submit_fix","description":"Hand in the fix: files, a list of the files you changed, each its path (an existing file under pool/, all in the same part, e.g. pool/PART.gate@2/) and its whole new content. The fix is then judged by every test: a pass ends the run; otherwise you are told what the tests printed, and may hand in again while you have calls left.","parameters":{"type":"object","properties":{"files":{"type":"array","items":{"type":"object","properties":{"path":{"type":"string"},"content":{"type":"string"}},"required":["path","content"]}}},"required":["files"]}}}]"#;
+const TOOLS: &str = r#"[{"type":"function","function":{"name":"look","description":"Look at the repo, as it stands with the test red. command is list (args: a folder), read (args: a file, then optionally the first and last line to show, or give them as start_line and end_line; at most 400 lines at a time; it answers with the file, the lines shown and how many it has, then each line with its number) or find (args: a word, then optionally a folder or file to look in; otherwise pool, specs, tests, index, findings and jig).","parameters":{"type":"object","properties":{"why":{"type":"string","description":"What you expect to learn from this look, in one sentence. A look without it is refused."},"command":{"type":"string","enum":["list","read","find"]},"args":{"type":"array","items":{"type":"string"}},"start_line":{"type":"integer"},"end_line":{"type":"integer"}},"required":["why","command","args"]}}},{"type":"function","function":{"name":"edit_file","description":"Change a file on disk, in your copy of the repo: old, copied exactly from the file and there exactly once, is replaced by new. Only existing files under pool/, all in the same part. Nothing is judged until you hand in; what you look at afterwards shows the change.","parameters":{"type":"object","properties":{"path":{"type":"string"},"old":{"type":"string","description":"The lines to replace, exactly as they are in the file, enough of them to be there once."},"new":{"type":"string"}},"required":["path","old","new"]}}},{"type":"function","function":{"name":"submit_fix","description":"Hand in what you changed on disk; files, if given, are first written whole: each its path (an existing file under pool/, all in the same part, e.g. pool/PART.gate@2/) and its whole new content. The fix is judged by every test: a pass ends the run; otherwise you are told what the tests printed, your changes stay on disk, and you may change them and hand in again while you have calls left. A run that ends without a hand-in has what is on disk handed in for it.","parameters":{"type":"object","properties":{"files":{"type":"array","items":{"type":"object","properties":{"path":{"type":"string"},"content":{"type":"string"}},"required":["path","content"]}}}}}}]"#;
 
 /// What the builder's tools and limits do between the runtime's calls.
 struct Builder<'a> {
     j: &'a Job,
     dir: PathBuf,
-    base: PathBuf,
+    base: PathBuf,     // the repo at the job's commit, never changed
+    work: PathBuf,     // the builder's copy of it, which its edits change
+    touched: Vec<String>, // files it has changed on disk
+    judged: String,    // what was on disk at the last hand-in
+    by_program: bool,  // the last hand-in was the program's, at the end
     code: String,
     budget: u64,
     jig: &'a Jig,
@@ -155,42 +163,102 @@ struct Builder<'a> {
 }
 
 impl Builder<'_> {
-    fn hand_in(&mut self, args: &Value) -> String {
-        self.hand += 1;
-        let h = self.hand;
+    /// paths the builder may change: checked with the ones it has changed already,
+    /// so all of them stay existing files of one part under pool/
+    fn may_change(&self, more: &[String]) -> Result<(), String> {
+        let mut all: Vec<String> = self.touched.clone();
+        for p in more {
+            if !all.contains(p) {
+                all.push(p.clone());
+            }
+        }
+        judge::check(&self.base, &all)
+    }
+
+    /// one exact edit on disk, in the builder's working copy: old must be there once
+    fn edit(&mut self, args: &Value) -> String {
+        let (Some(p), Some(old), Some(new)) = (args["path"].as_str(), args["old"].as_str(), args["new"].as_str()) else {
+            return "edit_file needs path, old and new.  Nothing was changed.".into();
+        };
+        if let Err(why) = self.may_change(&[p.to_string()]) {
+            return format!("refused: {why}.  Nothing was changed.");
+        }
+        let file = self.work.join(p);
+        let text = fs::read_to_string(&file).unwrap_or_default();
+        match text.matches(old).count() {
+            0 => return format!("{p} does not hold old exactly as given.  Nothing was changed; look again and copy it exactly."),
+            1 => {}
+            n => return format!("{p} holds old {n} times; give more of the lines around it so it is there once.  Nothing was changed."),
+        }
+        if old.is_empty() || fs::write(&file, text.replacen(old, new, 1)).is_err() {
+            return format!("{p} could not be changed.  Nothing was changed.");
+        }
+        self.note_touched(p);
+        say(self.quiet, &format!("edit {p}"));
+        format!("Edited {p} on disk.  Nothing is judged until you hand it in with submit_fix; a run that ends without a hand-in has what is on disk handed in for it.")
+    }
+
+    fn note_touched(&mut self, p: &str) {
+        if !self.touched.iter().any(|t| t == p) {
+            self.touched.push(p.to_string());
+        }
+    }
+
+    /// the files a hand-in gives whole are written to disk first, checked before anything is
+    fn write_files(&mut self, args: &Value) -> Result<(), String> {
         let mut files = Vec::new();
         for f in args["files"].as_array().into_iter().flatten() {
             match (f["path"].as_str(), f["content"].as_str()) {
                 (Some(p), Some(c)) if files.len() < MAX_FILES => files.push((p.to_string(), c.to_string())),
-                _ => {
-                    return self.refuse(format!("each file is a path and its whole content, at most {MAX_FILES}"));
-                }
+                _ => return Err(format!("each file is a path and its whole content, at most {MAX_FILES}")),
             }
         }
         let paths: Vec<String> = files.iter().map(|(p, _)| p.clone()).collect();
-        // the paths checked before anything is written
-        if let Err(why) = judge::check(&self.base, &paths) {
-            return self.refuse(why);
+        self.may_change(&paths)?;
+        for (p, c) in &files {
+            fs::write(self.work.join(p), c).map_err(|_| format!("could not write {p}"))?;
+            self.note_touched(p);
         }
+        Ok(())
+    }
+
+    /// what is on disk now: each changed file and its content, for knowing whether
+    /// it was judged already
+    fn on_disk(&self) -> String {
+        self.touched.iter().map(|p| format!("{p}\n{}", fs::read_to_string(self.work.join(p)).unwrap_or_default())).collect()
+    }
+
+    /// the files changed on disk, run against the suite on the jig.  by: the
+    /// builder, or the program when the builder ended without handing them in
+    fn judge_disk(&mut self, by_program: bool) -> String {
+        self.hand += 1;
+        let h = self.hand;
         let fixed = self.dir.join("fixed");
         let _ = fs::remove_dir_all(&fixed);
         let mut diff = String::new();
-        for (p, c) in &files {
-            let to = fixed.join(p);
+        let mut changed = Vec::new();
+        for p in self.touched.clone() {
+            let to = fixed.join(&p);
             if let Some(parent) = to.parent() {
                 let _ = fs::create_dir_all(parent);
             }
-            if fs::write(&to, c).is_err() {
-                return self.refuse(format!("could not write {p}"));
+            let _ = fs::copy(self.work.join(&p), &to);
+            let out = Command::new("diff").arg(self.base.join(&p)).arg(&to).output();
+            let d = out.map(|o| String::from_utf8_lossy(&o.stdout).to_string()).unwrap_or_default();
+            if !d.is_empty() {
+                changed.push(p.clone());
             }
-            let out = Command::new("diff").arg(self.base.join(p)).arg(&to).output();
-            diff += &format!("=== {p}\n{}", out.map(|o| String::from_utf8_lossy(&o.stdout).to_string()).unwrap_or_default());
+            diff += &format!("=== {p}\n{d}");
         }
         self.lines = diff.lines().filter(|l| l.starts_with('<') || l.starts_with('>')).count() as u64;
         let _ = fs::write(self.dir.join("output.txt"), &diff);
-        self.paths = paths;
-        say(self.quiet, &format!("hand-in {h}, {} file(s); running the suite on the jig", files.len()));
-        let after = match self.jig.run(&self.j.at, &self.j.suite, Some(&fixed)) {
+        self.paths = changed;
+        self.judged = self.on_disk();
+        self.by_program = by_program;
+        let who = if by_program { "handed in by the program, from what was on disk" } else { "" };
+        say(self.quiet, &format!("hand-in {h}{}{}, {} file(s) changed; running the suite on the jig", if by_program { ", " } else { "" }, who, self.paths.len()));
+        let over = if fixed.exists() { Some(fixed.as_path()) } else { None };
+        let after = match self.jig.run(&self.j.at, &self.j.suite, over) {
             Ok(a) => a,
             Err(why) => {
                 // the jig, not the fix: the run stops, and the note is not written from an error
@@ -206,8 +274,12 @@ impl Builder<'_> {
         let v = judge::verdict(&before, &after, &self.code);
         let _ = fs::write(self.dir.join("newly-red.txt"), v.newly_red.join("\n"));
         self.result = if v.pass { "pass" } else { "fail" }.into();
-        self.line = v.line.clone();
-        say(self.quiet, &format!("hand-in {h}: {}: {}", self.result, runtime::model::cut(&v.line, 140)));
+        self.line = if self.paths.is_empty() && by_program {
+            format!("nothing was changed on disk, so the tests ran on the commit as it was: {}", v.line)
+        } else {
+            v.line.clone()
+        };
+        say(self.quiet, &format!("hand-in {h}: {}: {}", self.result, runtime::model::cut(&self.line, 140)));
         if v.pass {
             return format!("Hand-in {h} judged: pass.  {}.", v.line);
         }
@@ -215,19 +287,18 @@ impl Builder<'_> {
         if !v.newly_red.is_empty() {
             a += &format!("\nWhat the tests that went red printed:\n{}", runtime::model::cut(&v.newly_red.join("\n"), 2000));
         }
-        a + "\nNothing was kept.  Change the fix and hand it in again with submit_fix."
+        a + "\nWhat you changed is still on disk.  Change it, with edit_file or whole files, and hand it in again with submit_fix."
     }
 
-    fn refuse(&mut self, why: String) -> String {
-        // a refused hand-in leaves nothing of an earlier one standing as its result
-        self.result = "refused".into();
-        self.line = why.clone();
-        self.lines = 0;
-        self.paths.clear();
-        let _ = fs::remove_file(self.dir.join("suite.txt"));
-        let _ = fs::remove_file(self.dir.join("output.txt"));
-        say(self.quiet, &format!("hand-in {} refused: {why}", self.hand));
-        format!("Hand-in {} refused: {why}.  Nothing was run.", self.hand)
+    fn submit(&mut self, args: &Value) -> String {
+        if let Err(why) = self.write_files(args) {
+            say(self.quiet, &format!("hand-in refused: {why}"));
+            return format!("Hand-in refused: {why}.  Nothing was written or run.");
+        }
+        if self.touched.is_empty() {
+            return "Nothing is changed on disk yet: change a file with edit_file, or give whole files in files, then hand in.".into();
+        }
+        self.judge_disk(false)
     }
 }
 
@@ -284,26 +355,27 @@ impl Hooks for Builder<'_> {
                     }
                 }
                 say(self.quiet, &format!("look {cmd} {}; why: {}", a.first().map(String::as_str).unwrap_or(""), runtime::model::cut(why, 120)));
-                let (answer, _) = look::look(&self.base, cmd, &a);
+                let (answer, _) = look::look(&self.work, cmd, &a);
                 // cut, and said so, so one read cannot fill the card (CivicCanada's Truncate)
                 Step::Answer(room::cap(&answer, self.j.look_chars as usize))
             }
+            "edit_file" => Step::Answer(self.edit(args)),
             "submit_fix" => {
-                let a = self.hand_in(args);
+                let a = self.submit(args);
                 if self.result == "pass" {
                     Step::Finish(a, "pass".into(), String::new())
                 } else {
                     Step::Answer(a)
                 }
             }
-            other => Step::Answer(format!("There is no tool {other}.  The tools are look and submit_fix.")),
+            other => Step::Answer(format!("There is no tool {other}.  The tools are look, edit_file and submit_fix.")),
         }
     }
 
     fn after(&mut self, turn: u32, left: u32) -> Option<String> {
         let mut n = format!("Call {turn} of {} done; {left} left.", self.j.max_turns);
         if left <= 10 {
-            n += "  Ten or fewer left: hand in your fix with submit_fix now.  A run that ends without one hands in nothing.";
+            n += "  Ten or fewer left: hand in your fix with submit_fix now.  A run that ends without one has only what is on disk handed in for it.";
         }
         Some(n)
     }
@@ -382,11 +454,13 @@ pub fn run(jobpath: &str) -> i32 {
     };
     // a fresh copy of the repo at the job's commit: what the builder sees, and nothing else
     let _ = fs::remove_dir_all(&dir);
+    let work = dir.join("work");
     let _ = fs::create_dir_all(&base);
+    // the copy twice: base never changes, work is where the builder's edits land
     let copied = Command::new("sh")
         .arg("-c")
-        .arg("git -C \"$1\" archive \"$2\" | tar -xf - -C \"$3\" && rm -rf \"$3/runs\" \"$3/out\"")
-        .args(["copy", &repo.to_string_lossy(), &j.at, &base.to_string_lossy()])
+        .arg("git -C \"$1\" archive \"$2\" | tar -xf - -C \"$3\" && rm -rf \"$3/runs\" \"$3/out\" && cp -a \"$3\" \"$4\"")
+        .args(["copy", &repo.to_string_lossy(), &j.at, &base.to_string_lossy(), &work.to_string_lossy()])
         .status()
         .map(|s| s.success())
         .unwrap_or(false);
@@ -431,6 +505,7 @@ pub fn run(jobpath: &str) -> i32 {
         url: std::env::var("OLLAMA_URL").ok().filter(|v| !v.is_empty()).unwrap_or_else(|| "http://localhost:11434".into()),
         num_ctx: j.num_ctx,
         max_tokens: j.max_tokens,
+        think_cap: j.think_tokens,
         timeout: Duration::from_secs(1800),
     };
     // the conversation's share of the window, less the system prompt; the rest is the reply
@@ -439,6 +514,10 @@ pub fn run(jobpath: &str) -> i32 {
         j: &j,
         dir: dir.clone(),
         base: base.clone(),
+        work,
+        touched: vec![],
+        judged: String::new(),
+        by_program: false,
         code,
         budget,
         jig: &jig,
@@ -469,9 +548,13 @@ pub fn run(jobpath: &str) -> i32 {
         eprintln!("agent: {why}");
         return 2;
     }
-    if b.hand == 0 {
-        b.result = "refused".into();
-        b.line = format!("no fix handed in ({why})");
+    // A run that ends without a pass, however it ends (out of calls, a reply cut
+    // off, out of room or time, the model gone), still has what is on disk handed
+    // in and the tests run on it, so there is always a result note to read
+    // (findings 0029): unless what is on disk was the last thing judged.
+    if ended != "pass" && !b.jig_down && (b.hand == 0 || b.on_disk() != b.judged) {
+        say(quiet, &format!("the run ended ({ended}); handing in what is on disk"));
+        b.judge_disk(true);
     }
     // the transcript for Chris and the mentor; the note for the director, never the transcript
     let _ = fs::write(dir.join("transcript.json"), serde_json::to_string_pretty(&json!({"system": system, "messages": r.messages})).unwrap_or_default());
@@ -481,8 +564,8 @@ pub fn run(jobpath: &str) -> i32 {
     let _ = fs::write(dir.join("note.toml"), &n);
     let dollars = runs.cost(&recorded, r.tokens_in, r.tokens_out).unwrap_or(0.0);
     let run_toml = format!(
-        "bench        = \"agent\"\njob          = {}\ntest         = {}\nat           = \"{}\"\ntry          = {}\nmodel        = {}\nnum_ctx      = {}\nprompt       = \"{}\"\nprompt_print = \"{}\"\nresult       = \"{}\"\nended        = \"{}\"\nwhy          = {}\ncalls        = {}\nhand_ins     = {}\nlines        = {}\ntokens_in    = {}\ntokens_out   = {}\npeak_context = {}\nfolded_chars = {}\nseconds      = {}\ndollars      = {:.6}\n",
-        note::toml_string(&j.job, 64), note::toml_string(&j.test, 128), j.at, j.try_, note::toml_string(&recorded, 160), j.num_ctx,
+        "bench        = \"agent\"\nhanded_in_by = \"{}\"\njob          = {}\ntest         = {}\nat           = \"{}\"\ntry          = {}\nmodel        = {}\nnum_ctx      = {}\nprompt       = \"{}\"\nprompt_print = \"{}\"\nresult       = \"{}\"\nended        = \"{}\"\nwhy          = {}\ncalls        = {}\nhand_ins     = {}\nlines        = {}\ntokens_in    = {}\ntokens_out   = {}\npeak_context = {}\nfolded_chars = {}\nseconds      = {}\ndollars      = {:.6}\n",
+        if b.hand == 0 { "nobody" } else if b.by_program { "program" } else { "builder" }, note::toml_string(&j.job, 64), note::toml_string(&j.test, 128), j.at, j.try_, note::toml_string(&recorded, 160), j.num_ctx,
         j.prompt, print, b.result, ended, note::toml_string(&why, 500), r.calls, b.hand, b.lines, r.tokens_in, r.tokens_out,
         r.peak, b.folded, seconds, dollars
     );

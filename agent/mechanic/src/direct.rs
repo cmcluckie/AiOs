@@ -422,7 +422,8 @@ pub fn run(planpath: &str) -> i32 {
         name: model,
         url: std::env::var("OLLAMA_URL").ok().filter(|v| !v.is_empty()).unwrap_or_else(|| "http://localhost:11434".into()),
         num_ctx,
-        max_tokens: 16000.min(num_ctx / 4),
+        max_tokens: 8000.min(num_ctx / 8),
+        think_cap: 8000.min(num_ctx / 8),
         timeout: Duration::from_secs(1800),
     };
     let r = react::run(&m, keys.as_ref(), &system, &first, MAX_CALLS, &mut d);

@@ -1,0 +1,10 @@
+code       = "TST.agent.limit@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+binds      = "SPEC.agent.8@1"
+red_when   = "on a toy repo with saved replies, thinking past its cap is read on, or the turn is not asked again with thinking off and the reply's own limit; an edit left on disk is not handed in and judged when the run ends, or when the replies are cut off at their limit; a run cut off with nothing changed gets no test run or no note; or an edit whose lines are not there once, or outside pool/, changes a file"
+timeout_ms = 120000
+isolates   = "TOOL.agent@1"
+runner     = "jig/test cmd sh tests/programs/agent.sh limit"
+mutations  = 4

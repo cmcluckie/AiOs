@@ -349,10 +349,10 @@ agent.plan@1 | red | agent/mechanic/src/plan.rs | s/Some(10), 1, 1000/Some(40), 
 agent.plan@1 | red | agent/mechanic/src/plan.rs | s/if at.len() < 7 [|][|] !at.chars()/if false \&\& !at.chars()/ | the commit to start from may be a branch name, which moves
 agent.plan@1 | red | agent/mechanic/src/plan.rs | s/"a key given twice"/"not TOML the repo writes"/ | a key given twice is refused without saying so
 agent.chat@1 | red | agent/runtime/src/model.rs | s/msg.remove("thinking");/msg.remove("not-thinking");/ | the thinking stays in the conversation and fills the context a turn at a time
-agent.chat@1 | red | agent/runtime/src/model.rs | s/if tout >= m.max_tokens { Stop::MaxTokens }/if tout >= m.max_tokens.min(0) { Stop::MaxTokens }/ | a full context is called a cut at the reply limit, and the room it ran out of goes unseen
+agent.chat@1 | red | agent/runtime/src/model.rs | s/if tout >= limit { Stop::MaxTokens }/if tout >= limit.min(0) { Stop::MaxTokens }/ | a full context is called a cut at the reply limit, and the room it ran out of goes unseen
 agent.chat@1 | red | agent/runtime/src/model.rs | s/let mut all = vec!\[json!({"role": "system", "content": system})\];/let mut all: Vec<Value> = vec![]; let _ = system;/ | the system prompt is never sent, so the builder has no role and no rules
 agent.chat@1 | red | agent/runtime/src/model.rs | s/let stop = if calls {/let stop = if false \&\& calls {/ | a call for a tool is read as the model stopping
-agent.chat@1 | red | agent/runtime/src/model.rs | s/"options": {"num_ctx": m.num_ctx, "num_predict": m.max_tokens},/"options": {"num_predict": m.max_tokens},/ | the context is left to Ollama's default, a sixth of the card
+agent.chat@1 | red | agent/runtime/src/model.rs | s/"options": {"num_ctx": m.num_ctx, "num_predict"/"options": {"num_predict"/ | the context is left to Ollama's default, a sixth of the card
 agent.build@1 | red | agent/mechanic/src/judge.rs | s/ \&\& rm -rf \\"\$d\/runs\\" \\"\$d\/out\\"//; | the jig's copy keeps runs/, so a builder's fix is judged beside the records of earlier ones
 agent.build@1 | red | agent/mechanic/src/build.rs | s/if why.is_empty() {/if false \&\& why.is_empty() {/ | a look with no why is run, and the builder reads without saying what it expects to learn
 agent.build@1 | red | agent/mechanic/src/build.rs | s/room::cap(\&answer, self.j.look_chars as usize)/room::cap(\&answer, self.j.look_chars as usize * 1000)/ | one read of a long file goes to the card whole and fills it
@@ -361,7 +361,7 @@ agent.build@1 | red | agent/mechanic/src/judge.rs | s/if !has(\&b, c, "FAIL") {/
 agent.build@1 | red | agent/mechanic/src/judge.rs | s/parts\[0\] != "pool"/false/ | a builder may hand in a change to the test itself and have it judged
 agent.build@1 | red | agent/mechanic/src/judge.rs | s/if has(\&b, c, "PASS") \&\& !has(\&a, c, "FAIL") \&\& !has(\&a, c, "PASS") {/if false {/ | a fix that stops a green test from running gets past
 agent.build@1 | red | agent/mechanic/src/judge.rs | s/let green = has(\&a, code, "PASS") \&\& !has(\&a, code, "FAIL");/let green = has(\&a, code, "PASS");/ | a fix that prints its own PASS line beside the real FAIL is a pass
-agent.build@1 | red | agent/mechanic/src/build.rs | s/if let Err(why) = judge::check(\&self.base, \&paths) {/if let Err(why) = judge::check(\&self.base, \&paths).and(Err::<(), String>(String::new())).or(Ok::<(), String>(())) {/ | a hand-in's paths are not checked before they are written, so one can land outside the folder
+agent.build@1 | red | agent/mechanic/src/build.rs | s/        self.may_change(\&paths)?;/        let _ = \&paths;/ | a hand-in's paths are not checked before they are written, so one can land outside the folder
 agent.build@1 | red | agent/mechanic/src/build.rs | s/self.jig_down = true;/self.jig_down = false;/ | a jig gone at a hand-in is taken for a failed fix, and the director spends a try on it
 agent.build@1 | red | agent/mechanic/src/build.rs | s/if spent + next > m {/if spent + next > m * 100.0 {/ | a paid builder spends past its share of the part's dollars
 agent.build@1 | red | agent/mechanic/src/build.rs | s/if let Err(why) = self.runs.room(spent + next) {/if let Err(why) = Ok::<(), String>(()) {/ | a paid builder never asks the month's cap
@@ -377,3 +377,7 @@ agent.bedrock@1 | red | agent/mechanic/src/record.rs | s/if meta.permissions().m
 agent.bedrock@1 | red | agent/runtime/src/model.rs | s/let id = ids\[used\].clone();/let id = String::from("t-0-0");/ | a tool's answer is handed back against a call that was never made, and Bedrock refuses the turn
 agent.bedrock@1 | red | agent/runtime/src/model.rs | s/let last_is_user = out.last().map(|m| m\["role"\] == "user").unwrap_or(false);/let last_is_user = false;/ | two user turns in a row, which Converse refuses
 agent.bedrock@1 | red | agent/runtime/src/model.rs | s/"model_context_window_exceeded" => Stop::Context,/"model_context_window_exceeded" => Stop::End,/ | a full context on Sonnet reads as a plain stop, and room is never seen
+agent.limit@1 | red | agent/runtime/src/model.rs | s/if cap > 0 \&\& thinking > cap \&\& v\["done"\] != true {/if false \&\& cap > 0 \&\& thinking > cap \&\& v["done"] != true {/ | thinking runs on past its cap and eats the reply's limit, as it did twice on waits
+agent.limit@1 | red | agent/runtime/src/model.rs | s/req\["think"\] = json!(false);/let _ = 0;/ | the turn asked again after too much thinking thinks again
+agent.limit@1 | red | agent/mechanic/src/build.rs | s/if ended != "pass" \&\& !b.jig_down/if false \&\& ended != "pass" \&\& !b.jig_down/ | a builder that ends without handing in hands in nothing, and the director gets no note of its work
+agent.limit@1 | red | agent/mechanic/src/build.rs | s/if let Err(why) = self.may_change(\&\[p.to_string()\]) {/if let Err(why) = Ok::<(), String>(()) {/ | an edit may change a test, or a file outside pool/

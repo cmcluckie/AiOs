@@ -1,0 +1,7 @@
+code       = "SPEC.agent.8@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+component  = "TOOL.agent@1"
+clause     = "A builder's reply has two limits, kept apart: what it may think, and what it may then say and call.  Its reply is read as it comes; thinking past its cap is stopped there and the same turn asked again with thinking off, so the reply's own limit goes to what it says and does.  A builder changes files on disk, in its own copy of the repo, with exact edits (lines that must be there once, existing files of one part under pool/) or whole files, and looks at what it changed.  However its run ends without a pass, by a reply cut off at its limit, out of calls, room or time, or the model gone, the program hands in what is on disk and runs the tests on it, unless that was the last thing judged; with nothing changed, the tests run on the commit as it was.  So every builder's run ends with a result note, and no builder hands in nothing (findings 0029)."
+author     = "KEY.chris"

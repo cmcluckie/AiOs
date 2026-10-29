@@ -1,0 +1,11 @@
+id      = "0098"
+date    = 2026-10-29
+kind    = "code"
+touches = ["agent/runtime/src/transport.rs", "agent/runtime/src/model.rs", "agent/runtime/src/react.rs", "agent/mechanic/src/build.rs", "agent/mechanic/src/direct.rs", "agent/mechanic/src/main.rs", "specs/agent.4@1.toml", "specs/agent.8@1.toml", "tests/agent.limit@1.toml", "tests/programs/agent.sh", "tests/fixtures/agent/build/think-1.json", "tests/fixtures/agent/build/think-2.json", "tests/fixtures/agent/build/cut-1.json", "tests/fixtures/agent/build/cut-2.json", "tests/fixtures/agent/build/cut-3.json", "tests/fixtures/agent/build/bare-1.json", "tests/fixtures/agent/build/bare-2.json", "tests/fixtures/agent/build/badedit-1.json", "tests/fixtures/agent/build/badedit-2.json", "tests/mutations.txt", "index/tool/agent@1.as-built.md"]
+asked   = "The first fix from the waits run on the layered bench (findings 0029): builders 1 and 2 ended with a reply cut off at its limit, and builder 2 handed in nothing.  A builder's thinking is capped apart from what it says (8,000 and 12,000 tokens a reply): the reply is streamed, thinking past the cap is stopped and the turn asked again with thinking off.  A builder now changes files on disk, in its own copy, with exact edits (edit_file) or whole files, and however its run ends without a pass, the program hands in what is on disk and runs the tests, so every run has a result note; with nothing changed the tests run on the commit as it was.  A refused hand-in is no longer counted as one.  SPEC.agent.8, TST.agent.limit (red on the committed agent; four mutations, killed); three mutations the change left stale rewritten; all 47 of the agent's killed."
+options = ["take it", "do not take it"]
+default = "take it"
+chose   = "take it"
+why     = "Chris, 2026-10-29: \"Cap thinking separately from output, and when a builder hits the limit, the program hands in whatever is on disk and runs the tests anyway.  A builder that times out still gets a result note.  No builder ever 'hands in nothing' again.\""
+by      = "KEY.chris@1"
+drafted = "Claude"

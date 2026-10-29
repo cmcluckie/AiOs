@@ -196,7 +196,7 @@ mod tests {
     }
 
     fn model() -> Model {
-        Model { gear: 1, name: "m".into(), url: "http://x".into(), num_ctx: 8192, max_tokens: 100, timeout: Duration::from_secs(5) }
+        Model { gear: 1, name: "m".into(), url: "http://x".into(), num_ctx: 8192, max_tokens: 100, think_cap: 0, timeout: Duration::from_secs(5) }
     }
 
     struct Script {

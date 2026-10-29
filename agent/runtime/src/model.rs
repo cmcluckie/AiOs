@@ -16,7 +16,8 @@ pub struct Model {
     pub name: String,      // Ollama's name, or Bedrock's model id
     pub url: String,       // Ollama's address (gear 1)
     pub num_ctx: u64,      // the context the model holds
-    pub max_tokens: u64,   // each reply's limit, thinking included
+    pub max_tokens: u64,   // each reply's limit for what it says and calls
+    pub think_cap: u64,    // the thinking allowed before it, apart; 0 for no cap
     pub timeout: Duration, // to wait for one reply
 }
 
@@ -50,11 +51,13 @@ pub struct Reply {
     pub tokens_in: u64,
     pub tokens_out: u64,
     pub error: String,
+    /// its thinking passed think_cap, so it was stopped and asked again without
+    pub thought_cut: bool,
 }
 
 impl Reply {
     fn failed(stop: Stop, error: String) -> Reply {
-        Reply { stop, message: None, tokens_in: 0, tokens_out: 0, error }
+        Reply { stop, message: None, tokens_in: 0, tokens_out: 0, error, thought_cut: false }
     }
 }
 
@@ -82,22 +85,37 @@ fn number(v: &Value, key: &str) -> u64 {
     v.get(key).and_then(Value::as_u64).unwrap_or(0)
 }
 
-/// The request Ollama gets, and its reply read (decisions 0056, 0086 and 0090).
-pub fn ollama_request(m: &Model, system: &str, messages: &[Value], tools: &[Value]) -> Value {
+/// What one reply may produce in all: its thinking, then what it says and calls.
+pub fn reply_limit(m: &Model) -> u64 {
+    m.max_tokens + m.think_cap
+}
+
+/// The request Ollama gets (decisions 0056, 0086 and 0090), streamed so the
+/// thinking can be watched as it comes; with think false, a reply with none.
+pub fn ollama_request(m: &Model, system: &str, messages: &[Value], tools: &[Value], think: bool) -> Value {
     let mut all = vec![json!({"role": "system", "content": system})];
     all.extend(messages.iter().cloned());
     let mut req = json!({
-        "model": m.name, "stream": false, "keep_alive": "10m",
-        "options": {"num_ctx": m.num_ctx, "num_predict": m.max_tokens},
+        "model": m.name, "stream": true, "keep_alive": "10m",
+        "options": {"num_ctx": m.num_ctx, "num_predict": if think { reply_limit(m) } else { m.max_tokens }},
         "messages": all,
     });
+    if !think {
+        req["think"] = json!(false);
+    }
     if !tools.is_empty() {
         req["tools"] = Value::Array(tools.to_vec());
     }
     req
 }
 
+/// A reply read whole: Ollama's final object, or one built from its stream.
 pub fn ollama_reply(m: &Model, text: &str) -> Reply {
+    read_reply(text, reply_limit(m))
+}
+
+/// limit: the num_predict the request was sent with
+fn read_reply(text: &str, limit: u64) -> Reply {
     let got: Value = match serde_json::from_str(text) {
         Ok(v) => v,
         Err(_) => return Reply::failed(Stop::Error, format!("Ollama's reply could not be read: {}", cut(text, 200))),
@@ -114,20 +132,91 @@ pub fn ollama_reply(m: &Model, text: &str) -> Reply {
         Stop::Tool
     } else if got.get("done_reason").and_then(Value::as_str) == Some("length") {
         // short of its own limit, the conversation filled the context (decision 0090)
-        if tout >= m.max_tokens { Stop::MaxTokens } else { Stop::Context }
+        if tout >= limit { Stop::MaxTokens } else { Stop::Context }
     } else {
         Stop::End
     };
-    Reply { stop, message: Some(Value::Object(msg)), tokens_in: tin, tokens_out: tout, error: String::new() }
+    Reply { stop, message: Some(Value::Object(msg)), tokens_in: tin, tokens_out: tout, error: String::new(), thought_cut: false }
+}
+
+enum Streamed {
+    Whole(String),          // the reply, put back together as one object
+    ThoughtTooLong(u64),    // stopped: its thinking passed the cap, about this many tokens
+    Failed(Reply),
+}
+
+/// One streamed call.  Each line is a piece of the reply; the pieces are joined
+/// into the one object a whole reply would have been.  With a cap, the reading
+/// stops once the thinking passes it.
+fn stream(m: &Model, body: &str, cap: u64) -> Streamed {
+    let (mut content, mut thought, mut thinking) = (String::new(), String::new(), 0u64);
+    let mut calls: Vec<Value> = Vec::new();
+    let mut last = Value::Null;
+    let mut bad: Option<String> = None;
+    let mut over = false;
+    let mut on = |line: &str| -> bool {
+        let Ok(v) = serde_json::from_str::<Value>(line) else {
+            bad = Some(cut(line, 200));
+            return false;
+        };
+        if let Some(t) = v["message"]["content"].as_str() {
+            content += t;
+        }
+        if let Some(t) = v["message"]["thinking"].as_str() {
+            thinking += crate::room::tokens(t);
+            thought += t;
+        }
+        if let Some(c) = v["message"]["tool_calls"].as_array() {
+            calls.extend(c.iter().cloned());
+        }
+        if cap > 0 && thinking > cap && v["done"] != true {
+            over = true;
+            return false;
+        }
+        last = v;
+        true
+    };
+    let status = match transport::post_lines(&format!("{}/api/chat", m.url), body, m.timeout, &mut on) {
+        Err(Failure::Unreachable(_)) => return Streamed::Failed(Reply::failed(Stop::Unreachable, format!("could not reach Ollama at {}", m.url))),
+        Err(Failure::Other(e)) => return Streamed::Failed(Reply::failed(Stop::Error, format!("Ollama: {e}"))),
+        Ok(s) => s,
+    };
+    if over {
+        return Streamed::ThoughtTooLong(thinking);
+    }
+    if status != 200 {
+        return Streamed::Failed(Reply::failed(Stop::Error, format!("Ollama said {status}: {}", bad.unwrap_or_else(|| cut(&last.to_string(), 200)))));
+    }
+    if bad.is_some() || last.is_null() {
+        return Streamed::Failed(Reply::failed(Stop::Error, format!("Ollama's reply could not be read: {}", bad.unwrap_or_default())));
+    }
+    // as a whole reply has it; ollama_reply counts the thinking and drops it
+    let mut msg = json!({"role": "assistant", "content": content, "thinking": thought});
+    if !calls.is_empty() {
+        msg["tool_calls"] = Value::Array(calls);
+    }
+    last["message"] = msg;
+    Streamed::Whole(last.to_string())
 }
 
 fn ollama(m: &Model, system: &str, messages: &[Value], tools: &[Value]) -> Reply {
-    let body = ollama_request(m, system, messages, tools).to_string();
-    match transport::post(&format!("{}/api/chat", m.url), &body, None, m.timeout) {
-        Err(Failure::Unreachable(_)) => Reply::failed(Stop::Unreachable, format!("could not reach Ollama at {}", m.url)),
-        Err(Failure::Other(e)) => Reply::failed(Stop::Error, format!("Ollama: {e}")),
-        Ok((200, text)) => ollama_reply(m, &text),
-        Ok((code, text)) => Reply::failed(Stop::Error, format!("Ollama said {code}: {}", cut(&text, 200))),
+    let body = ollama_request(m, system, messages, tools, true).to_string();
+    match stream(m, &body, m.think_cap) {
+        Streamed::Whole(text) => ollama_reply(m, &text),
+        Streamed::Failed(r) => r,
+        // thinking past its cap: stopped there, and the same turn asked again
+        // with no thinking, so the reply's own limit goes to what it says and does
+        Streamed::ThoughtTooLong(thought) => {
+            let body = ollama_request(m, system, messages, tools, false).to_string();
+            let mut r = match stream(m, &body, 0) {
+                Streamed::Whole(text) => read_reply(&text, m.max_tokens),
+                Streamed::Failed(r) => r,
+                Streamed::ThoughtTooLong(_) => Reply::failed(Stop::Error, "Ollama thought with thinking off".into()),
+            };
+            r.tokens_out += thought;
+            r.thought_cut = true;
+            r
+        }
     }
 }
 
@@ -240,6 +329,7 @@ pub fn bedrock_reply(text: &str) -> Reply {
         tokens_in: number(&got["usage"], "inputTokens"),
         tokens_out: number(&got["usage"], "outputTokens"),
         error: String::new(),
+        thought_cut: false,
     }
 }
 

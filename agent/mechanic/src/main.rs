@@ -117,6 +117,7 @@ fn cmd_chat(a: &[String]) -> i32 {
         url: std::env::var("OLLAMA_URL").ok().filter(|v| !v.is_empty()).unwrap_or_else(|| "http://localhost:11434".into()),
         num_ctx: ctx,
         max_tokens: max,
+        think_cap: std::env::var("AGENT_THINK").ok().and_then(|v| v.parse().ok()).unwrap_or(0),
         timeout: Duration::from_secs(1800),
     };
     let r = model::chat(&m, system, messages, &tools, keys.as_ref());
