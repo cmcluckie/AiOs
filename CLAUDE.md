@@ -22,6 +22,11 @@ why.  The full design is in design.md; read it before doing anything.
   "undefined reference".
 - Admit the smallest reviewable unit a failure asked for, never the package
   upstream ships it in.
+- Rust is the default language (tenet 11, decision 0097).  A new piece starts in
+  Rust; C only for a reason the petition names: lifted from Linux, linked
+  straight against a lifted C part where a Rust boundary costs more, the jig's
+  toolchain cannot build Rust for the target yet, or a reason Chris accepts.
+  What moves off the jig into an agent starts in Rust.
 - Nothing gets installed on the jig without a row in design.md's tool table,
   and the row is not complete until "how it gets reduced" is filled in.
 - You propose.  The referee decides.  You never install.
@@ -80,7 +85,7 @@ exactly; when a new one is needed, add it here in the same commit.
 
 - **Constitution.**  This repository.  The only authority on what a machine
   contains and why.  Every commit is signed.
-- **Tenet.**  One of the ten beliefs in design.md that no vote can amend.
+- **Tenet.**  One of the eleven beliefs in design.md that no vote can amend.
   The architects' (this file's side), never the referee's: a tenet is a
   belief, a rule is a check.  Moved out of constitution/ on 2026-10-15.
 - **Two rule books, two readers.**  This file is the rule book for the two
@@ -195,6 +200,12 @@ exactly; when a new one is needed, add it here in the same commit.
   processor refuses, and the nucleus prints a Guru Meditation line.  Page
   tables do the fencing, not the processor's older way of cutting memory
   (Chris's ruling, 2026-10-18).  Part 18, findings 0021.
+- **Marked for Rust.**  A piece in C that tenet 11 says should be Rust, listed
+  in findings 0028 with what it does, why it is C and that Rust is the target.
+  Not rewritten for that alone: it moves to Rust when it is next touched for
+  its own reasons, or when a petition says so.  Kept apart from TECH-DEBT n,
+  which marks lines in the source and is checked by a test; marking for Rust
+  changes no source.  Named by Chris on 2026-10-29.
 - **Tech debt.**  A line that is there on purpose and has to go.  It is marked
   `TECH-DEBT n` in a comment in the source and listed under the same number in
   the findings, with what replaces it and when it goes; a test checks the two

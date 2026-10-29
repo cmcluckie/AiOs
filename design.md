@@ -28,6 +28,7 @@ These are the architects' tenets: what AiOs is for, and what no agent, app or co
 8. **A test is written to fail.**  A failed test is the most valuable signal in the system.  A sensor or test that cannot go red is decoration.
 9. **Nothing is self-reported.**  No agent's certainty counts.  Confidence is earned by track record and judged by a committee with competing priorities.
 10. **Everything expires.**  Petitions carry a sunset.  Unused grants are revoked and the component stripped.
+11. **Rust by default.**  Every new piece starts in Rust.  C is allowed when the petition says why: it was lifted from Linux, and lifted/ keeps the language it was written in; it links straight against a lifted C part and a Rust boundary would cost more than it saves; the jig's toolchain cannot build Rust for the target yet, and then it is marked for Rust; or another reason Chris accepts.  (Added 2026-10-29, decision 0097.)
 
 ## The base
 

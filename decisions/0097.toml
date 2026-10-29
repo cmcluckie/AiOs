@@ -1,0 +1,11 @@
+id      = "0097"
+date    = 2026-10-29
+kind    = "tenet"
+touches = ["design.md", "CLAUDE.md", "findings/0028.md", "decisions/0095.toml"]
+asked   = "Tenet 11: Rust is the default language for AiOs.  Default, not rule: every new piece starts in Rust; C is allowed when the petition names one of four reasons: lifted from Linux (lifted/ keeps its language, always); linked straight against a lifted C part where a Rust boundary costs more than it saves (which part, and why); the jig's toolchain cannot build Rust for the target yet (then C until it can, marked for Rust); or another reason Chris accepts.  When a job moves off the jig into an agent it starts in Rust.  What already moved off the jig into C without a reason is marked for Rust (named file, what it does, why C, Rust the target) and rewritten only when next touched for its own reasons or when a petition says so.  Why Rust: memory safety where untrusted model output is handled; Rust was already slotted for the editor at @2; the agent is the first thing it applies to.  C was first: every pool part and the referee are C, and none is rewritten for this.  pool/ gone through file by file (findings 0028 items 5 to 7).  This rules decision 0095."
+options = ["Rust is the default, C by named reason", "Rust only where the input is untrusted", "C stays the default", "decide later"]
+default = "Rust is the default, C by named reason"
+chose   = "Rust is the default, C by named reason"
+why     = "Chris, 2026-10-29: \"Rust is the default language for AiOs.  Default, not rule: Rust is where every new piece starts, and C is allowed when one of the reasons below applies.  The reason goes in the petition.\""
+by      = "KEY.chris@1"
+drafted = "Claude"
