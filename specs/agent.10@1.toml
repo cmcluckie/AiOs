@@ -1,0 +1,7 @@
+code       = "SPEC.agent.10@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+component  = "TOOL.agent@1"
+clause     = "The prompt library keeps every version: a new one is a new file, the old one unchanged.  director@2 tells the director that every builder starts from a clean checkout of the plan's commit, so a file is never described as already changed, and that a hint must say something the result note did not already say, or be left out.  builder@2 holds reading the test's source first, without guessing at what it wants, as a standing rule, not a hint.  The director is shown the plan as the program read it, with no comments.  A prompt trial is two part plans alike but for their prompts, sharing a trial name that goes into every job and run record of both, and the scorecard shows a trial's runs together, marked (findings 0029)."
+author     = "KEY.chris"

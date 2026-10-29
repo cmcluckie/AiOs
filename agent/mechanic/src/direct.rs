@@ -160,6 +160,9 @@ impl Director {
             "# written by the director for {}, from the part plan\njob = \"{id}\"\ntest = \"{test}\"\nat = \"{}\"\ntry = {n}\nprompt = \"{}\"\nmodel = \"{}\"\nnum_ctx = {}\ndeadline = {}\n",
             self.id, self.p.at, self.p.prompt_builder, self.bmodel, self.bctx, self.deadline
         );
+        if !self.p.trial.is_empty() {
+            job += &format!("trial = \"{}\"\n", self.p.trial);
+        }
         if self.p.gear_builders == 2 {
             // a paid builder may spend what is left of the part's share
             job += &format!("gear = 2\nmax_usd = {:.6}\n", self.left());
@@ -399,8 +402,10 @@ pub fn run(planpath: &str) -> i32 {
         return 2;
     }
     let stamp = runtime::sigv4::now();
-    let plan_text = fs::read_to_string(planpath).unwrap_or_default();
-    let first = format!("The part plan, {id}:\n\n{plan_text}");
+    // the plan as the program reads it, every default filled in and no comments:
+    // a comment is strategic's note to itself, and on waits the director handed one
+    // to a builder as its hint (findings 0029)
+    let first = format!("The part plan, {id}:\n\n{}", plan::write(&p));
     let budget = num_ctx * 60 / 100;
     let mut d = Director {
         passed: vec![false; p.tests.len()],
@@ -491,7 +496,7 @@ pub fn run(planpath: &str) -> i32 {
     let item = format!("direct-{}", id.to_lowercase());
     if let Err(e) = d.runs.record(
         &item, &recorded, 1, r.tokens_in, r.tokens_out, if how == "done" { "pass" } else { "fail" }, 0,
-        &dir.join("director.json"), &dir.join("report.md"), &d.p.at, &print, Some(&stamp), r.peak, ended,
+        &dir.join("director.json"), &dir.join("report.md"), &d.p.at, &print, Some(&stamp), r.peak, ended, &d.p.trial,
     ) {
         eprintln!("agent: the director's run could not be recorded in runs/ ({e}); its files are in {}", dir.display());
     }

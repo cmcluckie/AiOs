@@ -33,6 +33,7 @@ pub struct Job {
     pub suite: String,
     pub hint: String,
     pub item: String,
+    pub trial: String,
     pub max_turns: u64,
     pub max_tokens: u64,
     pub think_tokens: u64,
@@ -48,7 +49,7 @@ fn read_job(path: &str) -> Result<Job, String> {
     let t: toml::Table = toml::from_str(&text).map_err(|e| crate::plan::toml_error(path, &text, &e))?;
     let known = [
         "job", "test", "at", "try", "prompt", "model", "num_ctx", "suite", "hint", "item", "max_turns", "max_tokens", "think_tokens",
-        "look_chars", "room_share", "gear", "max_usd", "deadline",
+        "look_chars", "room_share", "gear", "max_usd", "deadline", "trial",
     ];
     if let Some(k) = t.keys().find(|k| !known.contains(&k.as_str())) {
         return Err(format!("{k} is not something a job has"));
@@ -89,6 +90,7 @@ fn read_job(path: &str) -> Result<Job, String> {
         suite: s("suite", false)?,
         hint: s("hint", false)?,
         item: s("item", false)?,
+        trial: s("trial", false)?,
         max_turns: n("max_turns", Some(60), 1, 500)?,
         // what a reply may say and call, and apart from it, what it may think first:
         // two builders on waits died thinking past one shared limit (findings 0029)
@@ -108,6 +110,7 @@ fn read_job(path: &str) -> Result<Job, String> {
     if !plain(&j.job, "._-@") || !plain(&j.test, "._-@") || !plain(&j.suite, " ._-@") || !hex
         || !plain(&j.model, "._-:/") || !prompts::valid(&j.prompt)
         || !j.item.chars().all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '-' || c == '_')
+        || !plain(&j.trial, "-_")
     {
         return Err("job, test, at, model, prompt, suite or item has a character a job may not".into());
     }
@@ -588,7 +591,7 @@ pub fn run(jobpath: &str) -> i32 {
     let sitting = std::env::var("AGENT_SITTING").ok().filter(|s| !s.is_empty() && plain(s, "._-"));
     if let Err(e) = runs.record(
         &j.item, &recorded, j.try_, r.tokens_in, r.tokens_out, &b.result, b.lines, &dir.join("transcript.json"),
-        &dir.join("output.txt"), &j.at, &print, sitting.as_deref(), r.peak, &ended,
+        &dir.join("output.txt"), &j.at, &print, sitting.as_deref(), r.peak, &ended, &j.trial,
     ) {
         eprintln!("agent: the run could not be recorded in runs/ ({e}); its files are in {}", dir.display());
         return 1;

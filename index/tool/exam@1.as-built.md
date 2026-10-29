@@ -40,7 +40,9 @@ Sits a model for one exam item (exam/items.toml) and writes down what happened.
   cost and the prompt's fingerprint; then items passed, sittings, total spent
   and cost per passing sitting.  Items never sat print "not sat".  A sitting on
   the agent's bench adds its bench, the most context any of its calls held and
-  how its last try ended.
+  how its last try ended.  Below the items, the layered bench by part: one line
+  per director run, its model, its prompt, pass or fail and how it ended, a
+  prompt trial's runs together under its name (RUNS_TRIAL, SPEC.agent.10).
 
 ## What a run records
 id, date, item, model, version, sitting (one start of sit), prompt (first 8

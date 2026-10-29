@@ -53,6 +53,7 @@ impl Runs {
         sitting: Option<&str>,
         peak: u64,
         ended: &str,
+        trial: &str,
     ) -> Result<String, String> {
         let day = runtime::sigv4::now();
         let day = format!("{}-{}-{}", &day[..4], &day[4..6], &day[6..8]);
@@ -68,6 +69,9 @@ impl Runs {
             .env("RUNS_PROMPT", prompt);
         if let Some(s) = sitting {
             c.env("RUNS_SITTING", s);
+        }
+        if !trial.is_empty() {
+            c.env("RUNS_TRIAL", trial);
         }
         let out = c.output().map_err(|e| format!("jig/runs: {e}"))?;
         if out.status.success() {

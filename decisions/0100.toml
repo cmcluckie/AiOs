@@ -1,0 +1,11 @@
+id      = "0100"
+date    = 2026-10-29
+kind    = "code"
+touches = ["prompts/director@2.txt", "prompts/builder@2.txt", "agent/plans/waits-old.toml", "agent/plans/waits-new.toml", "agent/mechanic/src/plan.rs", "agent/mechanic/src/direct.rs", "agent/mechanic/src/build.rs", "agent/mechanic/src/record.rs", "jig/runs", "jig/scorecard", "specs/agent.10@1.toml", "tests/agent.trial@1.toml", "tests/programs/agent.sh", "tests/mutations.txt", "index/tool/agent@1.as-built.md", "index/tool/exam@1.as-built.md"]
+asked   = "The third fix from the waits run (findings 0029): the director's hints.  Hint 1 repeated the plan, a comment in it included; hint 3 called loader.c already partly modified, which it never is.  director@2: every builder starts from a clean checkout, so never describe a file as already changed; a hint says something the result note did not, or nothing.  builder@2: read the test's source first, do not guess, as a standing rule; and the edit tool and on-disk hand-in of decision 0098.  director@1 and builder@1 kept as they were used.  The director is shown the plan as the program read it, with no comments.  A prompt trial: agent/plans/waits-old.toml and waits-new.toml, alike but for their prompts, under trial prompts-2; the trial name goes into every job and run record, and the card shows the layered bench by part, a trial's runs together.  SPEC.agent.10, TST.agent.trial (red with no second prompts; three mutations, killed)."
+options = ["take it", "do not take it"]
+default = "take it"
+chose   = "take it"
+why     = "Chris, 2026-10-29: \"Two rules go in the director's system prompt, versioned in the prompt library as a new version, old one kept ... 'Read the test source first, don't guess' goes in the builder's system prompt as a standing rule, not a hint.  Run the old prompt against the new on waits as a prompt trial, two scorecard rows.\""
+by      = "KEY.chris@1"
+drafted = "Claude"

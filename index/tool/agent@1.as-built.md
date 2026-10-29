@@ -22,7 +22,8 @@ The runtime (agent/runtime), ported from CivicCanada as logic (agent/origin.toml
   model's own count of what was sent (SPEC.agent.9); a tool answer cut at a limit
   with CivicCanada's marker; the oldest tool answers dropped past a budget that
   counts the system prompt and tools too, the newest four kept.
-- prompts: the prompt library, NAME@N.txt, with git's fingerprint for each.
+- prompts: the prompt library, NAME@N.txt, with git's fingerprint for each;
+  every version kept (director@1 and @2, builder@1 and @2, SPEC.agent.10).
 - money: prices per million tokens from a price list, and the month's room asked
   of a command the caller names.
 - transport: reqwest, or with the `fake` feature saved replies (tests only).

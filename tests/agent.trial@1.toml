@@ -1,0 +1,10 @@
+code       = "TST.agent.trial@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+binds      = "SPEC.agent.10@1"
+red_when   = "director@1 or builder@1 is changed; director@2 does not say every builder starts from a clean checkout or that a hint must add to the note or be left out; builder@2 does not hold reading the test's source first; the trial plans differ in more than their prompts; the director is shown the plan's comments; a job or run on a trial plan does not carry the trial; or the card does not show a trial's runs together"
+timeout_ms = 120000
+isolates   = "TOOL.agent@1"
+runner     = "jig/test cmd sh tests/programs/agent.sh trial"
+mutations  = 3

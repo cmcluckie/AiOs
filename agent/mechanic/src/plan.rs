@@ -24,6 +24,7 @@ pub struct Plan {
     pub stuck_no_drop: u64,
     pub prompt_director: String,
     pub prompt_builder: String,
+    pub trial: String, // a prompt trial this run belongs to, "" for none
 }
 
 /// toml's own words for what it could not read, said plainly with the line
@@ -136,6 +137,12 @@ pub fn read(path: &str) -> Result<Plan, String> {
     let stuck_no_drop = r.whole("stuck_no_drop", Some(5), 1, 100)?;
     let prompt_director = r.text("prompts.director", true)?;
     let prompt_builder = r.text("prompts.builder", true)?;
+    // a prompt trial: two plans alike but for their prompts share one name, and the
+    // scorecard shows their rows together, marked (findings 0029)
+    let trial = r.text("trial", false)?;
+    if !trial.chars().all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_') {
+        return Err("trial is a name: letters, digits, - and _".into());
+    }
     if !version(&prompt_director) || !version(&prompt_builder) {
         return Err("prompts name a library version, like builder@1".into());
     }
@@ -156,6 +163,7 @@ pub fn read(path: &str) -> Result<Plan, String> {
         stuck_no_drop,
         prompt_director,
         prompt_builder,
+        trial,
     })
 }
 
@@ -171,9 +179,13 @@ pub fn write(p: &Plan) -> String {
         "{:<19} = {}\n{:<19} = {}\n{:<19} = {}\n{:<19} = {}\n",
         "max_tries", p.max_tries, "max_minutes", p.max_minutes, "stuck_same_failures", p.stuck_same_failures, "stuck_no_drop", p.stuck_no_drop
     );
+    if !p.trial.is_empty() {
+        s += &q("trial", &p.trial);
+    }
     s += &format!("\n[gear]\n{:<19} = {}\n{:<19} = {}\n", "tactical", p.gear_tactical, "builders", p.gear_builders);
     s += "\n[prompts]\n";
     s += &q("director", &p.prompt_director);
     s += &q("builder", &p.prompt_builder);
+
     s
 }

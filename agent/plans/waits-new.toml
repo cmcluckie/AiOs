@@ -1,0 +1,18 @@
+# Prompt trial prompts-2 (decision 0100, findings 0029): waits run twice on the
+# same program, model, commit and caps, once with the first prompts and once
+# with the second, so what the prompts changed is a number on the card.  This is
+# the new prompts.
+part       = "PART.loader@9: TECH-DEBT 2, a program waiting for a key stops the others"
+tests      = ["share.waits@1"]
+at         = "9c6c852"
+budget_usd = 0
+max_tries  = 10
+trial      = "prompts-2"
+
+[gear]
+tactical = 1
+builders = 1
+
+[prompts]
+director = "director@2"
+builder  = "builder@2"

@@ -11,6 +11,7 @@
 #   sh tests/programs/agent.sh build   TST.agent.build@1: one builder, its fix judged
 #   sh tests/programs/agent.sh limit   TST.agent.limit@1: a builder's limits; what is on disk handed in
 #   sh tests/programs/agent.sh tokens  TST.agent.tokens@1: the estimate, calibrated by the model's count
+#   sh tests/programs/agent.sh trial   TST.agent.trial@1: the second prompts, and the trial against the first
 #   sh tests/programs/agent.sh direct  TST.agent.direct@1: a director and its limits
 #   sh tests/programs/agent.sh bedrock TST.agent.bedrock@1: gear 2, and what it may spend
 #
@@ -268,6 +269,53 @@ build)
 		fail "the paid run is not in runs/ with its cost"
 	unset AIOS_AWS JOBMODEL
 	echo "a builder on a toy repo: a look with no why refused, one with a why answered from its copy, 400 lines cut at 8000 characters with the marker, a look outside refused, a call it could not read answered, a fix that broke a green test shown what it broke and not blamed for one red before, a fix to the test refused, a fix that makes a green test skip or prints its own PASS beside the FAIL failed, a hand-in path climbing out or through . refused before anything is written, the right fix a pass on call 8, also with the out folder given from here; a jig gone at the hand-in is cannot-run, with the note from the suite before; told its calls left, thinking dropped, an old answer dropped to make room and the last four kept; peak context, tokens, the note and the change recorded, and the run in runs/ with its bench and ending; the repo untouched; a full card ends as room, no model is cannot-run, and a job with a key no job has is refused; on gear 2 a call the month's cap has no room for is not sent, and a job stops before a call that could pass its share of the part's dollars, recorded with its cost" ;;
+trial)
+	pr=prompts
+	# the old versions are kept as they were used on waits (decision 0096's run)
+	[ "$(git hash-object "$pr/director@1.txt" | cut -c1-8)" = 1b06a8df ] && [ "$(git hash-object "$pr/builder@1.txt" | cut -c1-8)" = cf2c3ca3 ] ||
+		fail "director@1 or builder@1 changed: a version is never written over"
+	grep -q 'Every builder starts from a clean checkout of the plan.s commit' "$pr/director@2.txt" &&
+		grep -q 'Never describe a file as already changed' "$pr/director@2.txt" ||
+		fail "director@2 does not say every builder starts from a clean checkout, never describing a file as already changed"
+	grep -q 'A hint must say something the result note did not already say' "$pr/director@2.txt" && grep -q 'If you have nothing to add, give no hint' "$pr/director@2.txt" ||
+		fail "director@2 does not say a hint must add to the note, or be left out"
+	grep -q "Read the test's source first, before anything else" "$pr/builder@2.txt" && grep -q 'Do not guess at what a test wants' "$pr/builder@2.txt" ||
+		fail "builder@2 does not hold reading the test's source first as a standing rule"
+	grep -q 'hands in nothing' "$pr/builder@2.txt" && fail "builder@2 still says a run can hand in nothing"
+	# the trial: two plans alike but for their prompts, under one trial name
+	for v in old new; do "$t/agent" plan agent/plans/waits-$v.toml > "$t/$v.toml" 2> "$t/$v.err" || fail "the $v trial plan was refused: $(cat "$t/$v.err")"; done
+	grep -q '^trial  *= "prompts-2"$' "$t/old.toml" && grep -q '^director  *= "director@1"$' "$t/old.toml" && grep -q '^director  *= "director@2"$' "$t/new.toml" ||
+		fail "the trial plans do not name trial prompts-2 with the old and new prompts"
+	[ "$(grep -v -E '^(director|builder) ' "$t/old.toml")" = "$(grep -v -E '^(director|builder) ' "$t/new.toml")" ] ||
+		fail "the trial plans differ in more than their prompts: $(diff "$t/old.toml" "$t/new.toml" | head -4 | tr '\n' ' ')"
+	# a director on a trial plan: the plan it is shown has no comments, its jobs carry the
+	# trial, and its run and its builders' are recorded under it
+	cat > "$t/builder" <<'FAKE'
+#!/bin/sh
+jf=$2; job=$(sed -n 's/^job = "\(.*\)"$/\1/p' "$jf"); try=$(sed -n 's/^try = //p' "$jf"); cp "$jf" "$T/seen-$job.toml"
+o=$AGENT_OUT/$job-try$try; mkdir -p "$o"
+printf 'PASS  TST.share.waits@1  1s  ok\n# 1 passed, 0 failed, 0 skipped\n' | "$T/agent" note "$job" "$try" 10 10 > "$o/note.toml"
+printf 'result       = "pass"\nended        = "pass"\nwhy          = ""\n' > "$o/run.toml"
+FAKE
+	mkdir "$t/fake"; cp "$fx/direct/done/4.json" "$t/fake/1.json"
+	printf '{"model":"qwen3.8:27b","message":{"role":"assistant","content":"","tool_calls":[{"function":{"name":"done","arguments":{"report":"Passed."}}}]},"done":true,"done_reason":"stop","prompt_eval_count":900,"eval_count":20}\n' > "$t/fake/2.json"
+	sed 's/toy.answer@1/share.waits@1/' "$t/fake/1.json" > "$t/fake/x" && mv "$t/fake/x" "$t/fake/1.json"
+	cp agent/plans/waits-new.toml "$t/waits-new.toml"
+	T=$t AGENT_FAKE="$t/fake" AGENT_BUILDER="sh $t/builder" AGENT_OUT="$t/out" AGENT_QUIET=1 AGENT_RUNS="sh $(pwd)/jig/runs" RUNS="$t/runs" PRICES="$(pwd)/jig/prices.toml" \
+		"$t/agent" direct "$t/waits-new.toml" > "$t/d.out" 2> "$t/d.err"; rc=$?
+	[ $rc -eq 0 ] || fail "a director on the trial plan gave exit $rc: $(cat "$t/d.err" "$t/d.out" | head -3)"
+	jq -r '.messages[1].content' "$t/fake/sent-1.json" | grep -q '^#' && fail "the director was shown the plan's comments"
+	grep -qx 'trial = "prompts-2"' "$t/seen-waits-new-1.toml" || fail "the builder's job does not carry the trial"
+	grep -qx 'trial         = "prompts-2"' "$t"/runs/*-direct-waits-new-*/run.toml || fail "the director's run is not recorded under the trial"
+	# the card: the trial's two runs shown together, marked, each with its director's prompt
+	RUNS_TRIAL=prompts-2 RUNS_BENCH=agent RUNS_ENDED=stuck RUNS_PEAK=3000 RUNS_PROMPT=1b06a8df RUNS_SITTING=20261030T090000Z RUNS="$t/runs" PRICES="$(pwd)/jig/prices.toml" \
+		sh jig/runs record direct-waits-old ollama:qwen3.8:27b 2026-10-30 1 100 10 fail 0 "$t/d.out" "$t/d.out" > /dev/null || fail "the old run could not be recorded"
+	RUNS="$t/runs" sh jig/scorecard > "$t/card" 2>&1 || fail "the scorecard failed: $(head -2 "$t/card")"
+	sed -n '/^The layered bench, by part$/,$p' "$t/card" > "$t/parts"
+	grep -q '^  prompt trial prompts-2$' "$t/parts" && grep -q '^    waits-new .*PASS  ended pass' "$t/parts" &&
+		grep -q '^    waits-old .*director prompt 1b06a8df  FAIL  ended stuck' "$t/parts" ||
+		fail "the card does not show the trial's two runs together, marked, each with its prompt and ending: $(cat "$t/parts")"
+	echo "director@1 and builder@1 kept as used on waits; director@2 says every builder starts from a clean checkout and a hint must add to the note or be left out; builder@2 reads the test's source first as a standing rule; the two trial plans differ only in their prompts; a director on one is shown the plan with no comments, its jobs and its run carry the trial, and the card shows the trial's two runs together" ;;
 tokens)
 	tf="$fx/tokens"
 	# the model's own count of a file: its count with the file, less its count with nothing
