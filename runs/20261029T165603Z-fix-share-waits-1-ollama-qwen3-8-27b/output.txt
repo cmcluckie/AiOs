@@ -1,0 +1,41 @@
+=== pool/PART.loader@9/loader.c
+83,84c83,85
+< /* Interrupts off for the length of a system call, so a tick never lands in the
+<  * middle of one: one program's bytes never interleave with another's. */
+---
+> /* Interrupts off for a call's brief, non-reentrant operations, so a tick never
+>  * lands in the middle of one.  A call that waits for a device instead leaves
+>  * them on, so the tick keeps taking the processor back (SPEC.loader.16@1). */
+287,289c288,294
+< /* Wait for one byte, then take whatever else has already arrived.  TECH-DEBT 2:
+<  * a system call runs with interrupts off, so while a program waits here no
+<  * other program gets a turn.  It goes in the mechanic, after the series. */
+---
+> /* Wait for one byte, then take whatever else has already arrived.  The wait is
+>  * done with interrupts on, so the 8254's tick keeps taking the processor back
+>  * and the other programs keep their turns while this one waits
+>  * (SPEC.loader.16@1); a tick in the middle of it lands in the gate, which
+>  * saves this program's frame and resumes the next, and the poll starts again
+>  * when it gets the processor back.  Only the taking of the byte is with
+>  * interrupts off, so it is atomic. */
+297,304c302,312
+< 	while (!serial8250_poll(CONSOLE_PORT))
+< 		;
+< 	f = irq_save();
+< 	p[got++] = serial8250_getc(CONSOLE_PORT);
+< 	while (got < n && serial8250_poll(CONSOLE_PORT))
+< 		p[got++] = serial8250_getc(CONSOLE_PORT);
+< 	irq_restore(f);
+< 	return got;
+---
+> 	while (1) {
+> 		f = irq_save();
+> 		if (serial8250_poll(CONSOLE_PORT)) {
+> 			p[got++] = serial8250_getc(CONSOLE_PORT);
+> 			while (got < n && serial8250_poll(CONSOLE_PORT))
+> 				p[got++] = serial8250_getc(CONSOLE_PORT);
+> 			irq_restore(f);
+> 			return got;
+> 		}
+> 		irq_restore(f);
+> 	}

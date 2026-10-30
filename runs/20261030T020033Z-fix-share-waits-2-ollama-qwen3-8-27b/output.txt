@@ -1,0 +1,26 @@
+=== pool/PART.loader@9/loader.c
+287,289c287,294
+< /* Wait for one byte, then take whatever else has already arrived.  TECH-DEBT 2:
+<  * a system call runs with interrupts off, so while a program waits here no
+<  * other program gets a turn.  It goes in the mechanic, after the series. */
+---
+> /* Wait for one byte, then take whatever else has already arrived.  Waiting is
+>  * the only part that may take the processor away: as long as no byte has come
+>  * and there is another program still running, hand the processor to it; the
+>  * 8254's next tick resumes this one and the loop sees the byte then.
+>  * (TECH-DEBT 2, paid here: the kernel no longer spins for the first byte with
+>  * interrupts off, so a program waiting in read no longer stops the others.)
+>  * The actual grab is still atomic: one byte, then any already waiting, taken
+>  * with the 8254 held off, as before. */
+297c302,308
+< 	while (!serial8250_poll(CONSOLE_PORT))
+---
+> 	while (!serial8250_poll(CONSOLE_PORT)) {
+> #ifdef HAVE_SHARE
+> 		/* If there is another program still running, yield to it.  If not,
+> 		 * share_exit returns to the spin below and the kernel keeps waiting
+> 		 * here for the byte. */
+> 		share_exit();
+> #endif
+298a310
+> 	}

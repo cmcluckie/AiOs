@@ -1,0 +1,16 @@
+=== pool/PART.loader@9/loader.c
+287,289c287,294
+< /* Wait for one byte, then take whatever else has already arrived.  TECH-DEBT 2:
+<  * a system call runs with interrupts off, so while a program waits here no
+<  * other program gets a turn.  It goes in the mechanic, after the series. */
+---
+> /* Wait for one byte, then take whatever else has already arrived.  The system
+>  * call runs with interrupts off (the int 0x80 gate cleared them, as Linux's
+>  * int 0x80 entry does), so the wait loop opens the tick again (sti): a tick
+>  * (IRQ 0) then preempts this kernel wait and hands the processor to the other
+>  * program, and the saved frame is resumed inside the loop when its turn comes
+>  * (the scheduler's switch, in the gate).  Taking the bytes stays under the
+>  * saved flags, so one program's bytes never interleave with another's.  The
+>  * TECH-DEBT 2 this was is gone. */
+296a302
+> 	__asm__ volatile("sti" : : : "memory");	/* wait with the tick open (TECH-DEBT 2, fixed) */

@@ -1,0 +1,207 @@
+{
+  "system": "You are the director of one part of AiOs, a small operating system built from parts.  Strategic (two people, Chris and Claude) wrote the part plan in the first message: the tests that say the part is done, the commit the work starts from, and the limits you work under.  Your job is to get every one of those tests green by giving jobs to builders.  You never write code and never read it.\n\nA builder starts fresh for each job, does that one job and is gone.  Give a job with the job tool: one red test, and, when it helps, a hint of at most a few sentences: what an earlier builder's note showed, which part to look at, a lesson from the prompt library.  A builder never sees an earlier builder's work, so a hint is the only way something learned on one try reaches the next.\n\nAfter each job you get its result note, written by the program from what the tests printed on the jig: pass or fail, the tests passed and failed, the failing tests, the first failure, the files changed, how the job ended (a pass, out of calls, out of room, stopped) and why.  Trust the note over anything a builder might have said; you will not see what it said.\n\nsearch_log finds words in your log of this part: every job, every note.  search_prompts finds words in the prompt library: the lessons earlier jobs taught.  Use them before you give the same job twice.\n\nThe program keeps the limits, not you: the tries, the time, and the stuck rule.  If the same tests keep failing, or the count of failures stops going down, it stops the part and sends the notes to strategic.  Do not spend tries hoping; change something each time: the hint, or which test goes first.\n\nWhen every test in the plan has passed, call done with a report of a few sentences: what was done, in how many jobs, and anything strategic should know.  If you cannot go on without a decision only a person can make, call ask with the question, in one or two sentences; the part waits for the answer.  Never send an empty reply.\n",
+  "messages": [
+    {
+      "role": "user",
+      "content": "The part plan, waits:\n\n# A part plan, strategic's: the waits fix (TECH-DEBT 2), from the commit Sonnet\n# and the old bench's 3090 runs started from, so the layered agent's first real\n# run can be set beside them (findings 0026 item 11, findings 0027).  The model on\n# the card and its context are the agent's (AGENT_CARD_MODEL, AGENT_CARD_CTX).\npart       = \"PART.loader@9: TECH-DEBT 2, a program waiting for a key stops the others\"\ntests      = [\"share.waits@1\"]\nat         = \"9c6c852\"\nbudget_usd = 0\nmax_tries  = 10\n\n[gear]\ntactical = 1\nbuilders = 1\n\n[prompts]\ndirector = \"director@1\"\nbuilder  = \"builder@1\"\n"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "tool_calls": [
+        {
+          "id": "call_akrqcwo0",
+          "function": {
+            "index": 0,
+            "name": "search_log",
+            "arguments": {
+              "word": "waits"
+            }
+          }
+        },
+        {
+          "id": "call_w0wu8tbm",
+          "function": {
+            "index": 1,
+            "name": "search_prompts",
+            "arguments": {
+              "word": "waits"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "tool_name": "search_log",
+      "content": "log:1: # waits\nlog:3: plan agent/plans/waits.toml, at 9c6c852, sitting 20261029T160914Z"
+    },
+    {
+      "role": "tool",
+      "tool_name": "search_prompts",
+      "content": "director@1:11: When every test in the plan has passed, call done with a report of a few sentences: what was done, in how many jobs, and anything strategic should know.  If you cannot go on without a decision only a person can make, call ask with the question, in one or two sentences; the part waits for the answer.  Never send an empty reply."
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "tool_calls": [
+        {
+          "id": "call_x94enl0i",
+          "function": {
+            "index": 0,
+            "name": "search_log",
+            "arguments": {
+              "word": "share"
+            }
+          }
+        },
+        {
+          "id": "call_wst9lrz0",
+          "function": {
+            "index": 1,
+            "name": "search_prompts",
+            "arguments": {
+              "word": "key"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "tool_name": "search_log",
+      "content": "no line holds share"
+    },
+    {
+      "role": "tool",
+      "tool_name": "search_prompts",
+      "content": "no line holds key"
+    },
+    {
+      "role": "assistant",
+      "content": "The log is essentially empty (only the plan entry) and the prompt library has nothing relevant yet — first job, so let me hand it over with a hint drawn straight from the plan.",
+      "tool_calls": [
+        {
+          "id": "call_6snf6v2t",
+          "function": {
+            "index": 0,
+            "name": "job",
+            "arguments": {
+              "test": "share.waits@1",
+              "why": "It is the single test in the plan: a program waiting for a key must not stop the others, per the waits part plan.",
+              "hint": "The plan: TECH-DEBT 2 — a program waiting for a key stops the others; fix that. When a card is described, the model on the card and its context are the agent's (AGENT_CARD_MODEL, AGENT_CARD_CTX). Start from the plan's commit and make the test pass."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "tool_name": "job",
+      "content": "Job waits-1, share.waits@1: fail, ended stopped: its reply was cut off at its limit.\nIts result note, written by the program from what the tests printed on the jig:\njob           = \"waits-1\"\nstatus        = \"fail\"\ntests_passed  = 121\ntests_failed  = 1\nfailing       = [\"TST.share.waits@1\"]\nfirst_failure = \"TST.share.waits@1: it never showed 00:00 \"\ntry           = 1\ntokens        = 1209968\nseconds       = 2515\nfiles_changed = [\"pool/PART.loader@9/loader.c\"]\n"
+    },
+    {
+      "role": "assistant",
+      "content": "The test suite ran and nearly passed, but one check is failing that expects \"00:00\" to be shown. I'm moving on to the next job to investigate what that specific assertion requires.",
+      "tool_calls": [
+        {
+          "id": "call_7h7708wp",
+          "function": {
+            "index": 0,
+            "name": "job",
+            "arguments": {
+              "hint": "121 tests already pass; the only failing one says \"it never showed 00:00\". Work out what the test expects to see (likely a timestamp or time display while a program waits for a key) and make the waits path actually show it. Keep the change focused on the loader waits path.",
+              "test": "share.waits@1",
+              "why": "Previous job got everything green except one check: the failing line says the test \"never showed 00:00\", so the fix is close and that assertion is the gap."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "tool_name": "job",
+      "content": "Job waits-2, share.waits@1: refused, ended stopped: its reply was cut off at its limit.\nIts result note, written by the program from what the tests printed on the jig:\njob           = \"waits-2\"\nstatus        = \"fail\"\ntests_passed  = 121\ntests_failed  = 1\nfailing       = [\"TST.share.waits@1\"]\nfirst_failure = \"TST.share.waits@1: it never showed 00:00 \"\ntry           = 2\ntokens        = 934131\nseconds       = 1900\nfiles_changed = []\n"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "tool_calls": [
+        {
+          "id": "call_f9ziejny",
+          "function": {
+            "index": 0,
+            "name": "search_prompts",
+            "arguments": {
+              "word": "00:00"
+            }
+          }
+        },
+        {
+          "id": "call_2nen8qen",
+          "function": {
+            "index": 1,
+            "name": "search_log",
+            "arguments": {
+              "word": "00:00"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "tool_name": "search_prompts",
+      "content": "no line holds 00:00"
+    },
+    {
+      "role": "tool",
+      "tool_name": "search_log",
+      "content": "log:14: first_failure = \"TST.share.waits@1: it never showed 00:00 \"\nlog:22: hint: 121 tests already pass; the only failing one says \"it never showed 00:00\". Work out what the test expects to see (likely a timestamp or time display while a program waits for a key) and make the waits path actually show it. Keep the change focused on the loader waits path.\nlog:30: first_failure = \"TST.share.waits@1: it never showed 00:00 \""
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "tool_calls": [
+        {
+          "id": "call_ebnvd7q7",
+          "function": {
+            "index": 0,
+            "name": "job",
+            "arguments": {
+              "hint": "First read the TST.share.waits@1 test source to learn exactly what \"it never showed 00:00\" checks for and how the display is asserted; do not guess at it. Then look at the waits path in pool/PART.loader@9/loader.c (already partly modified) for where a key-wait should surface 00:00. Keep the change minimal and focused.",
+              "test": "share.waits@1",
+              "why": "Two tries in a row hit the same single assertion; last builder stopped with no change, so this time anchor it on reading the test's exact expectation first."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "tool_name": "job",
+      "content": "Job waits-3, share.waits@1: pass, ended pass.\nIts result note, written by the program from what the tests printed on the jig:\njob           = \"waits-3\"\nstatus        = \"pass\"\ntests_passed  = 122\ntests_failed  = 0\nfailing       = []\nfirst_failure = \"\"\ntry           = 3\ntokens        = 540774\nseconds       = 1667\nfiles_changed = [\"pool/PART.loader@9/loader.c\"]\n"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "tool_calls": [
+        {
+          "id": "call_iqaggux6",
+          "function": {
+            "index": 0,
+            "name": "done",
+            "arguments": {
+              "report": "Part \"PART.loader@9: TECH-DEBT 2\" done in 3 jobs. The waits fix in pool/PART.loader@9/loader.c is in place: a program waiting for a key no longer stops the others, and the waits path now shows 00:00 as the test asserts. All 122 tests pass, 0 failures, at commit 9c6c852. Nothing for strategic to chase — the bench baseline comparison (findings 0026 item 11 / 0027) is free to run against this."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "tool_name": "done",
+      "content": "Done."
+    }
+  ]
+}

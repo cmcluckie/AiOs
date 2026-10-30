@@ -1,0 +1,13 @@
+# waits-old: done
+
+every test in the plan passed, in 2 job(s)
+
+Plan: PART.loader@9: TECH-DEBT 2, a program waiting for a key stops the others, at 9c6c852, director director@1 (1b06a8df), builders builder@1.
+Director: 5 calls, 8770 tokens in, 1109 out, peak context 2505 of 98304; 153 minutes.
+
+- waits-old-1, share.waits@1: fail, ended turns: more than 60 calls
+- waits-old-2, share.waits@1: pass, ended pass
+
+The director's words:
+
+Part waits-old is done. The single test share.waits@1 now passes (122/122 total, 0 failing). First builder attempt ran out of turns and left a timer regression; the second builder made the keyboard-wait non-blocking in pool/PART.loader@9/loader.c so a key-waiting program no longer stalls the scheduler, and the timer rate test also recovers. Done in 2 jobs.

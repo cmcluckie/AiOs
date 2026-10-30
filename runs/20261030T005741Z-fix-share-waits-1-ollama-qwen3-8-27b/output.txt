@@ -1,0 +1,13 @@
+=== pool/PART.loader@9/loader.c
+287,289c287,293
+< /* Wait for one byte, then take whatever else has already arrived.  TECH-DEBT 2:
+<  * a system call runs with interrupts off, so while a program waits here no
+<  * other program gets a turn.  It goes in the mechanic, after the series. */
+---
+> /* Wait for one byte, then take whatever else has already arrived.  The wait
+>  * itself keeps interrupts on: a tick may arrive in the middle of it and hand
+>  * the processor to the next program, which resumes the waiter where it was
+>  * (its registers are saved on its kernel stack by the gate) when its own turn
+>  * comes again.  Only the taking of the byte closes the interrupts, so a tick
+>  * never lands in the middle of it and one program's bytes never interleave
+>  * with another's. */

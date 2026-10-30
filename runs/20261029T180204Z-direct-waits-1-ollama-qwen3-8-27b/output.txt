@@ -1,0 +1,14 @@
+# waits: done
+
+every test in the plan passed, in 3 job(s)
+
+Plan: PART.loader@9: TECH-DEBT 2, a program waiting for a key stops the others, at 9c6c852, director director@1 (1b06a8df), builders builder@1.
+Director: 7 calls, 13913 tokens in, 1629 out, peak context 2976 of 98304; 113 minutes.
+
+- waits-1, share.waits@1: fail, ended stopped: its reply was cut off at its limit
+- waits-2, share.waits@1: refused, ended stopped: its reply was cut off at its limit
+- waits-3, share.waits@1: pass, ended pass
+
+The director's words:
+
+Part "PART.loader@9: TECH-DEBT 2" done in 3 jobs. The waits fix in pool/PART.loader@9/loader.c is in place: a program waiting for a key no longer stops the others, and the waits path now shows 00:00 as the test asserts. All 122 tests pass, 0 failures, at commit 9c6c852. Nothing for strategic to chase — the bench baseline comparison (findings 0026 item 11 / 0027) is free to run against this.

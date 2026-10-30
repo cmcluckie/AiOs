@@ -1,0 +1,148 @@
+{
+  "system": "You are the director of one part of AiOs, a small operating system built from parts.  Strategic (two people, Chris and Claude) wrote the part plan in the first message: the tests that say the part is done, the commit the work starts from, and the limits you work under.  Your job is to get every one of those tests green by giving jobs to builders.  You never write code and never read it.\n\nA builder starts fresh for each job, does that one job and is gone.  Give a job with the job tool: one red test, and, when it helps, a hint of at most a few sentences: what an earlier builder's note showed, which part to look at, a lesson from the prompt library.  A builder never sees an earlier builder's work, so a hint is the only way something learned on one try reaches the next.\n\nAfter each job you get its result note, written by the program from what the tests printed on the jig: pass or fail, the tests passed and failed, the failing tests, the first failure, the files changed, how the job ended (a pass, out of calls, out of room, stopped) and why.  Trust the note over anything a builder might have said; you will not see what it said.\n\nsearch_log finds words in your log of this part: every job, every note.  search_prompts finds words in the prompt library: the lessons earlier jobs taught.  Use them before you give the same job twice.\n\nThe program keeps the limits, not you: the tries, the time, and the stuck rule.  If the same tests keep failing, or the count of failures stops going down, it stops the part and sends the notes to strategic.  Do not spend tries hoping; change something each time: the hint, or which test goes first.\n\nWhen every test in the plan has passed, call done with a report of a few sentences: what was done, in how many jobs, and anything strategic should know.  If you cannot go on without a decision only a person can make, call ask with the question, in one or two sentences; the part waits for the answer.  Never send an empty reply.\n",
+  "messages": [
+    {
+      "role": "user",
+      "content": "The part plan, waits-old:\n\npart                = \"PART.loader@9: TECH-DEBT 2, a program waiting for a key stops the others\"\npetition            = \"\"\ntests               = [\"share.waits@1\"]\nat                  = \"9c6c852\"\nbudget_usd          = 0.00\nmax_tries           = 10\nmax_minutes         = 240\nstuck_same_failures = 3\nstuck_no_drop       = 5\ntrial               = \"prompts-2\"\n\n[gear]\ntactical            = 1\nbuilders            = 1\n\n[prompts]\ndirector            = \"director@1\"\nbuilder             = \"builder@1\"\n"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "tool_calls": [
+        {
+          "id": "call_gtbhvxx6",
+          "function": {
+            "index": 0,
+            "name": "search_log",
+            "arguments": {
+              "word": "waits"
+            }
+          }
+        },
+        {
+          "id": "call_3vbkdojp",
+          "function": {
+            "index": 1,
+            "name": "search_prompts",
+            "arguments": {
+              "word": "waits"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "tool_name": "search_log",
+      "content": "log:1: # waits-old\nlog:3: plan agent/plans/waits-old.toml, at 9c6c852, sitting 20261029T232804Z"
+    },
+    {
+      "role": "tool",
+      "tool_name": "search_prompts",
+      "content": "director@1:11: When every test in the plan has passed, call done with a report of a few sentences: what was done, in how many jobs, and anything strategic should know.  If you cannot go on without a decision only a person can make, call ask with the question, in one or two sentences; the part waits for the answer.  Never send an empty reply."
+    },
+    {
+      "role": "assistant",
+      "content": "I found no prior lessons to work with. The plan is straightforward: one test, `share.waits@1`, and the description is clear—a program that blocks waiting for a keypress shouldn't freeze other programs. I'll start a job now.",
+      "tool_calls": [
+        {
+          "id": "call_t7jj0qca",
+          "function": {
+            "index": 0,
+            "name": "job",
+            "arguments": {
+              "test": "share.waits@1",
+              "why": "Only test in the plan; it should currently fail because a key-waiting program blocks the others.",
+              "hint": "The tech-debt issue: one program waiting for keyboard input stops the rest of the system from running. Look at where a blocking input wait happens and how the scheduler/runner loops through programs."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "tool_name": "job",
+      "content": "Job waits-old-1, share.waits@1: fail, ended turns: more than 60 calls.\nIts result note, written by the program from what the tests printed on the jig:\njob           = \"waits-old-1\"\nstatus        = \"fail\"\ntests_passed  = 120\ntests_failed  = 2\nfailing       = [\"TST.share.waits@1\", \"TST.timer.rate@1\"]\nfirst_failure = \"TST.share.waits@1: it never showed 00:00 \"\ntry           = 1\ntokens        = 2377847\nseconds       = 4828\nfiles_changed = [\"pool/PART.loader@9/loader.c\"]\ncalls         = 60\npeak_context  = 66997\nminutes       = 81\ndirector_peak = 1759\n"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "tool_calls": [
+        {
+          "id": "call_nw3klqff",
+          "function": {
+            "index": 0,
+            "name": "search_log",
+            "arguments": {
+              "word": "timer"
+            }
+          }
+        },
+        {
+          "id": "call_yj9xumfg",
+          "function": {
+            "index": 1,
+            "name": "search_prompts",
+            "arguments": {
+              "word": "loader"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "tool_name": "search_log",
+      "content": "log:13: failing       = [\"TST.share.waits@1\", \"TST.timer.rate@1\"]"
+    },
+    {
+      "role": "tool",
+      "tool_name": "search_prompts",
+      "content": "no line holds loader"
+    },
+    {
+      "role": "assistant",
+      "content": "The first builder ran out of turns, touched loader.c, and both waits and a timer test are now failing. I need a sharper hint: the fix is about the scheduler yielding to other programs while one waits on keyboard input, and not breaking the timer.",
+      "tool_calls": [
+        {
+          "id": "call_2eu0ho3q",
+          "function": {
+            "index": 0,
+            "name": "job",
+            "arguments": {
+              "test": "share.waits@1",
+              "why": "Same test, still failing plus a timer regression; a sharper hint about the non-blocking scheduler is needed.",
+              "hint": "TST.share.waits@1 fails with \"it never showed 00:00\": a program that is waiting for a keypress must not block the scheduler, so other programs (a timer/clock) keep ticking. In loader.c, the fix is to make keyboard input wait non-blocking: when a program is waiting on a key, yield to and keep running the others instead of blocking the whole loop. Also do not break TST.timer.rate@1 — the timer must still fire at the right rate."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "tool_name": "job",
+      "content": "Job waits-old-2, share.waits@1: pass, ended pass.\nIts result note, written by the program from what the tests printed on the jig:\njob           = \"waits-old-2\"\nstatus        = \"pass\"\ntests_passed  = 122\ntests_failed  = 0\nfailing       = []\nfirst_failure = \"\"\ntry           = 2\ntokens        = 1842503\nseconds       = 3477\nfiles_changed = [\"pool/PART.loader@9/loader.c\"]\ncalls         = 50\npeak_context  = 66272\nminutes       = 58\ndirector_peak = 2336\n"
+    },
+    {
+      "role": "assistant",
+      "content": "All tests pass — 122 passed, 0 failed, including both `TST.share.waits@1` and the previously broken `TST.timer.rate@1`.",
+      "tool_calls": [
+        {
+          "id": "call_3f5qkdyk",
+          "function": {
+            "index": 0,
+            "name": "done",
+            "arguments": {
+              "report": "Part waits-old is done. The single test share.waits@1 now passes (122/122 total, 0 failing). First builder attempt ran out of turns and left a timer regression; the second builder made the keyboard-wait non-blocking in pool/PART.loader@9/loader.c so a key-waiting program no longer stalls the scheduler, and the timer rate test also recovers. Done in 2 jobs."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "tool_name": "done",
+      "content": "Done."
+    }
+  ]
+}

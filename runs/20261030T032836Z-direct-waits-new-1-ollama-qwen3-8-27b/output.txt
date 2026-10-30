@@ -1,0 +1,12 @@
+# waits-new: done
+
+every test in the plan passed, in 1 job(s)
+
+Plan: PART.loader@9: TECH-DEBT 2, a program waiting for a key stops the others, at 9c6c852, director director@2 (7e5e3759), builders builder@2.
+Director: 3 calls, 4806 tokens in, 431 out, peak context 2025 of 98304; 15 minutes.
+
+- waits-new-1, share.waits@1: pass, ended pass
+
+The director's words:
+
+Part waits-new is complete. The single test share.waits@1 (TECH-DEBT 2: a program waiting for a key must not stop the others) went green on the first try (job waits-new-1, 1/1 passed, 122 tests green overall). The fix landed in pool/PART.loader@9/loader.c, where the keyboard-input wait loop was driving the scheduler. Done in 1 job.

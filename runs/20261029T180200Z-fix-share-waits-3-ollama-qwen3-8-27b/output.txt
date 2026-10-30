@@ -1,0 +1,15 @@
+=== pool/PART.loader@9/loader.c
+287,289c287,293
+< /* Wait for one byte, then take whatever else has already arrived.  TECH-DEBT 2:
+<  * a system call runs with interrupts off, so while a program waits here no
+<  * other program gets a turn.  It goes in the mechanic, after the series. */
+---
+> /* Wait for one byte, then take whatever else has already arrived.  The gate
+>  * runs a system call with interrupts off, but a key may never come, so the
+>  * wait itself runs with them on: the 8254's tick can then land and take the
+>  * processor to the next program while this one waits, as the sharing kernel
+>  * did before the gate (findings 0024 #11e, TECH-DEBT 2 now fixed here).  The
+>  * bytes are taken with interrupts off, so one program's bytes never interleave
+>  * with another's. */
+296a301
+> 	__asm__ volatile("sti");	/* a key may never come: let the tick tick the next program in */
