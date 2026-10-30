@@ -476,6 +476,10 @@ FAKE
 	T=$t AGENT_FAKE="$t/dfake" AGENT_BUILDER="sh $t/builder" AGENT_OUT="$t/dout" AGENT_QUIET=1 AGENT_RUNS="sh $(pwd)/jig/runs" RUNS="$t/druns" PRICES="$(pwd)/jig/prices.toml" \
 		"$t/agent" direct "$t/xplan.toml" > "$t/d.out" 2> "$t/d.err"; rc=$?
 	[ $rc -eq 0 ] || fail "a director on an exam plan gave exit $rc: $(cat "$t/d.err" "$t/d.out" | head -3)"
+	# the director is told the part is an exam item and what its one job is: on the
+	# first race run, told only "exam = serial", it asked strategic for the tests
+	jq -r '.messages[1].content' "$t/dfake/sent-1.json" | grep -q 'an exam item, not a fix.*Give its one job with test "toy"' ||
+		fail "the director on an exam plan is not told it is an exam item and what its one job is: $(jq -r '.messages[1].content' "$t/dfake/sent-1.json" | tail -3 | tr '\n' ' ')"
 	jf=$(ls "$t"/seen-*.toml | head -1)
 	grep -qx 'exam = "toy"' "$jf" && ! grep -q '^test = ' "$jf" || fail "the director's job for an exam plan does not name the item alone: $(tr '\n' ' ' < "$jf")"
 	echo "a lifter on a toy exam item: offered read_linux, write_file and submit_lift alone; shown the question, the file to write and the header, as jig/sit shows them, and never the hand lift; a read with no why refused, one with a why asked of the reader on the jig, once; a command the reader has not, or an argument with a ; or a space, never sent; a file the part does not ask for refused; a wrong lift shown what the test printed; the right one a pass on call 9, recorded under the item's own name with its lines, the note from the item's tests; a lift written and never handed in handed in by the program; a hand lift that fails its tests stops it before any call; an exam plan names its item, never tests too, and its director's jobs carry the item" ;;

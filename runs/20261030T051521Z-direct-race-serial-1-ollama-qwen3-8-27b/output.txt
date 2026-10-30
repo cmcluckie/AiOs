@@ -1,0 +1,11 @@
+# race-serial: asked
+
+the director asked strategic a question
+
+Plan: PART.serial.8250@1: send bytes out of the first serial port, as Linux's early console does, at d1abf44, director director@2 (7e5e3759), builders lifter@1.
+Director: 8 calls, 17443 tokens in, 1050 out, peak context 3327 of 98304; 1 minutes.
+
+
+The director's words:
+
+The race-serial plan arrived without its list of tests — the log and prompt library only give the part name ("send bytes out of the first serial port, as Linux's early console does"), the exam name "serial", and commit d1abf44. Can you send the test names the exam runs so I can give builders one at a time?

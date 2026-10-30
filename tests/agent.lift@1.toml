@@ -7,4 +7,4 @@ red_when   = "a lifter is offered more than read_linux, write_file and submit_li
 timeout_ms = 120000
 isolates   = "TOOL.agent@1"
 runner     = "jig/test cmd sh tests/programs/agent.sh lift"
-mutations  = 5
+mutations  = 6

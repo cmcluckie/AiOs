@@ -1,0 +1,11 @@
+id      = "0107"
+date    = 2026-10-29
+kind    = "code"
+touches = ["agent/mechanic/src/direct.rs", "tests/programs/agent.sh", "tests/agent.lift@1.toml", "tests/mutations.txt", "findings/0030.md"]
+asked   = "The first race run (findings 0030 item 8): race-serial stopped before any job, because the director, shown a plan naming only exam = \"serial\", asked strategic for the test names.  The program now tells a director on an exam plan, in its first message, that the part is an exam item, its one job is test \"ITEM\", and the lifter is judged by the item's own tests, which its note lists.  director@2 is not changed.  TST.agent.lift checks the director is told (red before; a sixth mutation, killed).  The director's stopped run is kept in runs/."
+options = ["take it", "do not take it"]
+default = "take it"
+chose   = "take it"
+why     = "Chris, 2026-10-29, after the run stopped on the director's question: \"Fix it?\""
+by      = "KEY.chris@1"
+drafted = "Claude"

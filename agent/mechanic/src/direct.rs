@@ -413,7 +413,15 @@ pub fn run(planpath: &str) -> i32 {
     // the plan as the program reads it, every default filled in and no comments:
     // a comment is strategic's note to itself, and on waits the director handed one
     // to a builder as its hint (findings 0029)
-    let first = format!("The part plan, {id}:\n\n{}", plan::write(&p));
+    let mut first = format!("The part plan, {id}:\n\n{}", plan::write(&p));
+    if p.exam {
+        // the plan names an item, not tests; without this a director asked for the
+        // tests (findings 0030, the first race run)
+        first += &format!(
+            "\nThis part is an exam item, not a fix.  Give its one job with test \"{}\": a fresh lifter is shown the item's question and header, reads Linux, writes the file, and is judged by the item's own tests, which its result note lists.  Give the job again, with a hint if the notes teach one, until it passes or the tries run out.\n",
+            p.tests[0]
+        );
+    }
     let budget = num_ctx * 60 / 100;
     let mut d = Director {
         passed: vec![false; p.tests.len()],
