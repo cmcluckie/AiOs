@@ -13,6 +13,7 @@
 #   sh tests/programs/agent.sh tokens  TST.agent.tokens@1: the estimate, calibrated by the model's count
 #   sh tests/programs/agent.sh trial   TST.agent.trial@1: the second prompts, and the trial against the first
 #   sh tests/programs/agent.sh columns TST.agent.columns@1: the race's columns, in every note and on the card
+#   sh tests/programs/agent.sh lift    TST.agent.lift@1: an exam item lifted, as jig/sit sits it
 #   sh tests/programs/agent.sh direct  TST.agent.direct@1: a director and its limits
 #   sh tests/programs/agent.sh bedrock TST.agent.bedrock@1: gear 2, and what it may spend
 #
@@ -389,6 +390,95 @@ limit)
 	ans3 badedit 1 3 | grep -q 'refused: only a file under pool/' || fail "an edit to a test was made: $(ans3 badedit 1 3)"
 	grep -qx 'code       = "TST.toy.answer@1"' "$t/out/toy-try14/work/tests/toy.answer@1.toml" || fail "the refused edit changed the file anyway"
 	echo "a builder's thinking past its cap of 2000 is stopped after 3 of 6 pieces and the turn asked again with thinking off and the reply's own 12000; an edit left on disk is handed in by the program and passes when the run ends, and when the replies are cut off at their limit; a run cut off with nothing changed has the tests run on the commit as it was and a note; an edit that does not match its lines or is outside pool/ is refused and changes nothing" ;;
+lift)
+	# the toy repo grows an exam: one item whose hand lift returns 42, a header, a
+	# test that is green only when the lift does, and a reader that answers from a
+	# one-file "Linux" and keeps a log of what it was asked
+	toy
+	mkdir -p "$a/exam" "$a/lifted/PART.toy.lift@1"
+	printf '[[item]]\nname  = "toy"\nasks  = "Give back the answer, the way Linux does."\nhand  = "lifted/PART.toy.lift@1/lift.c lifted/PART.toy.lift@1/lift.h"\ntests = "toy.lift@1"\n' > "$a/exam/items.toml"
+	printf '#include "lift.h"\nint lift(void) { return 42; }\n' > "$a/lifted/PART.toy.lift@1/lift.c"
+	printf 'int lift(void);\n' > "$a/lifted/PART.toy.lift@1/lift.h"
+	cat > "$a/jig/test" <<'TOY'
+#!/bin/sh
+if [ "${1:-}" = toy.lift@1 ]; then
+	f=lifted/PART.toy.lift@1/lift.c
+	if grep -q 'return 42' $f; then echo "PASS  TST.toy.lift@1  0s  42"; echo "# 1 passed, 0 failed, 0 skipped"
+	else echo "FAIL  TST.toy.lift@1  0s  the lift gives $(grep -o 'return [0-9]*' $f), not 42"; echo "# 0 passed, 1 failed, 0 skipped"; fi
+	exit 0
+fi
+echo "FAIL  TST.toy.old@1  0s  red before any of this"; echo "# 0 passed, 1 failed, 0 skipped"
+TOY
+	printf '#!/bin/sh\necho "$*" >> "$HOME/reader.log"\n[ "$1" = read ] && { echo "drivers/toy.c:1: int toy_lift(void) { return 42; }"; exit 0; }\necho "reader: no such thing"; exit 1\n' > "$a/jig/reader"
+	(cd "$a" && git add -A && git -c user.name=t -c user.email=t@t commit -qm exam) || fail "could not add the exam to the toy repo"
+	at=$(git -C "$a" rev-parse --short=9 HEAD)
+	lift() {	# lift CASE TRY: the lifter on the toy item, the replies in $t/CASE
+		printf 'job = "toy"\nexam = "toy"\nat = "%s"\ntry = %s\nprompt = "builder@1"\nmodel = "qwen3.8:27b"\nnum_ctx = 8192\n' "$at" "$2" > "$t/$1.toml"
+		(cd "$a" && AGENT_FAKE="$t/$1" AGENT_SSH="sh $t/ssh" AGENT_JIG=toy@jig AGENT_OUT="$t/out" AGENT_QUIET=1 \
+			AGENT_RUNS="sh $here/jig/runs" RUNS="$t/runs" PRICES="$here/jig/prices.toml" AGENT_SITTING=20261030T120000Z \
+			"$t/agent" build "$t/$1.toml" > "$t/$1.out" 2> "$t/$1.err"); rc=$?
+	}
+	mkdir "$t/whole"; for n in 1 2 3 4 5 6 7 8 9; do cp "$fx/lift/$n.json" "$t/whole/"; done
+	lift whole 1; o="$t/out/toy-try1"
+	[ $rc -eq 0 ] || fail "a lifter that hands in the right lift on call 9 gave exit $rc: $(head -2 "$t/whole.err" | tr '\n' ' ')$(cat "$t/whole.out")"
+	s1="$t/whole/sent-1.json"
+	[ "$(jq -r '[.tools[].function.name] | join(" ")' "$s1")" = "read_linux write_file submit_lift" ] ||
+		fail "the lifter's tools are not read_linux, write_file and submit_lift alone: $(jq -r '[.tools[].function.name] | join(" ")' "$s1")"
+	jq -r '.messages[1].content' "$s1" > "$t/first"
+	grep -q '^Part to lift: Give back the answer, the way Linux does.$' "$t/first" && grep -q '^Name of the C file to write: lift.c$' "$t/first" &&
+		grep -q '^The fixed header lift.h:$' "$t/first" && grep -q '^int lift(void);$' "$t/first" ||
+		fail "the first message is not the question, the file to write and the header, as jig/sit gives them: $(head -c 300 "$t/first" | tr '\n' ' ')"
+	grep -q 'return 42' "$t/first" "$s1" && fail "the lifter was shown the hand lift"
+	ans() { jq -r "[.messages[] | select(.role == \"tool\")][$2].content" "$t/whole/sent-$1.json"; }
+	ans 2 0 | grep -q '^refused: say why' || fail "a read with no why was run: $(ans 2 0)"
+	ans 3 1 | grep -q '^drivers/toy.c:1: int toy_lift' || fail "a read with a why was not answered by the reader on the jig: $(ans 3 1)"
+	grep -qx 'read drivers/toy.c 1 5' "$h/reader.log" && [ "$(wc -l < "$h/reader.log")" -eq 1 ] ||
+		fail "the reader was not asked exactly once, for drivers/toy.c 1 5: $(cat "$h/reader.log" 2> /dev/null | tr '\n' ';')"
+	ans 4 2 | grep -q "^refused: the reader has no command 'rm'" || fail "a command the reader has not was sent to the jig: $(ans 4 2)"
+	ans 5 3 | grep -q '^refused: each argument is' || fail "an argument with a ; and a space was sent to the jig: $(ans 5 3)"
+	ans 6 4 | grep -q '^refused: the part asks for lift.c, not other.c' || fail "a file the part does not ask for was written: $(ans 6 4)"
+	[ ! -e "$o/lift/other.c" ] || fail "other.c was written"
+	ans 8 6 | grep -q 'judged: fail.*FAIL  TST.toy.lift@1  0s  the lift gives return 41, not 42' || fail "a wrong lift was not shown what the test printed: $(ans 8 6)"
+	rt() { sed -n "s/^$1 *= *//p" "$o/run.toml"; }
+	[ "$(rt result)" = '"pass"' ] && [ "$(rt calls)" = 9 ] && [ "$(rt hand_ins)" = 2 ] && [ "$(rt exam)" = '"toy"' ] && [ "$(rt lines)" = 2 ] ||
+		fail "the run is not a pass on call 9, 2 hand-ins, of exam toy, 2 lines: $(grep -E '^(result|calls|hand_ins|exam|lines)' "$o/run.toml" | tr '\n' ' ')"
+	grep -qx 'tests_passed  = 1' "$o/note.toml" && grep -qx 'tests_failed  = 0' "$o/note.toml" || fail "the note is not from the item's tests: $(tr '\n' ' ' < "$o/note.toml")"
+	rr=$(ls "$t"/runs/*/run.toml)
+	grep -qx 'item          = "toy"' "$rr" && grep -qx 'result        = "pass"' "$rr" && grep -qx 'lines         = 2' "$rr" ||
+		fail "the run in runs/ is not under the item's own name, as jig/sit records it: $(grep -E '^(item|result|lines)' "$rr" | tr '\n' ' ')"
+	# written and never handed in: the program hands it in, as it does a builder's
+	mkdir "$t/disk"; for n in 1 2 3; do cp "$fx/lift/disk-$n.json" "$t/disk/$n.json"; done
+	lift disk 2; o="$t/out/toy-try2"
+	[ $rc -eq 0 ] && [ "$(rt handed_in_by)" = '"program"' ] && [ "$(rt result)" = '"pass"' ] ||
+		fail "a lift written and never handed in was not handed in by the program and passed: exit $rc, $(grep -E '^(handed_in_by|result|ended)' "$o/run.toml" | tr '\n' ' ')"
+	# a hand lift that does not pass: nothing is spent
+	sed -i 's/return 42/return 40/' "$a/lifted/PART.toy.lift@1/lift.c"; (cd "$a" && git -c user.name=t -c user.email=t@t commit -qam broken); at=$(git -C "$a" rev-parse --short=9 HEAD)
+	mkdir "$t/broken"; cp "$fx/lift/1.json" "$t/broken/"
+	lift broken 3
+	[ $rc -eq 2 ] && [ ! -f "$t/broken/sent-1.json" ] && grep -q 'hand lift of toy does not pass' "$t/broken.err" ||
+		fail "a hand lift that fails its own tests did not stop the lift before any call: exit $rc, $(head -1 "$t/broken.err")"
+	# a part plan for an exam names its item, never tests too; its jobs carry the item
+	printf 'part = "the toy lift"\nexam = "toy"\nat = "1234567"\nbudget_usd = 0\n[gear]\ntactical = 1\nbuilders = 1\n[prompts]\ndirector = "director@2"\nbuilder = "lifter@1"\n' > "$t/xplan.toml"
+	"$t/agent" plan "$t/xplan.toml" > "$t/xplan.out" 2> "$t/xplan.err" && grep -q '^exam  *= "toy"$' "$t/xplan.out" && ! grep -q '^tests' "$t/xplan.out" ||
+		fail "an exam plan was not read back with its item: $(cat "$t/xplan.err" "$t/xplan.out" | head -3 | tr '\n' ' ')"
+	sed 's/^exam = "toy"$/exam = "toy"\ntests = ["toy.lift@1"]/' "$t/xplan.toml" > "$t/both.toml"
+	"$t/agent" plan "$t/both.toml" > /dev/null 2> "$t/both.err" && fail "a plan with an exam and tests was taken"
+	grep -q 'not both' "$t/both.err" || fail "a plan with an exam and tests was not refused for it: $(cat "$t/both.err")"
+	cat > "$t/builder" <<'FAKE'
+#!/bin/sh
+jf=$2; job=$(sed -n 's/^job = "\(.*\)"$/\1/p' "$jf"); try=$(sed -n 's/^try = //p' "$jf"); cp "$jf" "$T/seen-$job.toml"
+o=$AGENT_OUT/$job-try$try; mkdir -p "$o"
+printf 'PASS  TST.toy.lift@1  1s  ok\n# 1 passed, 0 failed, 0 skipped\n' | "$T/agent" note "$job" "$try" 10 10 > "$o/note.toml"
+printf 'result       = "pass"\nended        = "pass"\nwhy          = ""\n' > "$o/run.toml"
+FAKE
+	mkdir "$t/dfake"; sed 's/toy.answer@1/toy/' "$fx/direct/done/4.json" > "$t/dfake/1.json"
+	printf '{"model":"qwen3.8:27b","message":{"role":"assistant","content":"","tool_calls":[{"function":{"name":"done","arguments":{"report":"Lifted."}}}]},"done":true,"done_reason":"stop","prompt_eval_count":900,"eval_count":20}\n' > "$t/dfake/2.json"
+	T=$t AGENT_FAKE="$t/dfake" AGENT_BUILDER="sh $t/builder" AGENT_OUT="$t/dout" AGENT_QUIET=1 AGENT_RUNS="sh $(pwd)/jig/runs" RUNS="$t/druns" PRICES="$(pwd)/jig/prices.toml" \
+		"$t/agent" direct "$t/xplan.toml" > "$t/d.out" 2> "$t/d.err"; rc=$?
+	[ $rc -eq 0 ] || fail "a director on an exam plan gave exit $rc: $(cat "$t/d.err" "$t/d.out" | head -3)"
+	jf=$(ls "$t"/seen-*.toml | head -1)
+	grep -qx 'exam = "toy"' "$jf" && ! grep -q '^test = ' "$jf" || fail "the director's job for an exam plan does not name the item alone: $(tr '\n' ' ' < "$jf")"
+	echo "a lifter on a toy exam item: offered read_linux, write_file and submit_lift alone; shown the question, the file to write and the header, as jig/sit shows them, and never the hand lift; a read with no why refused, one with a why asked of the reader on the jig, once; a command the reader has not, or an argument with a ; or a space, never sent; a file the part does not ask for refused; a wrong lift shown what the test printed; the right one a pass on call 9, recorded under the item's own name with its lines, the note from the item's tests; a lift written and never handed in handed in by the program; a hand lift that fails its tests stops it before any call; an exam plan names its item, never tests too, and its director's jobs carry the item" ;;
 columns)
 	# a builder's note says its calls, its peak context and its wall minutes, and its run
 	# in runs/ its calls and seconds

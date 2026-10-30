@@ -1,0 +1,11 @@
+id      = "0106"
+date    = 2026-10-29
+kind    = "code"
+touches = ["agent/mechanic/src/lift.rs", "agent/mechanic/src/build.rs", "agent/mechanic/src/judge.rs", "agent/mechanic/src/record.rs", "agent/mechanic/src/plan.rs", "agent/mechanic/src/direct.rs", "agent/mechanic/src/main.rs", "prompts/lifter@1.txt", "agent/plans/race-serial.toml", "agent/plans/race-timer.toml", "agent/plans/race-screen.toml", "specs/agent.12@1.toml", "tests/agent.lift@1.toml", "tests/programs/agent.sh", "tests/fixtures/agent/lift/1.json", "tests/fixtures/agent/lift/2.json", "tests/fixtures/agent/lift/3.json", "tests/fixtures/agent/lift/4.json", "tests/fixtures/agent/lift/5.json", "tests/fixtures/agent/lift/6.json", "tests/fixtures/agent/lift/7.json", "tests/fixtures/agent/lift/8.json", "tests/fixtures/agent/lift/9.json", "tests/fixtures/agent/lift/disk-1.json", "tests/fixtures/agent/lift/disk-2.json", "tests/fixtures/agent/lift/disk-3.json", "tests/mutations.txt", "index/tool/agent@1.as-built.md", "findings/0030.md"]
+asked   = "The race needs the layered agent to sit an exam item, which it could not: its builders fix red tests in existing files.  A lifter (findings 0030): a job naming exam = ITEM is shown what jig/sit shows, the question, the C file and the header, and nothing of the repo; reads Linux through jig/reader on the jig, each read with a why and checked before it is sent; writes only the item's file; passes when every one of the item's tests prints PASS with the lift in the hand lift's place (jig/judge's rule); costs nothing on an item whose hand lift fails; is recorded under the item's name.  A part plan names exam = ITEM in place of tests, never both.  prompts/lifter@1.txt from exam/prompt.txt.  The three race plans.  SPEC.agent.12, TST.agent.lift (red on the agent as committed; five mutations, killed).  Caps: each bench its own; runs: three of each item on each bench (Claude's recommendations, Chris had no preference)."
+options = ["a lift job beside the fix job", "recast the exam items as fixes"]
+default = "a lift job beside the fix job"
+chose   = "a lift job beside the fix job"
+why     = "Chris, 2026-10-29, after Claude explained that the layered agent can only fix a file, not write one from a question: \"I guess\"; on the caps and the number of runs, no preference."
+by      = "KEY.chris@1"
+drafted = "Claude"

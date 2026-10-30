@@ -75,6 +75,62 @@ impl Jig {
     }
 }
 
+impl Jig {
+    /// One question to the shared source reader on the jig (jig/reader), as jig/sit
+    /// asks it: the same pinned Linux, the same answers.  What it printed, and
+    /// whether it answered; or why it could not be asked.
+    pub fn reader(&self, command: &str, args: &[String]) -> Result<(String, bool), String> {
+        const COMMANDS: [&str; 7] = ["list", "read", "find", "callers", "calls", "ports", "check"];
+        if !COMMANDS.contains(&command) {
+            return Err(format!("the reader has no command '{command}'; its commands are {}", COMMANDS.join(", ")));
+        }
+        if args.len() > 4 || args.iter().any(|a| a.is_empty() || a.len() > 200 || !plain(a, "._-/+,") || a.starts_with('-')) {
+            return Err("each argument is a path, a name or a line number: letters, digits and . _ - / + , only, at most four".into());
+        }
+        if !plain(&self.repo, "._-/") || !plain(&self.host, "@._-") {
+            return Err("the jig or its clone has a character a command may not".into());
+        }
+        let r = &self.repo;
+        // every value in it checked above, so it is safe as one word for ssh
+        let remote = format!("cd \"$HOME/{r}\" && LINUX=\"$HOME/{r}/../linux\" sh jig/reader {command} {}", args.join(" "));
+        let words: Vec<&str> = self.ssh.split_whitespace().collect();
+        if words.is_empty() || !words.iter().all(|w| plain(w, "/._-=")) {
+            return Err("AGENT_SSH is not a command".into());
+        }
+        let out = Command::new(words[0])
+            .args(&words[1..])
+            .arg(&self.host)
+            .arg(&remote)
+            .stdin(Stdio::null())
+            .output()
+            .map_err(|e| format!("{}: {e}", self.ssh))?;
+        if out.status.code() == Some(255) {
+            return Err(format!("the jig did not answer: {}", String::from_utf8_lossy(&out.stderr).lines().next().unwrap_or("")));
+        }
+        let mut text = String::from_utf8_lossy(&out.stdout).to_string();
+        text += &String::from_utf8_lossy(&out.stderr);
+        Ok((text, out.status.success()))
+    }
+}
+
+/// A lift passes when every one of the item's tests prints PASS and none prints
+/// FAIL, with the lift in the hand lift's place: jig/judge's rule (exam/items.toml).
+/// A test that printed nothing, or SKIP, is not a pass.  The first one that is not,
+/// or None.
+pub fn lift_verdict(after: &str, codes: &[String]) -> Option<String> {
+    let a = results(after);
+    for c in codes {
+        if has(&a, c, "FAIL") {
+            let l = a[c].iter().find(|(w, _)| w == "FAIL").map(|(_, l)| l.clone()).unwrap_or_default();
+            return Some(runtime::model::cut(&l, 200));
+        }
+        if !has(&a, c, "PASS") {
+            return Some(format!("{c} did not run, or was skipped"));
+        }
+    }
+    None
+}
+
 /// A fix is the files of one part, each an existing file under pool/ in base, every
 /// part of its path a name: no "..", no ".", nothing empty.  Checked before
 /// anything is written, so a path the model chose cannot put a file anywhere else.

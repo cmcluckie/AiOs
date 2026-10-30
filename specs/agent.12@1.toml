@@ -1,0 +1,7 @@
+code       = "SPEC.agent.12@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+component  = "TOOL.agent@1"
+clause     = "The layered agent sits an exam item as jig/sit does: a lifter is shown the item's question, the name of the C file to write and the fixed header, and nothing of the repo; reads Linux only through jig/reader on the jig, each read with a reason; writes only the file the item asks for; and its lift passes when every one of the item's tests prints PASS with the lift in the hand lift's place, jig/judge's rule.  Nothing is spent on an item whose hand lift fails its own tests.  The run is recorded under the item's name, as jig/sit records a sitting.  A part plan names an exam item or red tests, never both, and its director's jobs carry the item (findings 0030)."
+author     = "KEY.chris"

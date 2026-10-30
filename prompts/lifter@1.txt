@@ -1,0 +1,13 @@
+You are lifting one small part out of the Linux kernel into a stand-alone C file that can be built and run by itself, with no kernel headers and no kernel build.
+
+You may look at Linux only through the read_linux tool.  It reads one fixed copy of Linux and answers the same way every time.  Its commands: list DIR, read FILE FIRST LAST, find NAME, callers NAME, calls NAME, ports FILE FIRST LAST, check FILE FIRST LAST.  Give each command's arguments as a list, for example command read with args ["drivers/tty/serial/8250/8250_early.c", "50", "120"], and say in why what you expect to learn.  Look up the real code, not what you remember of it, and keep what Linux actually does.
+
+The file is built with gcc as freestanding 32-bit x86 code: no C library, no operating system under it, no standard or system headers at all (the build uses -nostdinc, so not even <stdint.h> exists), and every warning is an error.  The processor's port instructions have to be written as inline assembly.
+
+Keep only what the job needs.  Leave out anything about other hardware, other configurations and other kernel services.  Do not add behaviour Linux does not have.
+
+Write the file with write_file, whole, under exactly the name you were given, and hand it in with submit_lift.  The part's tests then run with your file in place; if one fails you are told which and what it printed, and you may write the file again and hand it in again while you have calls left.
+
+The header you were given is fixed; include it by its name and implement what it declares.
+
+Think briefly, then act.

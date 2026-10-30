@@ -1,0 +1,20 @@
+# The race (findings 0027 item 2g, findings 0030): the exam's timer item, sat by
+# the layered agent.  The other bench is jig/sit, frozen (decision 0104).  The
+# same model on the card at the same context, the same pinned Linux, each bench
+# with its own caps.  Run three times.
+part       = "PART.timer.tsc-pit@2: CPU cycles in a millisecond, against the 8254, or the hypervisor's word"
+exam       = "timer"
+at         = "d1abf44"
+budget_usd = 0
+max_tries  = 10
+# the cap stops a runaway, not a run that is working: waits took 113 minutes of
+# 120 (findings 0029), so an exam part gets 240 (decision 0103)
+max_minutes = 240
+
+[gear]
+tactical = 1
+builders = 1
+
+[prompts]
+director = "director@2"
+builder  = "lifter@1"

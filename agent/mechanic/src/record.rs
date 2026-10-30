@@ -35,6 +35,15 @@ impl Runs {
         runtime::money::room(&c, ceiling).map(|_| ())
     }
 
+    /// A lift's code lines, as jig/runs counts them for jig/judge and the card.
+    pub fn count(&self, files: &[PathBuf]) -> Option<u64> {
+        let out = Command::new(&self.command[0]).args(&self.command[1..]).arg("count").args(files).output().ok()?;
+        if !out.status.success() {
+            return None;
+        }
+        String::from_utf8_lossy(&out.stdout).trim().parse().ok()
+    }
+
     /// jig/runs record, with the agent's fields; the run's id, or why not.
     #[allow(clippy::too_many_arguments)]
     pub fn record(

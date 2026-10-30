@@ -27,6 +27,7 @@
 mod build;
 mod direct;
 mod judge;
+mod lift;
 mod look;
 mod note;
 mod plan;

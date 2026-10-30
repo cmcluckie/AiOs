@@ -50,6 +50,16 @@ The program (agent/mechanic, the `agent` command):
   stops at its deadline.  Writes out/agent/JOB-tryN/ and records the run with
   jig/runs (bench, peak context, ended, calls, seconds).  Its note also says its
   calls, its peak context and its wall minutes (SPEC.agent.11).
+- `agent build JOB` with `exam = ITEM` in place of `test` (SPEC.agent.12): a
+  lifter.  It is shown what jig/sit shows a model sitting the item (the question,
+  the C file to write, the fixed header) and nothing of the repo; its tools are
+  read_linux (jig/reader on the jig over ssh, each read with a why, the command
+  and every argument checked before anything is sent), write_file (only the
+  file the item asks for) and submit_lift (the item's tests on the jig at the
+  job's commit with the lift in the hand lift's place; every one must print
+  PASS).  Before any call, the hand lift must pass those tests.  Recorded under
+  the item's name, as jig/sit records a sitting.  A part plan with `exam = ITEM`
+  in place of `tests` gives its director's jobs the item.
 - `agent count MODEL FILE...`: the model's own count of each file, from Ollama;
   `agent estimate CALIBRATION COUNTED FILE`: the calibrated estimate (SPEC.agent.9).
 - `agent direct PLAN` (SPEC.agent.5): one director.  Tools job, search_log,
@@ -65,9 +75,10 @@ The program (agent/mechanic, the `agent` command):
 Files under its out folder and the repo it is given.  Child processes, each with
 its arguments as separate words and no shell between: git and tar for the copy
 (through `sh -c` with the values as arguments, never in the script), diff, tar and
-ssh for the judge, jig/runs, and itself as a builder.  The one string that reaches
-a shell is the command ssh runs on the jig, built only from values checked to be
-letters, digits and a few marks.  The network only through transport.rs.
+ssh for the judge and the reader, jig/runs, and itself as a builder.  The only
+strings that reach a shell are the two commands ssh runs on the jig, the judge's
+and the reader's, built only from values checked to be letters, digits and a few
+marks.  The network only through transport.rs.
 
 ## Every symbol it imports
 The Rust standard library; serde, serde_json and toml; reqwest (blocking, rustls
@@ -80,8 +91,8 @@ AGENT_QUIET.  Files: out/agent/, and one run in runs/ per builder and director.
 On the jig, only the throwaway folder its ssh command makes and removes.
 
 ## Size
-3395 lines of Rust: the runtime 1291 (model 382, react 303, sigv4 177, room 148,
-transport 131, money 84, prompts 59, lib 7), the program 2104 (build 605, direct
-521, main 203, plan 191, judge 160, look 148, record 121, note 90, stuck 58,
-util 7).  Built
+3944 lines of Rust: the runtime 1291 (model 382, react 303, sigv4 177, room 148,
+transport 131, money 84, prompts 59, lib 7), the program 2653 (build 617, direct
+521, lift 450, judge 216, plan 212, main 204, look 148, record 130, note 90,
+stuck 58, util 7).  Built
 with warnings as errors; `sh agent/make` in WSL builds out/agent/agent.

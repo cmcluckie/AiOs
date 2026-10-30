@@ -14,6 +14,7 @@ pub struct Plan {
     pub part: String,
     pub petition: String,
     pub tests: Vec<String>,
+    pub exam: bool, // the tests are exam items to lift, not red tests to fix (findings 0030)
     pub at: String,
     pub gear_tactical: u8,
     pub gear_builders: u8,
@@ -111,18 +112,33 @@ pub fn read(path: &str) -> Result<Plan, String> {
     if at.len() < 7 || !at.chars().all(|c| c.is_ascii_hexdigit() && !c.is_ascii_uppercase()) {
         return Err("at is a commit's hash, seven hex digits or more".into());
     }
-    let tests = match r.get("tests") {
-        None => return Err("tests is missing".into()),
-        Some(Value::Array(a)) if !a.is_empty() && a.len() <= MAX_TESTS => a.clone(),
-        Some(_) => return Err(format!("tests is a list of one to {MAX_TESTS} tests")),
-    };
-    let mut names = Vec::new();
-    for t in tests {
-        match t {
-            Value::String(s) if s.contains('@') => names.push(s),
-            _ => return Err("tests names each test with its version, like share.waits@1".into()),
+    // an exam part names its item, and the item's own tests decide it; a fix names
+    // its red tests.  One or the other, never both.
+    let exam_item = r.text("exam", false)?;
+    let exam = !exam_item.is_empty();
+    let names = if exam {
+        if r.get("tests").is_some() {
+            return Err("exam and tests: a plan lifts an exam item or fixes red tests, not both".into());
         }
-    }
+        if !exam_item.chars().all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '-' || c == '_') {
+            return Err("exam names an item of exam/items.toml, like serial".into());
+        }
+        vec![exam_item]
+    } else {
+        let tests = match r.get("tests") {
+            None => return Err("tests is missing".into()),
+            Some(Value::Array(a)) if !a.is_empty() && a.len() <= MAX_TESTS => a.clone(),
+            Some(_) => return Err(format!("tests is a list of one to {MAX_TESTS} tests")),
+        };
+        let mut names = Vec::new();
+        for t in tests {
+            match t {
+                Value::String(s) if s.contains('@') => names.push(s),
+                _ => return Err("tests names each test with its version, like share.waits@1".into()),
+            }
+        }
+        names
+    };
     let gear_tactical = r.whole("gear.tactical", None, 1, 2)? as u8;
     let gear_builders = r.whole("gear.builders", None, 1, 2)? as u8;
     let budget_usd = match r.get("budget_usd") {
@@ -153,6 +169,7 @@ pub fn read(path: &str) -> Result<Plan, String> {
         part,
         petition,
         tests: names,
+        exam,
         at,
         gear_tactical,
         gear_builders,
@@ -172,7 +189,11 @@ pub fn write(p: &Plan) -> String {
     let q = |k: &str, v: &str| format!("{k:<19} = \"{v}\"\n");
     let tests = p.tests.iter().map(|t| format!("\"{t}\"")).collect::<Vec<_>>().join(", ");
     let mut s = q("part", &p.part) + &q("petition", &p.petition);
-    s += &format!("{:<19} = [{tests}]\n", "tests");
+    if p.exam {
+        s += &q("exam", &p.tests[0]);
+    } else {
+        s += &format!("{:<19} = [{tests}]\n", "tests");
+    }
     s += &q("at", &p.at);
     s += &format!("{:<19} = {:.2}\n", "budget_usd", p.budget_usd);
     s += &format!(

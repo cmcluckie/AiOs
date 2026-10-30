@@ -158,8 +158,8 @@ impl Director {
         let jobs = self.dir.join("jobs");
         let jobfile = jobs.join(format!("{id}.toml"));
         let mut job = format!(
-            "# written by the director for {}, from the part plan\njob = \"{id}\"\ntest = \"{test}\"\nat = \"{}\"\ntry = {n}\nprompt = \"{}\"\nmodel = \"{}\"\nnum_ctx = {}\ndeadline = {}\n",
-            self.id, self.p.at, self.p.prompt_builder, self.bmodel, self.bctx, self.deadline
+            "# written by the director for {}, from the part plan\njob = \"{id}\"\n{} = \"{test}\"\nat = \"{}\"\ntry = {n}\nprompt = \"{}\"\nmodel = \"{}\"\nnum_ctx = {}\ndeadline = {}\n",
+            self.id, if self.p.exam { "exam" } else { "test" }, self.p.at, self.p.prompt_builder, self.bmodel, self.bctx, self.deadline
         );
         if !self.p.trial.is_empty() {
             job += &format!("trial = \"{}\"\n", self.p.trial);

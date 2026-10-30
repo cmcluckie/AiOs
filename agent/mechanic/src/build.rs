@@ -25,6 +25,7 @@ pub const MAX_FILES: usize = 32;
 pub struct Job {
     pub job: String,
     pub test: String,
+    pub exam: String, // an exam item to lift, in place of a test to fix (findings 0030)
     pub at: String,
     pub try_: u64,
     pub prompt: String,
@@ -49,7 +50,7 @@ fn read_job(path: &str) -> Result<Job, String> {
     let t: toml::Table = toml::from_str(&text).map_err(|e| crate::plan::toml_error(path, &text, &e))?;
     let known = [
         "job", "test", "at", "try", "prompt", "model", "num_ctx", "suite", "hint", "item", "max_turns", "max_tokens", "think_tokens",
-        "look_chars", "room_share", "gear", "max_usd", "deadline", "trial",
+        "look_chars", "room_share", "gear", "max_usd", "deadline", "trial", "exam",
     ];
     if let Some(k) = t.keys().find(|k| !known.contains(&k.as_str())) {
         return Err(format!("{k} is not something a job has"));
@@ -79,9 +80,11 @@ fn read_job(path: &str) -> Result<Job, String> {
         Some(toml::Value::Integer(i)) if *i >= 0 => Some(*i as f64),
         Some(_) => return Err("max_usd is dollars, 0 or more".into()),
     };
+    let exam = s("exam", false)?;
     let mut j = Job {
         job: s("job", true)?,
-        test: s("test", true)?,
+        test: s("test", exam.is_empty())?,
+        exam,
         at: s("at", true)?,
         try_: n("try", Some(1), 1, 1000)?,
         prompt: s("prompt", true)?,
@@ -111,8 +114,14 @@ fn read_job(path: &str) -> Result<Job, String> {
         || !plain(&j.model, "._-:/") || !prompts::valid(&j.prompt)
         || !j.item.chars().all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '-' || c == '_')
         || !plain(&j.trial, "-_")
+        || !j.exam.chars().all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '-' || c == '_')
+        || (!j.exam.is_empty() && !j.test.is_empty())
     {
         return Err("job, test, at, model, prompt, suite or item has a character a job may not".into());
+    }
+    if j.item.is_empty() && !j.exam.is_empty() {
+        // jig/sit records a sitting of an item under the item's name, so the two line up
+        j.item = j.exam.clone();
     }
     if j.item.is_empty() {
         // the old bench's name for a fix of this test, so the two line up (jig/fix)
@@ -129,13 +138,13 @@ fn field(path: &Path, key: &str) -> Option<String> {
     t.get(key)?.as_str().map(String::from)
 }
 
-fn say(quiet: bool, s: &str) {
+pub(crate) fn say(quiet: bool, s: &str) {
     if !quiet {
         eprintln!("  {s}");
     }
 }
 
-fn now() -> u64 {
+pub(crate) fn now() -> u64 {
     SystemTime::now().duration_since(UNIX_EPOCH).map(|d| d.as_secs()).unwrap_or(0)
 }
 
@@ -409,7 +418,7 @@ pub fn max_call() -> f64 {
     std::env::var("AGENT_MAX_COST").ok().and_then(|v| v.parse::<f64>().ok()).filter(|v| *v > 0.0).unwrap_or(0.50)
 }
 
-fn absolute(p: &str) -> PathBuf {
+pub(crate) fn absolute(p: &str) -> PathBuf {
     let p = PathBuf::from(p);
     if p.is_absolute() { p } else { std::env::current_dir().unwrap_or_default().join(p) }
 }
@@ -425,6 +434,9 @@ pub fn run(jobpath: &str) -> i32 {
             return 2;
         }
     };
+    if !j.exam.is_empty() {
+        return crate::lift::run(&j, start, quiet);
+    }
     let repo = absolute(&std::env::var("AGENT_REPO").ok().filter(|v| !v.is_empty()).unwrap_or_else(|| ".".into()));
     // made whole from here, since the judge's command changes folder
     let out = absolute(&std::env::var("AGENT_OUT").ok().filter(|v| !v.is_empty()).unwrap_or_else(|| "out/agent".into()));
