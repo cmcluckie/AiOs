@@ -1,0 +1,10 @@
+code       = "TST.share.waits@2"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+binds      = "SPEC.loader.18@1"
+red_when   = "on the gate's sharing kernel, with a byte typed 5 seconds in, the stopwatch next to a program waiting for it does not show every second once, in order, through 00:09 or 00:10, or the waiting program never says it got the byte"
+timeout_ms = 30000
+isolates   = "PART.loader@9"
+runner     = "jig/test cmd env AIOS_SHARE=gateshare sh tests/programs/waitertyped.sh"
+mutations  = 2

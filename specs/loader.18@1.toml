@@ -1,0 +1,7 @@
+code       = "SPEC.loader.18@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+component  = "PART.loader@9"
+clause     = "While a program waits in read for a byte, the other programs still get their turns, and when the byte comes the program that waited gets it: the others are never let run by stopping the one that waits (findings 0029 item 6)."
+author     = "KEY.chris"

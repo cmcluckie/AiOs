@@ -1,0 +1,11 @@
+id      = "0105"
+date    = 2026-10-29
+kind    = "specs and tests"
+touches = ["specs/loader.18@1.toml", "tests/share.waits@2.toml", "tests/programs/waitertyped.sh", "tests/mutations.txt"]
+asked   = "Findings 0029 item 6: the old prompts' rerun passed waits by making the wait call share_exit, which stops the waiting program, and TST.share.waits@1, which never types anything, cannot tell a program waiting from one stopped.  TST.share.waits@2 adds, it does not swap: the same waiter and stopwatch on the gate's sharing kernel, a byte typed 5 seconds in, and green only when the stopwatch shows every second and the waiter says it got the byte.  The waiter's line can land inside one of the stopwatch's, which end with a carriage return, so the clock is read with it taken out.  Green on the committed fix three runs in three; two mutations killed, the wait with interrupts off and the dodge itself.  The dodge is written down as a known survivor of waits@1.  @1 stays as it is, so the runs judged by it keep their judge.  The part plans in agent/plans are not changed: they start from 9c6c852, where waits@2 does not exist, and they are the trial's record; a plan for the race names waits@2 and starts from a commit that has it."
+options = ["a second version of the waits test that types a byte", "leave it to TST.loader.quiet-exit"]
+default = "a second version of the waits test that types a byte"
+chose   = "a second version of the waits test that types a byte"
+why     = "Chris, 2026-10-29, on Claude's recommendation that the test a plan names is the one that must fail a dodge, since quiet-exit is red on every honest fix so far too: \"Then do it\""
+by      = "KEY.chris@1"
+drafted = "Claude"
