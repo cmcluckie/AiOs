@@ -1,5 +1,5 @@
 <!doctype html>
-<html><head><meta charset="utf-8"><title>The petition nobody wrote</title>
+<html><head><meta charset="utf-8"><title>The exam</title>
 <style>
 body{max-width:760px;margin:32px auto;padding:0 16px;font-family:Georgia,serif;font-size:18px;line-height:1.6;color:#222;background:#fff}
 section{border:1px solid #ddd;border-radius:10px;padding:0 20px 12px;margin:0 0 28px}
@@ -12,18 +12,20 @@ button.done{background:#fff;color:#0a66c2}
 <section id="post">
 <div class="bar"><span>1. Post</span><button onclick="copyText('post-body',this)">Copy</button></div>
 <div id="post-body" class="text">
-AiOs, part 19 (Kernel code: 1102 lines). "I do a hell of a lot of AI development, and about three quarters of the time I don't know what it's working on."...
+AiOs, part 17 (Kernel code: 1099 lines). "I was scared the exam would show the AI can't do this."...
 
-A model wrote a request for a program for the first time.  It read cat from Unix Version 7, 1979, 63 lines of C, and filled in the form: what the program needs, why, and which tests prove it.
+Until now, Claude and I lifted pieces out of Linux by hand.  Now an agent called the quartermaster does it alone: it looks things up in a fixed copy of Linux through a script with no AI in it, cuts the code down, and a judge runs my tests on what it wrote.
 
-Its first answer was good, with a paragraph of its own thinking stuck on the front.  The referee, which has no AI in it, accepted it anyway.  It only looked for a heading somewhere in the file.  I'd tested an essay and a clean petition, never the two together.  The model did it three tries out of three, so Claude fixed the check and we wrote the test that catches it.
+I gave Sonnet 4.6 three exams.  Serial and screen passed.  The timer failed.  The model's file was Linux's own code, almost line for line.  Linux gives the measurement 50 milliseconds.  On this machine that's too short, so mine uses 150.  Change that one number and the model's file passes.  The 50 was in the lines the model was handed.  Nothing it could read said Linux's number fails here.  It still has to be fixed, and that's a later post.
 
-The second try came back clean.  Then the builder tried to build it and stopped with a list of eight things the catalogue doesn't have.  The model never mentioned a C library, and three of the referee's rules fail on what it wrote.  All of it cost 13 cents.
+The first two tries cost 98 cents and I said a word I won't print.  Caching brought the next to 12 cents.  Everything, failures included, came to $3.13.
 
-I need a record I can open any morning and read the same way, and a check that doesn't get tired when I do.
+I changed my own prompt after the first run, because I'd never told the model how the file gets built.
 
-The first petition no person wrote: https://github.com/cmcluckie/aios/blob/main/findings/0022.md
-The first real draft, refused for its prose: https://github.com/cmcluckie/aios/commit/50d7361
+In product, a fail you can explain is worth more than a pass you can't.
+
+The exam, and why it was set: https://github.com/cmcluckie/aios/blob/main/findings/0020.md
+The first scorecard: https://github.com/cmcluckie/aios/commit/c550ddc
 The whole repo: https://github.com/cmcluckie/aios
 
 #AiOs
@@ -31,90 +33,112 @@ The whole repo: https://github.com/cmcluckie/aios
 </section>
 <section id="title">
 <div class="bar"><span>2. Title</span><button onclick="copyText('title-body',this)">Copy</button></div>
-<div id="title-body"><h1>The petition nobody wrote</h1></div>
+<div id="title-body"><h1>The exam</h1></div>
 </section>
 <section id="article">
 <div class="bar"><span>3. Article</span><button onclick="copyRich('article-body',this)">Copy</button></div>
 <div id="article-body">
-<p><em>The story behind AiOs, part 19.</em></p>
-<h2>A program that isn't ours</h2>
-<p>Until now every program in this series has been a university or high school exercise.  Hanoi, a sieve, a calculator, a stopwatch.  They need almost nothing: a bit of C, and not much from the operating system.</p>
-<p>This one is different.  It's the first program that comes from somebody else, off the internet, and whatever is in it is what goes into the system.  It's <code>cat</code>, from Unix Version 7, released in 1979.  If you've ever sat at a Unix prompt you've used its great-grandchild.  It prints a file.  The source is 63 lines of old C.</p>
-<p>And here's the part I've been looking forward to.  I didn't write the request for it.  Nobody did.</p>
-<h2>What a petition is, again</h2>
-<p>Every program in AiOs starts as a petition, a form that says what the program needs and why.  The pieces of the system it wants (I call them parts), the things it's allowed to do (capabilities), each with a reason, a machine to run on, and tests.  It's structured, never prose, and a referee with no AI in it checks the form.  Every petition so far, Claude and I wrote together.</p>
-<p>For <code>cat</code>, a model wrote it.  A small one, Sonnet 4.6, called through Amazon Bedrock.  It's handed the purpose in one sentence ("print the contents of the files named, or of standard input, to the console"), the layout of a petition, one finished petition as an example, and the catalogue, which is the list of everything AiOs has.  It's allowed to read the <code>cat</code> source, but only through the reader, a tool that answers questions about one fixed copy of the old source and nothing else.  The reader already did this for Linux.  Now it can read Unix V7 as well.</p>
-<h2>What I was hoping to see</h2>
-<p>I do a hell of a lot of AI development, and about three quarters of the time I don't know what it's working on.  I can never go back and see in detail what actually got built.  Maybe I'm doing something wrong.  But what I want is the same thing every time: the problem as a numbered list, one plain sentence per point, somewhere I know how to find it, whether I'm tired or fresh.</p>
-<p>A petition and its run record are that list.  The model's call is written down, a check with no AI in it judges the result, and I can open it the next morning and say: this one I'll stand behind.  That was the sanity check I wanted, from a program as small and old as <code>cat</code>.</p>
-<p>I'll say the other thing up front, like I have since the start of the series.  I have no delusions of grandeur.  Linux has thirty million lines and a mountain of drivers, and I have real doubts about whether the cost and the time would ever make sense.  I'm not going to guess in this article.  That isn't what this part is for.</p>
-<h2>The first thing it did was talk</h2>
-<p>The model's first answer was a good petition with a paragraph and a bullet list in front of it, explaining its thinking.  The prompt said, in so many words, no prose.  It did that three times out of three on its first attempt.</p>
-<p>And the referee accepted it.</p>
-<p>Its check for a petition only looked for a <code>[petition]</code> heading somewhere in the file.  I'd tested a pure essay, which it refused, and a clean petition, which it accepted.  I'd never tested an essay stuck in front of a petition.  The real model found that for us, for about four cents.  Claude changed the check so every line has to be a comment, a heading or a <code>key = value</code> line, and the referee now says which line broke the rule.  Then we wrote the test that catches it, plus a seventh way of sabotaging the check to prove that test can go red.</p>
-<p>I decided the draft step shouldn't quietly trim the preface off.  A petition with prose in it is thrown away, the call is still written down because it was paid for, and on the next try the model is shown what was wrong.  Try two came back clean.</p>
-<h2>What it wrote</h2>
-<p>Eighty-two lines.  The program itself plus eight other components, four capabilities with a reason each, and three tests.  Here's what I think it got right.  It reused what AiOs already has, a serial port, a disk and a Minix file system (an old, simple way of storing files), to read a file.  Nobody told it which ones.  It also added a test for a file that isn't there.</p>
-<p>Here's what it got wrong or missed.</p>
-<p>It named no C library.  Claude had measured this before the draft: <code>cat</code> needs three header files and eleven things from a C library (the standard toolbox every C program leans on, like opening a file), and AiOs has none of them.  The petition doesn't mention it.  It picked an old version of the loader, the part that starts programs, when a newer one exists, and it listed two versions of the same serial driver.  Three of the referee's rules fail on it.  It cites a requirement that doesn't exist yet.  It includes a part that needs an ability the petition never asked for.  And it depends on a part it never listed.</p>
-<p>So that's what 13 cents buys.  The shape is right and things that matter are missing.</p>
-<h2>The builder says what's missing</h2>
-<p>Then I asked the builder to build it.  It stopped, on purpose, and wrote down why.  Eight things named in the petition don't exist in the catalogue yet: the <code>cat</code> part itself, four requirements, and three tests.  The list is a file, <code>missing.txt</code>, one line each.  The builder doesn't guess and it doesn't make anything up.</p>
-<p>That list is the work order for the next part.  Nothing runs yet.  What I wanted from this part was a request nobody wrote, and a machine that reads it and says exactly what's missing.</p>
-<h2>A lesson in trusting my own paste</h2>
-<p>I ran the live calls from a second machine, the jig, and I told it to pull the new code.  The pull stopped because of a leftover file from an earlier run, and the old code ran anyway.  Old code meant the old referee, the one with the hole, so it happily accepted another model reply with its reasoning stuck on the front.</p>
-<p>That cost two and a half cents I hadn't planned on.  It also gave me a second, independent sample, which is how I know the preface wasn't a one-off.  Claude said what had gone wrong and gave me the two commands that fix it, and we ran it again properly.  Every call, the accidental one included, is in the run record with its cost.  The four calls came to 13 cents in total.</p>
-<h2>The licence</h2>
-<p>One more thing came up before this went out, and it changed the next part.</p>
-<p>The V7 source came with a letter.  In 2002 Caldera, the company that owned the old Unix code by then, let anyone use, change and share it, as long as they kept the copyright notice and, the odd part, credited Caldera in any advertising for a product built from it.  AiOs is GPL-2.0-only, the same licence as Linux, because every image mixes Linux's lines with ours.  A rule about advertising is the kind of extra condition the GPL doesn't allow.  I'm not a lawyer and I won't pretend to be one here.  This part only reads <code>cat</code> and copies nothing, so it's clean.  The next part would have built it in.</p>
-<p>So I swapped.  The <code>cat</code> in the next part comes from 4.4BSD-Lite, Berkeley's 1994 release, the same line of Unix a generation on.  Berkeley's code carried the same kind of advertising clause, and in July 1999 their licensing office sent a letter dropping it.  What's left is a licence the GPL is fine with.  Same job, a longer program, and the model gets to read it from scratch.</p>
+<p><em>The story behind AiOs, part 17.</em></p>
+<h2>This one scares me</h2>
+<p>I don't know why, but this part scares me more than any of the others.  So many questions go through my head while I work on it.  What will people think?  Will they think I'm stupid for trying to change Linux?  I've taken risks before.  Years ago I built a product people thought was a crazy idea, and it's still a company today, so I know this feeling.  But this is the post where the AI does something on its own, and honestly, this is where the blog either completely fails and I stop posting, or we go to the next level.</p>
+<h2>The quartermaster</h2>
+<p>A quartermaster is the person who decides what goes in the pack, so that's what I called the agent that decides what goes into AiOs.</p>
+<p>Here's the job.  For a while now, Claude and I have been lifting parts out of Linux by hand: the serial driver, the stopwatch, the screen.  Claude reads Linux, cuts it down to what the program needs, and I judge the result.  The quartermaster does that on its own.  Give it a petition (the plain list of what a program needs from the machine) and it has to find the right code, work out what that code calls, and cut it down to something small enough to use.  Ask two different models and you could get two completely different slices.</p>
+<p>Do the models already know Linux?  As far as I can tell, yes, it's free source and every big model has read it, but I can't see inside a model to prove it.  So the exam doesn't ask what the model knows.  It checks what the model hands back.</p>
+<h2>How it looks things up</h2>
+<p>Here are the steps, in plain English.</p>
+<ol>
+<li>It starts from the petition.</li>
+<li>The model says where it thinks the code lives, a file and a function.</li>
+<li>A script checks that name against one fixed copy of Linux.  A name that isn't there is refused.</li>
+<li>The script hands back just those lines, never more than 200 at a time.</li>
+<li>The model reads them, sees what they call, asks for those next, and keeps going.</li>
+<li>It trims the result down to what the part needs.</li>
+<li>The jig builds it and runs the tests.</li>
+</ol>
+<p>That script is the reader, and it has no AI in it.  The same question gets the same answer every time.  Here's what it looked like in the timer run.  One of the model's lookups asked where <code>quick_pit_calibrate</code> is defined.  The reader said line 557 of <code>arch/x86/kernel/tsc.c</code>.  The model asked to read that stretch and got Linux's own lines back.  Hold on to that, because it comes back at the end.</p>
+<p>The reader keeps the model from inventing a lookup.  It can't check the file the model finally writes.  Only step 7 does that.</p>
+<h2>The exam</h2>
+<p>Three items, the three parts I'd already lifted by hand: the serial driver, the timer, and the screen.  For each one the model gets the question, the part's header file, and the reader.  My hand lift stays hidden.</p>
+<p>I should be straight about the header.  It's a list of names the code has to provide, because my tests build against those names.  It's an interface, not an implementation, but it is a hint, and you should know the model gets it.</p>
+<p>The judge then swaps the model's file in for my hand lift, in a throwaway copy of the repo, and runs the same tests.  It passes only if every test goes green.  I score pass or fail, lines against mine, and tries.</p>
+<h2>Why Sonnet 4.6</h2>
+<p>I started with Claude on Amazon Bedrock, one small pinned model.  Not the 3090 yet.  One unknown at a time: if a small local model failed, I wouldn't know whether the method or the model was at fault.</p>
+<p>I wanted Sonnet 5.5.  AWS wouldn't let my account use it, or Sonnet 5.  The call came back "not available for this account," while Sonnet 4.6 worked fine on the same account.  I never found the cause, so I'm going to ask AWS.  The exam runs on Sonnet 4.6 and the newer row will wait.</p>
+<h2>The first run failed, and that was my fault</h2>
+<p>The serial item failed to build.  The model had included a system header and called a function that doesn't exist in a stand-alone build.</p>
+<p>The prompt said "stand-alone" and never said how the file is built: freestanding, no C library, no headers at all, every warning an error.  The model's function names matched the header exactly, and its lift was 68 lines against my 57.  The reading and writing were fine.  The missing fact was the build, and I hadn't told it.</p>
+<p>So I changed the prompt after seeing a result.  That shouldn't happen quietly, so it's recorded: the first run stays on the scorecard as it was, and from now on every run carries a fingerprint of the prompt it was given.  The first three serial runs show a dash, because the fingerprint didn't exist yet.</p>
+<h2>The bill</h2>
+<p>As a product manager, this is what I wanted before anything else.  Every try gets a record: tokens in and out, the result, and what it cost.  And there's a hard cap.  The script checks this month's recorded spending before every call, and refuses if the next call could pass 20 dollars.  I'm adding AWS's own budget alert as a second wall.</p>
+<p>The second serial run passed, at 62 lines against 57.  Both runs together cost 98 cents.  I said a word I won't print here.</p>
+<p>Nearly all of it was the conversation being sent again at every step, since the model is called over and over while it reads.  So the runner now marks what it has already sent to be remembered, and Bedrock charges a tenth of the price for that part.  The next serial pass came in at 54 lines, three under my hand lift, for 12 cents.  The two passes aren't the same run, so the drop isn't all caching, but it's most of it.</p>
+<h2>The scorecard</h2>
+<p>Sonnet 4.6, all three items.</p>
+<ul>
+<li>Serial: pass, 54 lines against my 57, $1.10 with every try counted.</li>
+<li>Screen: pass, 79 lines against my 55, $0.07.</li>
+<li>Timer: fail, 95 to 100 lines against my 103, $1.96.</li>
+</ul>
+<p>Total $3.13 across seven sittings.  Two parts passed, so each one cost about $1.56 once you count every failed try, the prompt mistake included.  That's a small model, one sitting each for two of them, and a header that gave it a hint, so I'm not drawing a big conclusion.  The screen is 24 lines longer than mine, and I haven't looked at why.</p>
+<h2>The timer failed, and that's the best part</h2>
+<p>The timer item measures how fast the processor's clock ticks, by timing it against the PC's old 8254 timer chip.  The model's code built and ran, and the test said the rate was never measured.  It reported zero.</p>
+<p>It tried three times in one sitting.  Two of the tries built and failed the same way, and the middle one ran out of steps without writing anything.  Claude and I went and looked.  The model's file is Linux's own code, almost line for line.  Mine differs in two places that matter, and both are things we found by running on this machine.</p>
+<p>First, Linux gives the measurement 50 milliseconds.  Under this setup, reading that chip is so slow that Linux's own accuracy check can never pass in 50, so my version gives it 150.  Second, I leave out a write to a port this machine doesn't have.</p>
+<p>Here's where the lookup from earlier comes back.  The 50 was right there in the lines the reader handed the model.  It did what the task asked, which was to keep what Linux actually does.  Nothing in the Linux source could tell it that Linux's number doesn't work here.</p>
+<p>I changed that one number in the model's file, from 50 to 150, and ran it through the judge.  It passed, at 100 lines.  I did that by hand.  It's not a test, and it's not on the scorecard.  But it tells me the model's code wasn't the problem.  I'd even seen this one coming, sort of.  Back in part 12, one of my deliberate breakages puts Linux's 50 back and checks the timer test goes red.  On the jig, it does.</p>
+<p>I'm leaving the fail on the card.  I could tell the model about the machine and it would pass, but the pass would prove nothing.  And I'm not going to pretend this is fine.  A part that comes back wrong on the machine it's for is a real failure, and it has to be fixed.  Fixing what goes red is the mechanic's job, the next agent on my list, so that's another post, when we build it.  Until then the timer stays red, in public.</p>
 <h2>What I'm taking away</h2>
-<p>The piece this rung added: an AI can write the request, a check that has no AI in it decides whether the request is any good, and I get a record I can open the next morning and read the same way every time.</p>
-<p>I'm not claiming this is how you'd build a distribution, and I'm not claiming <code>cat</code> proves anything about Linux.  The next part is the last one in this series: a small C library (musl), a loader for Linux's program files, and Berkeley's <code>cat</code> printing a file.  After that I'll have a number for how viable all this is, and I'll tell you what it is.</p>
+<p>I was scared the exam would show the AI can't do this.  It showed something I can use: two parts passed, one failed for a reason I can point at, and every dollar is written down in a file you can open.  The timer still has to be fixed, and I'll fix it in the open.  I want to say it goes through.  Two out of three on one small model isn't proof, but it's a start.</p>
+<p>Next, the same exam on the 3090.</p>
 <h2>Read along</h2>
 <ol>
-<li><a href="https://github.com/cmcluckie/aios/blob/main/draft/prompt.txt">draft/prompt.txt</a>.  Everything the model is told.  Fifteen lines.</li>
-<li><a href="https://github.com/cmcluckie/aios/blob/main/jig/draft">jig/draft</a>.  The draft step.  Look for where the reply is handed to the referee before anything is kept.</li>
-<li><a href="https://github.com/cmcluckie/aios/blob/main/petitions/0012.toml">petitions/0012.toml</a>.  The petition no person wrote.</li>
-<li><a href="https://github.com/cmcluckie/aios/blob/main/pool/AGT.referee%401/referee.c">pool/AGT.referee@1/referee.c</a>.  Look for <code>cmd_petition</code> and the line that says a petition is fields and never prose.</li>
-<li><a href="https://github.com/cmcluckie/aios/blob/main/findings/0022.md">findings/0022.md</a>.  The plan, the measured list, and what changed while building.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/jig/reader">jig/reader</a>.  The script that answers only from the one fixed copy of Linux.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/exam/prompt.txt">exam/prompt.txt</a>.  What the model is told.  This is the file I changed after the first run.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/jig/judge">jig/judge</a>.  Swaps the model's file in and runs the tests.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/jig/sit">jig/sit</a>.  The runner.</li>
+<li><a href="https://github.com/cmcluckie/aios/tree/main/runs">runs/</a>.  Every try, with the question, the answer and the cost.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/findings/0020.md">findings/0020.md</a>.  The account trouble, the prompt, the bill, and the timer.</li>
 </ol>
 <h2>Try this</h2>
-<p>Run <code>sh pool/AGT.referee@1/referee petition petitions/0012.toml</code>.  It says the petition is well formed and lists nine components still waiting to be added to the catalogue.  Now put one sentence of prose at the top of a copy of that file, something like "Here is the petition for cat, with my reasoning first.", and run it on the copy.  The referee refuses it and names line 1.  That's the exact mistake the model made, and the check that now catches it.</p>
+<p>Open the repo in Codespaces and run <code>sh jig/scorecard</code>.  That's the table above, built from the files in <code>runs/</code>.  Then open the last timer run's <code>output.txt</code> next to <code>lifted/PART.timer.tsc-pit@2/tsccal.c</code> and find the 50.  Would you have caught it?  If you would have, tell me how.</p>
 <h2>As built</h2>
-<p>This part added two components and changed two: the draft step and the builder are new, the reader learned Unix V7, and the referee learned to read a draft petition.  Each has a catalogue entry and an as-built spec, hand-written from the code (<a href="https://github.com/cmcluckie/aios/blob/main/index/tool/reader@1.as-built.md">reader@1</a>, <a href="https://github.com/cmcluckie/aios/blob/main/index/tool/draft@1.as-built.md">draft@1</a>, <a href="https://github.com/cmcluckie/aios/blob/main/index/tool/builder@1.as-built.md">builder@1</a>, <a href="https://github.com/cmcluckie/aios/blob/main/index/agent/referee@1.as-built.md">referee@1</a>).</p>
+<p>This part added two tools, TOOL.exam@1 (the run record, spending cap, line counter, scorecard, judge and runner) and TOOL.reader@1 (the source reader).  Both are scaffolding that leave with the jig, so each has a catalogue entry (<a href="https://github.com/cmcluckie/aios/blob/main/index/tool/exam@1.toml">exam@1</a>, <a href="https://github.com/cmcluckie/aios/blob/main/index/tool/reader@1.toml">reader@1</a>) and an as-built spec, hand-written from the scripts (<a href="https://github.com/cmcluckie/aios/blob/main/index/tool/exam@1.as-built.md">exam@1</a>, <a href="https://github.com/cmcluckie/aios/blob/main/index/tool/reader@1.as-built.md">reader@1</a>).</p>
 <h2>Addendum: the tests</h2>
-<p>Every test for this post, run by <code>sh jig/test</code> and <code>sh jig/mutate</code> on the jig, under KVM at commit 1602ff2.  The whole suite: 94 passed, 0 failed, 4 skipped.  This post's 5 tests: 5 passed.  Of its deliberate breakages, 22 were caught and 0 survived.  The referee's rules, run over every petition, fail three times on petition 0012, the one the model wrote: those are the findings the post describes, not test failures.  The model's own calls are not tests; they are in the run records, which the draft probe stands in for with saved replies.</p>
+<p>Every test for this post, from tests/results.txt and tests/mutations-results.txt, run on the jig under KVM at commit c550ddc.  The whole suite: 76 passed, 0 failed, 4 skipped.  Of 175 deliberate breakages, 172 were caught; the 3 that survive are known and written down, one each from parts 10, 12 and this post.  This post's tests carry 71 of them: 70 caught, and the one survivor.  The referee's own file, tests/referee-results.txt: 83 lines, 0 FAIL.  The calls to Bedrock are not tests; they are the runs in runs/ and the scorecard.</p>
+<h3>TOOL.exam@1</h3>
+<ul>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/exam.budget@1.toml">exam.budget@1</a>.  Checks: A call is refused when this calendar month's recorded cost plus the most the call could cost would pass the monthly cap.  Passed: October's 0.900000 is counted and September's 0.300000 is not; a call that could cost 0.05 or 0.10 is let through and 0.15 is refused against the 1.00 cap.  Mutations caught: 3.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/exam.cache@1.toml">exam.cache@1</a>.  Checks: Tokens a model reports as read from or written to its cache are costed at the model's own cache prices and written into the run record beside the other tokens; a model with no cache price is refused when it reports cached tokens, never costed as if they were free.  Passed: cached tokens are costed at their own prices (1000 in, 500 out, 10000 read, 2000 written: 0.021000) and kept in run.toml; cached tokens for a model with no cache price, or that are words, are refused and leave nothing behind; a run with none still records for a model with no cache price.  Mutations caught: 4.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/exam.count@1.toml">exam.count@1</a>.  Checks: Code lines are counted the same way for every lift, the model's and the hand's: non-blank lines outside comments.  Passed: 10, 6 and 4 code lines in the three fixtures, 16 for two together: blanks, one-line and two-line block comments, // comments and a comment in the middle of a line are not counted; a code line with a trailing comment is.  Mutations caught: 3.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/exam.judge@1.toml">exam.judge@1</a>.  Checks: A lift is judged by standing it in for the hand lift in a copy of the repo and running the item's tests there: it passes only if every one goes green, a lift that breaks one fails naming the first that went red, and the repo itself is never changed.  Passed: the hand lift passes at 57 lines; a lift that never waits for the chip fails on serial.waits-ready@1, one that adds a byte fails on serial.in-order@1, one that is not C fails; a missing file is refused, an unknown item is 'cannot judge', and the repo's own hand lift is never touched.  Mutations caught: 4, and one known survivor, written down.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/exam.ping@1.toml">exam.ping@1</a>.  Checks: A call to a model is made only when its model has a price, the key file is there and is readable by no one else, and the monthly cap has room for the most the call could cost; each call is then written into the run record with its tokens and its cost.  Passed: a saved reply gives its word, 14 in and 6 out and a cost of 0.000088 and is recorded once as ping; a model with no price, a call that could pass the cap, a missing key file and a key file others can read each stop it before any call.  Mutations caught: 5.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/exam.record@1.toml">exam.record@1</a>.  Checks: A run is recorded only with its model, version, token counts, result, input and output, the sitting it belongs to and the fingerprint of the prompt, at a cost computed from the price list; a model with no price, or a field that is malformed, is refused and leaves nothing behind.  Passed: one run recorded with cost 0.033000 (1000 in, 2000 out), its input and output kept as they were; a model with no price, a repeat, a result that is not pass, fail or refused, try 0, tokens that are words and a missing input were each refused and left nothing behind.  Mutations caught: 5.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/exam.scorecard@1.toml">exam.scorecard@1</a>.  Checks: The scorecard shows, for each model and each exam item, a line for every sitting (one start of the runner) with whether it passed, the lines kept beside the hand lift's, the tries, the total cost of every try and the fingerprint of the prompt it was given, then the items passed and the cost per passing sitting, from the recorded runs only; two sittings are never added into one, and an item a model never sat is shown as not sat.  Passed: two models, eleven runs in seven sittings: the table matches the one written by hand (a line per sitting with its passes, lines beside the hand lift's, tries, cost including the failed tries and prompt fingerprint, an item never sat, and the cost per passing sitting), and with no runs it says so.  Mutations caught: 8.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/exam.sit@1.toml">exam.sit@1</a>.  Checks: A model sits an exam item by being shown the question and the part's header, looking at Linux only through the reader, and writing the file the item asks for; the lift is judged by the judge, a failed try is shown its failing test and its own file before the next, every try is recorded with its tokens and cost whether it passed, failed or wrote nothing, and nothing is called when the judge cannot pass the hand lift; each request marks the prompt, the tools and the latest message to be cached, so that what has already been sent is charged at the cached rate.  Passed: a model that fails then passes is recorded as two runs, fail then pass at 5 lines, costing 0.001100 for the first; the reader's answers and a refused command reach it, the second try is shown the failing test and its own file, only the file asked for is kept and fences are dropped; a reply with no file is recorded as refused with its cost; a judge that fails the hand lift stops it before any call.  Mutations caught: 16.</li>
+</ul>
 <h3>TOOL.reader@1</h3>
 <ul>
-<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/reader.v7-pin@1.toml">reader.v7-pin@1</a>.  Checks: Asked about Unix Version 7, the reader answers only from the commit pinned in jig/v7.pin, by the same rules as for Linux, and turns down find, callers and calls, which only Linux has, by saying so.  Goes red when: the reader, asked about V7, reads from anything but the commit in jig/v7.pin, hands back a line that differs from an archive of that commit, answers for a file that is not in it, or answers find, callers or calls instead of saying they are Linux-only.  Status: Passed by the runner (on the jig, under KVM): V7 at 5beb5e90fa2d: usr/src/cmd/cat.c read byte for byte (63 lines), a range from the middle, list, seven refusals and a commit the clone lacks, and find, callers and calls say Linux-only.  Mutations caught: 4.</li>
-</ul>
-<h3>TOOL.draft@1</h3>
-<ul>
-<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/draft.parses@1.toml">draft.parses@1</a>.  Checks: A reply is kept as a draft petition only if the referee can read it as one; a reply that is not a petition, or that the referee refuses, is thrown away, no draft file is written, and the draft step says why; the call is still written into the run record, because it was paid for.  Goes red when: a saved reply that is a proper petition is not kept, or one that is not (prose, prose in front of a proper petition, a petition the referee refuses, an empty reply) is kept or leaves a file behind, or the same reply gives two different drafts, or the model's question to the reader is not answered, or a call is not written into the run record.  Status: Passed by the runner (on the jig, under KVM): a petition read, kept and the same both times; prose, prose in front of a petition, a refused petition and an empty reply each thrown away with nothing left behind and the call recorded.  Mutations caught: 4.</li>
-</ul>
-<h3>TOOL.builder@1</h3>
-<ul>
-<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/builder.missing-list@1.toml">builder.missing-list@1</a>.  Checks: A build that cannot finish because catalogue numbers its petitions name have no catalogue entry writes every one of them to out/FLAVOR/missing.txt, one to a line with what kind of thing it is, in the same order on every run, and exits with status 3, which means stopped and not crashed.  Goes red when: a build that cannot finish writes no out/FLAVOR/missing.txt, writes a list that differs from the expected one (a number left out, a line without its kind), lists the same things in a different order on a second run, or exits with any status but 3.  Status: Passed by the runner (on the jig, under KVM): the build of cat stopped with status 3 and wrote the 3 missing numbers, the same both times.  Mutations caught: 4.</li>
-<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/builder.no-guess@1.toml">builder.no-guess@1</a>.  Checks: The missing list holds exactly the catalogue numbers the flavor's petitions name that have no catalogue entry: it adds none of its own and leaves none out, and a flavor that is missing nothing gets no list.  Goes red when: the list holds a number the petitions do not name, or a number that has a catalogue entry, or leaves one out; or a number is still listed once its entry exists; or a flavor missing nothing gets a list.  Status: Passed by the runner (on the jig, under KVM): exactly the 3 numbers with no entry; none once they have one; a stale list removed; hello given none.  Mutations caught: 3.</li>
-</ul>
-<h3>AGT.referee@1</h3>
-<ul>
-<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/referee.draft@1.toml">referee.draft@1</a>.  Checks: A draft petition is accepted as well-formed only if every line is a comment, a table header or a field (never prose), and it has the petition fields, a purpose that exists, a role and an admitted flag on every component, a SPEC code as the reason for every capability, a future expiry, and only catalogue numbers that have a version and either resolve or come with a component not yet admitted; otherwise it is refused, naming the rule or the field and the number.  Goes red when: a well-formed draft is refused, or a draft that is prose, has prose in front of an otherwise proper petition, has an unknown role, has expired, has a number with no version, names a number that resolves nowhere and comes with no component, gives a reason that is not a SPEC code, names a purpose that does not exist, or has a component with no admitted flag is accepted.  Status: Passed by the runner (on the jig, under KVM): a good draft accepted and listed; prose and nine spoiled copies refused, each naming its reason.  Mutations caught: 7.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/reader.bounded@1.toml">reader.bounded@1</a>.  Checks: No question gets more than READER_MAX lines back, however large the answer, and a cut-short answer says how many lines it left out.  Passed: 200 lines is the most read will give, READER_MAX=3 stops a fourth, and list stops at the cap.  Mutations caught: 3.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/reader.exact@1.toml">reader.exact@1</a>.  Checks: Asked for lines, the reader returns exactly the pinned commit's lines, each as FILE:LINE: text, byte for byte.  Passed: the 4 lines asked for, the first 200 lines of drivers/tty/serial/8250/8250_early.c and its last line (228) equal the archive's, list marks folders, ports finds the one outb in 55-100.  Mutations caught: 5.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/reader.find@1.toml">reader.find@1</a>.  Checks: The find, callers and calls questions answer from a cscope database of the pinned source and give the same answer every time; a name it does not know is refused.  Passed: find, callers and calls match the recorded answers twice running, an unknown name is refused, and a cut-short answer says how much it left out.  Mutations caught: 6.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/reader.refuses@1.toml">reader.refuses@1</a>.  Checks: The reader refuses, with a reason and exit status 1, any file, directory, line range, number or name that is not in Linux at the pinned commit, and never answers with something nearby.  Passed: turned down: a missing file, a directory read as a file, lines past the end, line 0, a backwards range, a word for a number, a missing directory, a file listed as a directory, a check outside the file, a name with a semicolon, an unknown question, and a commit the clone lacks.  Mutations caught: 8.</li>
 </ul>
 <h2>Code on GitHub</h2>
-<p><a href="https://github.com/cmcluckie/aios/compare/6a9dc82...9683654">Every line that changed, on one page</a></p>
+<p><a href="https://github.com/cmcluckie/aios/compare/7365385...27e4427">Every line that changed, on one page</a>.</p>
 <p>The commits behind this post, in order:</p>
 <ol>
-<li><a href="https://github.com/cmcluckie/aios/commit/5695c66">Part 19: the plan and the pieces for cat</a></li>
-<li><a href="https://github.com/cmcluckie/aios/commit/50d7361">Part 19: the first real draft, and the referee refuses prose in front of a petition</a></li>
-<li><a href="https://github.com/cmcluckie/aios/commit/0e1dc68">The first petition no person wrote: the draft the referee accepted on its second try, installed as 0012 with the cat flavor; the builder stops on it with eight missing numbers</a></li>
-<li><a href="https://github.com/cmcluckie/aios/commit/c49e853">Ledger: hash for the accepted-draft commit</a></li>
-<li><a href="https://github.com/cmcluckie/aios/commit/3ffe037">As-built specs for the builder and the draft step, decision 0035</a></li>
-<li><a href="https://github.com/cmcluckie/aios/commit/e6f1216">Part 19: first draft of the article, Chris&#x27;s second set of notes, hash for the as-built commit</a></li>
-<li><a href="https://github.com/cmcluckie/aios/commit/1602ff2">Part 19: the post page, and the reader.refuses mutation pointed at ident() again, decision 0036</a></li>
-<li><a href="https://github.com/cmcluckie/aios/commit/9683654">Part 19: the jig results, the addendum and the commit links</a></li>
-<li>Part 19: the ledger hash for the results commit and the links (hash when committed)</li>
+<li><a href="https://github.com/cmcluckie/aios/commit/8a823df">Shared source reader, exam run record, scorecard, spending cap, judge, first model row and test call</a></li>
+<li><a href="https://github.com/cmcluckie/aios/commit/1a53ac2">The first exam runs on Sonnet 4.6, the account being refused the 5.x models</a></li>
+<li><a href="https://github.com/cmcluckie/aios/commit/19be95d">jig/sit, the runner that sits an exam item, and jq on the jig</a></li>
+<li><a href="https://github.com/cmcluckie/aios/commit/d2bc76b">The exam prompt says how the file is built, after the first run showed it was missing</a></li>
+<li><a href="https://github.com/cmcluckie/aios/commit/ce37369">The first real runs of the exam, Sonnet 4.6 on the serial item</a></li>
+<li><a href="https://github.com/cmcluckie/aios/commit/175adf7">The runner caches what it has already sent, and the run record keeps cached tokens</a></li>
+<li><a href="https://github.com/cmcluckie/aios/commit/3271581">The serial item again, with caching: 0.12 dollars for a pass at 54 lines</a></li>
+<li><a href="https://github.com/cmcluckie/aios/commit/810d191">The scorecard keeps sittings apart and shows the prompt's fingerprint</a></li>
+<li><a href="https://github.com/cmcluckie/aios/commit/c550ddc">The first scorecard: serial and screen pass, timer fails on Linux's 50 ms</a></li>
+<li><a href="https://github.com/cmcluckie/aios/commit/c654be9">The exam article, its image and the jig's results</a></li>
+<li><a href="https://github.com/cmcluckie/aios/commit/27e4427">The as-built specs for the exam and reader tools</a></li>
 </ol>
 <p><a href="https://github.com/cmcluckie/aios">The whole repo</a>.</p>
 </div>

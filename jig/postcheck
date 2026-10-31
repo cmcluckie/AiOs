@@ -39,14 +39,14 @@ check_html() {
 		grep 'https\?://' "$p" | grep -qv '^[^ ].*: https\?://[^ ]*$' && bad "$h" "post has a link that is not on its own line after a few words saying what it is (decision 0085)"
 		sed -n '2,$p' "$p" | grep . | head -1 | grep -q '^\(In this part\|Today I\)' && bad "$h" "post opens with 'In this part' or 'Today I'"
 		sed '1d' "$p" | grep -q '[a-z0-9"]\. [A-Z]' && bad "$h" "post's story has one space after a period; two"
-		# from part 15, the same three links end every post, before the hashtag: the
-		# findings, the one commit, the repo (decision 0109)
-		if [ "$n" -ge 15 ]; then
+		# from part 13, the same three links end every post, before the hashtag: the
+		# findings (or the petition), the one commit, the repo (decisions 0109, 0110)
+		if [ "$n" -ge 13 ]; then
 			grep . "$p" | tail -4 | head -3 > "$p.links"
-			sed -n 1p "$p.links" | grep -q "^[^ ].*: $R/blob/main/findings/[0-9][0-9][0-9][0-9]\.md$" &&
+			sed -n 1p "$p.links" | grep -q "^[^ ].*: $R/blob/main/\(findings/[0-9][0-9][0-9][0-9]\.md\|petitions/[0-9][0-9][0-9][0-9]\.toml\)$" &&
 				sed -n 2p "$p.links" | grep -q "^[^ ].*: $R/commit/[0-9a-f]\{7,\}$" &&
 				[ "$(sed -n 3p "$p.links")" = "The whole repo: $R" ] ||
-				bad "$h" "post does not end with its three links: the findings, the one commit, the whole repo (decision 0109)"
+				bad "$h" "post does not end with its three links: the findings or petition, the one commit, the whole repo (decisions 0109, 0110)"
 			[ "$(grep -c 'https\?://' "$p")" -eq 3 ] || bad "$h" "post has $(grep -c 'https\?://' "$p") links; the three, once (decision 0109)"
 			rm -f "$p.links"
 		fi

@@ -22,16 +22,16 @@ Each file holds the short post, the title and the full article.
 | 10 | 2026-10-24 | [Saved like it's 1991](posts/2026-10-24.html) |
 | 11 | 2026-10-26 | [From KERNAL to kernel](posts/2026-10-26.html) |
 | 12 | 2026-10-28 | [Hi, I'm the other one](posts/2026-10-28.html) |
-| 13 | 2026-10-30 | [Language matters](posts/2026-10-30.html) |
-| 14 | 2026-10-31 | [Give me Notepad or die](posts/2026-10-31.html) |
-| 15 | 2026-11-03 | [Unplug from the matrix](posts/2026-11-03.html) |
-| 16 | 2026-11-05 | [I never looked](posts/2026-11-05.html) |
-| 17 | 2026-11-10 | [The exam](posts/2026-11-10.html) |
-| 18 | 2026-11-12 | [The gate](posts/2026-11-12.html) |
-| 19 | 2026-11-17 | [The petition nobody wrote](posts/2026-11-17.html) |
-| 20 | 2026-11-19 | [Found a 30 year old bug hidden in a basic UNIX command](posts/2026-11-19.html) |
-| 21 | 2026-11-24 | [Why can't we just tell it not to do that?](posts/2026-11-24.html) |
-| 22 | 2026-11-26 | [Disqualified](posts/2026-11-26.html) |
+| 13 | 2026-11-03 | [Language matters](posts/2026-11-03.html) |
+| 14 | 2026-11-05 | [Give me Notepad or die](posts/2026-11-05.html) |
+| 15 | 2026-11-10 | [Unplug from the matrix](posts/2026-11-10.html) |
+| 16 | 2026-11-12 | [I never looked](posts/2026-11-12.html) |
+| 17 | 2026-11-17 | [The exam](posts/2026-11-17.html) |
+| 18 | 2026-11-19 | [The gate](posts/2026-11-19.html) |
+| 19 | 2026-11-24 | [The petition nobody wrote](posts/2026-11-24.html) |
+| 20 | 2026-11-26 | [Found a 30 year old bug hidden in a basic UNIX command](posts/2026-11-26.html) |
+| 21 | 2026-12-01 | [Why can't we just tell it not to do that?](posts/2026-12-01.html) |
+| 22 | 2026-12-03 | [Disqualified](posts/2026-12-03.html) |
 
 ![AiOs: the nucleus at the centre, the agents that build and guard it around it, and the jig underneath](docs/aios-components.png)
 

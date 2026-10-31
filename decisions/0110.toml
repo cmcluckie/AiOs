@@ -1,0 +1,11 @@
+id      = "0110"
+date    = 2026-10-31
+kind    = "rules and words"
+touches = ["CLAUDE.md", "posts/voice.md", "jig/postcheck"]
+asked   = "Decision 0109 was built on a wrong premise: part 12 was the last post out, on 2026-10-28, and parts 13 and 14 were never published.  So the Tuesday and Thursday schedule starts at part 13: 13 on 2026-11-03, 14 on 11-05, 15 on 11-10, 16 on 11-12, 17 on 11-17, 18 on 11-19, 19 on 11-24, 20 on 11-26, 21 on 12-01, 22 on 12-03.  Files and images renamed, part 13's four extra images with them, each page's own image line, the ledger's post keys, README.md's table, upcoming.md.  The three links end every post from part 13, not 15; a part with no findings file links its petition instead (part 14: petitions/0007.toml).  CLAUDE.md, posts/voice.md and jig/postcheck say so.  The line about Tuesdays and Thursdays moves from part 15's post to part 13's, and part 15's three shortened sentences are restored.  To keep part 13's post within 220 words, 'in school' is cut from one sentence."
+options = ["as written", "keep decision 0109's dates"]
+default = "as written"
+chose   = "as written"
+why     = "Chris, 2026-10-31: \"No last post was 12 the AI post\" and \"I must have screwed up\"."
+by      = "KEY.chris@1"
+drafted = "Claude"
