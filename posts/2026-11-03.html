@@ -16,13 +16,19 @@ AiOs, part 15 (Kernel code: 1044 lines). "Just because a test passes doesn't mea
 
 Claude played the bad agent on purpose.  It rewrote hello world from part 1 to skip the system and talk to the serial port itself.  Same 14 bytes out, and the test passed it.
 
-The referee didn't.  "Rule 12: PART.hello@1 touches the hardware itself."  After every build it reads the machine instructions each program became and looks for the handful that reach the hardware directly.  I've been scared there'd be no way to check the AI, and here it was, catching one.
+The referee didn't.  "Rule 12: PART.hello@1 touches the hardware itself."  After every build it reads each program's machine instructions, looking for the few that reach the hardware.  I've been scared there'd be no way to check the AI, and here it was, catching one.
 
-Then the cheat everyone worries about.  A test fails, and the AI loosens the test instead of fixing the code.  So tests, specs and the rules themselves are now on a list only I decide, and changing any of them takes a written decision signed with my key.  Claude tried it without one, then with a name that isn't on the list.  Refused both times.
+Then the cheat everyone worries about.  A test fails, and the AI loosens the test instead of fixing the code.  So tests, specs and the rules themselves are now on a list only I decide, and changing any of them takes a written decision signed with my key.  Claude tried without one, then with a fake one.  Refused both times.
 
-The first night the referee read all the paperwork, it found four petitions that had never asked for a permission their code was using.  The tests had been green for three posts, and nothing could say so.
+The first night the referee read all the paperwork, it found four petitions that had never asked for a permission their code was using.  The tests had been green for three posts.
 
 Writing code is the AI's job.  Deciding what counts as correct is mine.
+
+Posts now land Tuesdays and Thursdays: writing them properly takes longer than I thought.
+
+What a passing test does and does not prove: https://github.com/cmcluckie/aios/blob/main/findings/0016.md
+The referee, rewritten in C: https://github.com/cmcluckie/aios/commit/99fa5e6
+The whole repo: https://github.com/cmcluckie/aios
 
 #AiOs
 </div>
@@ -54,7 +60,7 @@ Writing code is the AI's job.  Deciding what counts as correct is mine.
 <h2>And what do you know, Claude cheated on my first post!</h2>
 <p>Claude played the bad agent.  It rewrote hello world, the program from part 1, to skip the system and talk to the serial port itself, the way an AI might write its own control instead of using the framework.</p>
 <p>Hello's test passed it.  Same 14 bytes, exactly.  The test only checks what comes out, and what came out was perfect.</p>
-<p>The referee refused it anyway: "rule 12: PART.hello@1 touches the hardware itself."  (PART.hello@1 is hello world's catalogue number.)  Rule 12 is new this week, and it's simple: a program never talks to the hardware directly.  It asks the operating system to do it.  After every build, the referee reads the machine instructions the program was turned into and looks for the handful that talk to hardware.  If it finds one, the build is refused.  No judgment, no AI, just a list.</p>
+<p>The referee refused it anyway: "rule 12: PART.hello@1 touches the hardware itself."  (PART.hello@1 is hello world's catalogue number.)  Rule 12 is new in this part, and it's simple: a program never talks to the hardware directly.  It asks the operating system to do it.  After every build, the referee reads the machine instructions the program was turned into and looks for the handful that talk to hardware.  If it finds one, the build is refused.  No judgment, no AI, just a list.</p>
 <p><em>Afterthought: I absolutely love this, because I've been so scared that there would be no way to validate the AI.  I may still be naive in thinking I can control it 100% through code, and if I'm being honest, I don't think that.  But the fact that we got a win, found an instance of this happening so quickly, and already had the methodology built to fix it, is very exciting and very promising to me.</em></p>
 <h2>The second cheat: the test got easier</h2>
 <p>Then the cheat everyone worries about.  A test fails, and instead of fixing the code, the AI changes the test so it passes.  It gives the test more time to finish, or quietly loosens what counts as a failure.  Everything goes green, and nothing got fixed.</p>
@@ -135,7 +141,7 @@ requires      = ["CAP.tty.write@1", "CAP.tty.read@1", "CAP.fs.read@1",
                  "CAP.fs.write@2", "CAP.proc.exit@1"]
 exposes       = []
 as_built      = "index/part/editor@1.as-built.md"</code></pre>
-<p>Line by line.  The code is its name.  The sentence is for you, not the referee: every entry has one as of this week, because a catalogue a person can't read is gobbledygook.  Source is where the code lives.  Depends is the one part it's built on, the kernel.  Requires is every permission it needs: write and read the console, read and write a file, exit.  Exposes is what it provides to others, and a program provides nothing.  The as-built file is the prose description, hand-written until a tool writes it.</p>
+<p>Line by line.  The code is its name.  The sentence is for you, not the referee: every entry has one as of this part, because a catalogue a person can't read is gobbledygook.  Source is where the code lives.  Depends is the one part it's built on, the kernel.  Requires is every permission it needs: write and read the console, read and write a file, exit.  Exposes is what it provides to others, and a program provides nothing.  The as-built file is the prose description, hand-written until a tool writes it.</p>
 <p>And here's the petition that asks for the editor, cut down to its shape:</p>
 <pre><code>[petition]
 id      = "0007"

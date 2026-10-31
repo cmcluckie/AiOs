@@ -1,0 +1,11 @@
+id      = "0109"
+date    = 2026-10-31
+kind    = "rules and words"
+touches = ["CLAUDE.md", "posts/voice.md", "jig/postcheck"]
+asked   = "The series moves to Tuesdays and Thursdays at 7:30 AM Pacific, as decision 0010 moved it to every second day.  Published as of 2026-10-31: everything through part 14, which went out 2026-10-31, a day early; its file and image are renamed to that date and its ledger key says so.  Unpublished: part 15 (2026-11-03) and 16 (2026-11-05) stay; 17 to 2026-11-10, 18 to 11-12, 19 to 11-17, 20 to 11-19, 21 to 11-24, and part 22 to 11-26, since 11-17 is 19's now.  Files and images renamed, each page's own image line with them (part 16's named 2026-10-22.png, now its own), the ledger's post keys, README.md's table (part 22 added), upcoming.md.  Part 15's 'this week', twice, is 'this part' now.  Every post from part 15 ends, before the hashtag, with the same three links: the part's findings file, the one commit worth opening, the whole repo, each 'What it is: link'; part 21's, which had its links twice, has them once.  CLAUDE.md and posts/voice.md say so, and jig/postcheck fails a post from part 15 without them.  Part 15's post says the posts now land Tuesdays and Thursdays because writing them properly takes longer; to stay within 220 words three of its sentences were shortened."
+options = ["as written", "keep every second day"]
+default = "as written"
+chose   = "as written"
+why     = "Chris, 2026-10-31: \"Series change, its own commit, not mixed with part 22.  Same as decision 0010's reschedule, but Tuesdays and Thursdays from here.\""
+by      = "KEY.chris@1"
+drafted = "Claude"

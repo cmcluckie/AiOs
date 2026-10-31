@@ -429,11 +429,12 @@ with no steering.  Until then, each post adds one word to the vocabulary.
 
 **When.**  Every time an item or sub-item in plan/brief.md moves to [done],
 Claude drafts a post for it.  The post is also the body of the commit that
-moves the item to done.  One post every second day, weekends included, at
-7:30 AM Pacific: the date is the day it is meant to go out, two days after the
-post before it.  Part 7 is 2026-10-18 and the rhythm runs on from there.  The
-folder runs ahead of LinkedIn on purpose.  When the schedule moves, the files
-are renamed to their new dates and README.md's table follows (decision 0010).
+moves the item to done.  One post every Tuesday and Thursday at 7:30 AM
+Pacific, from 2026-11-03 (decision 0109; every second day from part 7 to part
+14, decision 0010): the date is the day it is meant to go out, or, once it has,
+the day it did.  The folder runs ahead of LinkedIn on purpose.  When the
+schedule moves, the files are renamed to their new dates and README.md's table
+and the ledger's post keys follow.
 
 **Files.**  Two per post, same date, same name, in posts/:
 - `YYYY-MM-DD.html`: everything Chris pastes into LinkedIn, in one file, in
@@ -475,7 +476,10 @@ thousands of people and the one-line teasers after it reached a few hundred).
 4. `#AiOs` on its own line (`#AiOS` for parts 1 to 12, matching their name).
 No bullet points, and never open with "In this part" or "Today I".  Links
 go after the closing sentence and before the hashtag, each on its own line
-with a few words saying what it is (decision 0085; LinkedIn rewrites them to
+with a few words saying what it is (decision 0085).  From part 15 every post
+ends with the same three links, in this order: the part's findings file, the
+one commit worth opening, and the whole repo, each `What it is: link`
+(decision 0109; LinkedIn rewrites them to
 its own short links, and that is fine).  The links are not counted in the
 150 to 220 words.  jig/postcheck checks all of it from part 7.  K is the lines of code taken from Linux (lifted/, the .c files, no blanks, no
 comments, as the as-built specs record them) on the day the post goes out:
