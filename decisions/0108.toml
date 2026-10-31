@@ -1,0 +1,11 @@
+id      = "0108"
+date    = 2026-10-31
+kind    = "mutation list"
+touches = ["tests/mutations.txt"]
+asked   = "The jig's mutation run at d515c84 found one breakage that no longer applied: exam.scorecard's 'the prompt fingerprint is not shown on a passing line' looked for a line ending in spr[sk], and since decision 0096 the card's lines end in the bench column.  Rewritten to change the passing line only, as it meant to; caught (8 of 8 scorecard breakages) in Claude's workspace.  Also found and left for its own fix: jig/mutate counts a test that prints SKIP as caught, so the jig reports the agent's 64 breakages caught though it cannot build the agent."
+options = ["take it", "do not take it"]
+default = "take it"
+chose   = "take it"
+why     = "Chris, 2026-10-31, finishing part 22: the addendum reports the mutation run honestly, and a breakage that no longer applies proves nothing."
+by      = "KEY.chris@1"
+drafted = "Claude"

@@ -201,7 +201,7 @@ exam.scorecard@1 | red | jig/scorecard | s#sc\[sk\] += \$8#if ($6 == "pass") sc[
 exam.scorecard@1 | red | jig/scorecard | s#sl\[sk\] = \$7#sl[sk] = hand[$3]# | the hand lift's lines are shown as the model's
 exam.scorecard@1 | red | jig/scorecard | s#if (!(sk in sn)) { ns\[k\]++#if (0) { ns[k]++# | no sitting is ever listed
 exam.scorecard@1 | red | jig/scorecard | s#if (ns\[k\] == 0) {#if (0) {# | an item a model never sat is shown as a failure
-exam.scorecard@1 | red | jig/scorecard | s#, spr\[sk\]$#, "-"# | the prompt fingerprint is not shown on a passing line
+exam.scorecard@1 | red | jig/scorecard | /PASS  %d lines/s#spr\[sk\], bench$#"-", bench# | the prompt fingerprint is not shown on a passing line
 exam.scorecard@1 | red | jig/scorecard | s#passcost / npass#total / npass# | the cost of failed sittings is spread over the passing ones
 exam.scorecard@1 | red | jig/scorecard | s#if (st == "") {#if (0) {# | runs recorded before sittings existed are all added into one
 gate.screen-refused@1   | red      | pool/PART.gate@1/gate.c               | s/pt0\[i\] = (i << 12) [|] 0x3;/pt0[i] = (i << 12) + 0x7;/ | the kernel's own pages, the screen's among them, are opened to ring 3

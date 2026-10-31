@@ -1,5 +1,5 @@
 # tests/mutations-results.txt, written by jig/mutate.  Do not edit by hand.
-# run 2026-10-27T18:08Z at commit c30a46f
+# run 2026-10-31T18:06Z at commit d515c84
 KILLED    hello.exact-bytes@1  one wrong letter in hello's message
 KILLED    hello.exact-bytes@1  the newline goes missing
 KILLED    hello.exact-bytes@1  one extra write before exit
@@ -194,7 +194,7 @@ KILLED    exam.scorecard@1  the cost of a failed try is left off
 KILLED    exam.scorecard@1  the hand lift's lines are shown as the model's
 KILLED    exam.scorecard@1  no sitting is ever listed
 KILLED    exam.scorecard@1  an item a model never sat is shown as a failure
-KILLED    exam.scorecard@1  the prompt fingerprint is not shown on a passing line
+NO-OP     exam.scorecard@1  the prompt fingerprint is not shown on a passing line
 KILLED    exam.scorecard@1  the cost of failed sittings is spread over the passing ones
 KILLED    exam.scorecard@1  runs recorded before sittings existed are all added into one
 KILLED    gate.screen-refused@1  the kernel's own pages, the screen's among them, are opened to ring 3
@@ -313,4 +313,87 @@ KILLED    gate.window-end@1  the whole last 4 MiB is opened to ring 3, as before
 KILLED    gate.window-end@1  the part-block is never mapped, so the program loses the end of its own memory
 KILLED    share.waits@1  the wait runs with interrupts off again, so the stopwatch freezes while a program waits for a key
 KILLED    share.waits@1  interrupts come back on only once the byte has arrived, too late for the wait
-# 308 killed, 0 survived unexpectedly, 5 known survivors, 0 no-ops, 0 no-builds
+KILLED    fix.judged@1  FIX_AT is ignored: the model gets the repo as it is, where the fix is already in
+KILLED    fix.judged@1  the copy at FIX_AT keeps runs/, so the model can read how the fix was done last time
+KILLED    fix.judged@1  the run does not record which commit it worked from
+KILLED    fix.judged@1  a reply cut off at the limit is taken for a model gone quiet
+KILLED    exam.ollama@1  an Ollama reply cut off at its limit is handed on as if it had finished
+KILLED    fix.judged@1  a copy at FIX_AT, inside the repo's folder, reads the repo's history and refuses its later commits, as on the 3090's first run
+KILLED    fix.judged@1  the model the bench calls leaks into the suite it runs, and the tests of the model tools call it, as on the 3090's second run
+KILLED    exam.ollama@1  a reply stopped by a full context is taken for one cut off at its limit, as on the 3090's first try
+KILLED    fix.judged@1  a conversation that outgrew the context is taken for a model gone quiet, and reminded into a context with no room
+KILLED    fix.judged@1  a look that gives no reason is run anyway: the model may wander without saying why, as the 3090 did
+KILLED    fix.judged@1  a look's answer is never cut, so one read of a whole file fills a small model's memory
+KILLED    exam.bench@1  an agent run's peak context is not kept, so a run that died of room cannot be told from one that did not
+KILLED    exam.bench@1  the card shows the last try's peak, not the most any call held
+KILLED    exam.bench@1  any word is taken as how a run ended
+KILLED    agent.runtime@1  Bedrock's requests are signed wrong, and every paid call is refused
+KILLED    agent.runtime@1  a model that keeps stopping is reminded forever, and spends every call
+KILLED    agent.runtime@1  a model is costed at another model's price
+KILLED    agent.runtime@1  a short answer counts as no room at all
+KILLED    agent.note@1  the passing tests are not counted, so every note says none passed
+KILLED    agent.note@1  a run with a failing test is noted as a pass
+KILLED    agent.note@1  every failing test is named, and none is counted as left out
+KILLED    agent.note@1  the first failure goes to the director whole, however long
+KILLED    agent.note@1  a try that is not a number is read as 0 and a note is written
+KILLED    agent.plan@1  a key no plan has is let through, so a typo in a limit silently leaves the default
+KILLED    agent.plan@1  a gear that does not exist is taken
+KILLED    agent.plan@1  a plan that names no try cap gets 40, not the 10 findings 0027 sets
+KILLED    agent.plan@1  the commit to start from may be a branch name, which moves
+KILLED    agent.plan@1  a key given twice is refused without saying so
+KILLED    agent.chat@1  the thinking stays in the conversation and fills the context a turn at a time
+KILLED    agent.chat@1  a full context is called a cut at the reply limit, and the room it ran out of goes unseen
+KILLED    agent.chat@1  the system prompt is never sent, so the builder has no role and no rules
+KILLED    agent.chat@1  a call for a tool is read as the model stopping
+KILLED    agent.chat@1  the context is left to Ollama's default, a sixth of the card
+KILLED    agent.build@1  the jig's copy keeps runs/, so a builder's fix is judged beside the records of earlier ones
+KILLED    agent.build@1  a look with no why is run, and the builder reads without saying what it expects to learn
+KILLED    agent.build@1  one read of a long file goes to the card whole and fills it
+KILLED    agent.build@1  the newest answers are dropped too, so the builder loses what it just read
+KILLED    agent.build@1  a fix is blamed for a test that was red before it
+KILLED    agent.build@1  a builder may hand in a change to the test itself and have it judged
+KILLED    agent.build@1  a fix that stops a green test from running gets past
+KILLED    agent.build@1  a fix that prints its own PASS line beside the real FAIL is a pass
+KILLED    agent.build@1  a hand-in's paths are not checked before they are written, so one can land outside the folder
+KILLED    agent.build@1  a jig gone at a hand-in is taken for a failed fix, and the director spends a try on it
+KILLED    agent.build@1  a paid builder spends past its share of the part's dollars
+KILLED    agent.build@1  a paid builder never asks the month's cap
+KILLED    agent.direct@1  the same failure run after run never stops the part, and the tries are spent hoping
+KILLED    agent.direct@1  a failing count that holds steady is taken for progress
+KILLED    agent.direct@1  jobs that move between tests and fail the same way are called stuck
+KILLED    agent.direct@1  the director's word that the part is done is taken without the notes to show it
+KILLED    agent.direct@1  one try more than the plan allows is run
+KILLED    agent.direct@1  the fold keeps more notes whole than findings 0027 says, and fills the room it was meant to free
+KILLED    agent.direct@1  the director's hint never reaches the builder
+KILLED    agent.direct@1  the director's own spending is left out of what the part has left
+KILLED    agent.bedrock@1  a key file anyone on the machine can read is used
+KILLED    agent.bedrock@1  a tool's answer is handed back against a call that was never made, and Bedrock refuses the turn
+KILLED    agent.bedrock@1  two user turns in a row, which Converse refuses
+KILLED    agent.bedrock@1  a full context on Sonnet reads as a plain stop, and room is never seen
+KILLED    agent.limit@1  thinking runs on past its cap and eats the reply's limit, as it did twice on waits
+KILLED    agent.limit@1  the turn asked again after too much thinking thinks again
+KILLED    agent.limit@1  a builder that ends without handing in hands in nothing, and the director gets no note of its work
+KILLED    agent.limit@1  an edit may change a test, or a file outside pool/
+KILLED    agent.tokens@1  the model's count is read and thrown away, and code is undercounted as it was on waits
+KILLED    agent.tokens@1  a builder never learns how the model counts, and old answers stay until the card is full
+KILLED    agent.tokens@1  the loop never passes on what the model counted
+KILLED    agent.trial@1  the director is shown strategic's comments, and hands one to a builder as its hint, as on waits
+KILLED    agent.trial@1  a builder's run in a prompt trial is recorded as if it were not one
+KILLED    agent.trial@1  a run's trial is never written, and the card cannot set a trial's runs side by side
+KILLED    agent.columns@1  a builder's note leaves out its calls, its peak and its minutes, so the race has no columns to fill
+KILLED    agent.columns@1  the director's peak is never kept, and every note says it held nothing
+KILLED    agent.columns@1  the card shows no calls for any part's builders
+KILLED    agent.columns@1  the card's wall minutes are a tenth of the real ones
+KILLED    agent.plan@1  a plan that names no time cap gets the 120 minutes waits nearly ran out of, not 240
+KILLED    exam.control@1  the exam's runner changes under the race, and the control is no longer the control
+KILLED    exam.control@1  the fix runner changes under the race, and the waits runs are no longer comparable
+KILLED    share.waits@2  the wait runs with interrupts off again, so the stopwatch freezes while a program waits for a key
+KILLED    share.waits@2  the old prompts' dodge (findings 0029 item 6): the waiting program is stopped so the others run, and its byte never reaches it
+SURVIVED  share.waits@1  the old prompts' dodge (findings 0029 item 6): nothing is typed, so a waiter that was stopped looks like one still waiting; TST.share.waits@2 catches it  (known, written down)
+KILLED    agent.lift@1  a lifter may write any file it names, not only the one the part asks for
+KILLED    agent.lift@1  a lift passes without one of the part's tests passing
+KILLED    agent.lift@1  an argument with a ; and a space reaches the shell on the jig
+KILLED    agent.lift@1  the lifter is never shown the fixed header jig/sit shows a model
+KILLED    agent.lift@1  a lift is spent on an item whose hand lift does not pass its own tests
+KILLED    agent.lift@1  a director on an exam plan is told only the item, and asks strategic for the tests, as on the first race run
+# 389 killed, 0 survived unexpectedly, 6 known survivors, 1 no-ops, 0 no-builds
