@@ -403,7 +403,10 @@ lift)
 #!/bin/sh
 if [ "${1:-}" = toy.lift@1 ]; then
 	f=lifted/PART.toy.lift@1/lift.c
-	if grep -q 'return 42' $f; then echo "PASS  TST.toy.lift@1  0s  42"; echo "# 1 passed, 0 failed, 0 skipped"
+	if grep -q 'asm volatile' $f; then
+		echo "/nix/store/abc-gcc-15/bin/gcc: lifted/PART.toy.lift@1/lift.c:2:19: error: 'asm' undeclared"
+		echo "FAIL  TST.toy.lift@1  0s  build of toy failed"; echo "# 0 passed, 1 failed, 0 skipped"
+	elif grep -q 'return 42' $f; then echo "PASS  TST.toy.lift@1  0s  42"; echo "# 1 passed, 0 failed, 0 skipped"
 	else echo "FAIL  TST.toy.lift@1  0s  the lift gives $(grep -o 'return [0-9]*' $f), not 42"; echo "# 0 passed, 1 failed, 0 skipped"; fi
 	exit 0
 fi
@@ -451,6 +454,13 @@ TOY
 	lift disk 2; o="$t/out/toy-try2"
 	[ $rc -eq 0 ] && [ "$(rt handed_in_by)" = '"program"' ] && [ "$(rt result)" = '"pass"' ] ||
 		fail "a lift written and never handed in was not handed in by the program and passed: exit $rc, $(grep -E '^(handed_in_by|result|ended)' "$o/run.toml" | tr '\n' ' ')"
+	# a lift that does not build: the builder is shown what the compiler said, not
+	# only that the build failed (findings 0032, the timer in the race)
+	mkdir "$t/blind"; for n in 1 2 3 4; do cp "$fx/lift/blind-$n.json" "$t/blind/$n.json"; done
+	lift blind 4; o="$t/out/toy-try4"
+	bans=$(jq -r '[.messages[] | select(.role == "tool")][1].content' "$t/blind/sent-3.json")
+	printf '%s\n' "$bans" | grep -q "judged: fail.*build of toy failed" && printf '%s\n' "$bans" | grep -qx "gcc: lifted/PART.toy.lift@1/lift.c:2:19: error: 'asm' undeclared" ||
+		fail "a lift that did not build was not shown what the compiler said: $(printf '%s' "$bans" | tr '\n' ' ')"
 	# a hand lift that does not pass: nothing is spent
 	sed -i 's/return 42/return 40/' "$a/lifted/PART.toy.lift@1/lift.c"; (cd "$a" && git -c user.name=t -c user.email=t@t commit -qam broken); at=$(git -C "$a" rev-parse --short=9 HEAD)
 	mkdir "$t/broken"; cp "$fx/lift/1.json" "$t/broken/"

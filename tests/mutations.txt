@@ -403,3 +403,4 @@ agent.lift@1 | red | agent/mechanic/src/judge.rs | s/!plain(a, "._-\/+,")/!plain
 agent.lift@1 | red | agent/mechanic/src/lift.rs | s/for h in \&it.headers {/for h in it.headers.iter().take(0) {/ | the lifter is never shown the fixed header jig/sit shows a model
 agent.lift@1 | red | agent/mechanic/src/lift.rs | s/judge::lift_verdict(\&before, \&it.codes)/judge::lift_verdict(\&before, \&it.codes[..0])/ | a lift is spent on an item whose hand lift does not pass its own tests
 agent.lift@1 | red | agent/mechanic/src/direct.rs | s/^    if p.exam {$/    if p.exam \&\& false {/ | a director on an exam plan is told only the item, and asks strategic for the tests, as on the first race run
+agent.lift@1 | red | agent/mechanic/src/judge.rs | s/            if said.is_empty() {/            if said.is_empty() || true {/ | a lift that does not build is told only that the build failed, never what the compiler said, as on the timer in the race

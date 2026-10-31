@@ -122,7 +122,11 @@ pub fn lift_verdict(after: &str, codes: &[String]) -> Option<String> {
     for c in codes {
         if has(&a, c, "FAIL") {
             let l = a[c].iter().find(|(w, _)| w == "FAIL").map(|(_, l)| l.clone()).unwrap_or_default();
-            return Some(runtime::model::cut(&l, 200));
+            let said = printed_before(after, &l);
+            if said.is_empty() {
+                return Some(runtime::model::cut(&l, 200));
+            }
+            return Some(format!("{}\nPrinted just before it:\n{said}", runtime::model::cut(&l, 200)));
         }
         if !has(&a, c, "PASS") {
             return Some(format!("{c} did not run, or was skipped"));
@@ -156,6 +160,30 @@ pub fn check(base: &Path, paths: &[String]) -> Result<(), String> {
 }
 
 /// Each test's lines: PASS, FAIL, SKIP, by code; a code may have more than one.
+/// What jig/test printed just before a result line, back to the result line before
+/// it: a build that failed prints the compiler's and the linker's own words there
+/// (findings 0032).  The last 15 lines, at most 1,500 characters, each program's
+/// path cut to its name.
+fn printed_before(out: &str, result: &str) -> String {
+    let mut block: Vec<String> = Vec::new();
+    for line in out.lines() {
+        let t = line.trim_start_matches(' ');
+        if t == result {
+            break;
+        }
+        if ["PASS  ", "FAIL  ", "SKIP  ", "# "].iter().any(|w| t.starts_with(w)) {
+            block.clear();
+        } else if !t.trim().is_empty() {
+            block.push(match (t.starts_with('/'), t.find(": ")) {
+                (true, Some(i)) => format!("{}{}", t[..i].rsplit('/').next().unwrap_or(""), &t[i..]),
+                _ => t.to_string(),
+            });
+        }
+    }
+    let from = block.len().saturating_sub(15);
+    runtime::model::cut(&block[from..].join("\n"), 1500)
+}
+
 fn results(out: &str) -> BTreeMap<String, Vec<(String, String)>> {
     let mut m: BTreeMap<String, Vec<(String, String)>> = BTreeMap::new();
     for line in out.lines() {

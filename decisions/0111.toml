@@ -1,0 +1,11 @@
+id      = "0111"
+date    = 2026-10-31
+kind    = "code"
+touches = ["agent/mechanic/src/judge.rs", "tests/programs/agent.sh", "tests/agent.lift@1.toml", "tests/mutations.txt", "tests/fixtures/agent/lift/blind-1.json", "tests/fixtures/agent/lift/blind-2.json", "tests/fixtures/agent/lift/blind-3.json", "tests/fixtures/agent/lift/blind-4.json", "findings/0032.md"]
+asked   = "Why the timer never built in the race (findings 0032): of the ten last hand-ins, eight did not build, and the compiler or linker said exactly why each time, but the lifter was told only \"build of stopwatch failed\".  A failed lift's answer now carries what jig/test printed just before its FAIL line, the last 15 lines, at most 1,500 characters, each program's path cut to its name.  TST.agent.lift checks a lift that does not build is shown the compiler's line (red before; a seventh mutation).  The builder's fix path and the director's note are not changed."
+options = ["take it", "do not take it"]
+default = "take it"
+chose   = "take it"
+why     = "Chris, 2026-10-31, after the timer's failures were explained: \"Yes\"."
+by      = "KEY.chris@1"
+drafted = "Claude"
