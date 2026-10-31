@@ -1,0 +1,132 @@
+The build failed because I referenced `UART_DLL_OFFSET`/`UART_DLM_OFFSET`, which I never defined (the kernel's actual names are `UART_DLL`=0 and `UART_DLM`=1). Here is the corrected, complete file.
+
+=== serial8250.c ===
+/*
+ * serial8250.c — transmit bytes out of a PC's first serial port (16550),
+ * 8 data bits, no parity, 1 stop bit, 115200 baud.
+ *
+ * Lifted from the Linux kernel's early console for 8250/16550 UARTs:
+ *   drivers/tty/serial/8250/8250_early.c
+ *       serial8250_early_in / serial8250_early_out  (UPIO_PORT paths)
+ *       serial_putc                                 (transmit + LSR poll)
+ *       init_port                                   (LCR / IER / FCR / MCR / divisor)
+ *   include/uapi/linux/serial_reg.h                 (register offsets & bits)
+ *   include/linux/serial.h                          (uart_lsr_tx_empty)
+ *
+ * The receiving side, MMIO variants, per-port configuration and the kernel
+ * console/earlycon glue are dropped.  Port I/O is emitted as inline asm.
+ */
+#include "serial8250.h"
+
+/* UART register offsets (include/uapi/linux/serial_reg.h). */
+enum {
+	UART_RX   = 0,	/* In:  Receive buffer            */
+	UART_TX   = 0,	/* Out: Transmit buffer          */
+	UART_IER  = 1,	/* Out: Interrupt Enable Register */
+	UART_FCR  = 2,	/* Out: FIFO Control Register    */
+	UART_LCR  = 3,	/* Out: Line Control Register    */
+	UART_MCR  = 4,	/* Out: Modem Control Register   */
+	UART_LSR  = 5,	/* In:  Line Status Register     */
+};
+
+/* DLAB=1: the divisor latch low (offset 0) and high (offset 1). */
+enum {
+	UART_DLL  = 0,	/* Out: Divisor Latch Low        */
+	UART_DLM  = 1,	/* Out: Divisor Latch High       */
+};
+
+/* DLAB=0 bit definitions (include/uapi/linux/serial_reg.h). */
+enum {
+	UART_IER_UUE    = 0x40,	/* UART Unit Enable */
+	UART_LCR_WLEN8  = 0x03,	/* Wordlength: 8 bits */
+	UART_LCR_DLAB   = 0x80,	/* Divisor latch access bit */
+	UART_MCR_DTR    = 0x01,	/* DTR complement */
+	UART_MCR_RTS    = 0x02,	/* RTS complement */
+	UART_LSR_TEMT   = 0x40,	/* Transmitter empty */
+	UART_LSR_THRE   = 0x20,	/* Transmit-hold-register empty */
+};
+
+static void s8250_out(unsigned short base, unsigned char offset, unsigned char value)
+{
+	unsigned short p = (unsigned short)(base + offset);
+
+	__asm__ volatile ("outb %0, %1" : : "a" (value), "Nd" (p) : "memory");
+}
+
+static unsigned char s8250_in(unsigned short base, unsigned char offset)
+{
+	unsigned short p = (unsigned short)(base + offset);
+	unsigned char v;
+
+	__asm__ volatile ("inb %1, %0" : "=a" (v) : "Nd" (p) : "memory");
+	return v;
+}
+
+/* include/linux/serial.h: FIFO and shifting register empty. */
+static int s8250_lsr_tx_empty(unsigned int lsr)
+{
+	return (lsr & (UART_LSR_TEMT | UART_LSR_THRE)) == (UART_LSR_TEMT | UART_LSR_THRE);
+}
+
+void serial8250_init(unsigned short base)
+{
+	unsigned int divisor;
+	unsigned char c;
+	unsigned char ier;
+
+	/* 8n1 */
+	s8250_out(base, UART_LCR, UART_LCR_WLEN8);
+	/* no interrupt */
+	ier = s8250_in(base, UART_IER);
+	s8250_out(base, UART_IER, (unsigned char)(ier & UART_IER_UUE));
+	/* no fifo */
+	s8250_out(base, UART_FCR, 0);
+	s8250_out(base, UART_MCR, (unsigned char)(UART_MCR_DTR | UART_MCR_RTS));
+
+	/* 115200 baud from the standard 1.8432 MHz clock:
+	 * DIV_ROUND_CLOSEST(1843200, 16 * 115200) == 1 */
+	divisor = 1;
+	c = s8250_in(base, UART_LCR);
+	s8250_out(base, UART_LCR, (unsigned char)(c | UART_LCR_DLAB));
+	s8250_out(base, UART_DLL, (unsigned char)(divisor & 0xff));
+	s8250_out(base, UART_DLM, (unsigned char)((divisor >> 8) & 0xff));
+	s8250_out(base, UART_LCR, (unsigned char)(c & ~UART_LCR_DLAB));
+}
+
+void serial8250_putc(unsigned short base, unsigned char c)
+{
+	unsigned int status;
+
+	s8250_out(base, UART_TX, c);
+
+	for (;;) {
+		status = s8250_in(base, UART_LSR);
+		if (s8250_lsr_tx_empty(status))
+			break;
+		__asm__ volatile ("pause" ::: "memory");
+	}
+}
+
+void serial8250_write(unsigned short base, const void *s, unsigned long n)
+{
+	const char *p = (const char *)s;
+
+	while (n) {
+		serial8250_putc(base, (unsigned char)*p);
+		p++;
+		n--;
+	}
+}
+
+void serial8250_flush(unsigned short base)
+{
+	unsigned int status;
+
+	/* Wait for the last byte to leave the transmitter. */
+	for (;;) {
+		status = s8250_in(base, UART_LSR);
+		if (s8250_lsr_tx_empty(status))
+			break;
+		__asm__ volatile ("pause" ::: "memory");
+	}
+}

@@ -1,0 +1,95 @@
+=== serial8250.c ===
+#include "serial8250.h"
+
+/* 16550 register offsets (regshift 0, i.e. plain byte registers). */
+#define UART_RX 0
+#define UART_TX 1
+#define UART_IER 2
+#define UART_FCR 2
+#define UART_LCR 3
+#define UART_MCR 4
+#define UART_LSR 5
+#define UART_DLL 0
+#define UART_DLM 1
+
+/* LCR: 8 data bits (WLEN8), divisor latch bit. */
+#define UART_LCR_WLEN8 0x03
+#define UART_LCR_DLAB 0x80
+
+/* MCR: assert DTR and RTS. */
+#define UART_MCR_DTR 0x01
+#define UART_MCR_RTS 0x02
+
+/* LSR: transmitter-holding-register empty. */
+#define UART_LSR_TEMT 0x20
+
+/* IER: UART underrun/timeout enable, the one bit left set with interrupts off. */
+#define UART_IER_UUE 0x01
+
+#define UARTCLK 1843200u	/* 115200 * 16 */
+
+static unsigned int serial8250_in(unsigned short base, unsigned int off)
+{
+	unsigned int v;
+	__asm__ volatile("inb %1, %0" : "=a"(v) : "Nd"((unsigned short)(base + off)));
+	return v;
+}
+
+static void serial8250_out(unsigned short base, unsigned int off, unsigned int v)
+{
+	__asm__ volatile("outb %0, %1" : : "a"(v & 0xff), "Nd"((unsigned short)(base + off)) : "memory");
+}
+
+void serial8250_init(unsigned short base)
+{
+	unsigned int divisor;
+	unsigned char c;
+	unsigned int ier;
+
+	serial8250_out(base, UART_LCR, UART_LCR_WLEN8);		/* 8n1 */
+	ier = serial8250_in(base, UART_IER);
+	serial8250_out(base, UART_IER, ier & UART_IER_UUE);	/* no interrupt */
+	serial8250_out(base, UART_FCR, 0);			/* no fifo */
+	serial8250_out(base, UART_MCR, UART_MCR_DTR | UART_MCR_RTS);
+
+	divisor = (UARTCLK + 8 * 115200u) / (16 * 115200u);	/* DIV_ROUND_CLOSEST */
+	c = serial8250_in(base, UART_LCR);
+	serial8250_out(base, UART_LCR, c | UART_LCR_DLAB);
+	serial8250_out(base, UART_DLL, divisor & 0xff);
+	serial8250_out(base, UART_DLM, (divisor >> 8) & 0xff);
+	serial8250_out(base, UART_LCR, c & ~UART_LCR_DLAB);
+}
+
+void serial8250_putc(unsigned short base, unsigned char c)
+{
+	unsigned int status;
+
+	serial8250_out(base, UART_TX, c);
+
+	for (;;) {
+		status = serial8250_in(base, UART_LSR);
+		if (status & UART_LSR_TEMT)
+			break;
+		__asm__ volatile("pause" ::: "memory");
+	}
+}
+
+void serial8250_write(unsigned short base, const void *s, unsigned long n)
+{
+	const unsigned char *p = s;
+
+	while (n--)
+		serial8250_putc(base, *p++);
+}
+
+void serial8250_flush(unsigned short base)
+{
+	unsigned int status;
+
+	for (;;) {
+		status = serial8250_in(base, UART_LSR);
+		if (status & UART_LSR_TEMT)
+			break;
+		__asm__ volatile("pause" ::: "memory");
+	}
+}

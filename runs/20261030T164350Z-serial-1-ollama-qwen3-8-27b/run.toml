@@ -1,0 +1,15 @@
+id            = "20261030T164350Z-serial-1-ollama-qwen3-8-27b"
+date          = "2026-10-30T16:43:50Z"
+item          = "serial"
+model         = "ollama:qwen3.8:27b"
+version       = "2026-10-30"
+sitting       = "20261030T164223Z"
+prompt        = "98ad3b40"
+try           = 1
+input_tokens  = 96909
+output_tokens = 4281
+cache_read_tokens  = 0
+cache_write_tokens = 0
+cost_usd      = 0.000000
+result        = "fail"
+lines         = 82

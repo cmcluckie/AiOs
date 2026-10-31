@@ -1,0 +1,84 @@
+I have the kernel's `early_vga_write` logic (arch/x86/kernel/early_printk.c:26-70) and the `color_table` (drivers/tty/vt/vt.c:1399-1400). VGA memory at 0xb8000 is memory-mapped (out of the 16-bit port range), so I keep Linux's direct-cell read/write and express those accesses as inline assembly.
+
+=== vga.c ===
+```c
+/* PART.screen.vga@1: the 80 by 25 text screen.  Implements CAP.screen.write. */
+#include "vga.h"
+
+#define VGABASE		0xb8000UL
+#define MAX_XPOS	80
+#define MAX_YPOS	25
+
+static int current_ypos = MAX_YPOS;
+static int current_xpos = 0;
+static unsigned short color = 0x7;		/* light grey on black */
+
+/* ANSI colour number -> VGA colour number (drivers/tty/vt/vt.c) */
+const unsigned char color_table[16] = {
+	0, 4, 2, 6, 1, 5, 3, 7,
+	8, 12, 10, 14, 9, 13, 11, 15
+};
+
+static unsigned short readw(unsigned long addr)
+{
+	unsigned short v;
+	__asm__ __volatile__ ("movw %0, %1" : "=m" (v) : "m" (*(unsigned short *)addr));
+	return v;
+}
+
+static void writew(unsigned short v, unsigned long addr)
+{
+	__asm__ __volatile__ ("movw %0, %1" :: "r" (v), "m" (*(unsigned short *)addr));
+}
+
+void vga_write(const char *str, unsigned n)
+{
+	char c;
+	int i, k, j;
+
+	while ((c = *str++) != '\0' && n-- > 0) {
+		if (current_ypos >= MAX_YPOS) {
+			/* scroll 1 line up */
+			for (k = 1, j = 0; k < MAX_YPOS; k++, j++)
+				for (i = 0; i < MAX_XPOS; i++)
+					writew(readw(VGABASE + 2 * (MAX_XPOS * k + i)),
+						 VGABASE + 2 * (MAX_XPOS * j + i));
+			for (i = 0; i < MAX_XPOS; i++)
+				writew(color, VGABASE + 2 * (MAX_XPOS * j + i));
+			current_ypos = MAX_YPOS - 1;
+		}
+		if (c == '\n') {
+			current_xpos = 0;
+			current_ypos++;
+		} else if (c != '\r') {
+			writew(((unsigned short)color << 8) | (unsigned short)c,
+				 VGABASE + 2 * (MAX_XPOS * current_ypos + current_xpos++));
+			if (current_xpos >= MAX_XPOS) {
+				current_xpos = 0;
+				current_ypos++;
+			}
+		}
+	}
+}
+
+void vga_clear(void)
+{
+	int i;
+
+	for (i = 0; i < MAX_XPOS * MAX_YPOS; i++)
+		writew(color, VGABASE + 2 * i);
+	current_ypos = 0;
+	current_xpos = 0;
+}
+
+void vga_home(void)
+{
+	current_ypos = 0;
+	current_xpos = 0;
+}
+
+void vga_set_color(unsigned char attr)
+{
+	color = (unsigned short)(attr & 0xff);
+}
+```

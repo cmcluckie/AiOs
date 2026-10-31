@@ -1,0 +1,108 @@
+=== vga.c ===
+/*
+ * vga.c -- 80x25 VGA text screen, lifted from Linux's early VGA console
+ * (arch/x86/kernel/early_printk.c: early_vga_write) and the kernel's
+ * ANSI -> VGA colour table (drivers/tty/vt/vt.c: color_table).
+ *
+ * The text buffer sits at physical address 0xB8000.  In the early Linux
+ * kernel that address is directly mapped, so early_vga_write just does
+ * readw()/writew() on it; here, in flat 32-bit freestanding code, the same
+ * access is a plain 16-bit memory access through a volatile pointer.
+ */
+
+#include "vga.h"
+
+typedef unsigned short u16;
+
+#define MAX_YPOS 25
+#define MAX_XPOS 80
+
+/* arch/x86/kernel/early_printk.c:28-29
+ *   static int max_ypos = 25, max_xpos = 80;
+ *   static int current_ypos = 25, current_xpos;
+ * The cursor starts one line below the screen, so the first character
+ * written scrolls the screen, exactly like the kernel.
+ */
+static int max_ypos     = MAX_YPOS;
+static int max_xpos     = MAX_XPOS;
+static int current_ypos = MAX_YPOS;
+static int current_xpos = 0;
+
+/* The colour later text is written in (background << 4 | foreground),
+ * default light grey on black, the attribute the kernel's early output
+ * uses (0x7xx cells). */
+static unsigned char attr = 0x07;
+
+/* drivers/tty/vt/vt.c:1399
+ *   const unsigned char color_table[] = { 0, 4, 2, 6, 1, 5, 3, 7,
+ *                                         8,12,10,14, 9,13,11,15 };
+ * ANSI colour number -> VGA colour number. */
+const unsigned char color_table[16] = {
+	0, 4, 2, 6, 1, 5, 3, 7,
+	8, 12, 10, 14, 9, 13, 11, 15
+};
+
+/* The screen at 0xB8000, one 16-bit cell per character, row by row. */
+static volatile u16 *const vga_cells =
+	(volatile u16 *)0xB8000U;
+
+static u16 vga_cell(int x, int y)
+{
+	return (u16)(MAX_XPOS * y + x);
+}
+
+void vga_write(const char *str, unsigned n)
+{
+	char c;
+	int i, k, j;
+
+	while ((c = *str++) != '\0' && n-- > 0) {
+		if (current_ypos >= max_ypos) {
+			/* scroll 1 line up */
+			for (k = 1, j = 0; k < max_ypos; k++, j++) {
+				for (i = 0; i < max_xpos; i++)
+					vga_cells[vga_cell(i, j)] =
+						vga_cells[vga_cell(i, k)];
+			}
+			for (i = 0; i < max_xpos; i++)
+				vga_cells[vga_cell(i, j)] =
+					(u16)(attr << 8 | 0x20);
+			current_ypos = max_ypos - 1;
+		}
+
+		if (c == '\n') {
+			current_xpos = 0;
+			current_ypos++;
+		} else if (c != '\r') {
+			vga_cells[vga_cell(current_xpos, current_ypos)] =
+				(u16)(attr << 8 | (u16)(unsigned char)c);
+			current_xpos++;
+			if (current_xpos >= max_xpos) {
+				current_xpos = 0;
+				current_ypos++;
+			}
+		}
+	}
+}
+
+void vga_clear(void)
+{
+	int i;
+	u16 v = (u16)(attr << 8 | 0x20);
+
+	for (i = 0; i < MAX_XPOS * MAX_YPOS; i++)
+		vga_cells[i] = v;
+	current_ypos = 0;
+	current_xpos = 0;
+}
+
+void vga_home(void)
+{
+	current_ypos = 0;
+	current_xpos = 0;
+}
+
+void vga_set_color(unsigned char a)
+{
+	attr = a;
+}

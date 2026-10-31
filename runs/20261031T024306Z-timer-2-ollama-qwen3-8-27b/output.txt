@@ -1,0 +1,129 @@
+=== tsccal.c ===
+/*
+ * tsccal.c - measure the TSC rate in kHz against the PC 8254 PIT.
+ *
+ * Lifted from arch/x86/kernel/tsc.c: pit_calibrate_tsc() and the CAL_*
+ * constants, plus the inline port access and get_cycles() that support it.
+ *
+ * The measurement loads PIT channel 2 (1.19 MHz) with a 10 ms one-shot
+ * count (mode 0, interrupt on terminal count), then polls the PIT status
+ * pin on port 0x61 while reading the TSC each pass.  In mode 0 the OUT2
+ * pin is low while counting and goes high when the count reaches zero, so
+ * the TSC ticks elapsed over those 10 ms divided by 10 give the TSC rate
+ * in kHz.
+ *
+ * If the PIT is unavailable or too slow to read reliably (a hypervisor),
+ * the measurement is abandoned and the base-clock frequency the CPU
+ * reports through the CPUID frequency leaf (0x16, or 0x15) is used instead
+ * - the hypervisor's own word for the TSC rate.
+ *
+ * Freestanding 32-bit x86: no headers, ports via inline assembly.
+ */
+
+#include "tsccal.h"
+
+#define PIT_TICK_RATE 1193182UL
+#define CAL_MS        10
+#define CAL_LATCH     (PIT_TICK_RATE / (1000 / CAL_MS))
+
+/* Upper bound on loop iterations so a stuck status pin cannot hang us.
+ * 10 ms at 1.19 MHz is ~11932 ticks; allow well over that for a slow
+ * emulated PIT. */
+#define MAX_ITERS     200000
+
+static void out8(unsigned char v, unsigned short p)
+{
+	__asm__ __volatile__ ("outb %0, %1"
+			     :
+			     : "a" (v), "Nd" (p));
+}
+
+static unsigned char in8(unsigned short p)
+{
+	unsigned char v;
+
+	__asm__ __volatile__ ("inb %1, %0"
+			      : "=a" (v)
+			      : "Nd" (p));
+	return v;
+}
+
+unsigned long long tsccal_cycles(void)
+{
+	unsigned int lo, hi;
+
+	__asm__ __volatile__ ("rdtsc" : "=a" (lo), "=d" (hi));
+	return ((unsigned long long)hi << 32) | lo;
+}
+
+static void cpuid_leaf(unsigned int op, unsigned int *eax, unsigned int *ebx,
+		       unsigned int *ecx, unsigned int *edx)
+{
+	__asm__ __volatile__ ("cpuid"
+			      : "=a" (*eax), "=b" (*ebx),
+				"=c" (*ecx), "=d" (*edx)
+			      : "a" (op), "c" (0));
+}
+
+static unsigned long khz_from_cpuid(void)
+{
+	unsigned int base, b, c, d;
+
+	cpuid_leaf(0x16, &base, &b, &c, &d);
+	if (base != 0)
+		return (unsigned long)base * 1000;
+
+	cpuid_leaf(0x15, &base, &b, &c, &d);
+	if (base != 0)
+		return (unsigned long)base * 1000;
+
+	return 0;
+}
+
+static unsigned long pit_calibrate(void)
+{
+	unsigned long long t1, t2, delta;
+	unsigned int iters;
+
+	/* Set the Gate high, disable speaker */
+	out8((unsigned char)((in8(0x61) & ~0x02) | 0x01), 0x61);
+
+	/* Channel 2, mode 0 (interrupt on terminal count), binary count.
+	 * Load the latch (LSB then MSB) to start the countdown. */
+	out8(0xb0, 0x43);
+	out8((unsigned char)(CAL_LATCH & 0xff), 0x42);
+	out8((unsigned char)(CAL_LATCH >> 8), 0x42);
+
+	/* In mode 0 OUT2 is low while counting.  Wait (briefly) until it
+	 * is low so we do not latch on a stale high, then wait for it to
+	 * go high at terminal count. */
+	iters = 0;
+	while ((in8(0x61) & 0x20) != 0 && iters < MAX_ITERS)
+		iters++;
+	if (iters >= MAX_ITERS)
+		return 0;
+
+	t1 = tsccal_cycles();
+	t2 = t1;
+	iters = 0;
+	while ((in8(0x61) & 0x20) == 0 && iters < MAX_ITERS) {
+		t2 = tsccal_cycles();
+		iters++;
+	}
+	if (iters >= MAX_ITERS)
+		return 0;
+
+	delta = t2 - t1;
+	if (delta == 0)
+		return 0;
+	return (unsigned long)(delta / CAL_MS);
+}
+
+unsigned long tsccal_khz(void)
+{
+	unsigned long khz = pit_calibrate();
+
+	if (khz == 0)
+		khz = khz_from_cpuid();
+	return khz;
+}

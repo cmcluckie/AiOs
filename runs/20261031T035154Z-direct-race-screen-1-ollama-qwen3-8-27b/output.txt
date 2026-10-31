@@ -1,0 +1,12 @@
+# race-screen: done
+
+every test in the plan passed, in 1 job(s)
+
+Plan: PART.screen.vga@1: text on the 80 by 25 screen, as Linux's earliest console does, at d1abf44, director director@2 (7e5e3759), builders lifter@1.
+Director: 3 calls, 4739 tokens in, 309 out, peak context 1849 of 98304; 5 minutes.
+
+- race-screen-1, screen: pass, ended pass
+
+The director's words:
+
+The race-screen exam item passed on the first try (job race-screen-1). The lifter wrote lift/vga.c, and both of the item's tests came back green. One job, no hints needed.

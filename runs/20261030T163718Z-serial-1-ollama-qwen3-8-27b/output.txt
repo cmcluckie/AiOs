@@ -1,0 +1,84 @@
+=== serial8250.c ===
+/* Lifted from drivers/tty/serial/8250/8250_early.c (serial_putc, init_port)
+ * in the Linux kernel.  Send-only early console for a PC serial port at
+ * 115200 8n1, busy-polling THRE before each byte. */
+
+#include "serial8250.h"
+
+/* Register offsets (include/linux/serial_reg.h) */
+#define UART_THR  0	/* THR: transmit buffer write */
+#define UART_IER  1
+#define UART_FCR  2
+#define UART_LCR  3
+#define UART_MCR  4
+#define UART_LSR  5
+#define UART_DLL  0	/* divisor, low byte (DLAB set) */
+#define UART_DLM  1	/* divisor, high byte (DLAB set) */
+
+/* LCR bits */
+#define UART_LCR_WLEN8 3
+#define UART_LCR_DLAB  0x80
+
+/* IER bits */
+#define UART_IER_UUE 0x08
+
+/* MCR bits */
+#define UART_MCR_DTR 0x01
+#define UART_MCR_RTS 0x02
+
+/* LSR bits */
+#define UART_LSR_THRE 0x20
+
+static unsigned char in8(unsigned short port)
+{
+	unsigned char v;
+	__asm__ volatile ("inb %1, %0" : "=a" (v) : "Nd" (port));
+	return v;
+}
+
+static void out8(unsigned short port, unsigned char v)
+{
+	__asm__ volatile ("outb %0, %1" : : "a" (v), "Nd" (port));
+}
+
+void serial8250_init(unsigned short base)
+{
+	unsigned char lcr, c;
+	/* 115200 from 1843200 Hz crystal: DIV_ROUND_CLOSEST(1843200, 16*115200) */
+	unsigned int divisor = 1;
+
+	out8(base + UART_LCR, UART_LCR_WLEN8);		/* 8n1 */
+	c = in8(base + UART_IER);
+	out8(base + UART_IER, c & UART_IER_UUE);	/* no interrupts */
+	out8(base + UART_FCR, 0);			/* no fifo */
+	out8(base + UART_MCR, UART_MCR_DTR | UART_MCR_RTS);
+
+	lcr = in8(base + UART_LCR);
+	out8(base + UART_LCR, lcr | UART_LCR_DLAB);
+	out8(base + UART_DLL, divisor & 0xff);
+	out8(base + UART_DLM, (divisor >> 8) & 0xff);
+	out8(base + UART_LCR, lcr & ~UART_LCR_DLAB);
+}
+
+void serial8250_putc(unsigned short base, unsigned char c)
+{
+	/* wait until the chip says the transmit buffer is empty */
+	while ((in8(base + UART_LSR) & UART_LSR_THRE) == 0)
+		;
+	out8(base + UART_THR, c);
+}
+
+void serial8250_write(unsigned short base, const void *s, unsigned long n)
+{
+	const unsigned char *p = (const unsigned char *)s;
+	unsigned long i;
+
+	for (i = 0; i < n; i++)
+		serial8250_putc(base, p[i]);
+}
+
+void serial8250_flush(unsigned short base)
+{
+	while ((in8(base + UART_LSR) & UART_LSR_THRE) == 0)
+		;
+}

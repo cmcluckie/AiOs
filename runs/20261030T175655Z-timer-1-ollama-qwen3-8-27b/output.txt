@@ -1,0 +1,123 @@
+=== tsccal.c ===
+/*
+ * tsccal.c - Measure TSC frequency in kHz against the 8254 PIT;
+ * fall back to CPUID when the PIT is unavailable or too slow.
+ *
+ * Lifted from arch/x86/kernel/tsc.c (pit_calibrate_tsc,
+ * native_calibrate_tsc).
+ */
+
+#include "tsccal.h"
+
+#define PIT_TICK_RATE 1193182ULL
+#define CPUID_LEAF_TSC  0x15
+#define CPUID_LEAF_FREQ 0x16
+
+unsigned long long tsccal_cycles(void)
+{
+	unsigned int lo, hi;
+	__asm__ volatile ("rdtsc" : "=a"(lo), "=d"(hi));
+	return ((unsigned long long)hi << 32) | lo;
+}
+
+/*
+ * Load PIT channel 2 (mode 0, one-shot) with a 1000-tick count and
+ * poll the counter until it reaches zero, measuring the TSC delta.
+ * Returns kHz, or 0 on failure.
+ */
+static unsigned long pit_calibrate_tsc(void)
+{
+	unsigned long long t1, t2, delta;
+	unsigned char lo, hi, spk;
+	int i;
+
+	/* Gate high, disable speaker (port 0x61) */
+	__asm__ volatile ("inb $0x61, %%al" : "=a"(spk));
+	__asm__ volatile ("outb %%al, $0x61"
+			  :: "a"((unsigned char)((spk & 0xFD) | 0x01)));
+
+	/* Channel 2, mode 0 (one-shot), binary count (port 0x43) */
+	__asm__ volatile ("outb $0xb0, $0x43");
+
+	/* Load latch value 1000 (LSB first, then MSB) at port 0x42 */
+	__asm__ volatile ("outb $0xE8, $0x42");	/* 1000 & 0xFF */
+	__asm__ volatile ("outb $0x03, $0x42");	/* 1000 >> 8  */
+
+	t1 = tsccal_cycles();
+
+	/* Poll until the counter reads zero (LSB then MSB) */
+	for (i = 0; i < 5000; i++) {
+		__asm__ volatile ("inb $0x42, %%al" : "=a"(lo));
+		__asm__ volatile ("inb $0x42, %%al" : "=a"(hi));
+		if (lo == 0 && hi == 0)
+			break;
+	}
+
+	if (i >= 5000)
+		return 0;
+
+	t2 = tsccal_cycles();
+	delta = t2 - t1;
+
+	if (delta == 0)
+		return 0;
+
+	/*
+	 * The counter ran 1000 ticks = 1000/PIT_TICK_RATE seconds.
+	 * kHz = delta / (1000/PIT_TICK_RATE * 1000 ms)
+	 *     = delta * PIT_TICK_RATE / 1000000
+	 */
+	return (unsigned long)(delta * PIT_TICK_RATE / 1000000ULL);
+}
+
+/*
+ * Determine the TSC frequency via CPUID, else return 0.
+ * (from native_calibrate_tsc, vendor checks dropped)
+ */
+static unsigned long tsc_khz_from_cpuid(void)
+{
+	unsigned int max_leaf, ax, bx, cx, dx, mhz;
+	unsigned long ck = 0;
+
+	__asm__ volatile ("cpuid" : "=a"(max_leaf) : "a"(0u));
+
+	if (max_leaf >= CPUID_LEAF_TSC) {
+		__asm__ volatile ("cpuid"
+				  : "=a"(ax), "=b"(bx), "=c"(cx), "=d"(dx)
+				  : "a"(CPUID_LEAF_TSC));
+
+		if (bx != 0 && ax != 0) {
+			ck = (unsigned long)cx / 1000;
+
+			if (ck == 0 && max_leaf >= CPUID_LEAF_FREQ) {
+				__asm__ volatile ("cpuid" : "=a"(mhz)
+						   : "a"(CPUID_LEAF_FREQ));
+				ck = (unsigned long)mhz * 1000UL *
+				     (unsigned long)ax / (unsigned long)bx;
+			}
+
+			if (ck != 0)
+				return ck * (unsigned long)bx / (unsigned long)ax;
+		}
+	}
+
+	if (max_leaf >= CPUID_LEAF_FREQ) {
+		__asm__ volatile ("cpuid" : "=a"(mhz) : "a"(CPUID_LEAF_FREQ));
+		if (mhz != 0)
+			return (unsigned long)mhz * 1000UL;
+	}
+
+	return 0;
+}
+
+unsigned long tsccal_khz(void)
+{
+	unsigned long khz;
+
+	khz = pit_calibrate_tsc();
+	if (khz != 0)
+		return khz;
+
+	/* PIT too slow or unreliable; take the hypervisor's word */
+	return tsc_khz_from_cpuid();
+}

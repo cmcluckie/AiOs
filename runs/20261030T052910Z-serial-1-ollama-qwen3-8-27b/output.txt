@@ -1,0 +1,136 @@
+I have all the information I need. Let me trace through the Linux early console code to build the standalone file.
+
+Key findings:
+- `serial_putc` (line 86-98): writes to UART_TX, then polls UART_LSR until both TEMT and THRE are set (from `uart_lsr_tx_empty`)
+- `init_port` (lines 131-152): sets 8n1, disables interrupts, disables FIFO, sets DTR+RTS, then sets divisor
+- Register constants from `serial_reg.h`
+- `uartclk` for standard PC = 1843200 Hz; divisor for 115200 = `DIV_ROUND_CLOSEST(1843200, 1843200)` = 1
+- `cpu_relax()` → `pause` instruction on x86
+
+=== serial8250.c ===
+
+#include "serial8250.h"
+
+/* ── port I/O ────────────────────────────────────────────────────────────── */
+
+static inline unsigned char inb(unsigned short port)
+{
+	unsigned char r;
+	__asm__ volatile ("inb %1, %0" : "=a"(r) : "Nd"(port) : "memory");
+	return r;
+}
+
+static inline void outb(unsigned char val, unsigned short port)
+{
+	__asm__ volatile ("outb %0, %1" : : "a"(val), "Nd"(port) : "memory");
+}
+
+static inline void cpu_relax(void)
+{
+	__asm__ volatile ("pause" ::: "memory");
+}
+
+/* ── 16550 register offsets (from include/uapi/linux/serial_reg.h) ───────── */
+
+enum {
+	UART_TX  = 0,
+	UART_IER = 1,
+	UART_FCR = 2,
+	UART_LCR = 3,
+	UART_MCR = 4,
+	UART_LSR = 5,
+	/* DLAB = 1 */
+	UART_DLL = 0,
+	UART_DLM = 1,
+};
+
+/* ── bit definitions ─────────────────────────────────────────────────────── */
+
+#define UART_IER_UUE     0x40
+#define UART_LCR_DLAB    0x80
+#define UART_LCR_WLEN8   0x03   /* 8 data bits, 1 stop bit, no parity (8n1) */
+#define UART_MCR_DTR     0x01
+#define UART_MCR_RTS     0x02
+#define UART_LSR_TEMT    0x40   /* transmitter empty            */
+#define UART_LSR_THRE    0x20   /* transmit holding register empty */
+#define UART_LSR_BOTH_EMPTY (UART_LSR_TEMT | UART_LSR_THRE)
+
+/* 115200 baud, 1.8432 MHz reference clock
+   divisor = DIV_ROUND_CLOSEST(1843200, 16 * 115200) = 1           */
+#define DIVISOR  1U
+
+/* ── implementation ──────────────────────────────────────────────────────── */
+
+/*
+ * Mirrors drivers/tty/serial/8250/8250_early.c  init_port().
+ * Configures the chip for 8n1 at 115200 baud, interrupts off, FIFO off.
+ */
+void serial8250_init(unsigned short base)
+{
+	unsigned int ier;
+	unsigned char lcr;
+
+	/* 8n1 */
+	outb(UART_LCR_WLEN8, base + UART_LCR);
+
+	/* disable all interrupts (keep only the UART-UUE bit) */
+	ier = inb(base + UART_IER);
+	outb((unsigned char)(ier & UART_IER_UUE), base + UART_IER);
+
+	/* no FIFO */
+	outb(0, base + UART_FCR);
+
+	/* DTR + RTS */
+	outb(UART_MCR_DTR | UART_MCR_RTS, base + UART_MCR);
+
+	/* set baud-rate divisor */
+	lcr = inb(base + UART_LCR);
+	outb(lcr | UART_LCR_DLAB, base + UART_LCR);
+	outb((unsigned char)(DIVISOR & 0xff),          base + UART_DLL);
+	outb((unsigned char)((DIVISOR >> 8) & 0xff),   base + UART_DLM);
+	outb(lcr & (unsigned char)~UART_LCR_DLAB, base + UART_LCR);
+}
+
+/*
+ * Mirrors drivers/tty/serial/8250/8250_early.c  serial_putc().
+ * Writes one byte then waits until the shift register has finished
+ * transmitting it (both TEMT and THRE set).
+ */
+void serial8250_putc(unsigned short base, unsigned char c)
+{
+	outb(c, base + UART_TX);
+	for (;;) {
+		unsigned int status = inb(base + UART_LSR);
+		if ((status & UART_LSR_BOTH_EMPTY) == UART_LSR_BOTH_EMPTY)
+			break;
+		cpu_relax();
+	}
+}
+
+/*
+ * Writes n bytes from s, one at a time, through serial8250_putc.
+ * Equivalent to what uart_console_write() does in the early console.
+ */
+void serial8250_write(unsigned short base, const void *s, unsigned long n)
+{
+	const unsigned char *p = (const unsigned char *)s;
+	unsigned long i;
+
+	for (i = 0; i < n; i++)
+		serial8250_putc(base, p[i]);
+}
+
+/*
+ * Waits until the transmitter is fully empty (TEMT set).
+ * Each serial8250_putc already blocks until TEMT, so this is a
+ * safety net for code that may have left data in the FIFO.
+ */
+void serial8250_flush(unsigned short base)
+{
+	for (;;) {
+		unsigned int status = inb(base + UART_LSR);
+		if (status & UART_LSR_TEMT)
+			break;
+		cpu_relax();
+	}
+}

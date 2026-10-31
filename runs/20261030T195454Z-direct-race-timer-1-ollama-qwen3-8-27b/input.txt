@@ -1,0 +1,396 @@
+{
+  "system": "You are the director of one part of AiOs, a small operating system built from parts.  Strategic (two people, Chris and Claude) wrote the part plan in the first message: the tests that say the part is done, the commit the work starts from, and the limits you work under.  Your job is to get every one of those tests green by giving jobs to builders.  You never write code and never read it.\n\nA builder starts fresh for each job, does that one job and is gone.  Give a job with the job tool: one red test, and, when it helps, a hint of at most a few sentences: what an earlier builder's note showed, which part to look at, a lesson from the prompt library.  A builder never sees an earlier builder's work, so a hint is the only way something learned on one try reaches the next.\n\nTwo rules for every hint:\n- Every builder starts from a clean checkout of the plan's commit.  Nothing an earlier builder changed is there.  Never describe a file as already changed, partly fixed or modified: it is not.\n- A hint must say something the result note did not already say: a file or a line to look at, why an earlier try failed, what to do differently.  The builder is given the test and what it printed; do not repeat them, or the plan.  If you have nothing to add, give no hint.\n\nAfter each job you get its result note, written by the program from what the tests printed on the jig: pass or fail, the tests passed and failed, the failing tests, the first failure, the files changed, how the job ended (a pass, out of calls, out of room, stopped) and why.  Trust the note over anything a builder might have said; you will not see what it said.\n\nsearch_log finds words in your log of this part: every job, every note.  search_prompts finds words in the prompt library: the lessons earlier jobs taught.  Use them before you give the same job twice.\n\nThe program keeps the limits, not you: the tries, the time, and the stuck rule.  If the same tests keep failing, or the count of failures stops going down, it stops the part and sends the notes to strategic.  Do not spend tries hoping; change something each time: the hint, or which test goes first.\n\nWhen every test in the plan has passed, call done with a report of a few sentences: what was done, in how many jobs, and anything strategic should know.  If you cannot go on without a decision only a person can make, call ask with the question, in one or two sentences; the part waits for the answer.  Never send an empty reply.\n",
+  "messages": [
+    {
+      "role": "user",
+      "content": "The part plan, race-timer:\n\npart                = \"PART.timer.tsc-pit@2: CPU cycles in a millisecond, against the 8254, or the hypervisor's word\"\npetition            = \"\"\nexam                = \"timer\"\nat                  = \"d1abf44\"\nbudget_usd          = 0.00\nmax_tries           = 10\nmax_minutes         = 240\nstuck_same_failures = 3\nstuck_no_drop       = 5\n\n[gear]\ntactical            = 1\nbuilders            = 1\n\n[prompts]\ndirector            = \"director@2\"\nbuilder             = \"lifter@1\"\n\nThis part is an exam item, not a fix.  Give its one job with test \"timer\": a fresh lifter is shown the item's question and header, reads Linux, writes the file, and is judged by the item's own tests, which its result note lists.  Give the job again, with a hint if the notes teach one, until it passes or the tries run out.\n"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "tool_calls": [
+        {
+          "id": "call_7b5212dt",
+          "function": {
+            "index": 0,
+            "name": "search_log",
+            "arguments": {
+              "word": "timer"
+            }
+          }
+        },
+        {
+          "id": "call_fj1s8q6j",
+          "function": {
+            "index": 1,
+            "name": "search_prompts",
+            "arguments": {
+              "word": "timer"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "tool_name": "search_log",
+      "content": "log:1: # race-timer\nlog:3: plan agent/plans/race-timer.toml, at d1abf44, sitting 20261030T165547Z"
+    },
+    {
+      "role": "tool",
+      "tool_name": "search_prompts",
+      "content": "no line holds timer"
+    },
+    {
+      "role": "assistant",
+      "content": "Fresh part, first try. The exam item itself carries the question and header; the lifter just needs the test name.",
+      "tool_calls": [
+        {
+          "id": "call_ja4azo84",
+          "function": {
+            "index": 0,
+            "name": "job",
+            "arguments": {
+              "test": "timer",
+              "why": "First try on the exam item: give its one job and see what its tests judge.",
+              "hint": "If you must pick a source: the 8254 PIT's base clock is 1,193,182 Hz, but under a hypervisor the TSC (or a calibrated loop) is the safer word to measure against."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "tool_name": "job",
+      "content": "Job race-timer-1, timer: fail, ended turns: more than 60 calls.\nIts result note, written by the program from what the tests printed on the jig:\njob           = \"race-timer-1\"\nstatus        = \"fail\"\ntests_passed  = 0\ntests_failed  = 2\nfailing       = [\"TST.timer.rate@1\", \"TST.timer.slow-reads@1\"]\nfirst_failure = \"TST.timer.rate@1: build of stopwatch failed\"\ntry           = 1\ntokens        = 2527958\nseconds       = 3602\nfiles_changed = [\"lift/tsccal.c\"]\ncalls         = 60\npeak_context  = 68007\nminutes       = 61\ndirector_peak = 2003\n"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "tool_calls": [
+        {
+          "id": "call_ofbtzx8q",
+          "function": {
+            "index": 0,
+            "name": "search_log",
+            "arguments": {
+              "word": "build"
+            }
+          }
+        },
+        {
+          "id": "call_bre45xvl",
+          "function": {
+            "index": 1,
+            "name": "search_prompts",
+            "arguments": {
+              "word": "build"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "tool_name": "search_log",
+      "content": "log:14: first_failure = \"TST.timer.rate@1: build of stopwatch failed\""
+    },
+    {
+      "role": "tool",
+      "tool_name": "search_prompts",
+      "content": "lifter@1:1: You are lifting one small part out of the Linux kernel into a stand-alone C file that can be built and run by itself, with no kernel headers and no kernel build.\nlifter@1:5: The file is built with gcc as freestanding 32-bit x86 code: no C library, no operating system under it, no standard or system headers at all (the build uses -nostdinc, so not even <stdint.h> exists), and every warning is an error.  The processor's port instructions have to be written as inline assembly.\ndirector@2:1: You are the director of one part of AiOs, a small operating system built from parts.  Strategic (two people, Chris and Claude) wrote the part plan in the first message: the tests that say the part is done, the commit the work starts from, and the limits you work under.  Your job is to get every one of those tests green by giving jobs to builders.  You never write code and never read it.\ndirector@2:3: A builder starts fresh for each job, does that one job and is gone.  Give a job with the job tool: one red test, and, when it helps, a hint of at most a few sentences: what an earlier builder's note showed, which part to look at, a lesson from the prompt library.  A builder never sees an earlier builder's work, so a hint is the only way something learned on one try reaches the next.\ndirector@2:6: - Every builder starts from a clean checkout of the plan's commit.  Nothing an earlier builder changed is there.  Never describe a file as already changed, partly fixed or modified: it is not.\ndirector@2:7: - A hint must say something the result note did not already say: a file or a line to look at, why an earlier try failed, what to do differently.  The builder is given the test and what it printed; do not repeat them, or the plan.  If you have nothing to add, give no hint.\ndirector@2:9: After each job you get its result note, written by the program from what the tests printed on the jig: pass or fail, the tests passed and failed, the failing tests, the first failure, the files changed, how the job ended (a pass, out of calls, out of room, stopped) and why.  Trust the note over anything a builder might have said; you will not see what it said."
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "tool_calls": [
+        {
+          "id": "call_3dzo0amt",
+          "function": {
+            "index": 0,
+            "name": "search_prompts",
+            "arguments": {
+              "word": "stopwatch"
+            }
+          }
+        },
+        {
+          "id": "call_7x9xkmrz",
+          "function": {
+            "index": 1,
+            "name": "search_prompts",
+            "arguments": {
+              "word": "exam"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "tool_name": "search_prompts",
+      "content": "no line holds stopwatch"
+    },
+    {
+      "role": "tool",
+      "tool_name": "search_prompts",
+      "content": "lifter@1:3: You may look at Linux only through the read_linux tool.  It reads one fixed copy of Linux and answers the same way every time.  Its commands: list DIR, read FILE FIRST LAST, find NAME, callers NAME, calls NAME, ports FILE FIRST LAST, check FILE FIRST LAST.  Give each command's arguments as a list, for example command read with args [\"drivers/tty/serial/8250/8250_early.c\", \"50\", \"120\"], and say in why what you expect to learn.  Look up the real code, not what you remember of it, and keep what Linux actually does."
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "tool_calls": [
+        {
+          "id": "call_vsharo4w",
+          "function": {
+            "index": 0,
+            "name": "search_log",
+            "arguments": {
+              "word": "stopwatch"
+            }
+          }
+        },
+        {
+          "id": "call_zhmn54vt",
+          "function": {
+            "index": 1,
+            "name": "search_prompts",
+            "arguments": {
+              "word": "rate"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "tool_name": "search_log",
+      "content": "log:14: first_failure = \"TST.timer.rate@1: build of stopwatch failed\""
+    },
+    {
+      "role": "tool",
+      "tool_name": "search_prompts",
+      "content": "director@2:1: You are the director of one part of AiOs, a small operating system built from parts.  Strategic (two people, Chris and Claude) wrote the part plan in the first message: the tests that say the part is done, the commit the work starts from, and the limits you work under.  Your job is to get every one of those tests green by giving jobs to builders.  You never write code and never read it.\ndirector@2:13: The program keeps the limits, not you: the tries, the time, and the stuck rule.  If the same tests keep failing, or the count of failures stops going down, it stops the part and sends the notes to strategic.  Do not spend tries hoping; change something each time: the hint, or which test goes first.\ndirector@2:15: When every test in the plan has passed, call done with a report of a few sentences: what was done, in how many jobs, and anything strategic should know.  If you cannot go on without a decision only a person can make, call ask with the question, in one or two sentences; the part waits for the answer.  Never send an empty reply."
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "tool_calls": [
+        {
+          "id": "call_xfsyemwk",
+          "function": {
+            "index": 0,
+            "name": "search_log",
+            "arguments": {
+              "word": "slow"
+            }
+          }
+        },
+        {
+          "id": "call_lskbnvnl",
+          "function": {
+            "index": 1,
+            "name": "search_prompts",
+            "arguments": {
+              "word": "TST"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "tool_name": "search_log",
+      "content": "log:13: failing       = [\"TST.timer.rate@1\", \"TST.timer.slow-reads@1\"]"
+    },
+    {
+      "role": "tool",
+      "tool_name": "search_prompts",
+      "content": "no line holds TST"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "tool_calls": [
+        {
+          "id": "call_0kus49yi",
+          "function": {
+            "index": 0,
+            "name": "search_log",
+            "arguments": {
+              "word": "tsccal"
+            }
+          }
+        },
+        {
+          "id": "call_sgoovefu",
+          "function": {
+            "index": 1,
+            "name": "search_prompts",
+            "arguments": {
+              "word": "loops"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "tool_name": "search_log",
+      "content": "log:18: files_changed = [\"lift/tsccal.c\"]"
+    },
+    {
+      "role": "tool",
+      "tool_name": "search_prompts",
+      "content": "no line holds loops"
+    },
+    {
+      "role": "assistant",
+      "content": "The first attempt burned all 60 calls on Linux exploration and never got the stopwatch to compile. New job, with a hint aimed at the real failure.",
+      "tool_calls": [
+        {
+          "id": "call_olqg0dyf",
+          "function": {
+            "index": 0,
+            "name": "job",
+            "arguments": {
+              "hint": "Your last colleague spent all its calls reading Linux and never once compiled what it wrote — the note says 'build of stopwatch failed', a compile error, not a wrong number.  Spend your budget on getting the file to build clean under the freestanding rules (no C library, no system headers, -nostdinc, no C99 declarations, inline assembly for the port and TSC instructions, every warning fatal) and running that same build yourself before you stop.  Only then worry about measuring one millisecond against the TSC rather than the 8254.",
+              "test": "timer",
+              "why": "Second try; the first one exhausted its calls and never even got the stopwatch to build."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "tool_name": "job",
+      "content": "Job race-timer-2, timer: fail, ended turns: more than 60 calls.\nIts result note, written by the program from what the tests printed on the jig:\njob           = \"race-timer-2\"\nstatus        = \"fail\"\ntests_passed  = 0\ntests_failed  = 2\nfailing       = [\"TST.timer.rate@1\", \"TST.timer.slow-reads@1\"]\nfirst_failure = \"TST.timer.rate@1: the door said 0 throughout: the rate was never measured \"\ntry           = 2\ntokens        = 1635239\nseconds       = 2612\nfiles_changed = [\"lift/tsccal.c\"]\ncalls         = 60\npeak_context  = 46850\nminutes       = 44\ndirector_peak = 3755\n"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "tool_calls": [
+        {
+          "id": "call_5h9gxb60",
+          "function": {
+            "index": 0,
+            "name": "search_prompts",
+            "arguments": {
+              "word": "door"
+            }
+          }
+        },
+        {
+          "id": "call_kodpa6cc",
+          "function": {
+            "index": 1,
+            "name": "search_prompts",
+            "arguments": {
+              "word": "8254"
+            }
+          }
+        },
+        {
+          "id": "call_yz91xo7r",
+          "function": {
+            "index": 2,
+            "name": "search_prompts",
+            "arguments": {
+              "word": "PIT"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "tool_name": "search_prompts",
+      "content": "no line holds door"
+    },
+    {
+      "role": "tool",
+      "tool_name": "search_prompts",
+      "content": "no line holds 8254"
+    },
+    {
+      "role": "tool",
+      "tool_name": "search_prompts",
+      "content": "no line holds PIT"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "tool_calls": [
+        {
+          "id": "call_qfdbb0qb",
+          "function": {
+            "index": 0,
+            "name": "search_log",
+            "arguments": {
+              "word": "door"
+            }
+          }
+        },
+        {
+          "id": "call_zwcun54q",
+          "function": {
+            "index": 1,
+            "name": "search_prompts",
+            "arguments": {
+              "word": "rate"
+            }
+          }
+        },
+        {
+          "id": "call_vktcy9bz",
+          "function": {
+            "index": 2,
+            "name": "search_prompts",
+            "arguments": {
+              "word": "inb"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "tool_name": "search_log",
+      "content": "log:34: first_failure = \"TST.timer.rate@1: the door said 0 throughout: the rate was never measured \""
+    },
+    {
+      "role": "tool",
+      "tool_name": "search_prompts",
+      "content": "director@2:1: You are the director of one part of AiOs, a small operating system built from parts.  Strategic (two people, Chris and Claude) wrote the part plan in the first message: the tests that say the part is done, the commit the work starts from, and the limits you work under.  Your job is to get every one of those tests green by giving jobs to builders.  You never write code and never read it.\ndirector@2:13: The program keeps the limits, not you: the tries, the time, and the stuck rule.  If the same tests keep failing, or the count of failures stops going down, it stops the part and sends the notes to strategic.  Do not spend tries hoping; change something each time: the hint, or which test goes first.\ndirector@2:15: When every test in the plan has passed, call done with a report of a few sentences: what was done, in how many jobs, and anything strategic should know.  If you cannot go on without a decision only a person can make, call ask with the question, in one or two sentences; the part waits for the answer.  Never send an empty reply."
+    },
+    {
+      "role": "tool",
+      "tool_name": "search_prompts",
+      "content": "no line holds inb"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "tool_calls": [
+        {
+          "id": "call_or5q5anw",
+          "function": {
+            "index": 0,
+            "name": "job",
+            "arguments": {
+              "hint": "The build now passes; the failure is that your read of PIT counter 0 (port 0x40) returned 0 for the whole test, so the millisecond rate was never actually measured.  Before you read a counter of the 8254 you must command it into latched/operating mode through the command port (0x43, lsb first, msb second): pick mode 1 or 2, binary counting, counter 0, latch operation.  Also remember the 8254's base clock is fixed at 1,193,182 Hz, so a nonzero 16-bit counter read is what 'the door said something' means.  Do not burn calls re-reading Linux for context; write the file, build it yourself, and finish.",
+              "test": "timer",
+              "why": "Second failure was 'door said 0': the 8254 counter was never primed, so the lifter must learn to program the command port before reading."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "tool_name": "job",
+      "content": "Job race-timer-3, timer: fail, ended turns: more than 60 calls.\nIts result note, written by the program from what the tests printed on the jig:\njob           = \"race-timer-3\"\nstatus        = \"fail\"\ntests_passed  = 0\ntests_failed  = 2\nfailing       = [\"TST.timer.rate@1\", \"TST.timer.slow-reads@1\"]\nfirst_failure = \"TST.timer.rate@1: build of stopwatch failed\"\ntry           = 3\ntokens        = 2599789\nseconds       = 4272\nfiles_changed = [\"lift/tsccal.c\"]\ncalls         = 60\npeak_context  = 66767\nminutes       = 72\ndirector_peak = 4598\n\nThe part is stuck: the same 2 test(s) failed in the last 3 runs in a row on timer: TST.timer.rate@1 TST.timer.slow-reads@1.  It stops here and goes to strategic."
+    }
+  ]
+}

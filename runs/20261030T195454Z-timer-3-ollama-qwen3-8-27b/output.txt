@@ -1,0 +1,168 @@
+=== tsccal.c ===
+/*
+ * PART.timer.tsc-pit@2
+ *
+ * Measure the rate of the CPU's time stamp counter (TSC) in ticks per
+ * millisecond by timing it against the PC's 8254 programmable interval
+ * timer, and, on a machine where the 8254 read is slow or dead (typical
+ * of a hypervisor), give up on that and take the hypervisor's word for
+ * it (CPUID leaf 0x15, the TSC/crystal ratio leaf).
+ *
+ * Lifted from arch/x86/kernel/tsc.c (pit_calibrate_tsc(),
+ * quick_pit_calibrate() and native_calibrate_tsc() there).
+ *
+ * On a hypervisor the emulated 8254 does not run at its nominal
+ * 1,193,182 Hz, so the PIT measurement is biased.  When a hypervisor is
+ * present we therefore take its word (CPUID leaf 0x15, the TSC/crystal
+ * ratio), which is exactly accurate in the host's time; on bare metal,
+ * where CPUID leaf 0x15 is not guaranteed, we fall back to the 8254.
+ */
+
+#include "tsccal.h"
+
+unsigned long long tsccal_cycles(void)
+{
+	unsigned int lo, hi;
+	__asm__ __volatile__ ("rdtsc" : "=a" (lo), "=d" (hi));
+	return ((unsigned long long)hi << 32) | (unsigned long long)lo;
+}
+
+/*
+ * Take the hypervisor's word for the TSC frequency, via CPUID leaf 0x15
+ * (TSC and Crystal Ratio).  Same leaf the kernel's native_calibrate_tsc()
+ * in arch/x86/kernel/tsc.c uses when no other reference is available.
+ *
+ *   eax = TSC/Crystal frequency ratio, denominator
+ *   ebx = TSC/Crystal frequency ratio, numerator
+ *   ecx = crystal clock frequency, Hz
+ *
+ * Returns the TSC frequency in kHz, or 0 if no hypervisor is present or
+ * the leaf does not carry the information.
+ */
+static unsigned long tsccal_hypervisor_khz(void)
+{
+	unsigned int max, hv, den, num, cr, tmp;
+	unsigned long long prod;
+
+	/* Check CPUID max supported leaf >= 15. */
+	__asm__ __volatile__ ("cpuid"
+		: "=a" (max), "=b" (tmp), "=c" (tmp), "=d" (tmp)
+		: "a" (0));
+	if (max < 15)
+		return 0;
+
+	/* CPUID.1:ECX bit 31 = hypervisor-present. */
+	__asm__ __volatile__ ("cpuid"
+		: "=a" (tmp), "=b" (tmp), "=c" (hv), "=d" (tmp)
+		: "a" (1));
+	if (!(hv & 0x80000000u))
+		return 0;
+
+	/* CPUID leaf 15: TSC/crystal ratio. */
+	__asm__ __volatile__ ("cpuid"
+		: "=a" (den), "=b" (num), "=c" (cr), "=d" (tmp)
+		: "a" (15));
+	if (den == 0 || num == 0 || cr == 0)
+		return 0;
+
+	/* TSC_khz = (numerator * crystal_hz) / (denominator * 1000). */
+	prod = (unsigned long long)num * (unsigned long long)cr;
+	return (unsigned long)(prod / ((unsigned long long)den * 1000u));
+}
+
+/*
+ * Measure the TSC rate against 8254 counter 0.
+ *
+ *  1.  Set the gate high and disable the speaker (port 0x61), exactly
+ *      as the kernel does before touching the 8254.
+ *
+ *  2.  Program counter 0 through the command port (0x43, LSB first,
+ *      MSB second): counter 0, read/write lo+hi, mode 0 (one-shot,
+ *      interrupt on terminal count), binary counting  =>  0x30.  Then
+ *      load the latch value (LSB then MSB) into counter 0 (port 0x40).
+ *
+ *  3.  Read the TSC, then poll counter 0 until it reaches zero (the
+ *      end of the 1 ms countdown).  The TSC delta is the TSC rate in
+ *      kHz.
+ *
+ * Returns 0 if the 8254 read never came back with a nonzero counter
+ * (dead hardware, or a hypervisor that traps every access and returns
+ * zero).
+ */
+static unsigned long tsccal_pit_khz(void)
+{
+	unsigned int lo, hi, i;
+	unsigned char val;
+	unsigned long long t1, t2;
+
+	/* Gate high, speaker disabled (port 0x61), as the kernel does:
+	 *   outb((inb(0x61) & ~0x02) | 0x01, 0x61)                     */
+	__asm__ __volatile__ ("inb $0x61, %0" : "=a" (val) : : "memory");
+	__asm__ __volatile__ ("outb %0, $0x61" : : "a" ((unsigned char)((val & 0xFD) | 0x01)) : "memory");
+
+	/*
+	 * Command port 0x43: counter 0, read/write lo+hi, mode 0 (one-shot,
+	 * interrupt on terminal count), binary counting  =>  0x30.
+	 *   00 (counter 0)  11 (rw lo+hi)  000 (mode 0)  0 (binary)
+	 */
+	__asm__ __volatile__ ("outb %0, $0x43" : : "a" ((unsigned char)0x30) : "memory");
+
+	/* Load the 1 ms latch (1193 = 0x04D7) into counter 0: LSB 0xD7, MSB 0x04. */
+	__asm__ __volatile__ ("outb %0, $0x40" : : "a" ((unsigned char)0xD7) : "memory");
+	__asm__ __volatile__ ("outb %0, $0x40" : : "a" ((unsigned char)0x04) : "memory");
+
+	/* TSC at start. */
+	__asm__ __volatile__ ("rdtsc" : "=a" (lo), "=d" (hi));
+	t1 = ((unsigned long long)hi << 32) | (unsigned long long)lo;
+
+	/*
+	 * Liveness check: the 8254 starts counting on the next clock edge
+	 * after the load.  If the first read of counter 0 comes back zero,
+	 * the counter never came up (dead hardware, or a hypervisor
+	 * returning zero for the read).
+	 */
+	__asm__ __volatile__ ("inb $0x40, %0" : "=a" (val) : : "memory");
+	if (val == 0)
+		return 0;
+
+	/*
+	 * Poll counter 0 until it reads zero (countdown finished, i.e.
+	 * 1 ms of wall time has passed).  Cap the polls so a slow,
+	 * hypervisor-trapped read cannot spin us forever.
+	 */
+	i = 0;
+	for (;;) {
+		__asm__ __volatile__ ("inb $0x40, %0" : "=a" (val) : : "memory");
+		if (val == 0)
+			break;
+		if (++i >= 100000)
+			return 0;
+	}
+
+	/* TSC at end. */
+	__asm__ __volatile__ ("rdtsc" : "=a" (lo), "=d" (hi));
+	t2 = ((unsigned long long)hi << 32) | (unsigned long long)lo;
+
+	/*
+	 * The countdown spanned 1193 ticks at 1,193,182 Hz, exactly 1 ms,
+	 * so the TSC delta is the TSC rate in ticks per ms = kHz.
+	 */
+	return (unsigned long)(t2 - t1);
+}
+
+/*
+ * Counter ticks per millisecond, or 0 if the measurement failed.
+ *
+ * On a machine with a hypervisor the emulated 8254 does not run at its
+ * nominal rate, so we take the hypervisor's word for the TSC frequency
+ * (CPUID leaf 0x15).  Otherwise we measure it against the 8254.
+ */
+unsigned long tsccal_khz(void)
+{
+	unsigned long r;
+
+	r = tsccal_hypervisor_khz();
+	if (r)
+		return r;
+	return tsccal_pit_khz();
+}

@@ -1,0 +1,12 @@
+# race-serial: done
+
+every test in the plan passed, in 1 job(s)
+
+Plan: PART.serial.8250@1: send bytes out of the first serial port, as Linux's early console does, at d1abf44, director director@2 (7e5e3759), builders lifter@1.
+Director: 3 calls, 5047 tokens in, 346 out, peak context 2042 of 98304; 3 minutes.
+
+- race-serial-1, serial: pass, ended pass
+
+The director's words:
+
+serial exam passed on the first try (race-serial-1). A fresh lifter wrote lift/serial8250.c after reading Linux's 8250 early console, and all 3 of the item's tests passed — 0 failures. Total: 1 job, ~2 minutes, no hints needed. Nothing strategic should know beyond that this exam item was answered cleanly.

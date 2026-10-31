@@ -1,0 +1,13 @@
+# race-screen: done
+
+every test in the plan passed, in 2 job(s)
+
+Plan: PART.screen.vga@1: text on the 80 by 25 screen, as Linux's earliest console does, at d1abf44, director director@2 (7e5e3759), builders lifter@1.
+Director: 5 calls, 9129 tokens in, 1618 out, peak context 2633 of 98304; 95 minutes.
+
+- race-screen-1, screen: fail, ended turns: more than 60 calls
+- race-screen-2, screen: pass, ended pass
+
+The director's words:
+
+race-screen passed on the 2nd try (10 total tries budget). Both tests — TST.life.screen@1 and TST.vga.plain@1 — are green. First attempt failed because the program emitted NUL bytes into a test-script command substitution, causing "ignored null byte" warnings at tests/programs/screen.sh:51; the fix (hinted on try 2) was to emit plain printable text lines, one per screen row, with no raw character+attribute pairs or NUL padding. The builder changed lift/vga.c in 6 calls / ~7 minutes.

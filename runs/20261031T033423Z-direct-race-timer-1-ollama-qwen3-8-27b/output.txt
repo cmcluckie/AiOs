@@ -1,0 +1,10 @@
+# race-timer: stuck
+
+the same 2 test(s) failed in the last 3 runs in a row on timer: TST.timer.rate@1 TST.timer.slow-reads@1
+
+Plan: PART.timer.tsc-pit@2: CPU cycles in a millisecond, against the 8254, or the hypervisor's word, at d1abf44, director director@2 (7e5e3759), builders lifter@1.
+Director: 9 calls, 22752 tokens in, 1854 out, peak context 4112 of 98304; 155 minutes.
+
+- race-timer-1, timer: fail, ended turns: more than 60 calls
+- race-timer-2, timer: fail, ended turns: more than 60 calls
+- race-timer-3, timer: fail, ended turns: more than 60 calls

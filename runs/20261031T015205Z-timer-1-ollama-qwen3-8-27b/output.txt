@@ -1,0 +1,234 @@
+=== tsccal.c ===
+/*
+ * tsccal.c - TSC calibration against the 8254 PIT, lifted from
+ * arch/x86/kernel/tsc.c (quick_pit_calibrate / pit_expect_msb /
+ * pit_verify_msb) with the CPUID-based fallback from
+ * native_calibrate_tsc.
+ *
+ * Provenance: arch/x86/kernel/tsc.c.
+ */
+
+#include "tsccal.h"
+
+#define PIT_TICK_RATE 1193182ul
+#define MAX_QUICK_PIT_MS 50
+#define MAX_QUICK_PIT_ITERATIONS \
+	(MAX_QUICK_PIT_MS * PIT_TICK_RATE / 1000 / 256)
+
+/* ---- port I/O (matches the kernel's inb/outb) ---- */
+
+static unsigned char x86_inb(unsigned int port)
+{
+	unsigned char r;
+	__asm__ __volatile__("inb %w1,%0" : "=a"(r) : "Nd"(port));
+	return r;
+}
+
+static void x86_outb(unsigned char v, unsigned int port)
+{
+	__asm__ __volatile__("outb %0,%w1" : : "a"(v), "Nd"(port) : "memory");
+}
+
+/* ---- TSC (matches the kernel's rdtsc) ---- */
+
+static unsigned long long x86_rdtsc(void)
+{
+	unsigned int lo, hi;
+	__asm__ __volatile__("rdtsc" : "=a"(lo), "=d"(hi));
+	return ((unsigned long long)hi << 32) | (unsigned long long)lo;
+}
+
+unsigned long long tsccal_cycles(void)
+{
+	return x86_rdtsc();
+}
+
+/* ---- CPUID fallback (from native_calibrate_tsc) ---- */
+
+/* *eax = leaf on entry; all four registers overwritten on exit. */
+static void x86_cpuid(unsigned int *eax, unsigned int *ebx,
+		      unsigned int *ecx, unsigned int *edx)
+{
+	*ecx = 0;
+	__asm__ __volatile__("cpuid"
+		: "=a"(*eax), "=b"(*ebx), "=c"(*ecx), "=d"(*edx)
+		: "a"(*eax), "c"(*ecx)
+		: "memory");
+}
+
+static unsigned long native_calibrate_tsc(void)
+{
+	unsigned int maxleaf, denom, numer, hz;
+	unsigned int v0, v1, v2, v3;
+	unsigned int crystal_khz;
+
+	/* max leaf (leaf 0) */
+	maxleaf = 0;
+	x86_cpuid(&maxleaf, &v0, &v1, &v2);
+	if (maxleaf < 0x15u)
+		return 0;
+
+	/* vendor: "GenuineIntel" (leaf 0) */
+	v0 = 0;
+	x86_cpuid(&v0, &v1, &v2, &v3);
+	if (v0 != 0x756e6547u || v1 != 0x6c656e69u || v2 != 0x49656e69u)
+		return 0;
+
+	/* CPUID 15H: EAX=denominator, EBX=numerator, ECX=crystal_hz */
+	denom = 0x15;
+	x86_cpuid(&denom, &numer, &hz, &v3);
+
+	if (numer == 0u || denom == 0u)
+		return 0;
+
+	crystal_khz = hz / 1000u;
+
+	/*
+	 * Some Intel SoCs don't report the crystal clock, but we
+	 * can calculate it from the CPU base MHz (leaf 0x16).
+	 */
+	if (crystal_khz == 0u) {
+		maxleaf = 0;
+		x86_cpuid(&maxleaf, &v0, &v1, &v2);
+		if (maxleaf >= 0x16u) {
+			unsigned int mhz;
+			mhz = 0x16;
+			x86_cpuid(&mhz, &v0, &v1, &v2);
+			crystal_khz = (unsigned int)(
+				(unsigned long long)mhz * 1000ULL *
+				(unsigned long long)denom /
+				(unsigned long long)numer);
+		}
+	}
+
+	if (crystal_khz == 0u)
+		return 0;
+
+	return (unsigned long)crystal_khz * numer / denom;
+}
+
+/* ---- quick PIT calibration (from quick_pit_calibrate) ---- */
+
+static int pit_verify_msb(unsigned char val)
+{
+	x86_inb(0x42); /* ignore LSB */
+	return (int)(x86_inb(0x42) == val);
+}
+
+/*
+ * Wait until the MSB of the PIT counter stops reading `val`,
+ * recording the TSC at the transition and the cycles between the
+ * two most recent TSC reads.  (from pit_expect_msb)
+ */
+static int pit_expect_msb(unsigned char val,
+			  unsigned long long *tscp,
+			  unsigned long *deltap)
+{
+	unsigned int count;
+	unsigned long long tsc;
+	unsigned long long prev_tsc;
+
+	tsc = 0;
+	prev_tsc = 0;
+
+	for (count = 0; count < 50000u; count++) {
+		if (!pit_verify_msb(val))
+			break;
+		prev_tsc = tsc;
+		tsc = x86_rdtsc();
+	}
+	*deltap = (unsigned long)(x86_rdtsc() - prev_tsc);
+	*tscp = tsc;
+
+	/*
+	 * We require _some_ success, but the quality control
+	 * will be based on the error terms on the TSC values.
+	 */
+	return (int)(count > 5u);
+}
+
+static unsigned long quick_pit_calibrate(void)
+{
+	unsigned int i;
+	unsigned long long tsc;
+	unsigned long long delta;
+	unsigned long d1;
+	unsigned long d2;
+
+	/* Set the Gate high, disable speaker */
+	x86_outb((unsigned char)((x86_inb(0x61) & 0x00FD) | 0x01), 0x61);
+
+	/* Counter 2, mode 0 (one-shot), binary count */
+	x86_outb(0xb0, 0x43);
+
+	/* Start at 0xffff */
+	x86_outb(0xff, 0x42);
+	x86_outb(0xff, 0x42);
+
+	/*
+	 * The PIT starts counting at the next edge, so we
+	 * need to delay for a microsecond.  The easiest way
+	 * to do that is to just read back the 16-bit counter
+	 * once from the PIT.
+	 */
+	pit_verify_msb(0);
+
+	if (!pit_expect_msb(0xff, &tsc, &d1))
+		return 0;
+
+	for (i = 1u; i <= (unsigned int)MAX_QUICK_PIT_ITERATIONS; i++) {
+		if (!pit_expect_msb((unsigned char)(255u - i),
+				    &delta, &d2))
+			break;
+
+		delta -= tsc;
+
+		/*
+		 * Extrapolate the error and fail fast if the error
+		 * will never be below 500 ppm.
+		 */
+		if (i == 1u &&
+		    (unsigned long long)(d1 + d2) >=
+		    (delta * (unsigned long long)MAX_QUICK_PIT_ITERATIONS)
+		    >> 11)
+			return 0;
+
+		/*
+		 * Iterate until the error is less than 500 ppm
+		 */
+		if ((unsigned long long)(d1 + d2) >= (delta >> 11))
+			continue;
+
+		/*
+		 * Check the PIT one more time to verify that
+		 * all TSC reads were stable wrt the PIT.
+		 *
+		 * This also guarantees serialization of the
+		 * last cycle read ('d2') in pit_expect_msb.
+		 */
+		if (!pit_verify_msb((unsigned char)(254u - i)))
+			break;
+
+		/*
+		 * kHz = (t2 - t1) / (I * 256 / PIT_TICK_RATE) / 1000
+		 *     = ((t2 - t1) * PIT_TICK_RATE) / (I * 256 * 1000)
+		 */
+		delta = (delta * (unsigned long long)PIT_TICK_RATE)
+			/ ((unsigned long long)i * 256ULL * 1000ULL);
+		return (unsigned long)delta;
+	}
+
+	return 0;
+}
+
+/* ---- public entry point ---- */
+
+unsigned long tsccal_khz(void)
+{
+	unsigned long khz = quick_pit_calibrate();
+
+	if (khz == 0)
+		khz = native_calibrate_tsc();
+
+	return khz;
+}

@@ -1,0 +1,79 @@
+=== tsccal.c ===
+/* TSC calibrated against the 8254 PIT channel 2, per arch/x86/kernel/tsc.c
+ * pit_calibrate_tsc().  Falls back to CPUID when the 8254 is too slow. */
+
+#include "tsccal.h"
+
+#define CAL_MS		10
+#define CAL_LATCH	(1193180UL / (1000 / CAL_MS))
+#define CAL_LOOPS	1000
+
+static unsigned char tsc_in8(unsigned short p)
+{
+	unsigned char v;
+	asm volatile ("inb %w1, %b0" : "=a" (v) : "Nd" (p));
+	return v;
+}
+
+static void tsc_out8(unsigned short p, unsigned char v)
+{
+	asm volatile ("outb %b0, %w1" : : "a" (v), "Nd" (p));
+}
+
+static unsigned long long tsc_rdtsc(void)
+{
+	unsigned int lo, hi;
+	asm volatile ("rdtsc" : "=a" (lo), "=d" (hi));
+	return ((unsigned long long)hi << 32) | lo;
+}
+
+static unsigned long tsc_measure(unsigned long latch, unsigned long ms, int min)
+{
+	unsigned long long start, t, d;
+	unsigned long tmin, tmax;
+	int n;
+
+	tsc_out8(0x61, (tsc_in8(0x61) & ~0x02) | 0x01);
+	tsc_out8(0x43, 0xB0);
+	tsc_out8(0x42, (unsigned char)(latch & 0xFF));
+	tsc_out8(0x42, (unsigned char)(latch >> 8));
+
+	start = t = tsc_rdtsc();
+	n = 0;
+	tmax = 0;
+	tmin = ~0UL;
+	while ((tsc_in8(0x61) & 0x20) == 0) {
+		t = tsc_rdtsc();
+		d = t - start;
+		start = t;
+		if (d < tmin)
+			tmin = (unsigned long)d;
+		if (d > tmax)
+			tmax = (unsigned long)d;
+		n++;
+	}
+	if (n < min || tmax > 10 * tmin)
+		return 0;
+	return (unsigned long)((t - start + (t - start)) / ms);
+}
+
+static unsigned long tsc_hv_khz(void)
+{
+	unsigned int a, b, c;
+	asm volatile ("cpuid" : "=a"(a), "=b"(b), "=c"(c) : "a"(15) : "edx");
+	if (a && b && c)
+		return (unsigned long)((c / 1000) * b / a);
+	asm volatile ("cpuid" : "=a"(a), "=b"(b), "=c"(c) : "a"(16) : "edx");
+	return (unsigned long)a * 1000;
+}
+
+unsigned long tsccal_khz(void)
+{
+	unsigned long k = tsc_measure(CAL_LATCH, CAL_MS, CAL_LOOPS);
+	return k ? k : tsc_hv_khz();
+}
+
+unsigned long long tsccal_cycles(void)
+{
+	return tsc_rdtsc();
+}

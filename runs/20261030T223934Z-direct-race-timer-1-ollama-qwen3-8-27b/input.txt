@@ -1,0 +1,135 @@
+{
+  "system": "You are the director of one part of AiOs, a small operating system built from parts.  Strategic (two people, Chris and Claude) wrote the part plan in the first message: the tests that say the part is done, the commit the work starts from, and the limits you work under.  Your job is to get every one of those tests green by giving jobs to builders.  You never write code and never read it.\n\nA builder starts fresh for each job, does that one job and is gone.  Give a job with the job tool: one red test, and, when it helps, a hint of at most a few sentences: what an earlier builder's note showed, which part to look at, a lesson from the prompt library.  A builder never sees an earlier builder's work, so a hint is the only way something learned on one try reaches the next.\n\nTwo rules for every hint:\n- Every builder starts from a clean checkout of the plan's commit.  Nothing an earlier builder changed is there.  Never describe a file as already changed, partly fixed or modified: it is not.\n- A hint must say something the result note did not already say: a file or a line to look at, why an earlier try failed, what to do differently.  The builder is given the test and what it printed; do not repeat them, or the plan.  If you have nothing to add, give no hint.\n\nAfter each job you get its result note, written by the program from what the tests printed on the jig: pass or fail, the tests passed and failed, the failing tests, the first failure, the files changed, how the job ended (a pass, out of calls, out of room, stopped) and why.  Trust the note over anything a builder might have said; you will not see what it said.\n\nsearch_log finds words in your log of this part: every job, every note.  search_prompts finds words in the prompt library: the lessons earlier jobs taught.  Use them before you give the same job twice.\n\nThe program keeps the limits, not you: the tries, the time, and the stuck rule.  If the same tests keep failing, or the count of failures stops going down, it stops the part and sends the notes to strategic.  Do not spend tries hoping; change something each time: the hint, or which test goes first.\n\nWhen every test in the plan has passed, call done with a report of a few sentences: what was done, in how many jobs, and anything strategic should know.  If you cannot go on without a decision only a person can make, call ask with the question, in one or two sentences; the part waits for the answer.  Never send an empty reply.\n",
+  "messages": [
+    {
+      "role": "user",
+      "content": "The part plan, race-timer:\n\npart                = \"PART.timer.tsc-pit@2: CPU cycles in a millisecond, against the 8254, or the hypervisor's word\"\npetition            = \"\"\nexam                = \"timer\"\nat                  = \"d1abf44\"\nbudget_usd          = 0.00\nmax_tries           = 10\nmax_minutes         = 240\nstuck_same_failures = 3\nstuck_no_drop       = 5\n\n[gear]\ntactical            = 1\nbuilders            = 1\n\n[prompts]\ndirector            = \"director@2\"\nbuilder             = \"lifter@1\"\n\nThis part is an exam item, not a fix.  Give its one job with test \"timer\": a fresh lifter is shown the item's question and header, reads Linux, writes the file, and is judged by the item's own tests, which its result note lists.  Give the job again, with a hint if the notes teach one, until it passes or the tries run out.\n"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "tool_calls": [
+        {
+          "id": "call_mp7nfnwy",
+          "function": {
+            "index": 0,
+            "name": "job",
+            "arguments": {
+              "test": "timer",
+              "why": "This part is a single exam item; give the one job to a fresh lifter.",
+              "hint": "You will be shown the exam item's question and header. Follow its terms exactly, and let its own tests judge the work."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "tool_name": "job",
+      "content": "Job race-timer-1, timer: fail, ended turns: more than 60 calls.\nIts result note, written by the program from what the tests printed on the jig:\njob           = \"race-timer-1\"\nstatus        = \"fail\"\ntests_passed  = 0\ntests_failed  = 2\nfailing       = [\"TST.timer.rate@1\", \"TST.timer.slow-reads@1\"]\nfirst_failure = \"TST.timer.rate@1: build of stopwatch failed\"\ntry           = 1\ntokens        = 2332077\nseconds       = 3237\nfiles_changed = [\"lift/tsccal.c\"]\ncalls         = 60\npeak_context  = 64606\nminutes       = 54\ndirector_peak = 1565\n"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "tool_calls": [
+        {
+          "id": "call_li5ipi37",
+          "function": {
+            "index": 0,
+            "name": "search_prompts",
+            "arguments": {
+              "word": "stopwatch"
+            }
+          }
+        },
+        {
+          "id": "call_g1kmruvn",
+          "function": {
+            "index": 1,
+            "name": "search_prompts",
+            "arguments": {
+              "word": "build"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "tool_name": "search_prompts",
+      "content": "no line holds stopwatch"
+    },
+    {
+      "role": "tool",
+      "tool_name": "search_prompts",
+      "content": "lifter@1:1: You are lifting one small part out of the Linux kernel into a stand-alone C file that can be built and run by itself, with no kernel headers and no kernel build.\nlifter@1:5: The file is built with gcc as freestanding 32-bit x86 code: no C library, no operating system under it, no standard or system headers at all (the build uses -nostdinc, so not even <stdint.h> exists), and every warning is an error.  The processor's port instructions have to be written as inline assembly.\ndirector@2:1: You are the director of one part of AiOs, a small operating system built from parts.  Strategic (two people, Chris and Claude) wrote the part plan in the first message: the tests that say the part is done, the commit the work starts from, and the limits you work under.  Your job is to get every one of those tests green by giving jobs to builders.  You never write code and never read it.\ndirector@2:3: A builder starts fresh for each job, does that one job and is gone.  Give a job with the job tool: one red test, and, when it helps, a hint of at most a few sentences: what an earlier builder's note showed, which part to look at, a lesson from the prompt library.  A builder never sees an earlier builder's work, so a hint is the only way something learned on one try reaches the next.\ndirector@2:6: - Every builder starts from a clean checkout of the plan's commit.  Nothing an earlier builder changed is there.  Never describe a file as already changed, partly fixed or modified: it is not.\ndirector@2:7: - A hint must say something the result note did not already say: a file or a line to look at, why an earlier try failed, what to do differently.  The builder is given the test and what it printed; do not repeat them, or the plan.  If you have nothing to add, give no hint.\ndirector@2:9: After each job you get its result note, written by the program from what the tests printed on the jig: pass or fail, the tests passed and failed, the failing tests, the first failure, the files changed, how the job ended (a pass, out of calls, out of room, stopped) and why.  Trust the note over anything a builder might have said; you will not see what it said."
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "tool_calls": [
+        {
+          "id": "call_y3y7yfd9",
+          "function": {
+            "index": 0,
+            "name": "job",
+            "arguments": {
+              "test": "timer",
+              "why": "The first lifter ran out of calls before the stopwatch even built; retry with a hint to build and verify early.",
+              "hint": "An earlier lifter spent all its calls and never got the stopwatch to build. Get a complete file that compiles as freestanding 32-bit x86 (-nostdinc, no libc, inline asm for port I/O) early, then verify the build passes before anything else. Do not exhaust calls on one attempt."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "tool_name": "job",
+      "content": "Job race-timer-2, timer: fail, ended turns: more than 60 calls.\nIts result note, written by the program from what the tests printed on the jig:\njob           = \"race-timer-2\"\nstatus        = \"fail\"\ntests_passed  = 0\ntests_failed  = 2\nfailing       = [\"TST.timer.rate@1\", \"TST.timer.slow-reads@1\"]\nfirst_failure = \"TST.timer.rate@1: build of stopwatch failed\"\ntry           = 2\ntokens        = 2151636\nseconds       = 1713\nfiles_changed = [\"lift/tsccal.c\"]\ncalls         = 60\npeak_context  = 63467\nminutes       = 29\ndirector_peak = 2611\n"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "tool_calls": [
+        {
+          "id": "call_w57p296e",
+          "function": {
+            "index": 0,
+            "name": "search_log",
+            "arguments": {
+              "word": "stopwatch"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "tool_name": "search_log",
+      "content": "log:14: first_failure = \"TST.timer.rate@1: build of stopwatch failed\"\nlog:26: hint: An earlier lifter spent all its calls and never got the stopwatch to build. Get a complete file that compiles as freestanding 32-bit x86 (-nostdinc, no libc, inline asm for port I/O) early, then verify the build passes before anything else. Do not exhaust calls on one attempt.\nlog:34: first_failure = \"TST.timer.rate@1: build of stopwatch failed\""
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "tool_calls": [
+        {
+          "id": "call_r5rzi1o5",
+          "function": {
+            "index": 0,
+            "name": "job",
+            "arguments": {
+              "test": "timer",
+              "why": "Two lifters exhausted 60 calls each, both stuck on the same build failure; change the approach: one complete file, then a single build check.",
+              "hint": "Two earlier lifters burned all 60 calls and the stopwatch still would not build. Work differently: write the entire lift/tsccal.c in one call — no #include of any kind (not even stdint.h), no libc calls, port I/O and rdtsc as inline asm, a main that does exactly what the item's header says — then run one build to confirm it compiles clean with -Werror before touching anything else. The build failing at all means the file still uses something that is not there; check includes, external symbols and warnings before doing any logic work."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "tool_name": "job",
+      "content": "Job race-timer-3, timer: fail, ended turns: more than 60 calls.\nIts result note, written by the program from what the tests printed on the jig:\njob           = \"race-timer-3\"\nstatus        = \"fail\"\ntests_passed  = 0\ntests_failed  = 2\nfailing       = [\"TST.timer.rate@1\", \"TST.timer.slow-reads@1\"]\nfirst_failure = \"TST.timer.rate@1: build of stopwatch failed\"\ntry           = 3\ntokens        = 2256680\nseconds       = 2854\nfiles_changed = [\"lift/tsccal.c\"]\ncalls         = 60\npeak_context  = 68455\nminutes       = 48\ndirector_peak = 3923\n\nThe part is stuck: the same 2 test(s) failed in the last 3 runs in a row on timer: TST.timer.rate@1 TST.timer.slow-reads@1.  It stops here and goes to strategic."
+    }
+  ]
+}

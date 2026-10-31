@@ -1,0 +1,93 @@
+=== vga.c ===
+/* The 80 by 25 PC text screen, lifted from Linux's earliest console
+ * (early_vga_write in arch/x86/kernel/early_printk.c) with the colour
+ * table from drivers/tty/vt/vt.c.  Freestanding 32-bit x86:
+ * memory-mapped video at 0xb8000, no kernel under it. */
+
+#include "vga.h"
+
+#define VGA_BASE	0xb8000UL
+#define VGA_XPOS	80
+#define VGA_YPOS	25
+
+static volatile unsigned short *const vga_mem =
+	(volatile unsigned short *)VGA_BASE;
+
+/* ANSI colour number -> VGA colour number, from drivers/tty/vt/vt.c */
+const unsigned char color_table[16] =
+	{ 0, 4, 2, 6, 1, 5, 3, 7,
+	  8, 12, 10, 14, 9, 13, 11, 15 };
+
+/* Like the kernel: the cursor starts past the last line, so the
+ * very first character scrolls the screen up one line first. */
+static int current_ypos = VGA_YPOS;
+static int current_xpos = 0;
+
+static unsigned char vga_attr = 0x07; /* white on black */
+
+static void vga_putc(unsigned cell, unsigned short v)
+{
+	vga_mem[cell] = v;
+}
+
+static void vga_scroll(void)
+{
+	int i, k, j;
+
+	/* scroll 1 line up */
+	for (k = 1, j = 0; k < VGA_YPOS; k++, j++) {
+		for (i = 0; i < VGA_XPOS; i++)
+			vga_putc((unsigned)(VGA_XPOS * j + i),
+				(unsigned short)vga_mem[VGA_XPOS * k + i]);
+	}
+	for (i = 0; i < VGA_XPOS; i++)
+		vga_putc((unsigned)(VGA_XPOS * j + i),
+			 (unsigned short)((vga_attr << 8) | 0x20));
+	current_ypos = VGA_YPOS - 1;
+}
+
+void vga_write(const char *str, unsigned n)
+{
+	char c;
+
+	while ((c = *str++) != '\0' && n-- > 0) {
+		if (current_ypos >= VGA_YPOS)
+			vga_scroll();
+
+		if (c == '\n') {
+			current_xpos = 0;
+			current_ypos++;
+		} else if (c != '\r') {
+			vga_putc((unsigned)(VGA_XPOS * current_ypos +
+					   current_xpos++),
+				(unsigned short)((vga_attr << 8) |
+						 (unsigned short)c));
+			if (current_xpos >= VGA_XPOS) {
+				current_xpos = 0;
+				current_ypos++;
+			}
+		}
+	}
+}
+
+void vga_clear(void)
+{
+	int i;
+
+	for (i = 0; i < VGA_XPOS * VGA_YPOS; i++)
+		vga_putc((unsigned)i,
+			 (unsigned short)((vga_attr << 8) | 0x20));
+	current_xpos = 0;
+	current_ypos = 0;
+}
+
+void vga_home(void)
+{
+	current_xpos = 0;
+	current_ypos = 0;
+}
+
+void vga_set_color(unsigned char attr)
+{
+	vga_attr = attr;
+}

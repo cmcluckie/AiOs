@@ -1,0 +1,41 @@
+=== tsccal.c ===
+#include "tsccal.h"
+
+unsigned long long tsccal_cycles(void)
+{
+	unsigned long long v;
+	__asm__ __volatile__ ("rdtsc" : "=A" (v));
+	return v;
+}
+
+unsigned long tsccal_khz(void)
+{
+	unsigned char status;
+	unsigned long pitcnt;
+	unsigned long tstart;
+	unsigned long long tprev;
+
+	/* Gate high, speaker off. */
+	__asm__ __volatile__ ("inb $0x61, %%al; andb $0xfd, %%al; orb $0x01, %%al; outb %%al, $0x61"
+			  : : : "memory");
+	/* Channel 2, mode 0 (interrupt on terminal count), binary. */
+	__asm__ __volatile__ ("movb $0xb0, %%al; outb %%al, $0x43" : : : "memory");
+	/* Latch 0x04A5 (1193 counts = 1 ms). */
+	__asm__ __volatile__ ("movb $0xa5, %%al; outb %%al, $0x42" : : : "memory");
+	__asm__ __volatile__ ("movb $0x04, %%al; outb %%al, $0x42" : : : "memory");
+
+	tstart = (unsigned long) tsccal_cycles();
+	tprev  = tstart;
+	pitcnt = 0;
+	do {
+		__asm__ __volatile__ ("inb $0x61, %0" : "=a" (status) : : "memory");
+		if (status & 0x20)
+			break;
+		tprev = tsccal_cycles();
+		pitcnt++;
+	} while (1);
+
+	if (pitcnt < 3)
+		return 0;
+	return (unsigned long)((tprev - tstart));
+}

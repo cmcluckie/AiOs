@@ -1,0 +1,138 @@
+=== serial8250.c ===
+/*
+ * serial8250.c - send bytes out of a PC serial port (8250/16550), 8n1 @ 115200.
+ *
+ * Lifted from the Linux early serial console, transmit path only:
+ *   drivers/tty/serial/8250/8250_early.c  serial_putc, init_port,
+ *                                          serial8250_early_in/out (UPIO_PORT)
+ *   include/uapi/linux/serial_reg.h       register offsets and bit fields
+ *   include/linux/serial.h                UART_LSR_BOTH_EMPTY / uart_lsr_tx_empty
+ *
+ * Freestanding 32-bit x86: port I/O is inline asm, no libc, no OS underneath.
+ */
+#include "serial8250.h"
+
+/* --- register offsets (include/uapi/linux/serial_reg.h) ----------------- */
+#define UART_RX   0	/* In:  receive buffer            */
+#define UART_TX   0	/* Out: transmit buffer           */
+#define UART_IER  1	/* interrupt enable register      */
+#define UART_FCR  2	/* fifo control register          */
+#define UART_LCR  3	/* line control register          */
+#define UART_MCR  4	/* modem control register         */
+#define UART_LSR  5	/* line status register           */
+
+/* DLAB=1 (include/uapi/linux/serial_reg.h) */
+#define UART_DLL  0	/* divisor latch low              */
+#define UART_DLM  1	/* divisor latch high             */
+
+/* --- IER bits ------------------------------------------------------------ */
+#define UART_IER_UUE 0x40	/* UART underrun-enable (leave as found)  */
+
+/* --- LCR bits (include/uapi/linux/serial_reg.h) -------------------------- */
+#define UART_LCR_DLAB  0x80	/* divisor latch access bit             */
+#define UART_LCR_WLEN8 0x03	/* wordlength: 8 bits                   */
+
+/* --- MCR bits (include/uapi/linux/serial_reg.h) -------------------------- */
+#define UART_MCR_RTS   0x02
+#define UART_MCR_DTR   0x01
+
+/* --- LSR bits (include/uapi/linux/serial_reg.h) -------------------------- */
+#define UART_LSR_TEMT  0x40	/* transmitter (shift) empty            */
+#define UART_LSR_THRE  0x20	/* transmit holding register empty      */
+
+/* FIFO and shifting register empty (include/linux/serial.h) */
+#define UART_LSR_BOTH_EMPTY (UART_LSR_TEMT | UART_LSR_THRE)
+
+/* Standard PC UART input clock: 1.8432 MHz */
+#define UARTCLK 1843200UL
+
+/* --- raw port I/O (UPIO_PORT: inb / outb) -------------------------------- */
+static void serial8250_outb(unsigned short port, unsigned char v)
+{
+	__asm__ volatile ("outb %b0, %w1" : : "a" (v), "d" (port));
+}
+
+static unsigned char serial8250_inb(unsigned short port)
+{
+	unsigned char v;
+
+	__asm__ volatile ("inb %w1, %b0" : "=a" (v) : "d" (port));
+	return v;
+}
+
+/* --- per-port register access -------------------------------------------- */
+static unsigned char uart_in(unsigned short base, int offset)
+{
+	return serial8250_inb(base + offset);
+}
+
+static void uart_out(unsigned short base, int offset, unsigned char value)
+{
+	serial8250_outb(base + offset, value);
+}
+
+/* cpu_relax() */
+static void serial8250_relax(void)
+{
+	__asm__ volatile ("rep; nop");
+}
+
+/* --- one byte out (serial_putc, 8250_early.c) ---------------------------- */
+void serial8250_putc(unsigned short base, unsigned char c)
+{
+	unsigned char status;
+
+	uart_out(base, UART_TX, c);
+
+	for (;;) {
+		status = uart_in(base, UART_LSR);
+		if ((status & UART_LSR_BOTH_EMPTY) == UART_LSR_BOTH_EMPTY)
+			break;
+		serial8250_relax();
+	}
+}
+
+/* --- whole buffer (early_serial8250_write -> uart_console_write) --------- */
+void serial8250_write(unsigned short base, const void *s, unsigned long n)
+{
+	const unsigned char *p = (const unsigned char *)s;
+	unsigned long i;
+
+	for (i = 0; i < n; i++)
+		serial8250_putc(base, p[i]);
+}
+
+/* --- wait for the last byte to leave the shift register ------------------ */
+void serial8250_flush(unsigned short base)
+{
+	unsigned char status;
+
+	for (;;) {
+		status = uart_in(base, UART_LSR);
+		if (status & UART_LSR_TEMT)
+			break;
+		serial8250_relax();
+	}
+}
+
+/* --- configure 8n1 @ 115200 (init_port, 8250_early.c) ------------------- */
+void serial8250_init(unsigned short base)
+{
+	unsigned int divisor;
+	unsigned char c;
+	unsigned int ier;
+
+	uart_out(base, UART_LCR, UART_LCR_WLEN8);	/* 8n1 */
+	ier = uart_in(base, UART_IER);
+	uart_out(base, UART_IER, (unsigned char)(ier & UART_IER_UUE)); /* no interrupt */
+	uart_out(base, UART_FCR, 0);	/* no fifo */
+	uart_out(base, UART_MCR, UART_MCR_DTR | UART_MCR_RTS);
+
+	/* baud: DIV_ROUND_CLOSEST(uartclk, 16 * baud) */
+	divisor = (UARTCLK + 8UL * 115200UL) / (16UL * 115200UL);
+	c = uart_in(base, UART_LCR);
+	uart_out(base, UART_LCR, (unsigned char)(c | UART_LCR_DLAB));
+	uart_out(base, UART_DLL, (unsigned char)(divisor & 0xff));
+	uart_out(base, UART_DLM, (unsigned char)((divisor >> 8) & 0xff));
+	uart_out(base, UART_LCR, (unsigned char)(c & ~UART_LCR_DLAB));
+}

@@ -1,0 +1,77 @@
+=== vga.c ===
+#include "vga.h"
+
+#define MAX_XPOS 80
+#define MAX_YPOS 25
+
+/* VGA text-mode buffer: 80 columns × 25 rows of 16-bit cells at 0xb8000. */
+static volatile unsigned short *vga_buf =
+	(volatile unsigned short *)0xb8000;
+
+static int cur_x = 0;
+static int cur_y = 0;
+static unsigned char cur_attr = 0x07;	/* light grey on black, as in Linux early_vga_write */
+
+const unsigned char color_table[16] = {
+	0, 4, 2, 6, 1, 5, 3, 7,
+	8, 12, 10, 14, 9, 13, 11, 15
+};
+
+void vga_set_color(unsigned char attr)
+{
+	cur_attr = attr;
+}
+
+void vga_home(void)
+{
+	cur_x = 0;
+	cur_y = 0;
+}
+
+void vga_clear(void)
+{
+	int i, j;
+	for (j = 0; j < MAX_YPOS; j++)
+		for (i = 0; i < MAX_XPOS; i++)
+			vga_buf[MAX_XPOS * j + i] =
+				(unsigned short)(0x20 | (cur_attr << 8));
+	cur_x = 0;
+	cur_y = 0;
+}
+
+/* Lifted from arch/x86/kernel/early_printk.c early_vga_write:
+   scroll one line up, then blank the last row. */
+static void vga_scroll(void)
+{
+	int i, j, k;
+	for (k = 1, j = 0; k < MAX_YPOS; k++, j++)
+		for (i = 0; i < MAX_XPOS; i++)
+			vga_buf[MAX_XPOS * j + i] = vga_buf[MAX_XPOS * k + i];
+	for (i = 0; i < MAX_XPOS; i++)
+		vga_buf[MAX_XPOS * j + i] =
+			(unsigned short)(0x20 | (cur_attr << 8));
+}
+
+void vga_write(const char *str, unsigned n)
+{
+	char c;
+
+	while ((c = *str++) != '\0' && n-- > 0) {
+		if (cur_y >= MAX_YPOS) {
+			vga_scroll();
+			cur_y = MAX_YPOS - 1;
+		}
+		if (c == '\n') {
+			cur_x = 0;
+			cur_y++;
+		} else if (c != '\r') {
+			vga_buf[MAX_XPOS * cur_y + cur_x] =
+				(unsigned short)((cur_attr << 8) | (unsigned char)c);
+			cur_x++;
+			if (cur_x >= MAX_XPOS) {
+				cur_x = 0;
+				cur_y++;
+			}
+		}
+	}
+}

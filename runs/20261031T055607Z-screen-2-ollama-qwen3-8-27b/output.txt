@@ -1,0 +1,71 @@
+=== vga.c ===
+#include "vga.h"
+
+#define VGABASE	((volatile unsigned short *)0xb8000u)
+
+#define MAX_XPOS	80
+#define MAX_YPOS	25
+
+static int current_ypos = MAX_YPOS;
+static int current_xpos = 0;
+static unsigned char cur_attr = 0x07;
+
+const unsigned char color_table[16] = {
+	0, 4, 2, 6, 1, 5, 3, 7,
+	8, 12, 10, 14, 9, 13, 11, 15
+};
+
+static void scroll_up(void)
+{
+	int i, k, j;
+
+	for (k = 1, j = 0; k < MAX_YPOS; k++, j++) {
+		for (i = 0; i < MAX_XPOS; i++)
+			VGABASE[MAX_XPOS*j + i] = VGABASE[MAX_XPOS*k + i];
+	}
+	for (i = 0; i < MAX_XPOS; i++)
+		VGABASE[MAX_XPOS*j + i] = (unsigned short)(cur_attr << 8) | 0x20;
+	current_ypos = MAX_YPOS - 1;
+}
+
+void vga_write(const char *str, unsigned n)
+{
+	char c;
+
+	while ((c = *str++) != '\0' && n-- > 0) {
+		if (current_ypos >= MAX_YPOS)
+			scroll_up();
+		if (c == '\n') {
+			current_xpos = 0;
+			current_ypos++;
+		} else if (c != '\r') {
+			VGABASE[MAX_XPOS*current_ypos + current_xpos++] =
+				(unsigned short)(cur_attr << 8) | (unsigned short)(unsigned char)c;
+			if (current_xpos >= MAX_XPOS) {
+				current_xpos = 0;
+				current_ypos++;
+			}
+		}
+	}
+}
+
+void vga_home(void)
+{
+	current_xpos = 0;
+	current_ypos = 0;
+}
+
+void vga_set_color(unsigned char attr)
+{
+	cur_attr = attr;
+}
+
+void vga_clear(void)
+{
+	int i, j;
+
+	for (j = 0; j < MAX_YPOS; j++)
+		for (i = 0; i < MAX_XPOS; i++)
+			VGABASE[MAX_XPOS*j + i] = (unsigned short)(cur_attr << 8) | 0x20;
+	vga_home();
+}

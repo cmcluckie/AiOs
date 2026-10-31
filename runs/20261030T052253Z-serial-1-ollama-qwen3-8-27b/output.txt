@@ -1,0 +1,113 @@
+=== serial8250.c ===
+/* PART.serial.8250@1: transmit on a 16550, lifted from
+ * drivers/tty/serial/8250/8250_early.c (serial_putc, init_port) in
+ * Linux commit a5ebb76233b79db01e82e061173cb73c6d2b5c6b.
+ *
+ * Sending only: the console write path, 8N1, 115200 baud at the
+ * standard 115200*16/3 = 1843200 Hz input clock (divisor 3), no
+ * interrupts, no FIFO, DTR and RTS asserted.  Before each byte
+ * the chip is asked for readiness; the byte is only written once
+ * the line status register says so.
+ */
+
+#include "serial8250.h"
+
+/* Register offsets (include/uapi/linux/serial_reg.h). */
+#define UART_RX   0
+#define UART_TX   0
+#define UART_IER  1
+#define UART_FCR  2
+#define UART_LCR  3
+#define UART_MCR  4
+#define UART_LSR  5
+
+#define UART_LCR_DLAB   0x80
+#define UART_LCR_WLEN8  0x03
+
+#define UART_MCR_DTR    0x01
+#define UART_MCR_RTS    0x02
+
+#define UART_LSR_TEMT   0x40 /* Transmitter empty */
+#define UART_LSR_THRE   0x20 /* Transmit-hold-register empty */
+
+/* 115200 baud: DIV_ROUND_CLOSEST(1843200, 16 * 115200) == 3. */
+#define UARTCLK     1843200u
+#define BAUD        115200u
+#define DIVISOR     (UARTCLK / (16 * BAUD))
+
+static unsigned char uart_in(unsigned short port)
+{
+	unsigned char v;
+
+	__asm__ volatile ("inb %w1, %b0" : "=a" (v) : "d" (port));
+	return v;
+}
+
+static void uart_out(unsigned short port, unsigned char v)
+{
+	__asm__ volatile ("outb %b0, %w1" : : "a" (v), "d" (port) : "memory");
+}
+
+void serial8250_init(unsigned short base)
+{
+	unsigned char c;
+
+	/* 8n1 */
+	uart_out(base + UART_LCR, UART_LCR_WLEN8);
+
+	/* no interrupt */
+	uart_out(base + UART_IER, 0);
+
+	/* no fifo */
+	uart_out(base + UART_FCR, 0);
+
+	uart_out(base + UART_MCR, UART_MCR_DTR | UART_MCR_RTS);
+
+	c = uart_in(base + UART_LCR);
+	uart_out(base + UART_LCR, c | UART_LCR_DLAB);
+	uart_out(base + 0, DIVISOR & 0xff);        /* UART_DLL */
+	uart_out(base + 1, (DIVISOR >> 8) & 0xff); /* UART_DLM */
+	uart_out(base + UART_LCR, c & ~UART_LCR_DLAB);
+}
+
+void serial8250_putc(unsigned short base, unsigned char c)
+{
+	unsigned int status;
+
+	for (;;) {
+		status = uart_in(base + UART_LSR);
+		if (status & UART_LSR_THRE)
+			break;
+		__asm__ volatile ("pause" ::: "memory");
+	}
+
+	uart_out(base + UART_TX, c);
+
+	for (;;) {
+		status = uart_in(base + UART_LSR);
+		if ((status & (UART_LSR_TEMT | UART_LSR_THRE)) ==
+		    (UART_LSR_TEMT | UART_LSR_THRE))
+			break;
+		__asm__ volatile ("pause" ::: "memory");
+	}
+}
+
+void serial8250_write(unsigned short base, const void *s, unsigned long n)
+{
+	const unsigned char *p = s;
+
+	while (n--)
+		serial8250_putc(base, *p++);
+}
+
+void serial8250_flush(unsigned short base)
+{
+	unsigned int status;
+
+	for (;;) {
+		status = uart_in(base + UART_LSR);
+		if (status & UART_LSR_TEMT)
+			break;
+		__asm__ volatile ("pause" ::: "memory");
+	}
+}

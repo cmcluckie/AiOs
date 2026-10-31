@@ -1,0 +1,70 @@
+I have all the pieces: the write/scroll logic from `early_vga_write` (arch/x86/kernel/early_printk.c:28-69), the cursor model, and the `color_table` from drivers/tty/vt/vt.c:1399-1400. The VGA text buffer at 0xb8000 is memory-mapped (readw/writew in the kernel), so no port instructions are needed. I'll generalize the kernel's hardcoded attribute `0x7` to a settable current color.
+
+=== vga.c ===
+```c
+#include "vga.h"
+
+#define VGABASE	((unsigned short *)0xb8000)
+#define MAX_YPOS	25
+#define MAX_XPOS	80
+
+static int current_ypos = MAX_YPOS;	/* earliest console starts at the bottom */
+static int current_xpos;
+static unsigned char cur_attr = 0x7;	/* white on black */
+
+const unsigned char color_table[16] = { 0, 4, 2, 6, 1, 5, 3, 7,
+					 8, 12, 10, 14, 9, 13, 11, 15 };
+
+void vga_write(const char *str, unsigned n)
+{
+	char c;
+	int i, k, j;
+
+	while ((c = *str++) != '\0' && n-- > 0) {
+		if (current_ypos >= MAX_YPOS) {
+			/* scroll 1 line up */
+			for (k = 1, j = 0; k < MAX_YPOS; k++, j++)
+				for (i = 0; i < MAX_XPOS; i++)
+					VGABASE[MAX_XPOS*j + i] =
+						VGABASE[MAX_XPOS*k + i];
+			for (i = 0; i < MAX_XPOS; i++)
+				VGABASE[MAX_XPOS*j + i] =
+					0x20 | (unsigned short)(cur_attr << 8);
+			current_ypos = MAX_YPOS - 1;
+		}
+		if (c == '\n') {
+			current_xpos = 0;
+			current_ypos++;
+		} else if (c != '\r') {
+			VGABASE[MAX_XPOS*current_ypos + current_xpos++] =
+				(unsigned short)(cur_attr << 8) |
+				(unsigned short)c;
+			if (current_xpos >= MAX_XPOS) {
+				current_xpos = 0;
+				current_ypos++;
+			}
+		}
+	}
+}
+
+void vga_clear(void)
+{
+	int i;
+
+	for (i = 0; i < MAX_XPOS*MAX_YPOS; i++)
+		VGABASE[i] = 0x20 | (unsigned short)(cur_attr << 8);
+	current_xpos = 0;
+	current_ypos = 0;
+}
+
+void vga_home(void)
+{
+	current_xpos = 0;
+	current_ypos = 0;
+}
+
+void vga_set_color(unsigned char attr)
+{
+	cur_attr = attr;
+}
+```

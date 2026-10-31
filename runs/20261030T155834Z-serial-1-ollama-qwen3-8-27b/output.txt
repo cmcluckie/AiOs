@@ -1,0 +1,138 @@
+=== serial8250.c ===
+/*
+ * serial8250.c - transmit-only 8250/16550 driver, lifted from the Linux
+ * early serial console (drivers/tty/serial/8250/8250_early.c).
+ *
+ * 8 data bits, no parity, one stop bit, 115200 baud, waiting for the
+ * transmitter holding register to be ready before each byte, the way
+ * Linux's early console does.  I/O port access is done with inline
+ * assembly; no kernel headers.
+ */
+
+#include "serial8250.h"
+
+/* Register offsets from the port base (include/uapi/linux/serial_reg.h). */
+#define UART_RX		0	/* In:  Receive buffer */
+#define UART_TX		0	/* Out: Transmit buffer */
+#define UART_DLL	0	/* Out: Divisor Latch Low (DLAB=1) */
+#define UART_IER	1	/* Out: Interrupt Enable Register */
+#define UART_DLM	1	/* Out: Divisor Latch High (DLAB=1) */
+#define UART_FCR	2	/* Out: FIFO Control Register */
+#define UART_LCR	3	/* Out: Line Control Register */
+#define UART_MCR	4	/* Out: Modem Control Register */
+#define UART_LSR	5	/* In:  Line Status Register */
+
+/* Line Control Register bits. */
+#define UART_LCR_DLAB	0x80 /* Divisor latch access bit */
+#define UART_LCR_WLEN8	0x03 /* Wordlength: 8 bits (with 1 stop bit, no
+				 * parity -> 8n1) */
+
+/* Modem Control Register bits. */
+#define UART_MCR_RTS	0x02 /* RTS complement */
+#define UART_MCR_DTR	0x01 /* DTR complement */
+
+/* Line Status Register bits. */
+#define UART_LSR_TEMT	0x40 /* Transmitter empty */
+#define UART_LSR_THRE	0x20 /* Transmit-hold-register empty */
+
+/* Interrupt Enable Register bit. */
+#define UART_IER_UUE	0x40 /* UART Update Enable */
+
+/* Fixed configuration: 115200 baud on the standard 1.8432 MHz reference
+ * clock (115200 * 16), the default the early console assumes. */
+#define UARTCLK	(115200 * 16)
+#define BAUD	115200
+
+static inline unsigned char inb(unsigned short port)
+{
+	unsigned char ret;
+
+	__asm__ __volatile__("inb %w1, %0"
+			     : "=a"(ret)
+			     : "Nd"(port));
+	return ret;
+}
+
+static inline void outb(unsigned char value, unsigned short port)
+{
+	__asm__ __volatile__("outb %0, %w1"
+			     :
+			     : "a"(value), "Nd"(port));
+}
+
+/* init_port() from the early console: 8n1, no interrupts, no FIFO, DTR/RTS,
+ * then program the baud-rate divisor. */
+static void serial8250_init_port(unsigned short base)
+{
+	unsigned int divisor;
+	unsigned int ier;
+	unsigned char c;
+
+	outb(UART_LCR_WLEN8, base + UART_LCR);		/* 8n1 */
+	ier = inb(base + UART_IER);
+	outb(ier & UART_IER_UUE, base + UART_IER);	/* no interrupt */
+	outb(0, base + UART_FCR);			/* no fifo */
+	outb(UART_MCR_DTR | UART_MCR_RTS, base + UART_MCR);
+
+	divisor = (UARTCLK + 8 * BAUD) / (16 * BAUD);
+	c = inb(base + UART_LCR);
+	outb(c | UART_LCR_DLAB, base + UART_LCR);
+	outb((unsigned char)(divisor & 0xff), base + UART_DLL);
+	outb((unsigned char)((divisor >> 8) & 0xff), base + UART_DLM);
+	outb(c & ~UART_LCR_DLAB, base + UART_LCR);
+}
+
+/* serial_putc(): wait for the chip to say it is ready for a byte
+ * (transmit holding register empty), hand it over, then wait until the
+ * transmitter is empty. */
+static void serial8250_putc_port(unsigned short base, unsigned char c)
+{
+	unsigned int status;
+
+	for (;;) {
+		status = inb(base + UART_LSR);
+		if (status & UART_LSR_THRE)
+			break;
+		__asm__ __volatile__("pause" ::: "memory");
+	}
+
+	outb(c, base + UART_TX);
+
+	for (;;) {
+		status = inb(base + UART_LSR);
+		if (status & UART_LSR_TEMT)
+			break;
+		__asm__ __volatile__("pause" ::: "memory");
+	}
+}
+
+void serial8250_init(unsigned short base)
+{
+	serial8250_init_port(base);
+}
+
+void serial8250_putc(unsigned short base, unsigned char c)
+{
+	serial8250_putc_port(base, c);
+}
+
+void serial8250_write(unsigned short base, const void *s, unsigned long n)
+{
+	const char *p = (const char *)s;
+	unsigned long i;
+
+	for (i = 0; i < n; i++)
+		serial8250_putc_port(base, (unsigned char)p[i]);
+}
+
+void serial8250_flush(unsigned short base)
+{
+	unsigned int status;
+
+	for (;;) {
+		status = inb(base + UART_LSR);
+		if (status & UART_LSR_TEMT)
+			break;
+		__asm__ __volatile__("pause" ::: "memory");
+	}
+}

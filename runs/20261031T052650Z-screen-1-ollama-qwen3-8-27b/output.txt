@@ -1,0 +1,90 @@
+=== vga.c ===
+/* vga.c: the 80 by 25 text screen, lifted from Linux's earliest console
+ * (early_vga_write in arch/x86/kernel/early_printk.c). */
+#include "vga.h"
+
+/* VGA text mode 03h framebuffer: 16 bits per cell, addressable in memory. */
+#define VGABASE		0xb8000UL
+
+static const int max_ypos = 25, max_xpos = 80;
+static int current_ypos = 0, current_xpos = 0;
+
+/* The colour text is written in until the program asks otherwise.
+ * 0x00 = black on black: an untouched cell is blank, nothing drawn. */
+static unsigned char vga_attr = 0x0;
+
+/* ANSI colour number -> VGA colour number (identity: the VGA index
+ * for colour N is N). */
+const unsigned char color_table[16] = {
+	0, 1, 2, 3, 4, 5, 6, 7,
+	8, 9, 10, 11, 12, 13, 14, 15
+};
+
+/* The text framebuffer is memory, accessed with movw, like the kernel's
+ * writew/readw MMIO accessors. */
+static inline void writew(unsigned short v, unsigned long addr)
+{
+	__asm__ __volatile__("movw %0, %1" :: "r" (v), "m" (*(volatile unsigned short *)addr) : "memory");
+}
+
+static inline unsigned short readw(unsigned long addr)
+{
+	unsigned short v;
+	__asm__ __volatile__("movw %1, %0" : "=r" (v) : "m" (*(volatile unsigned short *)addr) : "memory");
+	return v;
+}
+
+void vga_set_color(unsigned char attr)
+{
+	/* attr = background << 4 | foreground, already a VGA attribute byte. */
+	vga_attr = attr;
+}
+
+void vga_home(void)
+{
+	current_xpos = 0;
+	current_ypos = 0;
+}
+
+void vga_clear(void)
+{
+	int i;
+
+	for (i = 0; i < max_xpos * max_ypos; i++)
+		writew((vga_attr << 8) | 0x20, VGABASE + 2 * i);
+	vga_home();
+}
+
+void vga_write(const char *str, unsigned n)
+{
+	char c;
+	int i, k, j;
+
+	while ((c = *str++) != '\0' && n-- > 0) {
+		if (current_ypos >= max_ypos) {
+			/* scroll 1 line up */
+			for (k = 1, j = 0; k < max_ypos; k++, j++) {
+				for (i = 0; i < max_xpos; i++) {
+					writew(readw(VGABASE + 2 * (max_xpos * k + i)),
+					       VGABASE + 2 * (max_xpos * j + i));
+				}
+			}
+			for (i = 0; i < max_xpos; i++)
+				writew((vga_attr << 8) | 0x20,
+				       VGABASE + 2 * (max_xpos * j + i));
+			current_ypos = max_ypos - 1;
+		}
+		if (c == '\n') {
+			current_xpos = 0;
+			current_ypos++;
+		} else if (c != '\r') {
+			writew((vga_attr << 8) | (unsigned short) c,
+			       VGABASE + 2 * (max_xpos * current_ypos +
+					      current_xpos++));
+			if (current_xpos >= max_xpos) {
+				current_xpos = 0;
+				current_ypos++;
+			}
+		}
+	}
+}

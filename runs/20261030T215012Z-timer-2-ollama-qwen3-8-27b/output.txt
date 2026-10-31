@@ -1,0 +1,172 @@
+=== tsccal.c ===
+/* tsccal.c -- TSC rate measured against the 8254 PIT.
+ *
+ * Lifted from the Linux kernel:
+ *   arch/x86/kernel/tsc.c  -- quick_pit_calibrate(), pit_verify_msb(),
+ *                             pit_expect_msb(), native_calibrate_tsc()
+ *
+ * Primary method (quick PIT calibration):
+ *   Program PIT channel 2 (1.193182 MHz) to count down from 0xFFFF
+ *   in mode 0 (one-shot).  The MSB of the counter flips every 256
+ *   PIT ticks (about 214 us).  Watch the MSB in a tight loop,
+ *   reading the TSC at each flip.  If the per-flip TSC deltas are
+ *   steady (error < 500 ppm) the TSC is stable and we can compute
+ *   kHz = tsc_delta * PIT_TICK_RATE / (flips * 256 * 1000).
+ *
+ * Fallback (CPUID -- the hypervisor's word):
+ *   On a virtualised machine the port I/O to the PIT is trapped and
+ *   slow, so the tight loop never sees enough flips.  We then read
+ *   CPUID leaf 0x15 (TSC/crystal ratio, plus crystal Hz) or derive
+ *   the crystal from leaf 0x6.
+ *
+ * If both methods fail, return 0.
+ */
+
+#include "tsccal.h"
+
+#define TSCCAL_PIT_TICK_RATE	1193182u
+
+struct tsccal_cpuid_regs { unsigned int eax, ebx, ecx, edx; };
+
+static unsigned long long tsccal_rdtsc(void)
+{
+	unsigned int lo, hi;
+	__asm__ __volatile__ ("rdtsc" : "=a" (lo), "=d" (hi));
+	return ((unsigned long long)hi << 32) | lo;
+}
+
+static unsigned char tsccal_in8(unsigned char port)
+{
+	unsigned char v;
+	__asm__ __volatile__ ("inb %%dx, %%al"
+			      : "=a" (v) : "d" ((unsigned int)port) : "memory");
+	return v;
+}
+
+static void tsccal_out8(unsigned char port, unsigned char v)
+{
+	__asm__ __volatile__ ("outb %%al, %%dx"
+			      : : "a" (v), "d" ((unsigned int)port) : "memory");
+}
+
+static void tsccal_cpuid(unsigned int leaf, struct tsccal_cpuid_regs *r)
+{
+	__asm__ __volatile__ ("cpuid"
+			      : "=a" (r->eax), "=b" (r->ebx),
+				"=c" (r->ecx), "=d" (r->edx)
+			      : "0" (leaf));
+}
+
+/* 64/32 unsigned divide, in pure 32-bit arithmetic (no libgcc). */
+static unsigned long tsccal_u64div32(unsigned long long num,
+				     unsigned long den)
+{
+	unsigned long long q = 0, r = 0;
+	int i;
+	for (i = 63; i >= 0; i--) {
+		r = (r << 1) | ((num >> i) & 1ULL);
+		if (r >= den) {
+			r -= den;
+			q |= (unsigned long long)1 << i;
+		}
+	}
+	return (unsigned long)q;
+}
+
+static int tsccal_pit_verify_msb(unsigned char val)
+{
+	tsccal_in8(0x42);
+	return tsccal_in8(0x42) == val;
+}
+
+static int tsccal_pit_expect_msb(unsigned char val,
+				 unsigned long long *tscp,
+				 unsigned long *deltap)
+{
+	int count;
+	unsigned long long tsc = 0, prev_tsc = 0;
+	for (count = 0; count < 50000; count++) {
+		if (!tsccal_pit_verify_msb(val))
+			break;
+		prev_tsc = tsc;
+		tsc = tsccal_rdtsc();
+	}
+	*deltap = (unsigned long)(tsccal_rdtsc() - prev_tsc);
+	*tscp = tsc;
+	return count > 5;
+}
+
+static unsigned long tsccal_quick_pit_calibrate(void)
+{
+	int i;
+	int tsccal_max_it = 50 * TSCCAL_PIT_TICK_RATE / 1000 / 256;
+	unsigned long long tsc, delta;
+	unsigned long d1, d2;
+
+	tsccal_out8(0x61, (tsccal_in8(0x61) & ~0x02) | 0x01);
+	tsccal_out8(0x43, 0xb0);
+	tsccal_out8(0x42, 0xff);
+	tsccal_out8(0x42, 0xff);
+	tsccal_pit_verify_msb(0);
+
+	if (tsccal_pit_expect_msb(0xff, &tsc, &d1)) {
+		for (i = 1; i <= tsccal_max_it; i++) {
+			if (!tsccal_pit_expect_msb((unsigned char)(0xff - i),
+						   &delta, &d2))
+				break;
+			delta -= tsc;
+			if (i == 1 &&
+			    d1 + d2 >=
+			    (unsigned long)((delta * tsccal_max_it) >> 11))
+				return 0;
+			if (d1 + d2 >= (unsigned long)(delta >> 11))
+				continue;
+			if (!tsccal_pit_verify_msb((unsigned char)(0xfe - i)))
+				break;
+			delta *= TSCCAL_PIT_TICK_RATE;
+			return tsccal_u64div32(delta,
+					       (unsigned long)i * 256 * 1000);
+		}
+	}
+	return 0;
+}
+
+static unsigned long tsccal_cpuid_calibrate(void)
+{
+	struct tsccal_cpuid_regs r15;
+	unsigned int crystal_khz;
+
+	tsccal_cpuid(0x15, &r15);
+	if (r15.ebx == 0 || r15.eax == 0)
+		return 0;
+
+	crystal_khz = r15.ecx / 1000;
+
+	if (crystal_khz == 0) {
+		struct tsccal_cpuid_regs r6;
+		tsccal_cpuid(0x06, &r6);
+		if (r6.eax)
+			crystal_khz = (unsigned int)
+				((unsigned long long)r6.eax * 1000ULL *
+				 r15.eax / r15.ebx);
+	}
+
+	if (crystal_khz == 0)
+		return 0;
+
+	return (unsigned long)tsccal_u64div32(
+		(unsigned long long)crystal_khz * r15.ebx, r15.eax);
+}
+
+unsigned long tsccal_khz(void)
+{
+	unsigned long khz = tsccal_quick_pit_calibrate();
+	if (khz)
+		return khz;
+	return tsccal_cpuid_calibrate();
+}
+
+unsigned long long tsccal_cycles(void)
+{
+	return tsccal_rdtsc();
+}

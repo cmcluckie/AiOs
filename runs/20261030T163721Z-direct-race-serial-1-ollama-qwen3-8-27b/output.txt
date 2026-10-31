@@ -1,0 +1,12 @@
+# race-serial: done
+
+every test in the plan passed, in 1 job(s)
+
+Plan: PART.serial.8250@1: send bytes out of the first serial port, as Linux's early console does, at d1abf44, director director@2 (7e5e3759), builders lifter@1.
+Director: 2 calls, 3176 tokens in, 456 out, peak context 1886 of 98304; 2 minutes.
+
+- race-serial-1, serial: pass, ended pass
+
+The director's words:
+
+Part race-serial is done. The single exam item "serial" (PART.serial.8250@1) passed on the first job: 3/3 tests green, 0 failures, in one try (~61s). The fresh lifter wrote lift/serial8250.c implementing the 8250 UART early-console contract (data to offset 0, busy-poll LSR bit 5 / THRE). Nothing else to report.

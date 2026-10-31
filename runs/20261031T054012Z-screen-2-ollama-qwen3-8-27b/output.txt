@@ -1,0 +1,73 @@
+Now I have all the information I need. The previous failure was due to incorrect inline assembly syntax for memory reads/writes. Since the VGA text buffer is memory-mapped at 0xb8000 (not I/O port-mapped), I can simply use a volatile pointer cast, which is the most straightforward approach in freestanding 32-bit code.
+
+=== vga.c ===
+#include "vga.h"
+
+#define VGABASE		0xb8000UL
+#define MAX_XPOS	80
+#define MAX_YPOS	25
+
+static volatile unsigned short *const vga_mem =
+	(volatile unsigned short *)VGABASE;
+
+static int current_ypos = MAX_YPOS;
+static int current_xpos = 0;
+static unsigned short color = 0x07;		/* light grey on black */
+
+/* ANSI colour number -> VGA colour number (drivers/tty/vt/vt.c) */
+const unsigned char color_table[16] = {
+	0, 4, 2, 6, 1, 5, 3, 7,
+	8, 12, 10, 14, 9, 13, 11, 15
+};
+
+void vga_write(const char *str, unsigned n)
+{
+	char c;
+	int i, k, j;
+
+	while ((c = *str++) != '\0' && n-- > 0) {
+		if (current_ypos >= MAX_YPOS) {
+			/* scroll 1 line up */
+			for (k = 1, j = 0; k < MAX_YPOS; k++, j++) {
+				for (i = 0; i < MAX_XPOS; i++)
+					vga_mem[MAX_XPOS * j + i] =
+						vga_mem[MAX_XPOS * k + i];
+			}
+			for (i = 0; i < MAX_XPOS; i++)
+				vga_mem[MAX_XPOS * j + i] = color;
+			current_ypos = MAX_YPOS - 1;
+		}
+		if (c == '\n') {
+			current_xpos = 0;
+			current_ypos++;
+		} else if (c != '\r') {
+			vga_mem[MAX_XPOS * current_ypos + current_xpos++] =
+				((unsigned short)color << 8) | (unsigned short)c;
+			if (current_xpos >= MAX_XPOS) {
+				current_xpos = 0;
+				current_ypos++;
+			}
+		}
+	}
+}
+
+void vga_clear(void)
+{
+	int i;
+
+	for (i = 0; i < MAX_XPOS * MAX_YPOS; i++)
+		vga_mem[i] = color;
+	current_ypos = 0;
+	current_xpos = 0;
+}
+
+void vga_home(void)
+{
+	current_ypos = 0;
+	current_xpos = 0;
+}
+
+void vga_set_color(unsigned char attr)
+{
+	color = (unsigned short)(attr & 0xff);
+}
