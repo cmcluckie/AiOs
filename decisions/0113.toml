@@ -1,0 +1,11 @@
+id      = "0113"
+date    = 2026-11-07
+kind    = "tests"
+touches = ["tests/expected/timer.rate@1.check", "tests/timer.says@1.toml", "tests/programs/ratesays.sh", "tests/mutations.txt", "findings/0034.md"]
+asked   = "Decision 0112's check told every door stuck at 0 that the machine had stopped printing, because tests/programs/msprobe.c prints a stuck door's 0 only once (findings 0034).  The rule on how long the lines span is taken out: an empty capture is a machine that printed nothing, and a door stuck at 0 is said to be again.  TST.timer.says@1's capture of zeros is now the one line msprobe prints, so the test is red with decision 0112's check; its second mutation goes with the rule."
+options = ["take it", "do not take it"]
+default = "take it"
+chose   = "take it"
+why     = "Drafted by Claude on 2026-11-07, after the rerun showed decision 0112's message was wrong; Chris's signed commit is the decision."
+by      = "KEY.chris@1"
+drafted = "Claude"
