@@ -1,0 +1,11 @@
+id      = "0112"
+date    = 2026-11-07
+kind    = "tests"
+touches = ["tests/expected/timer.rate@1.check", "tests/timer.says@1.toml", "tests/programs/ratesays.sh", "tests/mutations.txt", "findings/0033.md"]
+asked   = "TST.timer.rate@1 said \"the door said 0 throughout\" of a machine that died before printing a line as well as of one that ran ten seconds and measured nothing, so the timer's builders went looking for another clock when their code had crashed (findings 0033).  Its check now says a machine printed nothing, or stopped printing after N of its seconds when its lines span less than half of them, before it says the door said 0; green and red are unchanged.  TST.timer.says@1 holds the check to that on three captures (red with the old check; two mutations).  TST.timer.kvm@1 is not changed."
+options = ["take it", "do not take it"]
+default = "take it"
+chose   = "take it"
+why     = "Chris, 2026-11-07, stopping the rerun after run 1: \"Stopped\", on the fix proposed for the crash message."
+by      = "KEY.chris@1"
+drafted = "Claude"

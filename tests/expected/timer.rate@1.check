@@ -2,5 +2,11 @@
 # The ms door's only idea of a second is the rate PART.timer.tsc-pit measured.
 # Green when that rate was measured at all (the door is not 0 forever) and the
 # door keeps pace with the host's clock to within 1%, as loader.ms@1 checks.
+# A machine that printed nothing, or stopped printing early, did not measure 0: it
+# died or hung, and says so, so whoever wrote the part looks for a crash and not
+# for a clock (findings 0033).
+[ -s "$1" ] || { echo "the machine printed nothing in its ${2:-?} seconds: it died or hung before the program's first line"; exit 1; }
+span=$(awk 'NR == 1 { a = $1 } { b = $1 } END { printf "%d", (b - a) / 1000 }' "$1")
+[ "$span" -ge $(( ${2:-10} / 2 )) ] || { echo "the machine stopped printing after ${span} of its ${2:-?} seconds: it died or hung while running"; exit 1; }
 grep -q ' [1-9][0-9]*$' "$1" || { echo "the door said 0 throughout: the rate was never measured"; exit 1; }
 sh "$(dirname "$0")/loader.ms@1.check" "$@"
