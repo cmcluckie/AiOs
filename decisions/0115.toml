@@ -1,0 +1,11 @@
+id      = "0115"
+date    = 2026-11-08
+kind    = "dependencies"
+touches = ["index/tool/agent@1.as-built.md"]
+asked   = "TOOL.agent@1's as-built spec catches up with decisions 0111 and 0114: a failed hand-in is answered with what jig/test printed before its line, the lifter is shown the item's tests, and a job with start begins from that run's file, which the director names on an exam plan after the first job.  Its size is counted again: 4066 lines, the program 2775.  It also says the lifter is shown the machine its test boots (decision 0117)."
+options = ["take it", "do not take it"]
+default = "take it"
+chose   = "take it"
+why     = "Chris, 2026-11-08, on the article: \"it still needs to follow our format\"; its As built section links this spec, and it did not say what the agent now does."
+by      = "KEY.chris@1"
+drafted = "Claude"

@@ -1,0 +1,260 @@
+=== tsccal.c ===
+/* PART.timer.tsc-pit@2: the processor counter's rate, measured against the 8254.
+ *
+ * Lifted from Linux arch/x86/kernel/tsc.c:
+ *   quick_pit_calibrate()   (fast: track channel-2 MSB as it counts down)
+ *   pit_calibrate_tsc()     (slow: one-shot, watch output line on port 0x61)
+ *   native_calibrate_tsc()  (CPUID leaf 0x15: the hypervisor's word)
+ *   cpu_khz_from_cpuid()    (CPUID leaf 0x16)
+ *
+ * The rate is obtained by measuring the TSC against the 8254 (fast, then slow
+ * method).  On a machine where reading the 8254 is slow (a hypervisor makes
+ * every I/O port read a VM-exit) the 8254 methods give up, and we then take the
+ * hypervisor's word: the TSC frequency reported through CPUID, exactly the
+ * kernel's native_calibrate_tsc() / cpu_khz_from_cpuid() fallback.
+ *
+ * The CPUID word is computed without any port read, so it is always available
+ * even when the 8254 reads are slow or blocked.
+ *
+ * PIT constant from include/linux/timex.h.
+ * Ports: 0x42 = counter 2 of the 8254; 0x43 = its mode register;
+ *        0x61 = speaker port (bit 5 = channel-2 output).
+ */
+#include "tsccal.h"
+
+#define PIT_TICK_RATE	1193182ul
+
+#define MAX_QUICK_PIT_MS	50
+#define MAX_QUICK_PIT_ITERATIONS (MAX_QUICK_PIT_MS * PIT_TICK_RATE / 1000 / 256)
+
+#define CAL_MS		10
+#define CAL_LATCH	(PIT_TICK_RATE / (1000 / CAL_MS))
+#define CAL_PIT_LOOPS	1000
+
+/* TSC-cycle budget per PIT polling call: bounds the wait in wall time even
+ * when each port read is a slow VM-exit, so the fallback stays reachable. */
+#define PIT_CALL_DEADLINE	10000000ULL	/* ~10 ms at a 1 GHz TSC */
+
+#define CPUID_LEAF_TSC	0x15
+#define CPUID_LEAF_FREQ 0x16
+
+static unsigned long cal_khz;
+
+/* ── primitives ─────────────────────────────────────────────────────────── */
+
+static inline unsigned long long get_cycles(void)
+{
+	unsigned long long v;
+	__asm__ __volatile__ ("rdtsc" : "=A" (v));
+	return v;
+}
+
+static inline unsigned char inb(unsigned short port)
+{
+	unsigned char v;
+	__asm__ __volatile__ ("inb %w1, %0" : "=a" (v) : "i" (port));
+	return v;
+}
+
+static inline void outb(unsigned char v, unsigned short port)
+{
+	__asm__ __volatile__ ("outb %0, %w1" : : "a" (v), "i" (port));
+}
+
+/* ── CPUID ──────────────────────────────────────────────────────────────── */
+
+struct cpuid_regs { unsigned int eax, ebx, ecx, edx; };
+
+static struct cpuid_regs cpuid(unsigned int leaf)
+{
+	struct cpuid_regs r;
+	__asm__ __volatile__ ("cpuid"
+			      : "=a"(r.eax), "=b"(r.ebx),
+				"=c"(r.ecx), "=d"(r.edx)
+			      : "a"(leaf));
+	return r;
+}
+
+/* CPUID leaf 0x15: EAX=denom, EBX=numer (TSC/crystal); ECX=crystal Hz (or 0).
+ * CPUID leaf 0x16: EAX=base MHz.
+ *   TSC_kHz = crystal_kHz * numer / denom
+ * (kernel: return crystal_khz * ebx_numerator / eax_denominator)
+ * No max-leaf gate: a hypervisor may report a low max basic leaf from leaf 0
+ * while still implementing 0x15/0x16, so we probe them directly and treat a
+ * zero numerator as "not present". */
+static unsigned long cpuid_tsc_khz(void)
+{
+	struct cpuid_regs r15;
+	unsigned long crystal_khz;
+
+	r15 = cpuid(CPUID_LEAF_TSC);
+	if (r15.ebx == 0 || r15.eax == 0)
+		return 0;
+
+	crystal_khz = r15.ecx / 1000;
+	if (crystal_khz == 0) {
+		struct cpuid_regs r16 = cpuid(CPUID_LEAF_FREQ);
+		crystal_khz = (unsigned long)r16.eax * 1000
+			      * (unsigned long)r15.eax
+			      / (unsigned long)r15.ebx;
+	}
+	if (crystal_khz == 0)
+		return 0;
+	return crystal_khz * r15.ebx / r15.eax;
+}
+
+static unsigned long cpuid_freq_khz(void)
+{
+	struct cpuid_regs r = cpuid(CPUID_LEAF_FREQ);
+	return (unsigned long)r.eax * 1000;
+}
+
+/* ── 64÷32 (do_div substitute) ──────────────────────────────────────────── */
+
+static unsigned long long div64by32(unsigned long long a, unsigned long d)
+{
+	unsigned long long rem = 0, quo = 0;
+	int i;
+	for (i = 63; i >= 0; i--) {
+		rem = (rem << 1) | ((a >> i) & 1ULL);
+		if (rem >= d) { rem -= d; quo |= 1ULL << i; }
+	}
+	return quo;
+}
+
+/* ── 8254 channel-2 helpers ─────────────────────────────────────────────── */
+
+static inline unsigned char pit_msb(void)
+{
+	inb(0x42);
+	return inb(0x42);
+}
+
+static inline int pit_verify_msb(unsigned char val)
+{
+	return pit_msb() == val;
+}
+
+/* Poll until the MSB of counter 2 differs from val, timestamping as we go.
+ * Give up after 50000 polls or after PIT_CALL_DEADLINE TSC cycles. */
+static int pit_expect_msb(unsigned char val,
+			  unsigned long long *tscp, unsigned long *deltap)
+{
+	int count;
+	unsigned long long tsc = 0, prev = 0, deadline;
+
+	deadline = get_cycles() + PIT_CALL_DEADLINE;
+	for (count = 0; count < 50000; count++) {
+		if (!pit_verify_msb(val))
+			break;
+		prev = tsc;
+		tsc = get_cycles();
+		if (tsc >= deadline)
+			return 0;
+	}
+	*deltap = get_cycles() - prev;
+	*tscp   = tsc;
+	return count > 5;
+}
+
+/* ── fast 8254 calibration ──────────────────────────────────────────────── */
+
+static unsigned long quick_pit_calibrate(void)
+{
+	unsigned long i;
+	unsigned long long tsc, delta;
+	unsigned long d1, d2;
+
+	outb((inb(0x61) & ~0x02) | 0x01, 0x61);
+	outb(0xb0, 0x43);
+	outb(0xff, 0x42);
+	outb(0xff, 0x42);
+	pit_verify_msb(0);
+
+	if (pit_expect_msb(0xff, &tsc, &d1)) {
+		for (i = 1; i <= MAX_QUICK_PIT_ITERATIONS; i++) {
+			if (!pit_expect_msb(0xff - i, &delta, &d2))
+				break;
+			delta -= tsc;
+			if (i == 1 &&
+			    d1 + d2 >= (delta * MAX_QUICK_PIT_ITERATIONS) >> 11)
+				return 0;
+			if (d1 + d2 >= delta >> 11)
+				continue;
+			if (!pit_verify_msb(0xfe - i))
+				break;
+			goto ok;
+		}
+	}
+	return 0;
+ok:
+	delta *= PIT_TICK_RATE;
+	return (unsigned long) div64by32(delta, i * 256 * 1000);
+}
+
+/* ── slow 8254 calibration ──────────────────────────────────────────────── */
+
+static unsigned long pit_calibrate_tsc(unsigned long latch,
+				       unsigned long ms,
+				       unsigned long loopmin)
+{
+	unsigned long long tsc, t1, t2, delta, deadline;
+	unsigned long tscmin, tscmax, pitcnt;
+
+	outb((inb(0x61) & ~0x02) | 0x01, 0x61);
+	outb(0xb0, 0x43);
+	outb(latch & 0xff, 0x42);
+	outb(latch >> 8, 0x42);
+
+	tsc = t1 = t2 = get_cycles();
+	deadline = t1 + PIT_CALL_DEADLINE;
+	pitcnt = 0;
+	tscmax = 0;
+	tscmin = ~0UL;
+	while ((inb(0x61) & 0x20) == 0) {
+		t2 = get_cycles();
+		if (t2 >= deadline)
+			return 0;
+		delta = t2 - tsc;
+		tsc = t2;
+		if ((unsigned long)delta < tscmin)
+			tscmin = (unsigned long)delta;
+		if ((unsigned long)delta > tscmax)
+			tscmax = (unsigned long)delta;
+		pitcnt++;
+	}
+	if (pitcnt < loopmin || tscmax > 10 * tscmin)
+		return 0;
+	return (unsigned long) div64by32(t2 - t1, ms);
+}
+
+/* ── public API ─────────────────────────────────────────────────────────── */
+
+unsigned long tsccal_khz(void)
+{
+	unsigned long v;
+
+	if (cal_khz)
+		return cal_khz;
+
+	/* 1. Measure against the 8254 (fast method, then slow method). */
+	v = quick_pit_calibrate();
+	if (v) { cal_khz = v; return v; }
+
+	v = pit_calibrate_tsc(CAL_LATCH, CAL_MS, CAL_PIT_LOOPS);
+	if (v) { cal_khz = v; return v; }
+
+	/* 2. Reading the 8254 was too slow: take the hypervisor's word. */
+	v = cpuid_tsc_khz();
+	if (v) { cal_khz = v; return v; }
+
+	v = cpuid_freq_khz();
+	if (v) { cal_khz = v; return v; }
+
+	return 0;
+}
+
+unsigned long long tsccal_cycles(void)
+{
+	return get_cycles();
+}

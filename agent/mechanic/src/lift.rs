@@ -320,13 +320,13 @@ pub fn run(j: &Job, start: Instant, quiet: bool) -> i32 {
     let _ = fs::create_dir_all(&base);
     let copied = Command::new("sh")
         .arg("-c")
-        .arg("git -C \"$1\" archive \"$2\" exam lifted tests | tar -xf - -C \"$3\"")
+        .arg("git -C \"$1\" archive \"$2\" exam lifted tests flavors index/machine | tar -xf - -C \"$3\"")
         .args(["copy", &repo.to_string_lossy(), &j.at, &base.to_string_lossy()])
         .status()
         .map(|s| s.success())
         .unwrap_or(false);
     if !copied {
-        eprintln!("agent: could not read exam/, lifted/ and tests/ at {}", j.at);
+        eprintln!("agent: could not read exam/, lifted/, tests/, flavors/ and index/machine/ at {}", j.at);
         return 2;
     }
     let it = match item(&base, &j.exam) {
@@ -374,6 +374,27 @@ pub fn run(j: &Job, start: Instant, quiet: bool) -> i32 {
         };
         let runner = field("runner");
         first += &format!("\nTest {t}\nRed when: {}\nRun as: {runner}\n", field("red_when"));
+        // the machine the test boots, as built: what is true of the hardware the lift
+        // runs on, such as how slow one read of a chip is there (findings 0037)
+        for w in runner.split_whitespace().filter(|w| plain(w, "_-") && !w.is_empty()) {
+            let Ok(flavor) = fs::read_to_string(base.join(format!("flavors/{w}.toml"))) else { continue };
+            let Some(m) = flavor
+                .lines()
+                .find(|l| l.split('=').next().map(|n| n.trim() == "machine").unwrap_or(false))
+                .and_then(|l| l.splitn(2, '=').nth(1))
+                .map(|v| v.trim().trim_matches('"').to_string())
+            else {
+                continue;
+            };
+            let f = format!("index/machine/{}.as-built.md", m.trim_start_matches("MACHINE."));
+            if shown.contains(&f) || !plain(&f, "/._-@") || f.contains("..") {
+                continue;
+            }
+            if let Ok(text) = fs::read_to_string(base.join(&f)) {
+                first += &format!("\nThe machine it boots, {m}, as built ({f}):\n{}\n", runtime::model::cut(&text, 4000));
+                shown.push(f);
+            }
+        }
         let mut files = vec![format!("tests/expected/{t}.check")];
         files.extend(runner.split_whitespace().filter(|w| w.starts_with("tests/")).map(|w| w.to_string()));
         for f in files {

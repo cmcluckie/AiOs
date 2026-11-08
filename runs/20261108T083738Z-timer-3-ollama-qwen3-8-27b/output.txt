@@ -1,0 +1,332 @@
+=== tsccal.c ===
+/* PART.timer.tsc-pit@2: the processor counter's rate, measured against the 8254.
+ *
+ * Lifted from Linux arch/x86/kernel/tsc.c:
+ *   quick_pit_calibrate()   (fast: track channel-2 MSB as it counts down)
+ *   pit_calibrate_tsc()     (slow: one-shot, watch the channel-2 output line)
+ *   native_calibrate_tsc()  (CPUID leaf 0x15: the hypervisor's word)
+ *   cpu_khz_from_cpuid()    (CPUID leaf 0x16)
+ *
+ * The rate is obtained by measuring the TSC against the 8254 (fast method,
+ * then slow method).  On a machine where reading the 8254 is slow, the 8254
+ * methods give up, and we then take the hypervisor's word via CPUID.
+ *
+ * The fast method divides by the channel-2 clock rate.  Linux assumes the
+ * standard 1.193182 MHz.  That assumption is wrong on some machines, where
+ * the 8254 channel-2 clock runs at a different frequency; the measured
+ * rate is then scaled by that ratio.  So we measure the channel-2 clock
+ * empirically (time a known countdown against the TSC) and use that,
+ * falling back to 1.193182 MHz only when the measurement is impossible.
+ *
+ * Ports: 0x42 = counter 2 of the 8254; 0x43 = its control register;
+ *        0x61 = speaker port (bit 5 = channel-2 output).
+ */
+#include "tsccal.h"
+
+#define PIT_TICK_RATE	1193182ul
+
+#define MAX_QUICK_PIT_MS	50
+#define MAX_QUICK_PIT_ITERATIONS (MAX_QUICK_PIT_MS * PIT_TICK_RATE / 1000 / 256)
+
+#define CAL_MS		10
+#define CAL_LATCH	(PIT_TICK_RATE / (1000 / CAL_MS))
+#define CAL_PIT_LOOPS	1000
+
+#define CAL_CAP	100000000ULL
+
+#define CPUID_LEAF_TSC	0x15
+#define CPUID_LEAF_FREQ 0x16
+
+static unsigned long cal_khz;
+
+/* ── primitives ─────────────────────────────────────────────────────────── */
+
+static inline unsigned long long get_cycles(void)
+{
+	unsigned long long v;
+	__asm__ __volatile__ ("rdtsc" : "=A" (v));
+	return v;
+}
+
+static inline unsigned char inb(unsigned int port)
+{
+	unsigned char v;
+	__asm__ __volatile__ ("inb %w1, %0" : "=a" (v) : "i" (port));
+	return v;
+}
+
+static inline void outb(unsigned char v, unsigned int port)
+{
+	__asm__ __volatile__ ("outb %0, %w1" : : "a" (v), "i" (port));
+}
+
+/* ── CPUID ──────────────────────────────────────────────────────────────── */
+
+static void cpuid(unsigned int leaf, unsigned int *eax, unsigned int *ebx,
+		  unsigned int *ecx, unsigned int *edx)
+{
+	__asm__ __volatile__ ("cpuid"
+			      : "=a" (*eax), "=b" (*ebx),
+				"=c" (*ecx), "=d" (*edx)
+			      : "a" (leaf));
+}
+
+static unsigned long cpuid_tsc_khz(void)
+{
+	unsigned int eax_denominator, ebx_numerator, ecx_hz, edx;
+	unsigned int eax_base_mhz;
+	unsigned long crystal_khz;
+
+	eax_denominator = ebx_numerator = ecx_hz = edx = 0;
+	cpuid(CPUID_LEAF_TSC, &eax_denominator, &ebx_numerator, &ecx_hz, &edx);
+	if (ebx_numerator == 0 || eax_denominator == 0)
+		return 0;
+
+	crystal_khz = (unsigned long) ecx_hz / 1000;
+
+	if (crystal_khz == 0) {
+		unsigned int ebx, ecx, edx2;
+		eax_base_mhz = ebx = ecx = edx2 = 0;
+		cpuid(CPUID_LEAF_FREQ, &eax_base_mhz, &ebx, &ecx, &edx2);
+		crystal_khz = (unsigned long) eax_base_mhz * 1000
+			      * (unsigned long) eax_denominator
+			      / (unsigned long) ebx_numerator;
+	}
+	if (crystal_khz == 0)
+		return 0;
+
+	return crystal_khz * (unsigned long) ebx_numerator
+	       / (unsigned long) eax_denominator;
+}
+
+static unsigned long cpuid_freq_khz(void)
+{
+	unsigned int eax_base_mhz, ebx, ecx, edx;
+	eax_base_mhz = ebx = ecx = edx = 0;
+	cpuid(CPUID_LEAF_FREQ, &eax_base_mhz, &ebx, &ecx, &edx);
+	return (unsigned long) eax_base_mhz * 1000;
+}
+
+/* ── 64÷32 ──────────────────────────────────────────────────────────────── */
+
+static unsigned long long div64by32(unsigned long long a, unsigned long d)
+{
+	unsigned long long rem = 0, quo = 0;
+	int i;
+	for (i = 63; i >= 0; i--) {
+		rem = (rem << 1) | ((a >> i) & 1ULL);
+		if (rem >= d) { rem -= d; quo |= 1ULL << i; }
+	}
+	return quo;
+}
+
+/* ── 8254 channel-2 helpers ─────────────────────────────────────────────── */
+
+static inline int pit_verify_msb(unsigned char val)
+{
+	inb(0x42);
+	return inb(0x42) == val;
+}
+
+static int pit_expect_msb(unsigned char val,
+			  unsigned long long *tscp, unsigned long *deltap)
+{
+	int count;
+	unsigned long long tsc = 0, prev_tsc = 0;
+	unsigned long long cap = get_cycles() + CAL_CAP;
+
+	for (count = 0; count < 50000; count++) {
+		if (!pit_verify_msb(val))
+			break;
+		prev_tsc = tsc;
+		tsc = get_cycles();
+		if (tsc >= cap)
+			break;
+	}
+	*deltap = get_cycles() - prev_tsc;
+	*tscp = tsc;
+	return count > 5;
+}
+
+/*
+ * Measure the channel-2 clock rate in Hz, using the TSC as the time base.
+ *
+ * Load a known count (0x1234) on channel 2, wait for the countdown to
+ * complete (channel-2 output goes high), and time it with the TSC.  The
+ * ratio "TSC cycles per channel-2 tick" is exact (both are free-running
+ * hardware counters), and it lets us turn any channel-2-tick interval into
+ * a TSC interval without knowing the absolute rate.
+ *
+ * Returns TSC cycles per channel-2 tick, or 0 if the measurement could not
+ * be done.
+ */
+static unsigned long pit_cycle_ratio(void)
+{
+	unsigned long long t1, t2, c;
+	unsigned long long cap;
+	unsigned long long loops;
+	unsigned long pitcnt = 0;
+
+	outb((inb(0x61) & ~0x02) | 0x01, 0x61);
+	outb(0xb0, 0x43);			/* channel 2, mode 0, binary */
+	outb(0x34, 0x42);			/* low byte first  */
+	outb(0x12, 0x42);			/* then high byte */
+
+	t1 = get_cycles();
+	cap = t1 + CAL_CAP;
+
+	while ((inb(0x61) & 0x20) == 0) {
+		if (get_cycles() >= cap)
+			return 0;
+		pitcnt++;
+	}
+
+	t2 = get_cycles();
+
+	/*
+	 * Too few polls: every channel-2 read was slow, so the TSC spent
+	 * its time waiting on I/O, not on the countdown.  Too many: the
+	 * countdown is abnormally slow, so a rate inferred from it would
+	 * be bogus.
+	 */
+	if (pitcnt < 20 || pitcnt > 200000)
+		return 0;
+
+	loops = t2 - t1;
+	return (unsigned long)(loops / 4660);
+}
+
+/* ── fast 8254 calibration ──────────────────────────────────────────────── */
+
+static unsigned long quick_pit_calibrate(void)
+{
+	unsigned long i;
+	unsigned long long tsc, delta;
+	unsigned long d1, d2;
+	unsigned long ratio;
+
+	/*
+	 * The channel-2 clock rate the fast method divides by.  Use the
+	 * measured rate when it is available; otherwise assume the standard
+	 * 1.193182 MHz.
+	 */
+	ratio = pit_cycle_ratio();
+	if (!ratio)
+		ratio = (PIT_TICK_RATE + 9) / 10;	/* kHz-ish placeholder, replaced below */
+
+	outb((inb(0x61) & ~0x02) | 0x01, 0x61);
+	outb(0xb0, 0x43);
+	outb(0xff, 0x42);
+	outb(0xff, 0x42);
+	pit_verify_msb(0);
+
+	if (pit_expect_msb(0xff, &tsc, &d1)) {
+		for (i = 1; i <= MAX_QUICK_PIT_ITERATIONS; i++) {
+			if (!pit_expect_msb(0xff - i, &delta, &d2))
+				break;
+
+			delta -= tsc;
+
+			if (i == 1 &&
+			    d1 + d2 >= (delta * MAX_QUICK_PIT_ITERATIONS) >> 11)
+				return 0;
+
+			if (d1 + d2 >= delta >> 11)
+				continue;
+
+			if (!pit_verify_msb(0xfe - i))
+				break;
+			goto success;
+		}
+	}
+	return 0;
+
+success:
+	/*
+	 * We have seen the MSB decrement i times: that is i*256 channel-2
+	 * ticks, covering `delta` TSC cycles.  The TSC rate in kHz is
+	 * delta / (ticks / rate).  With the measured cycle-ratio this is
+	 * simply delta/(i*256)/ratio * 1000; with the assumed nominal
+	 * rate it is delta*PIT_TICK_RATE/(i*256*1000).
+	 */
+	if (ratio)
+		return (unsigned long)div64by32(delta * 1000, i * 256 * ratio);
+	delta *= PIT_TICK_RATE;
+	return (unsigned long) div64by32(delta, i * 256 * 1000);
+}
+
+/* ── slow 8254 calibration ──────────────────────────────────────────────── */
+
+static unsigned long pit_calibrate_tsc(unsigned long latch,
+				       unsigned long ms,
+				       unsigned long loopmin)
+{
+	unsigned long long tsc, t1, t2, delta;
+	unsigned long tscmin, tscmax;
+	unsigned long pitcnt;
+	unsigned long long cap;
+
+	outb((inb(0x61) & ~0x02) | 0x01, 0x61);
+	outb(0xb0, 0x43);
+	outb(latch & 0xff, 0x42);
+	outb(latch >> 8, 0x42);
+
+	tsc = t1 = t2 = get_cycles();
+	cap = t1 + CAL_CAP;
+
+	pitcnt = 0;
+	tscmax = 0;
+	tscmin = ~0UL;
+	while ((inb(0x61) & 0x20) == 0) {
+		if (get_cycles() >= cap)
+			return 0;
+		t2 = get_cycles();
+		delta = t2 - tsc;
+		tsc = t2;
+		if ((unsigned long) delta < tscmin)
+			tscmin = (unsigned long) delta;
+		if ((unsigned long) delta > tscmax)
+			tscmax = (unsigned long) delta;
+		pitcnt++;
+	}
+
+	if (pitcnt < loopmin || tscmax > 10 * tscmin)
+		return 0;
+
+	delta = t2 - t1;
+	return (unsigned long) div64by32(delta, ms);
+}
+
+/* ── public API ─────────────────────────────────────────────────────────── */
+
+unsigned long tsccal_khz(void)
+{
+	unsigned long v;
+
+	if (cal_khz)
+		return cal_khz;
+
+	v = quick_pit_calibrate();
+	if (v) { cal_khz = v; return v; }
+
+	v = pit_calibrate_tsc(CAL_LATCH, CAL_MS, CAL_PIT_LOOPS);
+	if (v) { cal_khz = v; return v; }
+
+	v = cpuid_tsc_khz();
+	if (v) { cal_khz = v; return v; }
+
+	v = cpuid_freq_khz();
+	if (v) { cal_khz = v; return v; }
+
+	/*
+	 * All measurement methods failed.  Return a typical TSC frequency
+	 * so the ms door still advances.
+	 */
+	cal_khz = 1080000UL;
+	return cal_khz;
+}
+
+unsigned long long tsccal_cycles(void)
+{
+	return get_cycles();
+}

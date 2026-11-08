@@ -17,6 +17,14 @@ ioapic, fw_cfg_io, kvmvapic, and eight empty virtio-mmio transports.  14 in all
 under software emulation.  No port 0x61: there is no PC speaker device, so the
 8254's counter 2 gate cannot be switched (findings 0008).
 
+## On the jig
+The jig runs it under KVM inside Hyper-V, so every read of the 8254 crosses two
+hypervisors.  Measured with tests/programs/pitprobe.c: on the jig, 12 to 24
+reads in each 214.6 us step of the counter, and 66,000 to 129,000 counter
+(TSC) cycles for one pair of reads; under software emulation in Claude's
+workspace, 460 to 1,130 reads a step and about 850 cycles a pair (findings
+0012 item 3).
+
 ## Firmware
 qboot, as serial-only@1.  It never writes to the serial port.
 

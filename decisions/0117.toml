@@ -1,0 +1,11 @@
+id      = "0117"
+date    = 2026-11-08
+kind    = "code"
+touches = ["agent/mechanic/src/lift.rs", "index/machine/serial-timer@1.as-built.md", "tests/programs/agent.sh", "tests/agent.lift@1.toml", "tests/mutations.txt", "findings/0037.md"]
+asked   = "The lifter is shown the machine each of the item's tests boots, from its as-built spec: a runner word that names a flavor brings in that flavor's machine.  MACHINE.serial-timer@1's as-built spec gains an \"On the jig\" section with findings 0012's measurements of the 8254 there.  TST.agent.lift checks it on a toy flavor (red first; eleven mutations).  Then one lifter, from timer-2's last file, sees whether it finds the 150 itself."
+options = ["take it", "do not take it"]
+default = "take it"
+chose   = "take it"
+why     = "Chris, 2026-11-08, on the 3090 finding the 150 by itself: \"I just want that combined into an article.\""
+by      = "KEY.chris@1"
+drafted = "Claude"

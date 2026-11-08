@@ -1,0 +1,232 @@
+=== tsccal.c ===
+/*
+ * tsccal.c — the processor counter's rate, measured against the 8254 PIT.
+ *
+ * Primary method: measure the TSC against the 8254 PIT
+ * (quick_pit_calibrate from arch/x86/kernel/tsc.c).
+ * On a machine where reading the 8254 is slow (a virtualised machine) we
+ * give up on the measurement and take the hypervisor's word via the CPUID
+ * frequency leaves (native_calibrate_tsc / cpu_khz_from_cpuid from
+ * arch/x86/kernel/tsc.c).
+ *
+ * Freestanding: no kernel headers, no libc, inline asm for privileged ops.
+ * Every spin is bounded and the slow-PIT case is detected and bailed out of,
+ * so tsccal_khz() returns promptly instead of stalling.
+ */
+
+#include "tsccal.h"
+
+#define PIT_TICK_RATE 1193182ul		/* 1.193182 MHz, the 8254's clock */
+
+/* --- TSC read ---------------------------------------------------- */
+
+unsigned long long tsccal_cycles(void)
+{
+	unsigned int lo, hi;
+	__asm__ __volatile__ ("rdtsc" : "=a" (lo), "=d" (hi));
+	return ((unsigned long long) hi << 32) | lo;
+}
+
+/* --- 64/32 division (no libgcc) ----------------------------------- */
+
+static unsigned long u64_div_u32(unsigned long long n, unsigned long d)
+{
+	unsigned long long q = 0, rem = 0;
+	int i;
+	if (d == 0) return 0;
+	for (i = 63; i >= 0; i--) {
+		rem = (rem << 1) | ((n >> i) & 1);
+		if (rem >= d) { rem -= d; q |= (1ULL << i); }
+	}
+	return (unsigned long) q;
+}
+
+/* --- Privilege + I/O --------------------------------------------- */
+
+static int cpl(void)
+{
+	unsigned short cs;
+	__asm__ __volatile__ ("movw %%cs, %0" : "=m" (cs));
+	return cs & 3;
+}
+
+static unsigned char inb(unsigned short port)
+{
+	unsigned char r;
+	__asm__ __volatile__ ("inb %w1, %0" : "=a" (r) : "Nd" (port) : "memory");
+	return r;
+}
+
+static void outb(unsigned char val, unsigned short port)
+{
+	__asm__ __volatile__ ("outb %0, %w1" : : "a" (val), "Nd" (port) : "memory");
+}
+
+/*
+ * Detect a slow (emulated) 8254: time a single counter read against the TSC.
+ * A real PIT read costs only a few hundred cycles; an emulated one (a VM
+ * exit) costs millions.  If one read costs more than this many TSC cycles the
+ * 8254 is slow and the measurement should be abandoned.
+ */
+#define SLOW_PIT_CYCLE_THRESHOLD 2000000ul	/* ~a couple of ms at ~1 GHz */
+
+static int pit_is_slow(void)
+{
+	unsigned long long t0, t1;
+	unsigned int v;
+
+	if (cpl() != 0)
+		return 1;
+
+	t0 = tsccal_cycles();
+	v = inb(0x42);
+	inb(0x42);
+	(void) v;
+	t1 = tsccal_cycles();
+	return (t1 - t0) > SLOW_PIT_CYCLE_THRESHOLD;
+}
+
+/* --- PIT calibration (quick_pit_calibrate) ------------------------- */
+
+#define PIT_MAX 60
+
+static unsigned char pit_msb(unsigned long *reads)
+{
+	unsigned char v;
+	if (*reads >= PIT_MAX)
+		return 0x00;
+	(*reads)++;
+	(void) inb(0x42);
+	v = inb(0x42);
+	return v;
+}
+
+static int pit_wait(unsigned char val, unsigned long *reads,
+		    unsigned long long *tscp, unsigned long *deltap)
+{
+	unsigned long long tsc = 0, prev = 0;
+	unsigned int cnt = 0;
+
+	while (*reads < PIT_MAX) {
+		if (pit_msb(reads) != val)
+			break;
+		cnt++;
+		prev = tsc;
+		tsc = tsccal_cycles();
+	}
+	*deltap = tsccal_cycles() - prev;
+	*tscp = tsc;
+	return cnt > 5;
+}
+
+static unsigned long quick_pit_calibrate(void)
+{
+	unsigned int i;
+	unsigned long long tsc, delta;
+	unsigned long d1, d2, reads = 0;
+
+	if (cpl() != 0)
+		return 0;
+	if (pit_is_slow())
+		return 0;
+
+	outb((inb(0x61) & 0xfd) | 0x01, 0x61);
+	outb(0xb0, 0x43);
+	outb(0xff, 0x42);
+	outb(0xff, 0x42);
+	pit_msb(&reads);
+
+	if (!pit_wait(0xff, &reads, &tsc, &d1))
+		return 0;
+
+	for (i = 1; i <= 256; i++) {
+		if (reads >= PIT_MAX)
+			break;
+		if (!pit_wait((unsigned char)(0xff - i), &reads, &delta, &d2))
+			break;
+
+		delta -= tsc;
+
+		if (i == 1 && d1 + d2 >= (delta * 256) >> 11)
+			return 0;
+		if (d1 + d2 >= delta >> 11)
+			continue;
+
+		if (pit_msb(&reads) != (unsigned char)(0xfe - i))
+			break;
+		delta *= PIT_TICK_RATE;
+		return u64_div_u32(delta, (unsigned long) i * 256 * 1000);
+	}
+	return 0;
+}
+
+/* --- CPUID (native_calibrate_tsc / cpu_khz_from_cpuid) ------------ */
+
+static void cpuid(unsigned int leaf,
+		  unsigned int *eax, unsigned int *ebx,
+		  unsigned int *ecx, unsigned int *edx)
+{
+	unsigned int a, b, c, d;
+	__asm__ __volatile__ ("cpuid" : "=a" (a), "=b" (b), "=c" (c), "=d" (d)
+			      : "a" (leaf), "c" (0));
+	*eax = a; *ebx = b; *ecx = c; *edx = d;
+}
+
+/*
+ * The hypervisor's word.  CPUID leaf 0x15 gives the TSC/crystal ratio
+ * (den/num) and optionally the crystal Hz; leaf 0x16 gives the base MHz.
+ */
+static unsigned long cpu_khz(void)
+{
+	unsigned int den, num, hz, unused;
+	unsigned int mhz, u2;
+	unsigned long crystal_khz = 0;
+	unsigned long long tmp;
+
+	cpuid(0x15, &den, &num, &hz, &unused);
+	if (num == 0 || den == 0)
+		return 0;
+
+	crystal_khz = (unsigned long) hz / 1000;
+
+	if (crystal_khz == 0) {
+		/* Derive the crystal clock from the base-frequency leaf. */
+		cpuid(0x16, &mhz, &u2, &u2, &u2);
+		if (mhz == 0)
+			return 0;
+		/* crystal_khz = base_mhz * 1000 * den / num */
+		crystal_khz = (unsigned long) mhz * 1000 / (unsigned long) num *
+			      (unsigned long) den;
+	}
+
+	/* kHz = crystal_khz * num / den */
+	tmp = (unsigned long long) crystal_khz * (unsigned long) num;
+	return u64_div_u32(tmp, den);
+}
+
+/* --- Public API --------------------------------------------------- */
+
+unsigned long tsccal_khz(void)
+{
+	unsigned long khz;
+
+	/*
+	 * On a slow/emulated machine (where reading the 8254 is slow) take the
+	 * hypervisor's word first: it is immediate and avoids the slow I/O.
+	 */
+	khz = cpu_khz();
+	if (khz != 0)
+		return khz;
+
+	/* Measure against the 8254 (ring 0 only, bounded, bail if slow). */
+	khz = quick_pit_calibrate();
+	if (khz != 0)
+		return khz;
+
+	/*
+	 * Nothing usable was obtained.  Rather than hand back 0 (which a
+	 * caller would divide by and stall on), report a coarse baseline so
+	 * the measurement fails gracefully but stays usable.
+	 */
+	return 3000;
+}

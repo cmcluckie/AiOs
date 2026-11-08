@@ -1,0 +1,250 @@
+=== tsccal.c ===
+/*
+ * tsccal.c - measure the TSC rate against the 8254 PIT, else take the
+ * hypervisor's word (CPUID).
+ *
+ * Lifted from the Linux kernel, arch/x86/kernel/tsc.c:
+ *  - pit_calibrate_tsc(): latch PIT channel 2 for 10 ms, watch the output
+ *    line, sanity-check the per-loop TSC deltas, and divide the TSC span
+ *    by the elapsed milliseconds.
+ *  - native_calibrate_tsc(): CPUID leaf 15 gives the TSC-to-crystal ratio
+ *    and (when set by the platform or hypervisor) the crystal Hz; leaf 6
+ *    supplies the base MHz as a crystal fallback.
+ *
+ * The kernel returns ULONG_MAX on failure; here, per the header, 0.
+ *
+ * The kernel only runs the PIT loop when it knows a legacy PIC is present
+ * (has_legacy_pic()); on a virtualized machine it does not, because reading
+ * the 8254 there is slow.  Standing alone we detect that directly: we
+ * measure a single 8254 read against the TSC, and if it is too slow we
+ * give up on the 8254 and take the hypervisor's word (CPUID leaf 15).
+ */
+
+#include "tsccal.h"
+
+#define PIT_TICK_RATE 1193180UL		/* the classic 8254 channel rate */
+
+#define CAL_MS		10
+#define CAL_LATCH	(PIT_TICK_RATE / (1000 / CAL_MS))
+#define CAL_PIT_LOOPS	1000	/* minimum reads: below this, too slow / SMI */
+#define CAL_PIT_MAX	5000	/* maximum reads before giving up */
+
+/* A single 8254 port read costing more TSC ticks than this means the 8254
+ * is slow (virtualized) and we should not trust a measurement through it.
+ * Real hardware reads in tens of nanoseconds; a hypervisor-emulated read
+ * costs milliseconds.  500000 ticks (~a few hundred microseconds even at
+ * low TSC frequencies) is well between the two. */
+#define SLOW_READ	500000ULL
+
+/* --- the counter -------------------------------------------------------- */
+
+unsigned long long tsccal_cycles(void)
+{
+	unsigned int lo, hi;
+
+	__asm__ volatile ("rdtsc" : "=a"(lo), "=d"(hi));
+	return ((unsigned long long) hi << 32) | lo;
+}
+
+/* --- CPUID: the hypervisor's word ---------------------------------------- */
+
+static void cpuid(unsigned leaf, unsigned *eax, unsigned *ebx,
+		  unsigned *ecx, unsigned *edx)
+{
+	unsigned a, b, c, d;
+
+	c = 0;
+	__asm__ volatile ("cpuid"
+			  : "=a"(a), "=b"(b), "+c"(c), "=d"(d)
+			  : "a"(leaf));
+	*eax = a;
+	*ebx = b;
+	*ecx = c;
+	*edx = d;
+}
+
+/* Hypervisor-present bit: CPUID leaf 1, ECX bit 31. */
+static int hypervisor_present(void)
+{
+	unsigned eax, ebx, ecx, edx;
+
+	cpuid(1, &eax, &ebx, &ecx, &edx);
+	return (ecx >> 31) & 1;
+}
+
+/*
+ * Divide a 64-bit value by a 32-bit value, returning a 32-bit quotient.
+ * Bit-by-bit long division so the freestanding build needs no libgcc. */
+static unsigned long div64_32(unsigned long long x, unsigned long d)
+{
+	unsigned long q = 0;
+	unsigned long r = 0;
+	int i;
+
+	for (i = 63; i >= 0; i--) {
+		r = (r << 1) | ((x >> i) & 1);
+		if (r >= d) {
+			r -= d;
+			q |= 1UL << i;
+		}
+	}
+	return q;
+}
+
+/*
+ * Determine TSC frequency via CPUID leaf 15, else return 0.
+ * Leaf 15: eax = denominator, ebx = numerator, ecx = crystal Hz.
+ */
+static unsigned long cpuid_calibrate(void)
+{
+	unsigned max, denom, num, hz, crystal;
+	unsigned a, b, c, d;
+
+	cpuid(0, &max, &b, &c, &d);
+	if (max < 15)
+		return 0;
+
+	cpuid(15, &denom, &num, &hz, &a);
+	if (num == 0 || denom == 0)
+		return 0;
+
+	crystal = hz / 1000;
+
+	/*
+	 * Some platforms don't report the crystal clock, but we can easily
+	 * calculate it to a high degree of accuracy by seeing the crystal
+	 * ratio and the CPU speed (leaf 6 base MHz).
+	 */
+	if (crystal == 0 && max >= 6) {
+		cpuid(6, &a, &b, &c, &d);
+		crystal = a * 1000 * denom / num;
+	}
+
+	if (crystal == 0)
+		return 0;
+
+	return div64_32((unsigned long long) crystal * num, denom);
+}
+
+/* --- the 8254 measurement ------------------------------------------------ */
+
+/* --- raw I/O: 32-bit x86 port instructions ----------------------------- */
+
+static unsigned char in8_0x61(void)
+{
+	unsigned char v;
+
+	__asm__ volatile ("inb $0x61, %0" : "=a"(v) : : "memory");
+	return v;
+}
+
+static void out8_0x61(unsigned char v)
+{
+	__asm__ volatile ("outb %0, $0x61" : : "a"(v) : "memory");
+}
+
+static void out8_0x43(unsigned char v)
+{
+	__asm__ volatile ("outb %0, $0x43" : : "a"(v) : "memory");
+}
+
+static void out8_0x42(unsigned char v)
+{
+	__asm__ volatile ("outb %0, $0x42" : : "a"(v) : "memory");
+}
+
+/*
+ * Latch counter 2 (mode 0, terminal count, binary) for CAL_MS milliseconds
+ * and watch the output line while it is low.
+ *
+ * Return the TSC ticks per millisecond, or 0 if the PIT reads are too slow
+ * or too jittery to trust (a heavily virtualized machine, a massive SMI).
+ */
+static unsigned long pit_calibrate(void)
+{
+	unsigned long long t1, t2, delta, tsc;
+	unsigned long tscmin = 0xffffffffUL;
+	unsigned long tscmax = 0;
+	unsigned long pitcnt = 0;
+	unsigned char port;
+
+	/*
+	 * Probe: measure the cost of one 8254 read.  If it is slow (a
+	 * virtualized machine where every port access exits the guest) we
+	 * give up right away and let the caller take the hypervisor's word.
+	 */
+	t1 = tsccal_cycles();
+	port = in8_0x61();
+	t2 = tsccal_cycles();
+	if (t2 - t1 > SLOW_READ)
+		return 0;
+
+	/* Set the Gate high, disable speaker */
+	out8_0x61((port & ~0x02) | 0x01);
+
+	/*
+	 * Counter 2, mode 0 (interrupt on terminal count), binary count.
+	 * NOTE! Mode 2 decrements by two (and then the output is flipped
+	 * each time, giving the same final output frequency as a
+	 * decrement-by-one), so mode 0 is much better when looking at the
+	 * individual counts.
+	 *
+	 * Start the countdown with a CAL_MS ms latch (LSB then MSB).
+	 */
+	out8_0x43(0xb0);
+	out8_0x42((unsigned char) (CAL_LATCH & 0xff));
+	out8_0x42((unsigned char) (CAL_LATCH >> 8));
+
+	t1 = tsccal_cycles();
+	t2 = tsc = t1;
+	while (pitcnt < CAL_PIT_MAX && (in8_0x61() & 0x20) == 0) {
+		t2 = tsccal_cycles();
+		delta = t2 - tsc;
+		tsc = t2;
+		if (delta > SLOW_READ)		/* slow 8254: give up */
+			return 0;
+		if ((unsigned long) delta < tscmin)
+			tscmin = (unsigned long) delta;
+		if ((unsigned long) delta > tscmax)
+			tscmax = (unsigned long) delta;
+		pitcnt++;
+	}
+
+	/*
+	 * Sanity checks:
+	 *
+	 * If we were not able to read the PIT more than CAL_PIT_LOOPS
+	 * times, then we have been hit by a massive SMI, or the machine is
+	 * one where reading the 8254 is unacceptably slow (heavily
+	 * virtualized).  Reaching CAL_PIT_MAX means the output line never
+	 * cleared at all, i.e. there is no usable 8254 behind the ports.
+	 *
+	 * If the maximum is 10 times larger than the minimum, then we
+	 * got hit by an SMI as well.
+	 */
+	if (pitcnt >= CAL_PIT_MAX || pitcnt < CAL_PIT_LOOPS || tscmax > 10 * tscmin)
+		return 0;
+
+	/* TSC ticks / ms */
+	delta = t2 - t1;
+	return div64_32(delta, CAL_MS);
+}
+
+/* --- the part's interface -------------------------------------------------- */
+
+unsigned long tsccal_khz(void)
+{
+	unsigned long khz;
+
+	/*
+	 * On a virtualized machine reading the 8254 is slow, so give up on
+	 * it up front and take the hypervisor's word (CPUID) instead.
+	 */
+	if (hypervisor_present())
+		return cpuid_calibrate();
+
+	khz = pit_calibrate();
+	if (khz != 0)
+		return khz;
+	return cpuid_calibrate();
+}

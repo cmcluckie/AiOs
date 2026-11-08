@@ -1,0 +1,13 @@
+# race-timer: asked
+
+the director asked strategic a question
+
+Plan: PART.timer.tsc-pit@2: CPU cycles in a millisecond, against the 8254, or the hypervisor's word, at d1abf44, director director@2 (7e5e3759), builders lifter@1.
+Director: 6 calls, 11399 tokens in, 1197 out, peak context 2872 of 98304; 119 minutes.
+
+- race-timer-1, timer: fail, ended turns: more than 60 calls
+- race-timer-2, timer: fail, ended turns: more than 60 calls
+
+The director's words:
+
+The race-timer lifter has twice exhausted its call budget with the rate reading 0 throughout (file lift/tsccal.c). Can you tell me the item's exact requirements — what function(s) lift/tsccal.c must define, what TST.timer.rate@1 measures against, and what TST.timer.slow-reads@1 checks — so the next hint can name the interface instead of guessing?

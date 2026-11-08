@@ -1,0 +1,32 @@
+{
+  "system": "You are the director of one part of AiOs, a small operating system built from parts.  Strategic (two people, Chris and Claude) wrote the part plan in the first message: the tests that say the part is done, the commit the work starts from, and the limits you work under.  Your job is to get every one of those tests green by giving jobs to builders.  You never write code and never read it.\n\nA builder starts fresh for each job, does that one job and is gone.  Give a job with the job tool: one red test, and, when it helps, a hint of at most a few sentences: what an earlier builder's note showed, which part to look at, a lesson from the prompt library.  A builder never sees an earlier builder's work, so a hint is the only way something learned on one try reaches the next.\n\nTwo rules for every hint:\n- Every builder starts from a clean checkout of the plan's commit.  Nothing an earlier builder changed is there.  Never describe a file as already changed, partly fixed or modified: it is not.\n- A hint must say something the result note did not already say: a file or a line to look at, why an earlier try failed, what to do differently.  The builder is given the test and what it printed; do not repeat them, or the plan.  If you have nothing to add, give no hint.\n\nAfter each job you get its result note, written by the program from what the tests printed on the jig: pass or fail, the tests passed and failed, the failing tests, the first failure, the files changed, how the job ended (a pass, out of calls, out of room, stopped) and why.  Trust the note over anything a builder might have said; you will not see what it said.\n\nsearch_log finds words in your log of this part: every job, every note.  search_prompts finds words in the prompt library: the lessons earlier jobs taught.  Use them before you give the same job twice.\n\nThe program keeps the limits, not you: the tries, the time, and the stuck rule.  If the same tests keep failing, or the count of failures stops going down, it stops the part and sends the notes to strategic.  Do not spend tries hoping; change something each time: the hint, or which test goes first.\n\nWhen every test in the plan has passed, call done with a report of a few sentences: what was done, in how many jobs, and anything strategic should know.  If you cannot go on without a decision only a person can make, call ask with the question, in one or two sentences; the part waits for the answer.  Never send an empty reply.\n",
+  "messages": [
+    {
+      "role": "user",
+      "content": "The part plan, race-timer:\n\npart                = \"PART.timer.tsc-pit@2: CPU cycles in a millisecond, against the 8254, or the hypervisor's word\"\npetition            = \"\"\nexam                = \"timer\"\nat                  = \"d1abf44\"\nbudget_usd          = 0.00\nmax_tries           = 10\nmax_minutes         = 240\nstuck_same_failures = 3\nstuck_no_drop       = 5\n\n[gear]\ntactical            = 1\nbuilders            = 1\n\n[prompts]\ndirector            = \"director@2\"\nbuilder             = \"lifter@1\"\n\nThis part is an exam item, not a fix.  Give its one job with test \"timer\": a fresh lifter is shown the item's question and header, reads Linux, writes the file, and is judged by the item's own tests, which its result note lists.  Give the job again, with a hint if the notes teach one, until it passes or the tries run out.\n"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "tool_calls": [
+        {
+          "id": "call_2gdwzk6x",
+          "function": {
+            "index": 0,
+            "name": "job",
+            "arguments": {
+              "test": "timer",
+              "why": "First attempt at the exam item: the lifter must read the question, read Linux, and write the file.",
+              "hint": "The item asks for CPU cycles in a millisecond, measured against the 8254 PIT or a hypervisor time source. Read the exam header carefully for the exact file name and interface it expects."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "tool_name": "job",
+      "content": "Job race-timer-1, timer: refused, ended time: before call 25: the part's minutes are used.\nIts result note, written by the program from what the tests printed on the jig:\njob           = \"race-timer-1\"\nstatus        = \"fail\"\ntests_passed  = 0\ntests_failed  = 2\nfailing       = [\"TST.timer.rate@1\", \"TST.timer.slow-reads@1\"]\nfirst_failure = \"TST.timer.rate@1: nothing was handed in\"\ntry           = 1\ntokens        = 388986\nseconds       = 14555\nfiles_changed = []\ncalls         = 24\npeak_context  = 41378\nminutes       = 243\ndirector_peak = 1765\n"
+    }
+  ]
+}

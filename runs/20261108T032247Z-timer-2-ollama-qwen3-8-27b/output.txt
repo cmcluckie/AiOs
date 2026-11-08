@@ -1,0 +1,89 @@
+=== tsccal.c ===
+/*
+ * tsccal.c - measure the processor's time-stamp-counter rate against the
+ * PC's 8254 timer (the PIT), and give up (so the hypervisor's word can be
+ * used) on a machine where reading the 8254 is slow.
+ *
+ * The PIT counter on channel 0 decrements at the fixed PIT_TICK_RATE
+ * (1193182) Hz; channel 0 is selected on port 0x41 and its count is read
+ * from the data port 0x40.  We take two spaced reads of the count (each a
+ * channel-select followed by a data read), bracketed by TSC reads, and
+ * compute the counter rate from the *difference* between the two counts:
+ *
+ *     kHz = (t2 - t1) * PIT_TICK_RATE / (ticks * 1000)
+ */
+
+#include "tsccal.h"
+
+#define PIT_DATA_PORT	0x40
+#define PIT_SEL_PORT	0x41
+
+#define PIT_TICK_RATE	1193182u
+
+static unsigned char inb(unsigned short port)
+{
+	unsigned char v;
+
+	__asm__ volatile ("inb %w1,%b0" : "=a"(v) : "Nd"(port));
+	return v;
+}
+
+static void outb(unsigned char v, unsigned short port)
+{
+	__asm__ volatile ("outb %b0,%w1" : : "a"(v), "Nd"(port) : "memory");
+}
+
+unsigned long long tsccal_cycles(void)
+{
+	unsigned long lo, hi;
+
+	__asm__ volatile ("rdtsc" : "=a"(lo), "=d"(hi));
+	return (unsigned long long)hi << 32 | lo;
+}
+
+/* One sample: select channel 0, then read its count. */
+static unsigned char pit_sample(void)
+{
+	outb(0x00, PIT_SEL_PORT);
+	return inb(PIT_DATA_PORT);
+}
+
+/* 64-bit / 32-bit unsigned division (divl), so no libgcc helper is needed. */
+static unsigned long div64by32(unsigned long long num, unsigned long den)
+{
+	unsigned long lo = (unsigned long)num;
+	unsigned long hi = (unsigned long)(num >> 32);
+	unsigned long q, r;
+
+	__asm__ ("divl %3"
+		: "=a"(q), "=d"(r)
+		: "a"(lo), "r"(den), "d"(hi)
+		: "cc");
+	return q;
+}
+
+unsigned long tsccal_khz(void)
+{
+	unsigned char c0, c1;
+	unsigned long ticks;
+	unsigned long long t0, t1;
+
+	/* Two spaced reads of the PIT count, bracketed by TSC reads. */
+	c0 = pit_sample();
+	t0 = tsccal_cycles();
+	c1 = pit_sample();
+	t1 = tsccal_cycles();
+
+	/*
+	 * The step taken between the two reads (the difference, not either raw
+	 * value).  The counter decrements, so c0 >= c1 (mod 256).  If it did
+	 * not advance into a valid step, the measurement is untrustworthy
+	 * (slow/virtualized 8254), so give up and let the hypervisor's word
+	 * be used.
+	 */
+	ticks = (unsigned long)((c0 - c1) & 0xFF);
+	if (ticks == 0 || t1 <= t0)
+		return 0;
+
+	return div64by32((t1 - t0) * PIT_TICK_RATE, ticks * 1000u);
+}

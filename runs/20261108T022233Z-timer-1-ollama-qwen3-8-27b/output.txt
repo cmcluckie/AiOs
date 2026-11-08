@@ -1,0 +1,312 @@
+=== tsccal.c ===
+/*
+ * tsccal.c - the processor counter's rate, measured against the 8254.
+ *
+ * Lifted from arch/x86/kernel/tsc.c:
+ *   - quick_pit_calibrate()   : time the TSC against 256-count steps of
+ *                               8254 channel 2, watching the counter's MSB
+ *                               drop.
+ *   - native_calibrate_tsc()  : when the PIT is unusable (e.g. reading it
+ *                               is too slow on a virtualized machine), fall
+ *                               back to the rate the machine reports.
+ *
+ * The machine's word on the TSC rate comes from CPUID leaf 0x15, or, for a
+ * hypervisor that loads the TSC frequency into IA32_TSC_AUX (as KVM does),
+ * from that MSR.
+ */
+
+#include "tsccal.h"
+
+/* 8254 input clock, Hz */
+#define PIT_TICK_RATE	1193182UL
+
+#define PIT_CH2		0x42
+#define PIT_CTL		0x43
+#define SPK		0x61
+
+/* IA32_TSC_AUX - a hypervisor may load the TSC frequency here */
+#define IA32_TSC_AUX	0x0000003b
+
+/*
+ * How many MSB values do we want to see? We aim for
+ * a maximum error rate of 500 ppm (in practice the
+ * real error is much smaller), but refuse to spend
+ * more than 50ms on it.
+ */
+#define MAX_QUICK_PIT_MS 50
+#define MAX_QUICK_PIT_ITERATIONS (MAX_QUICK_PIT_MS * PIT_TICK_RATE / 1000 / 256)
+
+static unsigned long long rdtsc(void)
+{
+	unsigned int lo, hi;
+
+	__asm__ volatile ("rdtsc" : "=a"(lo), "=d"(hi));
+	return (unsigned long long)hi << 32 | lo;
+}
+
+static unsigned char inb(unsigned char port)
+{
+	unsigned char r;
+
+	__asm__ volatile ("inb %w1, %0" : "=a"(r) : "Nd"(port));
+	return r;
+}
+
+static void outb(unsigned char value, unsigned char port)
+{
+	__asm__ volatile ("outb %0, %w1" : : "a"(value), "Nd"(port));
+}
+
+static unsigned long long rdmsr(unsigned int msr)
+{
+	unsigned int lo, hi;
+
+	__asm__ volatile ("rdmsr" : "=a"(lo), "=d"(hi) : "c"(msr));
+	return ((unsigned long long)hi << 32) | lo;
+}
+
+struct cpuid_result {
+	unsigned int eax, ebx, ecx, edx;
+};
+
+static struct cpuid_result cpuid(unsigned int leaf)
+{
+	struct cpuid_result r;
+
+	__asm__ volatile ("cpuid"
+			  : "=a"(r.eax), "=b"(r.ebx), "=c"(r.ecx), "=d"(r.edx)
+			  : "a"(leaf));
+	return r;
+}
+
+/*
+ * 64-bit dividend divided by 32-bit divisor, yielding a 32-bit quotient.
+ * (The quotient is known to fit in 32 bits at every call site.)
+ */
+static unsigned long div64u32(unsigned long long n, unsigned long d)
+{
+	unsigned long q = 0;
+	unsigned long r = 0;
+	int i;
+
+	for (i = 31; i >= 0; i--) {
+		r = (r << 1) | ((n >> i) & 1);
+		if (r >= d) {
+			r -= d;
+			q |= 1UL << i;
+		}
+	}
+	return q;
+}
+
+/*
+ * Verify the MSB of the PIT count by reading the 16-bit counter.
+ * Ignore the LSB and read it twice to skip it.
+ */
+static int pit_verify_msb(unsigned char val)
+{
+	inb(PIT_CH2);
+	return inb(PIT_CH2) == val;
+}
+
+/*
+ * Wait until the MSB of the PIT count drops below val.
+ * Return the TSC at the transition ('*tscp') and the TSC cost of
+ * the wait ('*deltap').
+ *
+ *  - with 256 PIT ticks to read the value, we have 214us to see the
+ *    same MSB (and overhead like doing a single TSC read per MSB
+ *    value etc).
+ *  - We're doing 2 reads per loop (LSB, MSB), and we expect them
+ *    each to take about a microsecond on real hardware. So we
+ *    expect a count value of around 100. But we'll be generous,
+ *    and accept anything over 50.
+ *  - if the PIT is stuck, and we see *many* more reads, we return
+ *    early (and the next caller of pit_expect_msb() then considers
+ *    it a failure when they don't see the next expected value).
+ */
+static int pit_expect_msb(unsigned char val, unsigned long long *tscp,
+			  unsigned long *deltap)
+{
+	int count;
+	unsigned long long tsc = 0, prev_tsc = 0;
+
+	for (count = 0; count < 50000; count++) {
+		if (!pit_verify_msb(val))
+			break;
+		prev_tsc = tsc;
+		tsc = rdtsc();
+	}
+	*deltap = rdtsc() - prev_tsc;
+	*tscp = tsc;
+
+	/*
+	 * We require _some_ success, but the quality control
+	 * will be based on the error terms on the TSC values.
+	 */
+	return count > 5;
+}
+
+/*
+ * Time the TSC against 256-count steps of 8254 channel 2.
+ *
+ * Return the TSC rate in kHz, or 0 if the PIT reads are too
+ * slow or the counter does not behave.
+ */
+static unsigned long quick_pit_calibrate(void)
+{
+	int i;
+	unsigned long long tsc, delta;
+	unsigned long d1, d2;
+
+	/* Set the Gate high, disable speaker */
+	outb((inb(SPK) & ~0x02) | 0x01, SPK);
+
+	/*
+	 * Counter 2, mode 0 (one-shot), binary count
+	 *
+	 * NOTE! Mode 2 decrements by two (and then the
+	 * output is flipped each time, giving the same
+	 * final output frequency as a decrement-by-one),
+	 * so mode 0 is much better when looking at the
+	 * individual counts.
+	 */
+	outb(0xb0, PIT_CTL);
+
+	/* Start at 0xffff */
+	outb(0xff, PIT_CH2);
+	outb(0xff, PIT_CH2);
+
+	/*
+	 * The PIT starts counting at the next edge, so we
+	 * need to delay for a microsecond. The easiest way
+	 * to do that is to just read back the 16-bit counter
+	 * once from the PIT.
+	 */
+	pit_verify_msb(0);
+
+	if (pit_expect_msb(0xff, &tsc, &d1)) {
+		for (i = 1; (unsigned long)i <= MAX_QUICK_PIT_ITERATIONS; i++) {
+			if (!pit_expect_msb(0xff - i, &delta, &d2))
+				break;
+
+			delta -= tsc;
+
+			/*
+			 * Extrapolate the error and fail fast if the error
+			 * will never be below 500 ppm.
+			 */
+			if (i == 1 &&
+			    d1 + d2 >= (delta * MAX_QUICK_PIT_ITERATIONS) >> 11)
+				return 0;
+
+			/*
+			 * Iterate until the error is less than 500 ppm
+			 */
+			if (d1 + d2 >= delta >> 11)
+				continue;
+
+			/*
+			 * Check the PIT one more time to verify that
+			 * all TSC reads were stable wrt the PIT.
+			 *
+			 * This also guarantees serialization of the
+			 * last cycle read ('d2') in pit_expect_msb.
+			 */
+			if (!pit_verify_msb(0xfe - i))
+				break;
+			goto success;
+		}
+	}
+	return 0;
+
+success:
+	/*
+	 * Ok, if we get here, then we've seen the
+	 * MSB of the PIT decrement 'i' times, and the
+	 * error has shrunk to less than 500 ppm.
+	 *
+	 * As a result, we can depend on there not being
+	 * any odd delays anywhere, and the TSC reads are
+	 * reliable (within the error).
+	 *
+	 * kHz = ticks / time-in-seconds / 1000;
+	 * kHz = (t2 - t1) / (I * 256 / PIT_TICK_RATE) / 1000
+	 * kHz = ((t2 - t1) * PIT_TICK_RATE) / (I * 256 * 1000)
+	 */
+	delta *= PIT_TICK_RATE;
+	return div64u32(delta, (unsigned long)i * 256 * 1000);
+}
+
+/*
+ * Determine TSC frequency via CPUID leaf 0x15 (the crystal clock and
+ * the TSC/crystal ratio the machine reports), else return 0.
+ */
+static unsigned long native_calibrate_tsc(void)
+{
+	struct cpuid_result c0, c15;
+	unsigned int crystal_khz;
+
+	c0 = cpuid(0);
+	if (c0.eax < 0x15)
+		return 0;
+
+	/* CPUID 15H TSC/Crystal ratio, plus optionally Crystal Hz */
+	c15 = cpuid(0x15);
+
+	if (c15.ebx == 0 || c15.eax == 0)
+		return 0;
+
+	crystal_khz = c15.ecx / 1000;
+
+	/*
+	 * Some Intel SoCs like Skylake and Kabylake don't report the
+	 * crystal clock, but we can easily calculate it to a high degree
+	 * of accuracy by considering the crystal ratio and the CPU speed.
+	 */
+	if (crystal_khz == 0 && c0.eax >= 0x16)
+		crystal_khz = cpuid(0x16).eax * 1000 *
+			c15.eax / c15.ebx;
+
+	if (crystal_khz == 0)
+		return 0;
+
+	return (unsigned long)crystal_khz * c15.ebx / c15.eax;
+}
+
+/*
+ * The hypervisor's word on the TSC frequency, if it loaded one into
+ * IA32_TSC_AUX.  Such a value is a frequency in kHz (or Hz), so accept
+ * it only if it looks like a plausible TSC rate.
+ */
+static unsigned long tsc_khz_from_aux(void)
+{
+	unsigned long long v = rdmsr(IA32_TSC_AUX);
+
+	/*
+	 * A TSC rate is somewhere between 1 MHz (1000 kHz) and
+	 * ~10 GHz (10,000,000 kHz) when expressed in kHz.  A 0 is a
+	 * clear "not set" sentinel.
+	 */
+	if (v >= 1000 && v <= 10000000000ULL)
+		return (unsigned long)v;
+	return 0;
+}
+
+static unsigned long tsc_khz;
+
+unsigned long tsccal_khz(void)
+{
+	if (tsc_khz == 0)
+		tsc_khz = quick_pit_calibrate();
+	if (tsc_khz == 0)
+		tsc_khz = native_calibrate_tsc();
+	if (tsc_khz == 0)
+		tsc_khz = tsc_khz_from_aux();
+	return tsc_khz;
+}
+
+unsigned long long tsccal_cycles(void)
+{
+	return rdtsc();
+}

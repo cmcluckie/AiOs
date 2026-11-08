@@ -1,0 +1,8 @@
+# race-timer: out of time
+
+the plan's 240 minutes were used
+
+Plan: PART.timer.tsc-pit@2: CPU cycles in a millisecond, against the 8254, or the hypervisor's word, at d1abf44, director director@2 (7e5e3759), builders lifter@1.
+Director: 1 calls, 1434 tokens in, 331 out, peak context 1765 of 98304; 263 minutes.
+
+- race-timer-1, timer: refused, ended time: before call 25: the part's minutes are used

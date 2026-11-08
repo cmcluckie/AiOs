@@ -59,7 +59,17 @@ The program (agent/mechanic, the `agent` command):
   job's commit with the lift in the hand lift's place; every one must print
   PASS).  Before any call, the hand lift must pass those tests.  Recorded under
   the item's name, as jig/sit records a sitting.  A part plan with `exam = ITEM`
-  in place of `tests` gives its director's jobs the item.
+  in place of `tests` gives its director's jobs the item.  A hand-in that fails is
+  answered with the failing test's line and what jig/test printed just before it,
+  the compiler's and the linker's words when the build failed: the last 15
+  lines, at most 1,500 characters (decision 0111).  The lifter's first message
+  also shows each of the item's tests: its red_when, its runner, its check under
+  tests/expected/, every file under tests/ its runner names (decision 0114),
+  and the machine its runner's flavor boots, from that machine's as-built spec
+  (decision 0117).
+  A job with `start = RUN` begins with that run's file already written and shows
+  it with the line its tests said; on an exam plan the director's jobs after the
+  first name the last job's run as start (decision 0114).
 - `agent count MODEL FILE...`: the model's own count of each file, from Ollama;
   `agent estimate CALIBRATION COUNTED FILE`: the calibrated estimate (SPEC.agent.9).
 - `agent direct PLAN` (SPEC.agent.5): one director.  Tools job, search_log,
@@ -91,8 +101,8 @@ AGENT_QUIET.  Files: out/agent/, and one run in runs/ per builder and director.
 On the jig, only the throwaway folder its ssh command makes and removes.
 
 ## Size
-3944 lines of Rust: the runtime 1291 (model 382, react 303, sigv4 177, room 148,
-transport 131, money 84, prompts 59, lib 7), the program 2653 (build 617, direct
-521, lift 450, judge 216, plan 212, main 204, look 148, record 130, note 90,
+4066 lines of Rust: the runtime 1291 (model 382, react 303, sigv4 177, room 148,
+transport 131, money 84, prompts 59, lib 7), the program 2775 (build 619, direct
+538, lift 525, judge 244, plan 212, main 204, look 148, record 130, note 90,
 stuck 58, util 7).  Built
 with warnings as errors; `sh agent/make` in WSL builds out/agent/agent.

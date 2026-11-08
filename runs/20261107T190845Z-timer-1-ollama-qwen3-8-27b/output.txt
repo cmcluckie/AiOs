@@ -1,0 +1,175 @@
+=== tsccal.c ===
+#include "tsccal.h"
+
+/*
+ * Lifted from arch/x86/kernel/tsc.c — pit_calibrate_tsc().
+ *
+ * Strategy:
+ *   1. Program PIT channel 2 (PC-speaker) as a 16-bit one-shot counter
+ *      (mode 0).  The latch is set so the count takes `ms` milliseconds.
+ *      While counting, the PIT channel-2 output (PC speaker gate,
+ *      port 0x61 bit 5) stays LOW; at terminal count it goes HIGH.
+ *   2. Spin in a loop reading port 0x61, recording TSC each iteration.
+ *      Track min and max TSC deltas.
+ *   3. If pitcnt < loopmin (PIT too slow, e.g. virtualised) or
+ *      tscmax > 10 * tscmin (SMI / disturbance), return 0.
+ *   4. Otherwise return (t2 - t1) / ms  =  cycles per ms = kHz.
+ *
+ * Fallback: on a machine where the PIT is too slow (virtualised I/O),
+ * take the hypervisor's word via CPUID leaf 0x16
+ * (Processor Frequency Information, eax = base MHz).
+ */
+
+/* PIT constants */
+#define PIT_TICK_RATE   1193182UL
+#define PIT_COUNTER2    0x42
+#define PIT_CTRL        0x43
+#define PCSPK_PORT      0x61
+
+/* Calibration parameters: 10 ms window, require at least 1000 loop iterations */
+#define CAL_MS        10UL
+#define CAL_LATCH     (PIT_TICK_RATE / (1000 / CAL_MS))
+#define CAL_PIT_LOOPS 1000
+
+/* CPUID leaf 0x16: Processor Frequency Information */
+#define CPUID_LEAF_FREQ  0x16u
+
+/* ---- low-level primitives (freestanding 32-bit x86, no libc) -------- */
+
+static inline unsigned long long rdtsc(void)
+{
+	unsigned int lo, hi;
+	__asm__ __volatile__("rdtsc" : "=a"(lo), "=d"(hi));
+	return ((unsigned long long)hi << 32) | (unsigned long long)lo;
+}
+
+static inline unsigned char inb(unsigned short port)
+{
+	unsigned char v;
+	__asm__ __volatile__("inb %1,%0" : "=a"(v) : "Nd"(port) : "memory");
+	return v;
+}
+
+static inline void outb(unsigned char val, unsigned short port)
+{
+	__asm__ __volatile__("outb %0,%1" : : "a"(val), "Nd"(port) : "memory");
+}
+
+static void cpuid(unsigned int op,
+		  unsigned int *eax, unsigned int *ebx,
+		  unsigned int *ecx, unsigned int *edx)
+{
+	__asm__ __volatile__("cpuid"
+			     : "=a"(*eax), "=b"(*ebx),
+			       "=c"(*ecx), "=d"(*edx)
+			     : "a"(op), "c"(0u));
+}
+
+/* ---- the calibration (pit_calibrate_tsc) ----------------------------- */
+
+static unsigned long pit_calibrate_tsc(unsigned long latch,
+                                       unsigned long ms,
+                                       int loopmin)
+{
+	unsigned long long tsc, t1, t2, delta;
+	unsigned long tscmin, tscmax;
+	int pitcnt;
+
+	/* Set Gate high, disable speaker.
+	 * port 0x61: bit0 = gate, bit1 = speaker enable, bit5 = PIT ch2 out */
+	outb((unsigned char)((inb(PCSPK_PORT) & ~0x02) | 0x01), PCSPK_PORT);
+
+	/* Counter 2, mode 0 (interrupt-on-terminal-count), binary count.
+	 * Mode 0 decrements by one per PIT tick (unlike mode 2 which
+	 * decrements by two and flips the output), making the individual
+	 * counts easy to track in software. */
+	outb(0xb0, PIT_CTRL);
+	outb((unsigned char)(latch & 0xff), PIT_COUNTER2);
+	outb((unsigned char)(latch >> 8),  PIT_COUNTER2);
+
+	tsc = t1 = t2 = rdtsc();
+
+	pitcnt = 0;
+	tscmax = 0;
+	tscmin = 0xFFFFFFFFUL;
+
+	/*
+	 * PIT channel 2 is in mode 0: output is LOW while counting,
+	 * goes HIGH at terminal count.  The speaker status bit (0x20)
+	 * mirrors that output.  So (inb(0x61) & 0x20) == 0 means
+	 * "still counting" — keep looping.
+	 */
+	while ((inb(PCSPK_PORT) & 0x20) == 0) {
+		t2    = rdtsc();
+		delta = t2 - tsc;
+		tsc   = t2;
+		if (delta < tscmin)
+			tscmin = (unsigned long)delta;
+		if (delta > tscmax)
+			tscmax = (unsigned long)delta;
+		pitcnt++;
+	}
+
+	/*
+	 * Sanity checks:
+	 *  - pitcnt < loopmin: the PIT reads were too slow to fit
+	 *    loopmin iterations in the ms window.  This is what
+	 *    happens on virtualized hardware where each I/O port
+	 *    access costs many more cycles — give up and return 0
+	 *    so the caller can take the hypervisor's word.
+	 *  - tscmax > 10 * tscmin: a long stall (SMI, NMI, or an
+	 *    interrupt storm) skewed the measurement — give up.
+	 */
+	if (pitcnt < loopmin || tscmax > 10 * tscmin)
+		return 0;
+
+	/* cycles per millisecond  =  kHz */
+	delta = t2 - t1;
+	return (unsigned long)(delta / ms);
+}
+
+/* ---- hypervisor fallback --------------------------------------------- */
+
+/*
+ * Take the hypervisor's (or CPU's) word on the TSC frequency.
+ * Mirrors the kernel's cpu_khz_from_cpuid(): read CPUID leaf 0x16
+ * (Processor Frequency Information), eax = base MHz, return kHz.
+ */
+static unsigned long hypervisor_tsc_khz(void)
+{
+	unsigned int max_leaf, eax, ebx, ecx, edx;
+
+	/* Get the highest standard CPUID leaf supported */
+	cpuid(0, &max_leaf, &ebx, &ecx, &edx);
+
+	/* Leaf 0x16: Processor Frequency Information (eax = base MHz) */
+	if (max_leaf >= CPUID_LEAF_FREQ) {
+		cpuid(CPUID_LEAF_FREQ, &eax, &ebx, &ecx, &edx);
+		if (eax != 0)
+			return (unsigned long)eax * 1000;   /* MHz -> kHz */
+	}
+
+	return 0;
+}
+
+/* ---- public API ------------------------------------------------------- */
+
+unsigned long tsccal_khz(void)
+{
+	unsigned long khz;
+
+	khz = pit_calibrate_tsc(CAL_LATCH, CAL_MS, CAL_PIT_LOOPS);
+	if (khz != 0)
+		return khz;
+
+	/*
+	 * PIT was too slow (virtualised hardware) or unstable --
+	 * give up on the measurement and take the hypervisor's word.
+	 */
+	return hypervisor_tsc_khz();
+}
+
+unsigned long long tsccal_cycles(void)
+{
+	return rdtsc();
+}

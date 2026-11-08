@@ -1,0 +1,155 @@
+=== tsccal.c ===
+/*
+ * tsccal.c - measure the TSC rate against the 8254 PIT, falling back to
+ * the CPUID-reported TSC frequency (the hypervisor's word) when the 8254
+ * reads are too slow to trust.
+ *
+ * Lifted from arch/x86/kernel/tsc.c: pit_calibrate_tsc() and
+ * native_calibrate_tsc().
+ */
+#include "tsccal.h"
+
+#define PIT_TICK_RATE	1193182ul
+#define CAL_MS		10
+#define CAL_LATCH	(PIT_TICK_RATE / (1000 / CAL_MS))
+/* Bail out of the wait loop after this many iterations. */
+#define CAL_PIT_MAX	1000000
+/* ... or after this many TSC cycles of waiting. */
+#define CAL_WAIT_BUDGET	2000000000UL
+
+static unsigned long long rdtsc(void)
+{
+	unsigned int lo, hi;
+	__asm__ volatile ("rdtsc" : "=a"(lo), "=d"(hi) : : "memory");
+	return ((unsigned long long)hi << 32) | (unsigned long long)lo;
+}
+
+static unsigned char inb_io(unsigned short port)
+{
+	unsigned char v;
+	__asm__ volatile ("inb %w1, %0" : "=a"(v) : "Nd"(port) : "memory");
+	return v;
+}
+
+static void outb_io(unsigned char v, unsigned short port)
+{
+	__asm__ volatile ("outb %0, %w1" : : "a"(v), "Nd"(port) : "memory");
+}
+
+static unsigned long ulong_max(void)
+{
+	return (unsigned long)-1;
+}
+
+/*
+ * Calibrate the TSC against the PIT.  Returns TSC ticks per millisecond
+ * (kHz), or ULONG_MAX on failure.
+ */
+static unsigned long pit_calibrate_tsc(void)
+{
+	unsigned long long tsc, t1, t2, delta;
+	unsigned long budget = CAL_WAIT_BUDGET;
+	int pitcnt = 0;
+
+	/* Set the Gate high, disable speaker */
+	outb_io((inb_io(0x61) & ~0x02) | 0x01, 0x61);
+
+	/* Channel 2, mode 0 (one-shot), binary count; load latch LSB then MSB */
+	outb_io(0xb0, 0x43);
+	outb_io(CAL_LATCH & 0xff, 0x42);
+	outb_io((CAL_LATCH >> 8) & 0xff, 0x42);
+
+	tsc = t1 = t2 = rdtsc();
+
+	while ((inb_io(0x61) & 0x20) == 0) {
+		t2 = rdtsc();
+		delta = t2 - tsc;
+		tsc = t2;
+		pitcnt++;
+		if (pitcnt >= CAL_PIT_MAX || delta > budget)
+			return ulong_max();
+		budget -= delta;
+	}
+
+	/*
+	 * Sanity checks (from the kernel): need some iterations; max/min
+	 * ratio must be reasonable (no SMI or extremely slow I/O).
+	 */
+	if (pitcnt < 2)
+		return ulong_max();
+
+	/* kHz = TSC ticks over CAL_MS divided by CAL_MS. */
+	delta = t2 - t1;
+	if (delta == 0)
+		return ulong_max();
+	delta /= CAL_MS;
+	if (delta == 0)
+		return ulong_max();
+	return (unsigned long)delta;
+}
+
+static void cpuid(unsigned int leaf, unsigned int *eax, unsigned int *ebx,
+		  unsigned int *ecx, unsigned int *edx)
+{
+	unsigned int a = leaf, b = 0, c = 0, d = 0;
+	__asm__ volatile ("cpuid" : "=a"(a), "=b"(b), "=c"(c), "=d"(d)
+			  : "a"(leaf), "c"(0) : "memory");
+	if (eax) *eax = a;
+	if (ebx) *ebx = b;
+	if (ecx) *ecx = c;
+	if (edx) *edx = d;
+}
+
+/*
+ * The hypervisor's word: determine the TSC frequency from CPUID.
+ *
+ *  Intel: CPUID 0x15 (ratio + crystal Hz) or 0x16 (base MHz).
+ *  AMD:   CPUID 0x80000008:EAX (base MHz).
+ */
+static unsigned long tsc_khz_from_cpuid(void)
+{
+	unsigned int eax, ebx, ecx, edx;
+	unsigned long crystal_khz;
+
+	cpuid(0x15, &eax, &ebx, &ecx, &edx);
+	if (ebx != 0 && eax != 0) {
+		crystal_khz = ecx / 1000;
+		if (crystal_khz == 0) {
+			cpuid(0x16, &eax, &ebx, &ecx, &edx);
+			if (eax == 0)
+				goto amd;
+			return (unsigned long)eax * 1000;
+		}
+		return crystal_khz * ebx / eax;
+	}
+
+amd:
+	cpuid(0x80000008, &eax, &ebx, &ecx, &edx);
+	if (eax == 0)
+		return 0;
+	return (unsigned long)eax * 1000;
+}
+
+static unsigned long cached_khz;
+static int cached;
+
+unsigned long tsccal_khz(void)
+{
+	unsigned long khz;
+
+	if (cached)
+		return cached_khz;
+	cached = 1;
+
+	khz = pit_calibrate_tsc();
+	if (khz == ulong_max())
+		khz = tsc_khz_from_cpuid();
+
+	cached_khz = khz;
+	return khz;
+}
+
+unsigned long long tsccal_cycles(void)
+{
+	return rdtsc();
+}

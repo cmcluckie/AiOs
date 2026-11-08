@@ -1,0 +1,184 @@
+=== tsccal.c ===
+/*
+ * tsccal.c — Measure TSC frequency in kHz against the 8254 PIT.
+ *
+ * Lifted from arch/x86/kernel/tsc.c (pit_calibrate_tsc, CAL_* constants,
+ * and the CPUID-based fallback in native_calibrate_tsc).
+ *
+ * Primary path: set PIT channel 2 to one-shot mode 0 for a 10 ms window,
+ * spin reading the TSC while the PIT output is low, then compute kHz.
+ *
+ * If the PIT reads are too slow (virtualized machine), the sanity check
+ * (pitcnt < loopmin) fails and we return 0.  The caller is expected to
+ * take the hypervisor's word in that case.
+ */
+
+#include "tsccal.h"
+
+/* ---- 8254 port numbers ---- */
+#define PIT_CH2_DATA   0x42
+#define PIT_MODE_REG   0x43
+#define PIT_PORT61     0x61   /* speaker gate + PIT ch2 output status (bit 5) */
+
+/* PIT input clock: 1.19 MHz (classic PC rate) */
+#define PIT_TICK_RATE  1193182UL
+
+/*
+ * 10 ms calibration window:
+ *   latch = PIT_TICK_RATE / (1000 / 10) = 11931
+ * Require at least 1000 loop iterations; fewer means I/O is too slow.
+ */
+#define CAL_MS        10
+#define CAL_LATCH     (PIT_TICK_RATE / (1000 / CAL_MS))
+#define CAL_PIT_LOOPS 1000
+
+/* ---- inline port I/O (freestanding, no libc) ---- */
+
+static unsigned char inb(unsigned short port)
+{
+	unsigned char ret;
+	__asm__ __volatile__ ("inb %w1, %0" : "=a"(ret) : "Nd"(port));
+	return ret;
+}
+
+static void outb(unsigned char val, unsigned short port)
+{
+	__asm__ __volatile__ ("outb %0, %w1" : : "a"(val), "Nd"(port));
+}
+
+/* ---- read TSC ---- */
+
+static unsigned long long rdtsc(void)
+{
+	unsigned int lo, hi;
+	__asm__ __volatile__ ("rdtsc" : "=a"(lo), "=d"(hi));
+	return ((unsigned long long)hi << 32) | lo;
+}
+
+/* Public: read the counter now */
+unsigned long long tsccal_cycles(void)
+{
+	return rdtsc();
+}
+
+/*
+ * PIT-based calibration (from pit_calibrate_tsc in tsc.c).
+ *
+ * Returns kHz (TSC cycles per millisecond), or 0 on failure.
+ */
+static unsigned long pit_calibrate(unsigned long latch, unsigned long ms, int loopmin)
+{
+	unsigned long long tsc, t1, t2, delta;
+	unsigned long tscmin, tscmax;
+	int pitcnt;
+
+	/* Set the Gate high, disable speaker */
+	outb((inb(PIT_PORT61) & ~0x02) | 0x01, PIT_PORT61);
+
+	/*
+	 * Setup CTC channel 2 for mode 0 (interrupt on terminal count),
+	 * binary count.  Load the latch (LSB then MSB) to begin countdown.
+	 *
+	 * In mode 0 the output goes HIGH on load, then LOW on the next
+	 * clock edge (counting starts), then HIGH again at terminal count.
+	 */
+	outb(0xb0, PIT_MODE_REG);
+	outb(latch & 0xff, PIT_CH2_DATA);
+	outb(latch >> 8, PIT_CH2_DATA);
+
+	/*
+	 * Wait for the output to go LOW (bit 5 cleared), meaning the
+	 * counter has started counting down.  Without this, if the
+	 * output is still HIGH from the load cycle we'd exit the
+	 * timing loop immediately.
+	 */
+	while (inb(PIT_PORT61) & 0x20)
+		;
+
+	tsc = t1 = t2 = rdtsc();
+
+	pitcnt = 0;
+	tscmax = 0;
+	tscmin = (unsigned long)~0UL;
+
+	/* Spin until the PIT output goes high again (terminal count reached) */
+	while ((inb(PIT_PORT61) & 0x20) == 0) {
+		t2  = rdtsc();
+		delta = t2 - tsc;
+		tsc = t2;
+		if ((unsigned long)delta < tscmin)
+			tscmin = (unsigned long)delta;
+		if ((unsigned long)delta > tscmax)
+			tscmax = (unsigned long)delta;
+		pitcnt++;
+	}
+
+	/*
+	 * Sanity checks (from the kernel):
+	 *  - pitcnt < loopmin: too few iterations → SMI or slow I/O (VM)
+	 *  - tscmax > 10 * tscmin: disturbance between two reads
+	 */
+	if (pitcnt < loopmin || tscmax > 10 * tscmin)
+		return 0;
+
+	/* kHz = total TSC cycles elapsed / number of milliseconds */
+	delta = t2 - t1;
+	return (unsigned long)(delta / ms);
+}
+
+/*
+ * Fallback: read TSC frequency from CPUID leaf 0x15 (the hypervisor's
+ * word).  KVM exposes the TSC frequency through this leaf:
+ *   EAX = denominator, EBX = numerator, ECX = crystal Hz.
+ *   TSC_Hz = ECX * EBX / EAX
+ *   TSC_kHz = TSC_Hz / 1000
+ *
+ * This is the same path the kernel takes in native_calibrate_tsc().
+ */
+static unsigned long cpuid_calibrate(void)
+{
+	unsigned int eax, ebx, ecx, edx;
+
+	/* Check CPUID max leaf: leaf 0x15 requires max >= 0x15 */
+	{
+		unsigned int maxleaf;
+		__asm__ __volatile__ ("cpuid" : "=a"(maxleaf) : "a"(0) : "ebx", "ecx", "edx");
+		if (maxleaf < 0x15)
+			return 0;
+	}
+
+	__asm__ __volatile__ ("cpuid"
+			: "=a"(eax), "=b"(ebx), "=c"(ecx), "=d"(edx)
+			: "a"(0x15) : );
+
+	if (eax == 0 || ebx == 0)
+		return 0;
+
+	/* ecx = crystal frequency in Hz; TSC frequency = ecx * ebx / eax */
+	/* Return kHz: (ecx * ebx) / eax / 1000 */
+	{
+		unsigned long long hz;
+		hz = (unsigned long long)ecx * ebx / eax;
+		return (unsigned long)(hz / 1000);
+	}
+}
+
+/*
+ * Public: calibrate TSC frequency against the PIT.
+ * Returns ticks per millisecond (kHz), or 0 if the measurement failed.
+ *
+ * On a machine where the 8254 reads are too slow (virtualized),
+ * the PIT path fails and we fall back to the hypervisor's word
+ * (CPUID leaf 0x15).
+ */
+unsigned long tsccal_khz(void)
+{
+	unsigned long khz;
+
+	khz = pit_calibrate(CAL_LATCH, CAL_MS, CAL_PIT_LOOPS);
+	if (khz != 0)
+		return khz;
+
+	/* PIT calibration failed — take the hypervisor's word */
+	return cpuid_calibrate();
+}

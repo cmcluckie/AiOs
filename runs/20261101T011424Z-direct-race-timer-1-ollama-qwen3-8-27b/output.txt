@@ -1,0 +1,9 @@
+# race-timer: out of time
+
+the plan's 240 minutes were used
+
+Plan: PART.timer.tsc-pit@2: CPU cycles in a millisecond, against the 8254, or the hypervisor's word, at d1abf44, director director@2 (7e5e3759), builders lifter@1.
+Director: 3 calls, 5136 tokens in, 861 out, peak context 2128 of 98304; 285 minutes.
+
+- race-timer-1, timer: fail, ended error: call 43: Ollama said 500: {"error":"an error was encountered while running the model: CUDA error: unknown error\nCUDA error"}
+- race-timer-2, timer: fail, ended time: before call 13: the part's minutes are used

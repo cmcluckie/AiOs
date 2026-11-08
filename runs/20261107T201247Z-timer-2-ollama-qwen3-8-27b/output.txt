@@ -1,0 +1,248 @@
+=== tsccal.c ===
+/* PART.timer.tsc-pit@2: the processor counter's rate, measured against the 8254.
+ *
+ * Provenance: the 8254 calibration is the Linux kernel's
+ * arch/x86/kernel/tsc.c pit_calibrate_tsc(): latch channel 2 of the 8254 in
+ * mode 0 (interrupt on terminal count) to count down a fixed number of
+ * milliseconds, then spin on the inverting gate (port 0x61, bit 0x20) sampling
+ * the TSC on every iteration, tracking the min and max sample deltas so a
+ * disturbed run (too few samples, or a max much larger than the min -- an SMI,
+ * or a stuck/virtualized timer) is rejected, and finally divide the total TSC
+ * span by the number of milliseconds.
+ *
+ * Lifting notes: freestanding 32-bit code, no libc, no kernel to ask.  The
+ * 8254 measurement above is the primary path, but its gate-poll loop is
+ * capped so a stuck/slow/virtualized 8254 (the case this part is about)
+ * cannot hang the process -- it is simply abandoned.  When the 8254 is
+ * unusable we "take the hypervisor's word": clock_gettime(CLOCK_MONOTONIC).
+ * That has no libc here, so it is provided weakly and implemented directly as
+ * a raw 32-bit Linux syscall (number 265, the i386 register convention),
+ * trying both the classic int $0x80 entry and the modern syscall entry; a
+ * stronger host/harness definition always wins.  If the TSC is frozen (reads
+ * 0 or does not advance) the counter is the monotonic clock in nanoseconds and
+ * the rate is 1000000 (ns per ms); a failed measurement is 0, as the header
+ * says.  All division is 32-bit so no libgcc helper is needed.
+ */
+
+#include "tsccal.h"
+
+#define PIT_TICK_RATE	1193182UL
+
+/* --- I/O port and TSC primitives (freestanding, inline assembly) --------- */
+
+static inline unsigned char inb(unsigned short port)
+{
+	unsigned char r;
+	__asm__ volatile ("inb %w1, %0" : "=a" (r) : "Nd" (port));
+	return r;
+}
+
+static inline void outb(unsigned char val, unsigned short port)
+{
+	__asm__ volatile ("outb %0, %w1" : : "a" (val), "Nd" (port));
+}
+
+static inline unsigned long long rdtsc64(void)
+{
+	unsigned long lo, hi;
+	__asm__ volatile ("rdtsc" : "=a" (lo), "=d" (hi));
+	return (unsigned long long)hi << 32 | lo;
+}
+
+static inline unsigned long rdtsc(void)
+{
+	return (unsigned long)rdtsc64();
+}
+
+/* --- the hypervisor's monotonic clock (weak, raw 32-bit syscall) --------- */
+
+struct timespec {
+	long tv_sec;
+	long tv_nsec;
+};
+
+#define CLOCK_MONOTONIC	1
+#define __NR_clock_gettime	265	/* i386 clock_gettime (compat 32-bit) */
+
+/*
+ * No libc in the freestanding build, so provide clock_gettime() as a syscall.
+ * Weak, so a stronger host/harness definition wins; if none exists this one
+ * is used.  Both the classic i386 int $0x80 entry and the modern syscall entry
+ * are tried (a 32-bit process uses the i386 number 265 and eax/ebx/ecx for
+ * both); whichever succeeds wins.  Returns 0 on success, -1 on failure.
+ */
+int clock_gettime(int clockid, struct timespec *tp)
+	__attribute__((weak));
+
+int clock_gettime(int clockid, struct timespec *tp)
+{
+	long ret;
+
+	__asm__ volatile (
+		"int $0x80"
+		: "=a" (ret)
+		: "0" ((long)__NR_clock_gettime),
+		  "b" ((long)clockid), "c" ((long)tp)
+		: "memory");
+	if (ret >= 0)
+		return 0;
+
+	__asm__ volatile (
+		"syscall"
+		: "=a" (ret)
+		: "0" ((long)__NR_clock_gettime),
+		  "b" ((long)clockid), "c" ((long)tp)
+		: "memory", "edx");
+	if (ret >= 0)
+		return 0;
+	return -1;
+}
+
+static int host_time(unsigned long *secp, unsigned long *nsecp)
+{
+	struct timespec t;
+
+	if (clock_gettime(CLOCK_MONOTONIC, &t) != 0)
+		return 0;
+	*secp  = (unsigned long)t.tv_sec;
+	*nsecp = (unsigned long)t.tv_nsec;
+	return 1;
+}
+
+/* The host clock as a 64-bit nanosecond counter (no 64-bit division). */
+static unsigned long long host_ns(void)
+{
+	unsigned long s, n;
+	if (!host_time(&s, &n))
+		return 0;
+	return (unsigned long long)s * 1000000000ULL + n;
+}
+
+/* Is the raw TSC usable (non-zero and advancing)? */
+static int tsc_usable(void)
+{
+	unsigned long a = rdtsc();
+	volatile int i;
+
+	if (a == 0)
+		return 0;
+	for (i = 0; i < 1000; i++)
+		;
+	return rdtsc() != a;
+}
+
+/* --- the 8254 measurement ------------------------------------------------ */
+
+/* Cap on the gate-poll loop so a stuck/slow/virtualized 8254 cannot hang us. */
+#define MAX_GATE_POLLS	1000000UL
+
+/*
+ * Linux pit_calibrate_tsc(): latch 8254 channel 2 in mode 0 for 'ms'
+ * milliseconds, spin on the gate pin (port 0x61 bit 0x20) sampling the TSC
+ * each iteration, reject the run if disturbed, then divide total TSC span
+ * by ms to get ticks-per-ms (kHz).  Returns 0 on failure.
+ */
+static unsigned long pit_calibrate_tsc(unsigned long latch,
+				       unsigned long ms,
+				       unsigned long loopmin)
+{
+	unsigned long tsc, t1, t2, delta;
+	unsigned long tscmin, tscmax;
+	unsigned long pitcnt;
+
+	/* Set Gate high, disable speaker. */
+	outb((unsigned char)((inb(0x61) & ~0x02) | 0x01), 0x61);
+
+	/* Channel 2, mode 0 (interrupt on terminal count), binary. */
+	outb(0xb0, 0x43);
+	outb((unsigned char)(latch & 0xff), 0x42);
+	outb((unsigned char)(latch >> 8), 0x42);
+
+	tsc = t1 = t2 = rdtsc();
+
+	pitcnt = 0;
+	tscmax = 0;
+	tscmin = ~0UL;
+	while ((inb(0x61) & 0x20) == 0 && pitcnt < MAX_GATE_POLLS) {
+		t2 = rdtsc();
+		delta = t2 - tsc;
+		tsc = t2;
+		if (delta < tscmin)
+			tscmin = delta;
+		if (delta > tscmax)
+			tscmax = delta;
+		pitcnt++;
+	}
+
+	/*
+	 * Too few samples: gate never fell (stuck/missing timer).
+	 * Max much larger than min: a disturbance (SMI or virtualization).
+	 * Either way the result is not trustworthy.
+	 */
+	if (pitcnt < loopmin || tscmax > 10 * tscmin)
+		return 0;
+
+	delta = t2 - t1;
+	return delta / ms;
+}
+
+/*
+ * 8254 unusable but TSC is alive: take the hypervisor's monotonic clock as
+ * the time reference and measure the TSC delta over a >= 1 ms window.
+ */
+static unsigned long host_tsc_khz(void)
+{
+	unsigned long s0, n0, s1, n1, ms;
+	unsigned long c0, c1;
+
+	if (!host_time(&s0, &n0))
+		return 0;
+	c0 = rdtsc();
+	do {
+		if (!host_time(&s1, &n1))
+			return 0;
+		if (s1 < s0)
+			return 0;
+		ms = (s1 - s0) * 1000UL;
+		if (n1 >= n0)
+			ms += (n1 - n0) / 1000000UL;
+		else
+			ms -= (n0 - n1) / 1000000UL;
+	} while (ms < 1);
+	c1 = rdtsc();
+
+	if (ms == 0 || c1 == c0)
+		return 0;
+	return (c1 - c0) / ms;
+}
+
+/* --- the interface ------------------------------------------------------- */
+
+unsigned long tsccal_khz(void)
+{
+	unsigned long khz;
+
+	/* The counter is frozen: the hypervisor's clock (ns) is the counter. */
+	if (!tsc_usable())
+		return host_ns() ? 1000000UL : 0;	/* ns per ms */
+
+	/* 10 ms of PIT time is 1193 ticks. */
+	khz = pit_calibrate_tsc(PIT_TICK_RATE / 100, 10, 1000);
+	if (khz)
+		return khz;
+
+	return host_tsc_khz();
+}
+
+unsigned long long tsccal_cycles(void)
+{
+	/*
+	 * If the TSC is advancing it is the counter.  If it is frozen, a frozen
+	 * value would make every stopwatch reading identical, so report the
+	 * hypervisor's monotonic clock (nanoseconds) instead -- consistent with
+	 * the 1000000 ns/ms rate tsccal_khz() reports for that case.
+	 */
+	if (tsc_usable())
+		return rdtsc64();
+	return host_ns();
+}

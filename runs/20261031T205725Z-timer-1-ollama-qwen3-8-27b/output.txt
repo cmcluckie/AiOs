@@ -1,0 +1,271 @@
+=== tsccal.c ===
+/* tsccal.c - determine the processor cycle-counter (TSC) rate, in kHz
+ * (cycles per millisecond), by measuring it against the PC's 8254 PIT,
+ * and falling back to the hypervisor's own reported frequency when the
+ * 8254 is too slow to measure against.
+ *
+ * Lifted from the Linux kernel's TSC calibration:
+ *   arch/x86/kernel/tsc.c:
+ *     - quick_pit_calibrate / pit_expect_msb / pit_verify_msb
+ *       (measure rdtsc against the 8254, PIT_TICK_RATE = 1193180 Hz)
+ *     - native_calibrate_tsc
+ *       (CPUID leaf 0x15 TSC/crystal ratio and leaf 0x16 base frequency,
+ *        the "hardware-reported" / hypervisor-provided TSC frequency)
+ *
+ * Freestanding 32-bit x86, no kernel headers, no C library.
+ */
+
+#include "tsccal.h"
+
+/* The 8254 input clock: 1.19318 MHz. */
+#define PIT_TICK_RATE	1193180u
+
+/* How many MSB values do we want to see?  We aim for a maximum error
+ * rate of 500ppm (in practice the real error is much smaller), but
+ * refuse to spend more than 50ms on it.
+ *   MAX_QUICK_PIT_MS * PIT_TICK_RATE / 1000 / 256  ==  22
+ */
+#define MAX_QUICK_PIT_ITERATIONS	22
+
+/* ---- raw x86 primitives ------------------------------------------------- */
+
+/* The 64-bit TSC, now. */
+static unsigned long long get_cycles(void)
+{
+	unsigned int lo, hi;
+
+	__asm__ __volatile__ ("rdtsc"
+			      : "=a" (lo), "=d" (hi));
+	return ((unsigned long long) hi << 32) | lo;
+}
+
+/* Read one byte from I/O port p. */
+static unsigned char inb(unsigned short p)
+{
+	unsigned char v;
+
+	__asm__ __volatile__ ("inb %w1, %0"
+			      : "=a" (v)
+			      : "Nd" (p));
+	return v;
+}
+
+/* Write one byte b to I/O port p. */
+static void outb(unsigned char b, unsigned short p)
+{
+	__asm__ __volatile__ ("outb %0, %w1"
+			      :
+			      : "a" (b), "Nd" (p));
+}
+
+/* CPUID: leaf in EAX, subleaf in ECX; all four results in out-params. */
+static void cpuid(unsigned int leaf, unsigned int sub,
+		  unsigned int *eax, unsigned int *ebx,
+		  unsigned int *ecx, unsigned int *edx)
+{
+	unsigned int a = leaf, c = sub;
+
+	__asm__ __volatile__ ("cpuid"
+			      : "=a" (a), "=b" (*ebx), "=c" (c), "=d" (*edx)
+			      : "0" (a), "2" (c));
+	*eax = a;
+	*ecx = c;
+}
+
+/*
+ * 64-bit / 32-bit unsigned division, using the hardware div instruction.
+ * Requires (unsigned long long)num < (unsigned long)den * 0x100000000ULL
+ * (i.e. the 32-bit high word < den), which holds in our use.
+ */
+static unsigned long udiv64by32(unsigned long long num, unsigned long den)
+{
+	unsigned int lo = (unsigned int)num;
+	unsigned int hi = (unsigned int)(num >> 32);
+	unsigned int d   = (unsigned int)den;
+	unsigned int q, r;
+
+	__asm__ __volatile__ ("divl %3"
+			      : "=a" (q), "=d" (r)
+			      : "0" (lo), "1" (hi), "r" (d));
+	return (unsigned long)q;
+}
+
+/* ---- measurement against the 8254 -------------------------------------- */
+
+/*
+ * Read the current MSB of the PIT counter and check whether it still
+ * equals val.  The LSB is read first (and discarded) to serialise the
+ * two-byte latched value.
+ */
+static int pit_verify_msb(unsigned char val)
+{
+	/* Ignore LSB */
+	inb(0x42);
+	return inb(0x42) == val;
+}
+
+/*
+ * Spin until the MSB of the PIT counter is no longer `val`, taking TSC
+ * readings throughout, and report where and how long the change took.
+ * Returns non-zero once we have seen some progress.
+ */
+static int pit_expect_msb(unsigned char val, unsigned long long *tscp,
+			  unsigned long *deltap)
+{
+	int count;
+	unsigned long long tsc = 0, prev_tsc = 0;
+
+	for (count = 0; count < 50000; count++) {
+		if (!pit_verify_msb(val))
+			break;
+		prev_tsc = tsc;
+		tsc = get_cycles();
+	}
+	*deltap = (unsigned long) (get_cycles() - prev_tsc);
+	*tscp = tsc;
+
+	/*
+	 * We require _some_ success; the quality control is based on the
+	 * error terms on the TSC values.
+	 */
+	return count > 5;
+}
+
+/*
+ * Measure the TSC rate against the 8254, in kHz (cycles per millisecond).
+ * Returns 0 if the 8254 is too slow / unreliable to calibrate against.
+ *
+ * Counter 2 is loaded with 0xffff (mode 0, one-shot), so the MSB
+ * decrements once per 256 PIT ticks.  We count the TSC across a few such
+ * decrements and derive the TSC frequency from them.
+ */
+static unsigned long pit_calibrate(void)
+{
+	int i;
+	unsigned long long tsc, delta;
+	unsigned long d1, d2;
+
+	/* Set the Gate high, disable speaker. */
+	outb((unsigned char)((inb(0x61) & 0xfd) | 0x01), 0x61);
+
+	/*
+	 * Counter 2, mode 0 (one-shot), binary count.  Mode 2 would
+	 * decrement by two, so mode 0 is much better when looking at the
+	 * individual counts.
+	 */
+	outb(0xb0, 0x43);
+
+	/* Start at 0xffff. */
+	outb(0xff, 0x42);
+	outb(0xff, 0x42);
+
+	/*
+	 * The PIT starts counting at the next edge, so we delay a little;
+	 * reading the counter back once does that.
+	 */
+	pit_verify_msb(0);
+
+	if (pit_expect_msb(0xff, &tsc, &d1)) {
+		for (i = 1; i <= MAX_QUICK_PIT_ITERATIONS; i++) {
+			if (!pit_expect_msb((unsigned char)(0xff - i),
+					    &delta, &d2))
+				break;
+
+			delta -= tsc;
+
+			/*
+			 * Extrapolate the error and fail fast if the error
+			 * will never be below 500ppm.
+			 */
+			if (i == 1 &&
+			    d1 + d2 >= (unsigned long)(delta * MAX_QUICK_PIT_ITERATIONS >> 11))
+				return 0;
+
+			/* Iterate until the error is less than 500ppm. */
+			if (d1 + d2 >= (unsigned long)(delta >> 11))
+				continue;
+
+			/*
+			 * Check the PIT one more time to verify that all TSC
+			 * reads were stable wrt the PIT; this also serialises
+			 * the last cycle read.
+			 */
+			if (!pit_verify_msb((unsigned char)(0xfe - i)))
+				break;
+			goto success;
+		}
+	}
+
+	return 0;	/* fast PIT calibration failed */
+
+success:
+	/*
+	 * We saw the MSB of the PIT decrement `i` times and the error is
+	 * below 500ppm.
+	 *
+	 *   kHz = (t2 - t1) * PIT_TICK_RATE / (i * 256 * 1000)
+	 */
+	return udiv64by32(delta * (unsigned long long)PIT_TICK_RATE,
+			  (unsigned long)i * 256 * 1000);
+}
+
+/* ---- hypervisor's word -------------------------------------------------- */
+
+/*
+ * Ask the CPU/hypervisor for the TSC frequency it reports for us, in kHz.
+ * This mirrors native_calibrate_tsc():
+ *   - leaf 0x15 gives the TSC/crystal ratio (eax = denominator,
+ *     ebx = numerator) and, if present, the crystal clock in Hz (ecx).
+ *     The TSC rate is then crystal * numerator / denominator.
+ *   - otherwise, leaf 0x16 (eax = base clock in MHz) is combined with the
+ *     leaf 0x15 ratio to work out the crystal clock first.
+ * Under a hypervisor this is the "hardware-reported" TSC frequency -- the
+ * only word we can trust when reading the 8254 is too slow.
+ * Returns 0 if the machine reports nothing.
+ */
+static unsigned long hypervisor_khz(void)
+{
+	unsigned int eax, ebx, ecx, edx;
+	unsigned long crystal_khz;
+
+	cpuid(0x15, 0, &eax, &ebx, &ecx, &edx);
+	if (ebx == 0 || eax == 0)
+		return 0;
+
+	crystal_khz = (unsigned long)ecx / 1000;
+
+	/*
+	 * No crystal clock: work it out from the base MHz (leaf 0x16) and
+	 * the ratio.  kHz = base_MHz * 1000 * denominator / numerator.
+	 */
+	if (crystal_khz == 0) {
+		unsigned int base_mhz;
+
+		cpuid(0x16, 0, &base_mhz, &ebx, &ecx, &edx);
+		crystal_khz = (unsigned long)base_mhz * 1000 * eax / ebx;
+	}
+
+	if (crystal_khz == 0)
+		return 0;
+
+	/* kHz = crystal_khz * numerator / denominator */
+	return crystal_khz * ebx / eax;
+}
+
+/* ---- public interface --------------------------------------------------- */
+
+unsigned long long tsccal_cycles(void)
+{
+	return get_cycles();
+}
+
+unsigned long tsccal_khz(void)
+{
+	unsigned long khz = pit_calibrate();
+
+	/* The 8254 was too slow/unreliable: take the hypervisor's word. */
+	if (khz == 0)
+		khz = hypervisor_khz();
+
+	return khz;
+}

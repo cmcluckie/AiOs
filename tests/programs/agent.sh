@@ -402,7 +402,10 @@ lift)
 	# the item's test, as a lifter is shown it (findings 0035): its own words, its check
 	# and the program it runs, none of them the hand lift
 	mkdir -p "$a/tests/expected" "$a/tests/programs"
-	printf 'code       = "TST.toy.lift@1"\nred_when   = "the lift does not give the answer"\nrunner     = "jig/test cmd sh tests/programs/toylift.sh"\n' > "$a/tests/toy.lift@1.toml"
+	printf 'code       = "TST.toy.lift@1"\nred_when   = "the lift does not give the answer"\nrunner     = "jig/test cmd sh tests/programs/toylift.sh toy"\n' > "$a/tests/toy.lift@1.toml"
+	mkdir -p "$a/flavors" "$a/index/machine"
+	printf 'name    = "toy"\nmachine = "MACHINE.toy@1"\n' > "$a/flavors/toy.toml"
+	printf '# the toy machine as built: one read of its chip takes an age\n' > "$a/index/machine/toy@1.as-built.md"
 	printf '# the toy check: green when the lift gives forty-two\n' > "$a/tests/expected/toy.lift@1.check"
 	printf '# the toy probe: calls lift() and prints what it gave\n' > "$a/tests/programs/toylift.sh"
 	cat > "$a/jig/test" <<'TOY'
@@ -438,9 +441,11 @@ TOY
 		grep -q '^The fixed header lift.h:$' "$t/first" && grep -q '^int lift(void);$' "$t/first" ||
 		fail "the first message is not the question, the file to write and the header, as jig/sit gives them: $(head -c 300 "$t/first" | tr '\n' ' ')"
 	grep -q 'return 42' "$t/first" "$s1" && fail "the lifter was shown the hand lift"
-	grep -q '^Red when: the lift does not give the answer$' "$t/first" && grep -q '^Run as: jig/test cmd sh tests/programs/toylift.sh$' "$t/first" &&
+	grep -q '^Red when: the lift does not give the answer$' "$t/first" && grep -q '^Run as: jig/test cmd sh tests/programs/toylift.sh toy$' "$t/first" &&
 		grep -q '^# the toy check: green when the lift gives forty-two$' "$t/first" && grep -q '^# the toy probe: calls lift() and prints what it gave$' "$t/first" ||
 		fail "the lifter is not shown the item's test, its check and the program it runs: $(grep -A3 'How the part is judged' "$t/first" | tr '\n' ' ')"
+	grep -q '^The machine it boots, MACHINE.toy@1, as built (index/machine/toy@1.as-built.md):$' "$t/first" && grep -q '^# the toy machine as built: one read of its chip takes an age$' "$t/first" ||
+		fail "the lifter is not shown the machine its test boots, as built: $(grep -A1 'machine it boots' "$t/first" | tr '\n' ' ')"
 	ans() { jq -r "[.messages[] | select(.role == \"tool\")][$2].content" "$t/whole/sent-$1.json"; }
 	ans 2 0 | grep -q '^refused: say why' || fail "a read with no why was run: $(ans 2 0)"
 	ans 3 1 | grep -q '^drivers/toy.c:1: int toy_lift' || fail "a read with a why was not answered by the reader on the jig: $(ans 3 1)"
@@ -518,7 +523,7 @@ FAKE
 	# the second lifter starts from the first's file; the first from nothing
 	! grep -q '^start = ' "$t/seen-xplan-1.toml" && grep -qx "start = \"$t/dout/xplan/jobs/xplan-1-try1\"" "$t/seen-xplan-2.toml" ||
 		fail "the second lifter is not given the first's run to start from, or the first is given one: $(grep -h '^start' "$t"/seen-xplan-*.toml | tr '\n' ' ')"
-	echo "a lifter on a toy exam item: offered read_linux, write_file and submit_lift alone; shown the question, the file to write and the header, as jig/sit shows them, and never the hand lift; a read with no why refused, one with a why asked of the reader on the jig, once; a command the reader has not, or an argument with a ; or a space, never sent; a file the part does not ask for refused; a wrong lift shown what the test printed; the right one a pass on call 9, recorded under the item's own name with its lines, the note from the item's tests; a lift written and never handed in handed in by the program; a hand lift that fails its tests stops it before any call; shown the item's tests, their checks and the programs they run; a lifter after the first given the last lifter's file and what the tests said of it, and its director passing it on; an exam plan names its item, never tests too, and its director's jobs carry the item" ;;
+	echo "a lifter on a toy exam item: offered read_linux, write_file and submit_lift alone; shown the question, the file to write and the header, as jig/sit shows them, and never the hand lift; a read with no why refused, one with a why asked of the reader on the jig, once; a command the reader has not, or an argument with a ; or a space, never sent; a file the part does not ask for refused; a wrong lift shown what the test printed; the right one a pass on call 9, recorded under the item's own name with its lines, the note from the item's tests; a lift written and never handed in handed in by the program; a hand lift that fails its tests stops it before any call; shown the item's tests, their checks, the programs they run and the machine they boot, as built; a lifter after the first given the last lifter's file and what the tests said of it, and its director passing it on; an exam plan names its item, never tests too, and its director's jobs carry the item" ;;
 columns)
 	# a builder's note says its calls, its peak context and its wall minutes, and its run
 	# in runs/ its calls and seconds
