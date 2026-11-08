@@ -76,7 +76,16 @@ So I ran its file on the jig both ways.  With 50: 34,000 milliseconds against 9,
 
 <!-- Chris: your reaction when that came back green.  This is the moment. -->
 
-<!-- The run where the 3090 is shown the jig's machine spec and asked to find the 150 itself goes here (findings 0037, out/find150.sh). -->
+## Could it find the 150 itself?
+
+That's the question I really wanted answered.  Not "can Claude fix it", but "can the 3090 get there on its own".  So Claude wrote the missing fact down where it belongs, in the jig's own spec sheet: reading the 8254 on this machine is slow, 66,000 to 129,000 ticks a pair.  The 3090 now gets that spec with every job.  Then we gave one builder its own best file, the one that was off by 3.4 times, and 60 questions to fix it.
+
+It didn't.
+
+It read "the 8254 is slow here" and decided not to trust the 8254 at all.  Instead it would ask the hypervisor (the software the jig runs inside) how fast the processor ticks.  On this test the hypervisor won't say.  Of its 62 reads, 39 were in the hypervisor's source code, hunting for how that answer gets handed out.  Another 16 went looking for our own files, which it can't see.  Its last three tries came back exactly where it started: 34 seconds against 10.  It never touched the 50.
+
+The fact was right in front of it.  The reasoning wasn't.  Every wall before this one was something it couldn't see.  This one was what it concluded from what it could.  That's one run, one builder, one small model on one card, so I'm not calling it a ceiling.  But it's where we are.
+
 
 ## What I'm taking away
 
@@ -84,7 +93,7 @@ The 3090 lifted the timer.  Right for a real PC, straight out of Linux, all of i
 
 I want to be straight about who found what.  I didn't find the thrown-away error messages, the lying test, or the 150.  Claude did, by reading every file and every log.  My part was asking why, saying "stop" when a run was wasting the card, and deciding what we'd change.  That's the job I keep coming back to: not knowing the answer, but knowing which question to ask, and making sure the thing doing the work can see what it needs.
 
-And that's the piece this part adds.  An AI can only get better at what it can see.  If the test throws away the reason, it guesses.  If the test gives it the wrong reason, it goes looking in the wrong place, very confidently.  If nobody tells it about the machine, it does the right thing for the wrong machine.  None of what moved it from six reds to one number was a smarter model.  It was telling it the truth.
+And that's the piece this part adds.  An AI can only get better at what it can see.  If the test throws away the reason, it guesses.  If the test gives it the wrong reason, it goes looking in the wrong place, very confidently.  If nobody tells it about the machine, it does the right thing for the wrong machine.  None of what moved it from six reds to one number was a smarter model.  It was telling it the truth.  The last step, turning a true fact into the right fix, it couldn't make.  Not yet.
 
 That goes for people too.
 
@@ -101,6 +110,7 @@ Come along!
 5. [runs/20261108T072726Z-timer-2-ollama-qwen3-8-27b/output.txt](https://github.com/cmcluckie/aios/blob/main/runs/20261108T072726Z-timer-2-ollama-qwen3-8-27b/output.txt).  The 3090's timer.  Search for `MAX_QUICK_PIT_MS`: the 50.
 6. [lifted/PART.timer.tsc-pit@2/tsccal.c](https://github.com/cmcluckie/aios/blob/main/lifted/PART.timer.tsc-pit%402/tsccal.c).  Ours.  The comment at the top says why ours is 150.
 7. [findings/0036.md](https://github.com/cmcluckie/aios/blob/main/findings/0036.md).  The jig, both ways.
+8. [findings/0038.md](https://github.com/cmcluckie/aios/blob/main/findings/0038.md).  The run where it had the fact and still didn't find the 150, and where its 62 reads went.
 
 ## Try this
 
