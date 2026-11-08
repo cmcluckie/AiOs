@@ -1,0 +1,19 @@
+# The timer, after the race (findings 0031 to 0035): the exam's timer item on the
+# layered agent alone, no longer a race against jig/sit.  At b1e1f10 the timer's
+# test says what a machine did (decisions 0112, 0113); the lifter is shown the
+# item's tests and, from the second job on, the last lifter's file, and the
+# director keeps to facts a note shows (decision 0114).
+part       = "PART.timer.tsc-pit@2: CPU cycles in a millisecond, against the 8254, or the hypervisor's word"
+exam       = "timer"
+at         = "b1e1f10"
+budget_usd = 0
+max_tries  = 10
+max_minutes = 240
+
+[gear]
+tactical = 1
+builders = 1
+
+[prompts]
+director = "director@3"
+builder  = "lifter@1"

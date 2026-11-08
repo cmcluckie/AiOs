@@ -168,6 +168,15 @@ impl Director {
             // a paid builder may spend what is left of the part's share
             job += &format!("gear = 2\nmax_usd = {:.6}\n", self.left());
         }
+        // a lifter after the first starts from the last lifter's file (findings 0035)
+        if self.p.exam {
+            if let Some(last) = self.jobs.last() {
+                let prev = jobs.join(format!("{}-try{}", last.id, n - 1));
+                if prev.join("lift").is_dir() {
+                    job += &format!("start = {}\n", note::toml_string(&prev.to_string_lossy(), 1000));
+                }
+            }
+        }
         if let Some(h) = hint.filter(|h| !h.trim().is_empty()) {
             let hp = jobs.join(format!("{id}.hint"));
             let _ = fs::write(&hp, format!("{h}\n"));
@@ -418,7 +427,7 @@ pub fn run(planpath: &str) -> i32 {
         // the plan names an item, not tests; without this a director asked for the
         // tests (findings 0030, the first race run)
         first += &format!(
-            "\nThis part is an exam item, not a fix.  Give its one job with test \"{}\": a fresh lifter is shown the item's question and header, reads Linux, writes the file, and is judged by the item's own tests, which its result note lists.  Give the job again, with a hint if the notes teach one, until it passes or the tries run out.\n",
+            "\nThis part is an exam item, not a fix.  Give its one job with test \"{}\": a lifter is shown the item's question, its header and its tests, and from the second job on the last lifter's file with what the tests said of it; it reads Linux, writes the file, and is judged by the item's own tests, which its result note lists.  Give the job again, with a hint if the notes teach one, until it passes or the tries run out.\n",
             p.tests[0]
         );
     }

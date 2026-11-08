@@ -320,13 +320,13 @@ pub fn run(j: &Job, start: Instant, quiet: bool) -> i32 {
     let _ = fs::create_dir_all(&base);
     let copied = Command::new("sh")
         .arg("-c")
-        .arg("git -C \"$1\" archive \"$2\" exam lifted | tar -xf - -C \"$3\"")
+        .arg("git -C \"$1\" archive \"$2\" exam lifted tests | tar -xf - -C \"$3\"")
         .args(["copy", &repo.to_string_lossy(), &j.at, &base.to_string_lossy()])
         .status()
         .map(|s| s.success())
         .unwrap_or(false);
     if !copied {
-        eprintln!("agent: could not read exam/ and lifted/ at {}", j.at);
+        eprintln!("agent: could not read exam/, lifted/ and tests/ at {}", j.at);
         return 2;
     }
     let it = match item(&base, &j.exam) {
@@ -358,6 +358,60 @@ pub fn run(j: &Job, start: Instant, quiet: bool) -> i32 {
         let name = h.rsplit('/').next().unwrap_or(h);
         first += &format!("\nThe fixed header {name}:\n\n{}", fs::read_to_string(base.join(h)).unwrap_or_default());
     }
+    // how the lift is judged: each test's own words and the files under tests/ it runs.
+    // A builder told only what a test printed went looking for the test in Linux
+    // (findings 0035).  None of them is the hand lift.
+    first += "\nHow the part is judged.  Each of these tests runs on the jig with your file in the hand lift's place, and every one must pass:\n";
+    let mut shown: Vec<String> = vec![];
+    for t in it.suite.split_whitespace() {
+        let spec = fs::read_to_string(base.join(format!("tests/{t}.toml"))).unwrap_or_default();
+        let field = |k: &str| {
+            spec.lines()
+                .find(|l| l.split('=').next().map(|n| n.trim() == k).unwrap_or(false))
+                .and_then(|l| l.splitn(2, '=').nth(1))
+                .map(|v| v.trim().trim_matches('"').replace("\\\"", "\""))
+                .unwrap_or_default()
+        };
+        let runner = field("runner");
+        first += &format!("\nTest {t}\nRed when: {}\nRun as: {runner}\n", field("red_when"));
+        let mut files = vec![format!("tests/expected/{t}.check")];
+        files.extend(runner.split_whitespace().filter(|w| w.starts_with("tests/")).map(|w| w.to_string()));
+        for f in files {
+            if shown.contains(&f) || !plain(&f, "/._-@") || f.contains("..") {
+                continue;
+            }
+            if let Ok(text) = fs::read_to_string(base.join(&f)) {
+                first += &format!("\n{f}:\n{}\n", runtime::model::cut(&text, 4000));
+                shown.push(f);
+            }
+        }
+    }
+    // the last lifter's file, from the second lifter on: what was learned is kept, not
+    // only a hint about it (findings 0035)
+    let mut carried: Vec<String> = vec![];
+    if !j.start.is_empty() {
+        let from = PathBuf::from(&j.start);
+        let said = fs::read_to_string(from.join("run.toml"))
+            .ok()
+            .and_then(|t| toml::from_str::<toml::Table>(&t).ok())
+            .and_then(|t| t.get("line").and_then(|v| v.as_str()).map(|v| v.to_string()))
+            .unwrap_or_default();
+        let mut texts = String::new();
+        for n in &it.names {
+            if let Ok(text) = fs::read_to_string(from.join("lift").join(n)) {
+                let _ = fs::create_dir_all(dir.join("lift"));
+                let _ = fs::write(dir.join("lift").join(n), &text);
+                carried.push(n.clone());
+                texts += &format!("\n=== {n} ===\n{text}");
+            }
+        }
+        if !carried.is_empty() {
+            first += &format!(
+                "\nThe last lifter's file, as it last handed it in, is already written for you under the same name.  The part's tests said of it: {}\nHand it in as it is, change it with write_file, or write a new one.\n{texts}",
+                if said.is_empty() { "nothing recorded".into() } else { said }
+            );
+        }
+    }
     if let Some(h) = &hint {
         first += &format!("\nFrom your director, who has read how earlier tries went:\n\n{h}");
     }
@@ -377,7 +431,7 @@ pub fn run(j: &Job, start: Instant, quiet: bool) -> i32 {
         j,
         it,
         dir: dir.clone(),
-        written: vec![],
+        written: carried,
         judged: String::new(),
         by_program: false,
         budget: j.num_ctx * j.room_share / 100,

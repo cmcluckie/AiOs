@@ -1,0 +1,11 @@
+id      = "0114"
+date    = 2026-11-07
+kind    = "code"
+touches = ["agent/mechanic/src/lift.rs", "agent/mechanic/src/direct.rs", "agent/mechanic/src/build.rs", "prompts/director@3.txt", "agent/plans/timer.toml", "tests/programs/agent.sh", "tests/agent.lift@1.toml", "tests/mutations.txt", "findings/0035.md"]
+asked   = "Three things the timer's builders lacked in the rerun (findings 0035).  A lifter is shown each of the item's tests: its red_when, its runner, its check and the files under tests/ its runner names.  From the second job on, a lifter starts from the last lifter's file, shown with what the tests said of it; the director's job names that run as start.  prompts/director@3.txt says so, and that the director states no fact about the hardware or Linux that a result note does not show.  agent/plans/timer.toml runs the timer at b1e1f10 with director@3, on the layered agent alone, no longer a race.  TST.agent.lift checks the first two (red with each taken out; three mutations, ten in all); the prompt is checked by reading the next run's hints."
+options = ["take it", "do not take it"]
+default = "take it"
+chose   = "take it"
+why     = "Chris, 2026-11-07, stopping the rerun: \"ok stopped\", after the three fixes were proposed; the one-commit choice was Claude's, to save the card three reruns."
+by      = "KEY.chris@1"
+drafted = "Claude"

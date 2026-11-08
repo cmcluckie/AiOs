@@ -399,6 +399,12 @@ lift)
 	printf '[[item]]\nname  = "toy"\nasks  = "Give back the answer, the way Linux does."\nhand  = "lifted/PART.toy.lift@1/lift.c lifted/PART.toy.lift@1/lift.h"\ntests = "toy.lift@1"\n' > "$a/exam/items.toml"
 	printf '#include "lift.h"\nint lift(void) { return 42; }\n' > "$a/lifted/PART.toy.lift@1/lift.c"
 	printf 'int lift(void);\n' > "$a/lifted/PART.toy.lift@1/lift.h"
+	# the item's test, as a lifter is shown it (findings 0035): its own words, its check
+	# and the program it runs, none of them the hand lift
+	mkdir -p "$a/tests/expected" "$a/tests/programs"
+	printf 'code       = "TST.toy.lift@1"\nred_when   = "the lift does not give the answer"\nrunner     = "jig/test cmd sh tests/programs/toylift.sh"\n' > "$a/tests/toy.lift@1.toml"
+	printf '# the toy check: green when the lift gives forty-two\n' > "$a/tests/expected/toy.lift@1.check"
+	printf '# the toy probe: calls lift() and prints what it gave\n' > "$a/tests/programs/toylift.sh"
 	cat > "$a/jig/test" <<'TOY'
 #!/bin/sh
 if [ "${1:-}" = toy.lift@1 ]; then
@@ -416,7 +422,7 @@ TOY
 	(cd "$a" && git add -A && git -c user.name=t -c user.email=t@t commit -qm exam) || fail "could not add the exam to the toy repo"
 	at=$(git -C "$a" rev-parse --short=9 HEAD)
 	lift() {	# lift CASE TRY: the lifter on the toy item, the replies in $t/CASE
-		printf 'job = "toy"\nexam = "toy"\nat = "%s"\ntry = %s\nprompt = "builder@1"\nmodel = "qwen3.8:27b"\nnum_ctx = 8192\n' "$at" "$2" > "$t/$1.toml"
+		printf 'job = "toy"\nexam = "toy"\nat = "%s"\ntry = %s\nprompt = "builder@1"\nmodel = "qwen3.8:27b"\nnum_ctx = 8192\n%b' "$at" "$2" "${3:-}" > "$t/$1.toml"
 		(cd "$a" && AGENT_FAKE="$t/$1" AGENT_SSH="sh $t/ssh" AGENT_JIG=toy@jig AGENT_OUT="$t/out" AGENT_QUIET=1 \
 			AGENT_RUNS="sh $here/jig/runs" RUNS="$t/runs" PRICES="$here/jig/prices.toml" AGENT_SITTING=20261030T120000Z \
 			"$t/agent" build "$t/$1.toml" > "$t/$1.out" 2> "$t/$1.err"); rc=$?
@@ -432,6 +438,9 @@ TOY
 		grep -q '^The fixed header lift.h:$' "$t/first" && grep -q '^int lift(void);$' "$t/first" ||
 		fail "the first message is not the question, the file to write and the header, as jig/sit gives them: $(head -c 300 "$t/first" | tr '\n' ' ')"
 	grep -q 'return 42' "$t/first" "$s1" && fail "the lifter was shown the hand lift"
+	grep -q '^Red when: the lift does not give the answer$' "$t/first" && grep -q '^Run as: jig/test cmd sh tests/programs/toylift.sh$' "$t/first" &&
+		grep -q '^# the toy check: green when the lift gives forty-two$' "$t/first" && grep -q '^# the toy probe: calls lift() and prints what it gave$' "$t/first" ||
+		fail "the lifter is not shown the item's test, its check and the program it runs: $(grep -A3 'How the part is judged' "$t/first" | tr '\n' ' ')"
 	ans() { jq -r "[.messages[] | select(.role == \"tool\")][$2].content" "$t/whole/sent-$1.json"; }
 	ans 2 0 | grep -q '^refused: say why' || fail "a read with no why was run: $(ans 2 0)"
 	ans 3 1 | grep -q '^drivers/toy.c:1: int toy_lift' || fail "a read with a why was not answered by the reader on the jig: $(ans 3 1)"
@@ -461,6 +470,15 @@ TOY
 	bans=$(jq -r '[.messages[] | select(.role == "tool")][1].content' "$t/blind/sent-3.json")
 	printf '%s\n' "$bans" | grep -q "judged: fail.*build of toy failed" && printf '%s\n' "$bans" | grep -qx "gcc: lifted/PART.toy.lift@1/lift.c:2:19: error: 'asm' undeclared" ||
 		fail "a lift that did not build was not shown what the compiler said: $(printf '%s' "$bans" | tr '\n' ' ')"
+	# a lifter after the first starts from the last lifter's file, and is shown it and
+	# what the tests said of it (findings 0035): handed in as it is, it passes
+	mkdir "$t/carry"; cp "$fx/lift/7.json" "$t/carry/1.json"
+	lift carry 5 "start = \"$t/out/toy-try1\"\n"; o="$t/out/toy-try5"
+	jq -r '.messages[1].content' "$t/carry/sent-1.json" > "$t/cfirst"
+	grep -q "^The last lifter's file, as it last handed it in, is already written for you" "$t/cfirst" && grep -q 'tests said of it: every one of the part' "$t/cfirst" &&
+		grep -q 'int lift(void) { return 42; }' "$t/cfirst" || fail "a lifter given an earlier run is not shown its file and what the tests said of it: $(grep -A2 'last lifter' "$t/cfirst" | tr '\n' ' ')"
+	[ $rc -eq 0 ] && [ "$(rt result)" = '"pass"' ] && [ "$(rt calls)" = 1 ] ||
+		fail "the earlier lifter's file, handed in as it is, did not pass on call 1: exit $rc, $(grep -E '^(result|calls|ended)' "$o/run.toml" | tr '\n' ' ')"
 	# a hand lift that does not pass: nothing is spent
 	sed -i 's/return 42/return 40/' "$a/lifted/PART.toy.lift@1/lift.c"; (cd "$a" && git -c user.name=t -c user.email=t@t commit -qam broken); at=$(git -C "$a" rev-parse --short=9 HEAD)
 	mkdir "$t/broken"; cp "$fx/lift/1.json" "$t/broken/"
@@ -477,12 +495,17 @@ TOY
 	cat > "$t/builder" <<'FAKE'
 #!/bin/sh
 jf=$2; job=$(sed -n 's/^job = "\(.*\)"$/\1/p' "$jf"); try=$(sed -n 's/^try = //p' "$jf"); cp "$jf" "$T/seen-$job.toml"
-o=$AGENT_OUT/$job-try$try; mkdir -p "$o"
-printf 'PASS  TST.toy.lift@1  1s  ok\n# 1 passed, 0 failed, 0 skipped\n' | "$T/agent" note "$job" "$try" 10 10 > "$o/note.toml"
-printf 'result       = "pass"\nended        = "pass"\nwhy          = ""\n' > "$o/run.toml"
+o=$AGENT_OUT/$job-try$try; mkdir -p "$o/lift"; printf 'int lift(void) { return 4%s; }\n' "$try" > "$o/lift/lift.c"
+if [ "$try" = 1 ]; then
+	printf 'FAIL  TST.toy.lift@1  1s  the lift gives 41\n# 0 passed, 1 failed, 0 skipped\n' | "$T/agent" note "$job" "$try" 10 10 > "$o/note.toml"
+	printf 'result       = "fail"\nended        = "turns"\nwhy          = "more than 60 calls"\n' > "$o/run.toml"
+else
+	printf 'PASS  TST.toy.lift@1  1s  ok\n# 1 passed, 0 failed, 0 skipped\n' | "$T/agent" note "$job" "$try" 10 10 > "$o/note.toml"
+	printf 'result       = "pass"\nended        = "pass"\nwhy          = ""\n' > "$o/run.toml"
+fi
 FAKE
-	mkdir "$t/dfake"; sed 's/toy.answer@1/toy/' "$fx/direct/done/4.json" > "$t/dfake/1.json"
-	printf '{"model":"qwen3.8:27b","message":{"role":"assistant","content":"","tool_calls":[{"function":{"name":"done","arguments":{"report":"Lifted."}}}]},"done":true,"done_reason":"stop","prompt_eval_count":900,"eval_count":20}\n' > "$t/dfake/2.json"
+	mkdir "$t/dfake"; sed 's/toy.answer@1/toy/' "$fx/direct/done/4.json" > "$t/dfake/1.json"; cp "$t/dfake/1.json" "$t/dfake/2.json"
+	printf '{"model":"qwen3.8:27b","message":{"role":"assistant","content":"","tool_calls":[{"function":{"name":"done","arguments":{"report":"Lifted."}}}]},"done":true,"done_reason":"stop","prompt_eval_count":900,"eval_count":20}\n' > "$t/dfake/3.json"
 	T=$t AGENT_FAKE="$t/dfake" AGENT_BUILDER="sh $t/builder" AGENT_OUT="$t/dout" AGENT_QUIET=1 AGENT_RUNS="sh $(pwd)/jig/runs" RUNS="$t/druns" PRICES="$(pwd)/jig/prices.toml" \
 		"$t/agent" direct "$t/xplan.toml" > "$t/d.out" 2> "$t/d.err"; rc=$?
 	[ $rc -eq 0 ] || fail "a director on an exam plan gave exit $rc: $(cat "$t/d.err" "$t/d.out" | head -3)"
@@ -492,7 +515,10 @@ FAKE
 		fail "the director on an exam plan is not told it is an exam item and what its one job is: $(jq -r '.messages[1].content' "$t/dfake/sent-1.json" | tail -3 | tr '\n' ' ')"
 	jf=$(ls "$t"/seen-*.toml | head -1)
 	grep -qx 'exam = "toy"' "$jf" && ! grep -q '^test = ' "$jf" || fail "the director's job for an exam plan does not name the item alone: $(tr '\n' ' ' < "$jf")"
-	echo "a lifter on a toy exam item: offered read_linux, write_file and submit_lift alone; shown the question, the file to write and the header, as jig/sit shows them, and never the hand lift; a read with no why refused, one with a why asked of the reader on the jig, once; a command the reader has not, or an argument with a ; or a space, never sent; a file the part does not ask for refused; a wrong lift shown what the test printed; the right one a pass on call 9, recorded under the item's own name with its lines, the note from the item's tests; a lift written and never handed in handed in by the program; a hand lift that fails its tests stops it before any call; an exam plan names its item, never tests too, and its director's jobs carry the item" ;;
+	# the second lifter starts from the first's file; the first from nothing
+	! grep -q '^start = ' "$t/seen-xplan-1.toml" && grep -qx "start = \"$t/dout/xplan/jobs/xplan-1-try1\"" "$t/seen-xplan-2.toml" ||
+		fail "the second lifter is not given the first's run to start from, or the first is given one: $(grep -h '^start' "$t"/seen-xplan-*.toml | tr '\n' ' ')"
+	echo "a lifter on a toy exam item: offered read_linux, write_file and submit_lift alone; shown the question, the file to write and the header, as jig/sit shows them, and never the hand lift; a read with no why refused, one with a why asked of the reader on the jig, once; a command the reader has not, or an argument with a ; or a space, never sent; a file the part does not ask for refused; a wrong lift shown what the test printed; the right one a pass on call 9, recorded under the item's own name with its lines, the note from the item's tests; a lift written and never handed in handed in by the program; a hand lift that fails its tests stops it before any call; shown the item's tests, their checks and the programs they run; a lifter after the first given the last lifter's file and what the tests said of it, and its director passing it on; an exam plan names its item, never tests too, and its director's jobs carry the item" ;;
 columns)
 	# a builder's note says its calls, its peak context and its wall minutes, and its run
 	# in runs/ its calls and seconds

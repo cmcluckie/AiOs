@@ -33,6 +33,7 @@ pub struct Job {
     pub num_ctx: u64,
     pub suite: String,
     pub hint: String,
+    pub start: String, // a lifter's: the earlier lifter's run, whose file it starts from (findings 0035)
     pub item: String,
     pub trial: String,
     pub max_turns: u64,
@@ -50,7 +51,7 @@ fn read_job(path: &str) -> Result<Job, String> {
     let t: toml::Table = toml::from_str(&text).map_err(|e| crate::plan::toml_error(path, &text, &e))?;
     let known = [
         "job", "test", "at", "try", "prompt", "model", "num_ctx", "suite", "hint", "item", "max_turns", "max_tokens", "think_tokens",
-        "look_chars", "room_share", "gear", "max_usd", "deadline", "trial", "exam",
+        "look_chars", "room_share", "gear", "max_usd", "deadline", "trial", "exam", "start",
     ];
     if let Some(k) = t.keys().find(|k| !known.contains(&k.as_str())) {
         return Err(format!("{k} is not something a job has"));
@@ -92,6 +93,7 @@ fn read_job(path: &str) -> Result<Job, String> {
         num_ctx: n("num_ctx", None, 2048, 1_048_576)?,
         suite: s("suite", false)?,
         hint: s("hint", false)?,
+        start: s("start", false)?,
         item: s("item", false)?,
         trial: s("trial", false)?,
         max_turns: n("max_turns", Some(60), 1, 500)?,
