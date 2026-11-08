@@ -18,6 +18,11 @@ reason = "SPEC.drag.1@1"
 scope  = "console0"
 
 [[capability]]
+code   = "CAP.tty.read@1"
+reason = "SPEC.serial.2@1"
+scope  = "console0"
+
+[[capability]]
 code   = "CAP.mem.alloc@1"
 reason = "SPEC.gate.14@1"
 scope  = ""

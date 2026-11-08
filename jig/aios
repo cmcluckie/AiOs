@@ -119,7 +119,7 @@ cmd_missing() {
 }
 
 # prog_flags CODE: the extra compile flags a program's catalogue entry lists in
-# cflags (SPEC.builder.3@1), one to a line, -include=H as -include and H; any
+# cflags (SPEC.builder.3@2), one to a line, -include=H as -include and H; any
 # flag outside the allowed forms stops the build, naming the program and the flag
 prog_flags() {
 	for x in $(list_field "$(code_file "$1")" cflags); do
@@ -127,19 +127,21 @@ prog_flags() {
 			printf '%s\n' "$x"
 		elif printf '%s' "$x" | grep -Eqx -- '-include=[A-Za-z0-9_][A-Za-z0-9_/.@-]*\.h' && ! printf '%s' "$x" | grep -q '\.\.'; then
 			printf -- '-include\n%s\n' "${x#-include=}"
+		elif printf '%s' "$x" | grep -Eqx -- '-O(0|1|2|3|s|fast)|-m(arch|tune)=[a-z0-9-]+|-f[a-z][a-z0-9-]*'; then
+			printf '%s\n' "$x"	# how hard and for which processor it is optimised: the program's own build, as its author ran it (SPEC.builder.3@2)
 		else
-			die "SPEC.builder.3: $1 lists the compile flag '$x', which is not -std=, -D or -include= of a header"
+			die "SPEC.builder.3: $1 lists the compile flag '$x', which is not -std=, -D, -include= of a header, -O, -march=, -mtune= or -f without a value"
 		fi
 	done
 }
 
-# libc_musl DIR: musl from lifted/PART.libc.musl@1, built the way jig/libc builds
+# libc_musl DIR VERSION: musl from lifted/PART.libc.musl@VERSION, built the way jig/libc builds
 # the pinned one: the two generated headers from their lifted inputs, every
 # lifted source compiled with musl's own flags for i386, the library, the start
 # files, the headers a program sees, and the divide helper musl needs
 # (PART.divide64@1).  Only what was lifted is there to build.
 libc_musl() {
-	m=lifted/PART.libc.musl@1; d=$1
+	m=lifted/PART.libc.musl@$2; d=$1
 	[ -f "$d/libc.a" ] && return 0
 	mkdir -p "$d/obj/include/bits" "$d/include/bits"
 	sed -f "$m/tools/mkalltypes.sed" "$m/arch/i386/bits/alltypes.h.in" "$m/include/alltypes.h.in" > "$d/obj/include/bits/alltypes.h"
@@ -251,11 +253,12 @@ cmd_build() {
 	for prog in $progs; do
 		pdir=$(field "$(code_file "$prog")" source)
 		[ -d "$pdir" ] || die "rule 18: source $pdir is not in the pool"
-		if list_field "$(code_file "$prog")" depends | grep -qx 'PART.libc.musl@1'; then
+		mv=$(list_field "$(code_file "$prog")" depends | sed -n 's/^PART\.libc\.musl@\([0-9][0-9]*\)$/\1/p' | head -1)
+		if [ -n "$mv" ]; then
 			# a normal Linux program: built against musl from lifted/, linked the
 			# way a Linux toolchain links a static program, an ELF file (part 20)
 			pname=$(basename "${prog#PART.}"); pname=${pname%@*}
-			libc_musl "$out/musl"
+			libc_musl "$out/musl" "$mv"
 			pf=$(prog_flags "$prog" | tr '\n' ' '); pq=$(prog_flags "$prog" | sed "s/.*/'&'/" | tr '\n' ' ')
 			mflags="-m32 -march=i486 -O2 -nostdinc -fno-pie -fno-stack-protector -I $out/musl/include"
 			$CC $mflags $pf -c -o "$out/$pname.o" "$pdir$pname.c"

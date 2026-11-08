@@ -1,0 +1,11 @@
+id      = "0120"
+date    = 2026-11-08
+kind    = "rules and words"
+touches = ["jig/aios", "specs/builder.3@1.toml", "specs/builder.3@2.toml", "tests/builder.flags@1.toml", "tests/programs/builder.sh", "tests/mutations.txt", "petitions/0015.toml", "index/part/drag@1.toml", "index/part/libc.musl@2.toml", "findings/0042.md"]
+asked   = "Dave's sieve and the C library it needs lifted (PART.drag@1, PART.libc.musl@2; findings 0042).  The builder builds the musl a program depends on, and takes a program's own -O, -march=, -mtune= and -f flags, as a drag race entry is built (SPEC.builder.3@2, TST.builder.flags@1 red first, a fifth mutation).  Petition 0015 adds CAP.tty.read@1, which PART.loader@10's kernel exposes whether asked or not, so the drag flavor builds; a debt, written down."
+options = ["take it", "build Dave's sieve with AiOs's own flags, not his", "leave the drag flavor refused until the kernel can leave the console's receive side out"]
+default = "take it"
+chose   = "take it"
+why     = "Chris, 2026-11-08: \"lay out as much work as possible up front and fix it later\"; part 24's stock class is Dave's entry with its own flags (posts/upcoming.md, 2026-10-21)."
+by      = "KEY.chris@1"
+drafted = "Claude"

@@ -1,0 +1,37 @@
+# Where this part came from, exactly enough to lift it again.  Read by jig/upstream.
+# Format: schema/entries.md, "Origin".  Dave Plummer's software drag race,
+# PrimeC/solution_1: Mike Koss's C entry, April 2021, whole and untouched
+# (findings 0039, 0042).  sieve.c is kept as drag.c, the name the builder looks
+# for; prime-check.h keeps its own, as sieve.c includes it.  The repository has
+# no licence file; its CONTRIBUTING.md says every entry is BSD-3 (BSD-new) or more
+# permissive, which is compatible with GPL-2.0.
+
+[upstream]
+name       = "primes"
+repo       = "https://github.com/PlummersSoftwareLLC/Primes.git"
+canonical  = ""
+commit     = "bd2d51111adb76405cb704b5eb78669591d6f32b"
+committed  = 2026-11-01T05:05:26+01:00
+subject    = "Merge pull request #1098 from rbergen/eol-base-image-bump"
+licence    = "BSD-3-Clause"
+
+[lift]
+by         = "KEY.chris@1"
+on         = 2026-11-08T15:00:00-08:00
+into       = "drag.c"
+
+[[lift.from]]
+file   = "PrimeC/solution_1/sieve.c"
+blob   = "479caeb539120111199b423b06dd75a2b325f4d5"
+lines  = [[1, 320]]
+what   = "the whole file, as drag.c"
+
+[[lift.from]]
+file   = "PrimeC/solution_1/prime-check.h"
+blob   = "e0a7ff42db063671b1300096af1ba6db9a2f2537"
+lines  = [[1, 12]]
+what   = "the whole file"
+
+[cut]
+removed = []
+changed = []

@@ -1,0 +1,15 @@
+code          = "PART.libc.musl@2"
+sentence      = "musl 1.2.4, the C library: what Berkeley's cat takes and what Dave Plummer's sieve takes, 111 source files and every header they need, lifted whole and untouched."
+status        = "draft"
+admitted      = ""
+retired_by    = ""
+kind          = "library"
+source        = "lifted/PART.libc.musl@2/"
+licence       = "MIT"
+depends       = ["PART.divide64@1"]
+build_depends = ["TOOL.c@1"]
+exposes       = []
+requires      = []
+scaffold      = false
+as_built      = "index/part/libc.musl@2.as-built.md"
+reproducible  = ""

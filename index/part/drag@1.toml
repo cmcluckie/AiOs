@@ -1,0 +1,16 @@
+code          = "PART.drag@1"
+sentence      = "Dave Plummer's drag race, PrimeC/solution_1 (Mike Koss, 2021): sieves to 1,000,000 as many times as it can in five seconds and prints how many; lifted whole and untouched, with its author's own build flags."
+status        = "draft"
+admitted      = ""
+retired_by    = ""
+kind          = "program"
+source        = "lifted/PART.drag@1/"
+licence       = "BSD-3-Clause"
+depends       = ["PART.libc.musl@2", "PART.loader@10"]
+build_depends = ["TOOL.c@1"]
+exposes       = []
+requires      = ["CAP.tty.write@1", "CAP.mem.alloc@1", "CAP.time.read@1", "CAP.proc.exit@1", "CAP.cpu.avx@1"]
+scaffold      = false
+as_built      = "index/part/drag@1.as-built.md"
+reproducible  = ""
+cflags        = ["-Ofast", "-march=native", "-mtune=native", "-funroll-all-loops"]

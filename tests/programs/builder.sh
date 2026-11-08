@@ -83,7 +83,12 @@ flags)
 		[ ! -s "$t/cc.log" ] || fail "the flag '$bad' was refused only after something was compiled"
 		cp "$t/keep" "$e"
 	done
-	echo "hello compiled with exactly its four flags after the builder's own, -include= handed over as -include and the header, nothing else given them, and four flags outside the allowed forms each refused before anything was compiled" ;;
+	# a program's own optimisation, as its author built it (SPEC.builder.3@2): taken, after the builder's own
+	sed -i '/^cflags/d' "$e"; printf 'cflags        = ["-Ofast", "-march=native", "-mtune=native", "-funroll-all-loops"]\n' >> "$e"; : > "$t/cc.log"
+	(cd "$t" && CC="sh $t/cc.sh" sh jig/aios build hello > "$t/stdout" 2> "$t/stderr") || fail "hello with its author's optimisation flags did not build: $(tail -1 "$t/stderr")"
+	grep -- " -c -o out/hello/hello.o " "$t/cc.log" | grep -q -- " -Ofast -march=native -mtune=native -funroll-all-loops " || fail "hello was not compiled with its author's optimisation flags: $(grep -- 'out/hello/hello.o' "$t/cc.log" | head -1)"
+	cp "$t/keep" "$e"
+	echo "hello compiled with exactly its four flags after the builder's own, -include= handed over as -include and the header, nothing else given them, four flags outside the allowed forms each refused before anything was compiled, and its author's optimisation flags taken" ;;
 decided)
 	command -v gcc > /dev/null || { echo "no gcc"; exit 2; }
 	(cd "$t" && sh jig/aios build hello > /dev/null 2> "$t/stderr") || fail "hello did not build with its petition decided: $(tail -1 "$t/stderr")"
