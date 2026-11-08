@@ -1,0 +1,11 @@
+id      = "0119"
+date    = 2026-11-08
+kind    = "petitions"
+touches = ["petitions/0015.toml", "index/cap/cpu.avx@1.toml", "specs/drag.1@1.toml", "tests/drag.passes@1.toml", "tests/expected/drag.passes@1.check", "findings/0041.md"]
+asked   = "Petition 0015, Dave Plummer's sieve, PrimeC/solution_1 unchanged, for PUR.0012@1: drafted by the 3090 through jig/draft from jig/primes.pin, then corrected by Claude, every change listed in findings 0041.  The draft had the program's needs and none of how a Linux program file runs on AiOs.  New: CAP.cpu.avx@1, SPEC.drag.1@1 and TST.drag.passes@1, car 2 of the race."
+options = ["sign it as corrected", "sign the 3090's draft as it came", "do not sign"]
+default = "sign it as corrected"
+chose   = "sign it as corrected"
+why     = "Chris, 2026-11-08, on part 24: \"Yup lets do it\"; his commit of this decision is the signature."
+by      = "KEY.chris@1"
+drafted = "Claude"

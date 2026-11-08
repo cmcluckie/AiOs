@@ -1,0 +1,8 @@
+code       = "CAP.cpu.avx@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+touches    = "the processor's AVX registers and instructions, in a program's own state"
+mechanism  = "CR4.OSXSAVE and XCR0's x87, SSE and AVX bits, set by the kernel at boot when CPUID says the processor has XSAVE and AVX; the state saved and restored on every switch (findings 0040)"
+scope      = "none"
+scope_rule = "^$"

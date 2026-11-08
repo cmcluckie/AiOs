@@ -1,0 +1,15 @@
+# TST.drag.passes@1, run by jig/test as: sh this STAMPED-CAPTURE SECONDS
+# Green when Dave Plummer's sieve, alone on the drag flavor, printed its own
+# result line ("mckoss-c830;PASSES;5.0;1;..."), with at least one pass and no
+# line saying a count was wrong, and the program exited 0: car 2 of part 24's
+# race, and PASSES its time (findings 0039).
+awk '
+/Expected .* primes/ { print "the sieve says its count is wrong: " substr($0, index($0, $2)); exit 1 }
+$2 ~ /^mckoss-c830;/ { split($2, f, ";"); passes = f[2] + 0; line = $2 }
+$2 == "exit" { code = $3 }
+END {
+	if (line == "") { print "the sieve printed no result line"; exit 1 }
+	if (passes < 1) { print "the sieve made no passes: " line; exit 1 }
+	if (code != "0") { print "the sieve did not exit 0 (" (code == "" ? "no exit seen" : "exit " code) ")"; exit 1 }
+	printf "%d passes in 5 s on AiOs (%s)\n", passes, line
+}' "$1"

@@ -1,0 +1,125 @@
+# Petition 0015: Dave Plummer's sieve, PrimeC/solution_1, unchanged (part 24,
+# findings 0041).  Drafted by the 3090 through jig/draft from jig/primes.pin; its
+# draft, kept as it came, is in findings 0041 with every change made to it here
+# and why.  It had the program's own needs (the console, memory, the clock, exit)
+# and nothing of how a Linux program file runs on AiOs.
+[petition]
+id         = "0015"
+purpose    = "PUR.0012@1"
+submitted  = 2026-11-08
+submitter  = "KEY.chris@1"
+expires    = 2027-05-08
+supersedes = ""
+status     = "pending"
+
+[[capability]]
+code   = "CAP.tty.write@1"
+reason = "SPEC.drag.1@1"
+scope  = "console0"
+
+[[capability]]
+code   = "CAP.mem.alloc@1"
+reason = "SPEC.gate.14@1"
+scope  = ""
+
+[[capability]]
+code   = "CAP.time.read@1"
+reason = "SPEC.gate.13@1"
+scope  = ""
+
+[[capability]]
+code   = "CAP.proc.exit@1"
+reason = "SPEC.drag.1@1"
+scope  = ""
+
+[[capability]]
+code   = "CAP.cpu.ring3@1"
+reason = "SPEC.gate.9@1"
+scope  = ""
+
+[[capability]]
+code   = "CAP.cpu.avx@1"
+reason = "SPEC.gate.15@1"
+scope  = ""
+
+[[capability]]
+code   = "CAP.dev.serial@1"
+reason = "SPEC.machine.2@1"
+scope  = ""
+
+[[capability]]
+code   = "CAP.dev.pit@1"
+reason = "SPEC.timer.1@1"
+scope  = ""
+
+[[capability]]
+code   = "CAP.hv.kvmclock@1"
+reason = "SPEC.timer.3@1"
+scope  = ""
+
+[[component]]
+code     = "PART.drag@1"
+role     = "primary"
+admitted = false
+
+[[component]]
+code     = "PART.libc.musl@2"
+role     = "dependency"
+admitted = false
+
+[[component]]
+code     = "PART.divide64@1"
+role     = "dependency"
+admitted = false
+
+[[component]]
+code     = "TOOL.c@1"
+role     = "toolchain"
+admitted = false
+
+[[component]]
+code     = "PART.loader@10"
+role     = "boot"
+admitted = false
+
+[[component]]
+code     = "PART.gate@2"
+role     = "dependency"
+admitted = false
+
+[[component]]
+code     = "PART.timer.tsc-pit@2"
+role     = "dependency"
+admitted = false
+
+[[component]]
+code     = "PART.timer.kvmclock@1"
+role     = "dependency"
+admitted = false
+
+[[component]]
+code     = "PART.serial.8250@2"
+role     = "dependency"
+admitted = false
+
+[[component]]
+code     = "MACHINE.serial-timer@1"
+role     = "machine"
+admitted = false
+
+[[component]]
+code     = "TOOL.qemu@1"
+role     = "machine"
+admitted = false
+
+[[test]]
+code = "TST.drag.passes@1"
+
+[[test]]
+code = "TST.gate.clock@1"
+
+[[test]]
+code = "TST.gate.munmap@1"
+
+[[test]]
+code = "TST.gate.avx@1"

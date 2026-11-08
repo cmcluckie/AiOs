@@ -1,0 +1,7 @@
+code       = "SPEC.drag.1@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+component  = "PART.drag@1"
+clause     = "Dave Plummer's sieve, PrimeC/solution_1 unchanged, sieves to 1,000,000 as many times as it can in five seconds of its own clock, checks every pass's count of primes itself, prints one line saying how many passes it made, and exits."
+author     = "KEY.chris"
