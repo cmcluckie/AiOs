@@ -116,6 +116,9 @@ Chris included, and the posts say so.
   none), the one commit worth opening, and the whole repo, each "What it is:
   link" (decisions 0109, 0110).
 - The article ends with "Code on GitHub" and its labelled links (CLAUDE.md).
+- From part 22, while the drag races run, every article's title starts
+  "Drag Race Series, Claude versus Local LLM, N of 3: " and then its own title:
+  1 is part 22, 2 is part 23, 3 is Dave's sieve (decision 0116).
 - Every factual claim in a post is true of the repo at that commit.  The jokes
   can exaggerate; the numbers can't.
 

@@ -1,0 +1,11 @@
+id      = "0116"
+date    = 2026-11-08
+kind    = "rules and words"
+touches = ["posts/voice.md"]
+asked   = "From part 22, while the drag races run, every article's title starts \"Drag Race Series, Claude versus Local LLM, N of 3: \" and then its own title.  Three articles: part 22, Disqualified; part 23, One number, which takes in the 3090 finding the 150 itself; Dave's sieve.  Part 22's page is retitled to match, and part 23's draft carries its title; Chris edits part 22 on LinkedIn.  posts/voice.md says so."
+options = ["as written", "no series prefix"]
+default = "as written"
+chose   = "as written"
+why     = "Chris, 2026-11-08: \"In the title of these, I think we need to have, and I'll edit the last article, Drag Race Series, Claude versus Local LLM.\"  \"Each one needs to see which part it is, like one of two, two of three.\"  On the 150: \"I just want that combined into an article.\""
+by      = "KEY.chris@1"
+drafted = "Claude"
