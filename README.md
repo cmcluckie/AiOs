@@ -32,6 +32,7 @@ Each file holds the short post, the title and the full article.
 | 20 | 2026-11-26 | [Found a 30 year old bug hidden in a basic UNIX command](posts/2026-11-26.html) |
 | 21 | 2026-12-01 | [Why can't we just tell it not to do that?](posts/2026-12-01.html) |
 | 22 | 2026-12-03 | [Disqualified](posts/2026-12-03.html) |
+| 23 | 2026-12-08 | [One number](posts/2026-12-08.html) |
 
 ![AiOs: the nucleus at the centre, the agents that build and guard it around it, and the jig underneath](docs/aios-components.png)
 

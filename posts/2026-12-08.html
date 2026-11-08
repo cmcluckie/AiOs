@@ -1,0 +1,121 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Drag Race Series, Claude versus Local LLM, 2 of 3: One number</title>
+<style>
+body{max-width:760px;margin:32px auto;padding:0 16px;font-family:Georgia,serif;font-size:18px;line-height:1.6;color:#222;background:#fff}
+section{border:1px solid #ddd;border-radius:10px;padding:0 20px 12px;margin:0 0 28px}
+.bar{display:flex;justify-content:space-between;align-items:center;margin:0 -20px 12px;padding:8px 20px;background:#f4f3ef;border-bottom:1px solid #ddd;border-radius:10px 10px 0 0;font:600 14px system-ui,sans-serif;color:#555;user-select:none}
+button{font:600 14px system-ui,sans-serif;padding:6px 16px;border-radius:16px;border:1px solid #0a66c2;background:#0a66c2;color:#fff;cursor:pointer}
+button.done{background:#fff;color:#0a66c2}
+.text{white-space:pre-wrap;font-family:system-ui,sans-serif;font-size:15px}
+.img{font:14px system-ui,sans-serif;color:#555}
+</style></head><body>
+<section id="post">
+<div class="bar"><span>1. Post</span><button onclick="copyText('post-body',this)">Copy</button></div>
+<div id="post-body" class="text">
+AiOs, part 23 (Kernel code: 1102 lines). "The fact was right in front of it.  The reasoning wasn't."...
+
+Last time, the RTX 3090 under my desk sat an exam: lift three parts out of Linux and pass our tests.  The timer, the part that teaches AiOs how long a second is, went red six runs out of six.  I was ready to write it off.
+
+Then I asked Claude why the code didn't compile.  Nobody knew.  Claude rebuilt the last ten files the 3090 handed in: eight didn't build, and the compiler said exactly why every time.  Our test threw that away and just said "failed."  So we gave it the red pen.
+
+Then the test lied about crashes, the builders couldn't see the test, and each one started from scratch.  With those fixed, its best timer was one number from green: Linux's 50 milliseconds, where my test machine, slow to read the clock, needs 150.  With 150, it passed.  Told the machine was slow, it still didn't find the 150 itself.
+
+An AI can only get better at what it can see, and seeing still isn't understanding.
+
+The jig, both ways: https://github.com/cmcluckie/aios/blob/main/findings/0036.md
+The red pen, in one change: https://github.com/cmcluckie/aios/commit/883ea0f
+The whole repo: https://github.com/cmcluckie/aios
+
+#AiOs
+</div>
+</section>
+<section id="title">
+<div class="bar"><span>2. Title</span><button onclick="copyText('title-body',this)">Copy</button></div>
+<div id="title-body"><h1>Drag Race Series, Claude versus Local LLM, 2 of 3: One number</h1></div>
+</section>
+<section id="article">
+<div class="bar"><span>3. Article</span><button onclick="copyRich('article-body',this)">Copy</button></div>
+<div id="article-body">
+<p><em>The story behind AiOs, part 23.</em></p>
+<h2>Six reds</h2>
+<p>Last time, the 3090 sat its exam: three parts Claude and I had already lifted out of Linux by hand, the serial port, the timer and the screen, so we know what right looks like.  The director and builders beat the old bench 6 to 5.  The timer beat both of them.  Six runs, six reds.</p>
+<p>The timer is the part that teaches AiOs how long a second is.  The processor has a counter that ticks billions of times a second, but nobody tells you exactly how fast.  So you time it against something you trust: the 8254 (an old Intel timer chip that every PC has carried since the 1980s, ticking a known 1,193,182 times a second).  Count both for a moment, divide, and now you know.  Every clock in AiOs hangs off that one number.  Get it wrong and every second is wrong.</p>
+<p>The 3090 never got that far.  Run after run, the code it wrote didn't even turn into a program.  Six runs, hours each, and not one working timer.  Small model, hard part.  I was ready to write it off and move on to the sieve.</p>
+<p>I'm going to be honest about the next bit, because it's the whole story.  I didn't figure out what was wrong.  I wouldn't have known where to look.  What I did was ask Claude the dumbest question in the room: why doesn't the code compile?</p>
+<p>Nobody knew.  Not the 3090, not Claude, not me.</p>
+<h2>The red pen</h2>
+<p>Claude went and looked.  It took the last file every builder had handed in, ten of them, and built each one itself.  Eight didn't build, and every time the compiler (the program that turns code into something the machine can run) said exactly why, down to the line.</p>
+<p>Three tried to divide two really big numbers the ordinary way.  On a 32-bit processor that needs a little helper program that comes with a normal system, and AiOs doesn't have one.  Linux has carried a trick for that for decades, and our hand-written timer uses it.  Two spelled a piece of low-level code in a way our settings don't accept, and one put a number in the wrong place.  Two had warnings, and our build treats every warning as a failure, on purpose.</p>
+<p>And our test threw all of that away.  All the 3090 ever got back was "build of stopwatch failed."  Not which line.  Not why.</p>
+<p>It's like handing in an essay and getting back an F with no red pen marks.  You'd rewrite it, guess what was wrong, and probably make the same mistake again.  That's exactly what it did, over and over, until it ran out of tries.</p>
+<p>So Claude gave it the red pen.  Now when a build fails, the 3090 gets the compiler's own words.</p>
+<h2>Then the card died</h2>
+<p>Twice.  About an hour into a run, the graphics card crashed, and every question to the AI after that took twenty minutes instead of one.  The second time it took my screen with it, and I couldn't get in remotely.  Claude tried too, and Windows told it there was no screen at all.  Somebody had to walk over and hold the power button.</p>
+<p>A 3090 working flat out for hours can spike its power draw.  Claude suggested capping it at 300 watts instead of 350.  It hasn't crashed since.</p>
+<h2>The test told the truth, then lied, then told the truth</h2>
+<p>With the red pen, the 3090 started building working programs.  Then it hit the next wall.  The test kept saying "the door said 0 throughout: the rate was never measured."  In plain English: the timer said no time had passed.  (The door is how a program asks AiOs for something.  Here, what time it is.)</p>
+<p>Except most of those weren't zeros.  The 3090's code had crashed the machine in the first second, before it printed anything, and the test said the same thing it says when a timer runs fine for ten seconds and measures nothing.  So the 3090 went digging through Linux for a better way to read the clock, when the real problem was that its code was crashing.</p>
+<p>Claude fixed the message.  Then Claude got it wrong.  Its new version told every timer that printed a single line that it had crashed.  But the test program only prints when the time moves, so a timer stuck at zero prints "0" once, and that's it.  Every honest zero was now being told it had died.  Claude had written the check without reading the program it was checking, and wrote that down in the findings with its own name on it.  Fixed again.</p>
+<p>Part 22 was about a test that passed something it shouldn't have.  This time the test got pass and fail right, and the reason wrong.  For a person, a wrong reason is annoying.  For an AI, the reason is all it has to go on.</p>
+<h2>What the builders were missing</h2>
+<p>Then Claude read what the builders were actually doing, every step, and three things jumped out.</p>
+<p>They kept looking for the test.  They'd search Linux for the test's name, over and over, because Linux is the only thing they can read.  They wanted to know what they were being graded on, and nothing would show them.</p>
+<p>Every builder started from scratch.  Builder 2 would get somewhere, then builder 3 would start over with a blank page and a paragraph of advice.  That was our rule from part 22, so no builder would be told about work that wasn't there.  It also threw away everything learned.</p>
+<p>And the director, the AI that hands out the work, was making things up.  It told one builder a fact about the timer chip that isn't true.  The builder believed it.</p>
+<p>So now the builder sees the test.  Each new builder starts from the last one's file, with what the tests said about it.  And the director got a new rule: don't state a fact about the hardware you can't back up.</p>
+<p>Two out of three worked.  On the very next run the director told a builder not to assume the 8254 ticks at any particular speed.  It does.  That's the whole point of it.  You can't fix that with a sentence in the instructions.</p>
+<h2>One number</h2>
+<p>The last run ended red, out of time.  The best file the 3090 wrote counted 34 seconds while the real clock counted 10.</p>
+<p>Then Claude ran that same file on its own computer, in an emulator (software pretending to be a PC).  It passed.  Off by 1 millisecond in ten seconds.</p>
+<p>Same code, two answers.  So what's different about my test machine, the jig?</p>
+<p>This is the part I would never have found.  The jig is a Linux machine running inside another machine, inside my Windows box.  Every time the code asks the 8254 what time it is, the question goes through two layers of pretend hardware.  A pair of those reads costs about 66,000 to 129,000 of the processor's ticks on the jig, against about 850 in Claude's emulator.  Linux has a setting for how long the quick timing check is allowed to take: 50 milliseconds.  On a machine that slow to answer, 50 isn't enough.  When Claude and I lifted the timer by hand, we hit exactly this, and changed that one number to 150.</p>
+<p>The 3090 copied Linux faithfully.  It kept the 50.  Nothing it could see told it the jig was slow.</p>
+<p>So I ran its file on the jig both ways.  With 50: 34,000 milliseconds against 9,924.  With 150: 9,500 against 9,500.  Spot on.</p>
+<h2>Could it find the 150 itself?</h2>
+<p>That's the question I really wanted answered.  Not "can Claude fix it", but "can the 3090 get there on its own".  So Claude wrote the missing fact down where it belongs, in the jig's own spec sheet: reading the 8254 on this machine is slow, 66,000 to 129,000 ticks a pair.  The 3090 now gets that spec with every job.  Then we gave one builder its own best file, the one that was off by 3.4 times, and 60 questions to fix it.</p>
+<p>It didn't.</p>
+<p>It read "the 8254 is slow here" and decided not to trust the 8254 at all.  Instead it would ask the hypervisor (the software the jig runs inside) how fast the processor ticks.  On this test the hypervisor won't say.  Of its 62 reads, 39 were in the hypervisor's source code, hunting for how that answer gets handed out.  Another 16 went looking for our own files, which it can't see.  Its last three tries came back exactly where it started: 34 seconds against 10.  It never touched the 50.</p>
+<p>The fact was right in front of it.  The reasoning wasn't.  Every wall before this one was something it couldn't see.  This one was what it concluded from what it could.  That's one run, one builder, one small model on one card, so I'm not calling it a ceiling.  But it's where we are.</p>
+<h2>What I'm taking away</h2>
+<p>The 3090 lifted the timer.  Right for a real PC, straight out of Linux, all of it.  What stood between it and green was one number that exists because of how my test machine is built, and nothing it could see told it so.</p>
+<p>I want to be straight about who found what.  I didn't find the thrown-away error messages, the lying test, or the 150.  Claude did, by reading every file and every log.  My part was asking why, saying "stop" when a run was wasting the card, and deciding what we'd change.  That's the job I keep coming back to: not knowing the answer, but knowing which question to ask, and making sure the thing doing the work can see what it needs.</p>
+<p>And that's the piece this part adds.  An AI can only get better at what it can see.  If the test throws away the reason, it guesses.  If the test gives it the wrong reason, it goes looking in the wrong place, very confidently.  If nobody tells it about the machine, it does the right thing for the wrong machine.  None of what moved it from six reds to one number was a smarter model.  It was telling it the truth.  The last step, turning a true fact into the right fix, it couldn't make.  Not yet.</p>
+<p>That goes for people too.</p>
+<p>Next: Dave's sieve.</p>
+<p>Come along!</p>
+<h2>Read along</h2>
+<ol><li><a href="https://github.com/cmcluckie/aios/blob/main/findings/0032.md">findings/0032.md</a>.  Why the timer never built: the ten last hand-ins, rebuilt, and what the compiler said about each.</li><li><a href="https://github.com/cmcluckie/aios/blob/main/agent/mechanic/src/judge.rs">agent/mechanic/src/judge.rs</a>.  Search for <code>printed_before</code>: the whole red pen, about twenty lines.</li><li><a href="https://github.com/cmcluckie/aios/blob/main/tests/expected/timer.rate%401.check">tests/expected/timer.rate@1.check</a>.  The timer's test, which now says "the machine printed nothing" when it means that.  <a href="https://github.com/cmcluckie/aios/blob/main/findings/0034.md">findings/0034.md</a> is the version Claude got wrong.</li><li><a href="https://github.com/cmcluckie/aios/blob/main/findings/0035.md">findings/0035.md</a>.  What the builders were missing, port 0x41 and all.</li><li><a href="https://github.com/cmcluckie/aios/blob/main/runs/20261108T072726Z-timer-2-ollama-qwen3-8-27b/output.txt">runs/20261108T072726Z-timer-2-ollama-qwen3-8-27b/output.txt</a>.  The 3090's timer.  Search for <code>MAX_QUICK_PIT_MS</code>: the 50.</li><li><a href="https://github.com/cmcluckie/aios/blob/main/lifted/PART.timer.tsc-pit%402/tsccal.c">lifted/PART.timer.tsc-pit@2/tsccal.c</a>.  Ours.  The comment at the top says why ours is 150.</li><li><a href="https://github.com/cmcluckie/aios/blob/main/findings/0036.md">findings/0036.md</a>.  The jig, both ways.</li><li><a href="https://github.com/cmcluckie/aios/blob/main/findings/0038.md">findings/0038.md</a>.  The run where it had the fact and still didn't find the 150, and where its 62 reads went.</li></ol>
+<h2>Try this</h2>
+<p>Open <code>lifted/PART.timer.tsc-pit@2/tsccal.c</code>, find <code>do_div(delta, i<em>256</em>1000);</code>, and change it to <code>delta /= i<em>256</em>1000;</code>.  That's dividing the normal way.  Then run <code>sh jig/test timer.rate</code>.  It fails with "build of stopwatch failed", and just before that line, the linker's own words: <code>undefined reference to '__udivdi3'</code>.  That's the helper a 32-bit processor needs for the big division, and the line the 3090 never got to see.  Put <code>do_div</code> back and it passes again.  Claude ran this under emulation.</p>
+<h2>As built</h2>
+<ul><li><a href="https://github.com/cmcluckie/aios/blob/main/index/tool/agent%401.as-built.md">TOOL.agent@1</a>: the director and builders.  A failed hand-in now carries the compiler's words; a lifter is shown the item's tests and starts from the last lifter's file.</li></ul>
+<h2>Addendum: the tests</h2>
+<p>Every test this post added or changed, run by <code>sh jig/test</code> on the jig, under KVM, at commit 3cf51c7.  The whole suite: 126 passed, 1 failed, 16 skipped.  The one failure is loader.quiet-exit, red on purpose since part 22.  Of the skipped, 12 are the agent&#x27;s own tests, which need Rust, and 4 are retired.  <code>sh jig/mutate</code> has not been run on the jig for this post, and still counts a skipped test&#x27;s breakages as caught (part 22), so the breakages below were each tried by hand, where the test runs.  One thing still to catch up: SPEC.agent.12@1 says a lifter is shown nothing of the repo, and it is now shown the item&#x27;s tests and its machine&#x27;s spec.</p>
+<h3>TOOL.agent@1</h3>
+<ul><li><a href="https://github.com/cmcluckie/aios/blob/main/tests/agent.lift%401.toml">agent.lift@1</a>.  Checks: SPEC.agent.12@1, the lifter.  This post added: a lift that does not build is shown what the compiler said; a lifter is shown the item&#x27;s tests, their checks, the programs they run and the machine they boot; a lifter after the first starts from the last lifter&#x27;s file, shown with what the tests said of it, and the director passes it on.  Goes red when any of those is missing, or when a lifter is offered more than its three tools, shown the hand lift, or lets a read with no reason or a file the part does not ask for through.  Skipped on the jig, which has no Rust toolchain.  Passed in Claude&#x27;s workspace; 11 deliberate breakages, each caught there, the five this post added among them.</li></ul>
+<h3>PART.timer.tsc-pit@2</h3>
+<ul><li><a href="https://github.com/cmcluckie/aios/blob/main/tests/timer.rate%401.toml">timer.rate@1</a>.  Checks: SPEC.timer.1@1, the counter&#x27;s rate measured against the 8254&#x27;s 1,193,182 Hz, never assumed.  Goes red when the ms system call is 0 forever or drifts from the host&#x27;s clock by more than 1% over 10 seconds.  This post changed only what it says when red: a machine that printed nothing is said to have printed nothing.  Passed on the jig at 3cf51c7: drift 1 ms per 10 s.  3 deliberate breakages, caught on the jig at d515c84.</li>
+<li><a href="https://github.com/cmcluckie/aios/blob/main/tests/timer.says%401.toml">timer.says@1</a>.  New.  Checks: that timer.rate@1 tells a machine that printed nothing from a timer stuck at 0.  Goes red when it says a crash measured 0, or a stuck timer crashed (the mistake findings 0034 records).  Passed on the jig at 3cf51c7.  1 deliberate breakage, caught by hand.</li></ul>
+<h2>Code on GitHub</h2>
+<p>Every line that changed, on one page (hash when committed).</p>
+<p>The commits behind this post, in order:</p>
+<ol>
+<li><a href="https://github.com/cmcluckie/aios/commit/d515c84">Part 23: findings 0031, the race run: three of each exam item on each bench, the layered agent 6 of 9, the old bench 5 of 9, the timer beat both; every run record</a></li><li><a href="https://github.com/cmcluckie/aios/commit/883ea0f">Part 23: a lift that does not build is shown what the compiler said; findings 0032, why the timer never built (decision 0111)</a></li><li><a href="https://github.com/cmcluckie/aios/commit/b16b30b">Part 23: the timer&#x27;s test says a machine that died as that, not that it measured 0; findings 0033, the rerun (decision 0112)</a></li><li><a href="https://github.com/cmcluckie/aios/commit/b1e1f10">Part 23: a door stuck at 0 is said to be again, not that the machine stopped printing; findings 0034 (decision 0113)</a></li><li><a href="https://github.com/cmcluckie/aios/commit/5992997">Part 23: a lifter is shown the item&#x27;s tests and starts from the last lifter&#x27;s file; the director keeps to facts a note shows; findings 0035 (decision 0114)</a></li><li><a href="https://github.com/cmcluckie/aios/commit/aaa9d05">Part 23: findings 0036, the timer one number from green on the jig; the article&#x27;s first draft</a></li><li><a href="https://github.com/cmcluckie/aios/commit/94d4b17">Part 23: the article in the series&#x27; format and plain English; the lifter shown the machine its test boots, the jig&#x27;s 8254 in its spec; findings 0037 (decisions 0115, 0117); the timer&#x27;s run records</a></li><li><a href="https://github.com/cmcluckie/aios/commit/3cf51c7">Part 23: findings 0038, shown the jig&#x27;s machine the 3090 did not find the 150; the article&#x27;s ending; the run record</a></li><li>Part 23: the post page and its image, One number; the jig&#x27;s test results at 3cf51c7 (hash when committed)</li>
+</ol>
+<p><a href="https://github.com/cmcluckie/aios">The whole repo</a>.</p>
+</div>
+</section>
+<p class="img">Image: 2026-12-08.png, in this folder.</p>
+<script>
+function flash(b){b.textContent='Copied';b.classList.add('done');setTimeout(function(){b.textContent='Copy';b.classList.remove('done')},1500)}
+function select(id){var r=document.createRange();r.selectNodeContents(document.getElementById(id));var s=getSelection();s.removeAllRanges();s.addRange(r);return s}
+// A pasted image doesn't survive into LinkedIn, so each one is copied as a marker naming its file.
+function copyRich(id,b){var c=document.getElementById(id).cloneNode(true);c.removeAttribute('id');
+  c.querySelectorAll('img').forEach(function(i){var p=document.createElement('p');p.innerHTML='<strong>[Upload '+i.getAttribute('src')+' here]</strong>';(i.closest('p.img')||i).replaceWith(p)});
+  c.style.position='fixed';c.style.left='-9999px';document.body.appendChild(c);
+  var r=document.createRange();r.selectNodeContents(c);var s=window.getSelection();s.removeAllRanges();s.addRange(r);
+  document.execCommand('copy');s.removeAllRanges();c.remove();flash(b)}
+function copyText(id,b){var t=document.getElementById(id).innerText.trim();
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(function(){flash(b)},function(){copyRich(id,b)})}else{copyRich(id,b)}}
+</script>
+</body></html>
