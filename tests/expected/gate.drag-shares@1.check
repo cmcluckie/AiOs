@@ -1,0 +1,20 @@
+# TST.gate.drag-shares@1, run by jig/test as: sh this STAMPED-CAPTURE SECONDS
+# Green when Dave Plummer's sieve, a Linux program file, and the stopwatch were
+# booted together and watched for SECONDS by the host's clock: the stopwatch
+# showed every second once and in order and kept up with the host's clock (as
+# TST.stopwatch.ticks@1 asks of it alone), the sieve printed its own result
+# line, every pass of it checked by the sieve itself (solution_1's
+# "mckoss-c830;PASSES;5.0;1;..." line), with at least one pass, and at least
+# two seconds ticked over while the sieve was still working: the two really ran
+# at once (findings 0040).
+sh "$(dirname "$0")/stopwatch.ticks@1.check" "$1" "$2" > /tmp/drag.$$ 2>&1 || { cat /tmp/drag.$$; rm -f /tmp/drag.$$; exit 1; }
+rm -f /tmp/drag.$$
+awk '
+$2 ~ /^mckoss-c830;/ { split($2, f, ";"); if (f[2] + 0 < 1) { print "the sieve finished no passes: " $2; exit 1 } done = $1; passes = f[2]; next }
+$2 ~ /Expected .* primes/ { print "the sieve says its count is wrong: " substr($0, index($0, $2)); exit 1 }
+$2 ~ /^[0-9][0-9]:[0-9][0-9]$/ { if (!done) during++ }
+END {
+	if (!done) { print "the sieve printed no result line"; exit 1 }
+	if (during < 2) { print "only " during " seconds ticked while the sieve worked: they did not run at once"; exit 1 }
+	printf "the sieve, %d passes in its 5 s, beside the stopwatch, %d seconds ticked meanwhile\n", passes, during
+}' "$1"

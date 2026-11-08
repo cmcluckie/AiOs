@@ -1,0 +1,7 @@
+code       = "SPEC.gate.13@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+component  = "PART.gate@2"
+clause     = "A Linux program's clock_gettime64 with CLOCK_PROCESS_CPUTIME_ID answers the time the program has run, from the rate the timer measured at boot, in seconds and nanoseconds, never going backwards (findings 0039)."
+author     = "KEY.chris"

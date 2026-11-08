@@ -1,0 +1,7 @@
+code       = "SPEC.gate.15@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+component  = "PART.gate@2"
+clause     = "If the processor has AVX and XSAVE (CPUID leaf 1 ECX bits 28 and 26), the kernel sets CR4.OSXSAVE and turns on the x87, SSE and AVX state in XCR0 at boot, as Linux does, so a Linux program may use the AVX registers; with several programs, that state is saved and restored on every switch, as the SSE state is (findings 0039, findings 0040)."
+author     = "KEY.chris"

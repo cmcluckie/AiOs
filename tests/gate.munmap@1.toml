@@ -1,0 +1,10 @@
+code       = "TST.gate.munmap@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+binds      = "SPEC.gate.14@1"
+red_when   = "under the drag flavor's kernel, a Linux program that takes 64 KiB with mmap2 and gives it back with munmap, 20,000 times on a 64 MiB machine, is refused memory before the last round, or munmap fails"
+timeout_ms = 90000
+isolates   = "PART.gate@2"
+runner     = "jig/test cmd sh tests/programs/dragcalls.sh munmap"
+mutations  = 0

@@ -1,0 +1,7 @@
+# Dave Plummer's sieve beside the stopwatch, on the sharing kernel (part 24,
+# findings 0040): car 3, AiOs with several programs.  Until petition 0015 is
+# committed and the sharing kernel runs a Linux program file, this flavor does
+# not build, and its test is red.
+name      = "dragshare"
+machine   = "MACHINE.serial-irq@1"
+petitions = ["0004", "0006", "0015"]

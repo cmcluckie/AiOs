@@ -6,7 +6,7 @@
 # quartermaster calls it; so will the historian.  A name, file or line range
 # that is not in the pinned source is refused, never guessed at.
 #
-#   reader [--source v7|bsd] QUESTION   the source is Linux unless --source says Unix Version 7 or Berkeley
+#   reader [--source v7|bsd|primes] QUESTION   the source is Linux unless --source says Unix Version 7, Berkeley or Dave Plummer's drag race
 #   reader pin                       the commit every answer comes from
 #   reader list DIR                  what is in a directory ("." for the top); folders end in /
 #   reader read FILE FIRST LAST      those lines, each as  FILE:LINE: text
@@ -28,6 +28,9 @@
 # --source bsd reads Berkeley's 4.4BSD-Lite (1994) the same way, from the one
 # commit in jig/bsd.pin, out of the same history repo (BSD=/path, default the V7
 # clone).  The same rules hold, and the same three questions are refused.
+# --source primes reads Dave Plummer's drag race, PlummersSoftwareLLC/Primes, from
+# the one commit in jig/primes.pin, out of a clone of it (PRIMES=/path, default
+# ../Primes).  The same rules hold, and the same three questions are refused.
 #
 # Exit 0 answered, 1 refused (the reason is on stderr), 2 cannot run here.
 # At most READER_MAX lines (default 200) come back from any one question, so a
@@ -51,7 +54,8 @@ case "$source" in
 linux)	CLONE=${LINUX:-$repo/../linux}; name=Linux; pinfile=linux.pin; var=LINUX ;;
 v7)	CLONE=${V7:-$repo/../unix-history-repo}; name="Unix Version 7"; pinfile=v7.pin; var=V7 ;;
 bsd)	CLONE=${BSD:-${V7:-$repo/../unix-history-repo}}; name="4.4BSD-Lite"; pinfile=bsd.pin; var=BSD ;;
-*)	die "unknown source '$source'; the reader has linux, v7 and bsd" ;;
+primes)	CLONE=${PRIMES:-$repo/../Primes}; name="Dave Plummer's drag race"; pinfile=primes.pin; var=PRIMES ;;
+*)	die "unknown source '$source'; the reader has linux, v7, bsd and primes" ;;
 esac
 PIN=${READER_PIN:-$(sed -n 's/^commit *= *"\([0-9a-f]\{40\}\)".*/\1/p' "$repo/jig/$pinfile")}
 g()    { git -C "$CLONE" "$@"; }

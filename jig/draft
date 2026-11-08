@@ -17,7 +17,7 @@
 # number.  It is not in petitions/: a person reads it first and commits it.
 # DRAFT_TRIES (1), DRAFT_TURNS (25 model calls in one try), DRAFT_MAXTOKENS (8000
 # per reply), DRAFT_OUT (out/draft), DRAFT_ID (the petition number to use),
-# DRAFT_SOURCE (v7, or bsd for 4.4BSD-Lite: which source the model may read; every
+# DRAFT_SOURCE (v7, bsd for 4.4BSD-Lite, or primes for Dave's drag race: which source the model may read; every
 # question to the reader carries it), DRAFT_SUPERSEDES (the petition this draft
 # replaces, handed to the model; default none),
 # READER (the command to use, default jig/reader), REFEREE (default
@@ -40,7 +40,8 @@ command -v jq > /dev/null || cannot "jq is not installed"
 case "$DRAFT_SOURCE" in
 	v7) srcname="Unix Version 7 (1979)" ;;
 	bsd) srcname="4.4BSD-Lite (Berkeley, 1994)" ;;
-	*) die "unknown source '$DRAFT_SOURCE'; the draft step knows v7 and bsd" ;;
+	primes) srcname="Dave Plummer's software drag race (PlummersSoftwareLLC/Primes, 2021)" ;;
+	*) die "unknown source '$DRAFT_SOURCE'; the draft step knows v7, bsd and primes" ;;
 esac
 purpose=$1; source=$2
 pf="$repo/constitution/purposes/${purpose#PUR.}.toml"

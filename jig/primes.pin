@@ -1,0 +1,8 @@
+# The one commit of Dave Plummer's drag race the shared source reader (jig/reader
+# --source primes) answers from: PlummersSoftwareLLC/Primes on GitHub, the commit
+# out/sieve-car1.sh built car 1 from (findings 0039).  PrimeC/solution_1 is Mike
+# Koss's C entry, April 2021; contributions to the repository are BSD-3
+# (CONTRIBUTING.md).  Nothing from it is copied into the repo by the reader; what
+# part 24 takes goes to lifted/ with an origin record.  Moving the pin is a human
+# decision.
+commit = "bd2d51111adb76405cb704b5eb78669591d6f32b"

@@ -1,0 +1,7 @@
+code       = "SPEC.gate.16@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+component  = "PART.gate@2"
+clause     = "On the sharing kernel, a Linux program file runs beside AiOs's own programs, each in its own space, with the Linux calls PART.gate@2 gives a lone Linux program and its own SSE and AVX state, saved and restored on every switch (findings 0040)."
+author     = "KEY.chris"

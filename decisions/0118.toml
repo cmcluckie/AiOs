@@ -1,0 +1,11 @@
+id      = "0118"
+date    = 2026-11-08
+kind    = "tests"
+touches = ["jig/reader", "jig/draft", "jig/primes.pin", "tests/reader.primes-pin@1.toml", "tests/programs/reader-primes.sh", "tests/gate.clock@1.toml", "tests/gate.munmap@1.toml", "tests/gate.avx@1.toml", "tests/gate.drag-shares@1.toml", "tests/programs/dragcalls.c", "tests/programs/dragcalls.sh", "tests/expected/gate.drag-shares@1.check", "tests/mutations.txt", "specs/reader.7@1.toml", "specs/gate.13@1.toml", "specs/gate.14@1.toml", "specs/gate.15@1.toml", "specs/gate.16@1.toml", "constitution/purposes/0012@1.toml", "findings/0040.md"]
+asked   = "Part 24 laid out up front (findings 0040).  The reader and the draft step read Dave Plummer's drag race from jig/primes.pin (TST.reader.primes-pin@1, red first, three mutations).  Purpose PUR.0012@1: run Dave's sieve unchanged and print its own count of passes.  Four red tests for what AiOs lacks to run it, on the drag and dragshare flavors, which do not build until petition 0015 is committed: the clock call, munmap, AVX, and the sieve beside the stopwatch.  Their specs SPEC.gate.13 to 16.  The 3090 drafts petition 0015; its builders fix the first three after."
+options = ["take it", "do not take it"]
+default = "take it"
+chose   = "take it"
+why     = "Chris, 2026-11-08: \"Yup lets do it....can we lay out as much work as possible up front and fix it later?\""
+by      = "KEY.chris@1"
+drafted = "Claude"

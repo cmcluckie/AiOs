@@ -1,0 +1,10 @@
+code       = "TST.gate.drag-shares@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+binds      = "SPEC.gate.16@1"
+red_when   = "Dave Plummer's sieve, a Linux program file, booted beside the stopwatch on the sharing kernel and watched for 12 seconds: the stopwatch misses or repeats a second or drifts, the sieve prints no result line or a wrong count, or fewer than two seconds tick over while it works"
+timeout_ms = 30000
+isolates   = "PART.gate@2"
+runner     = "jig/test timed dragshare 12"
+mutations  = 0

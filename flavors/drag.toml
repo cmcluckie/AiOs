@@ -1,0 +1,7 @@
+# Dave Plummer's sieve, PrimeC/solution_1 (part 24, findings 0039): one Linux
+# program file on the machine with the 8254, so it can time itself.  Petition
+# 0015 is drafted by the 3090 from jig/primes.pin; until it is committed, this
+# flavor does not build, and the tests on it are red.
+name      = "drag"
+machine   = "MACHINE.serial-timer@1"
+petitions = ["0015"]

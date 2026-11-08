@@ -1,0 +1,6 @@
+code       = "PUR.0012@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+sentence   = "Run Dave Plummer's prime sieve, PrimeC/solution_1, unchanged, and print its own count of the passes it made in five seconds."
+holder     = "KEY.chris"

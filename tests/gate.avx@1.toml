@@ -1,0 +1,10 @@
+code       = "TST.gate.avx@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+binds      = "SPEC.gate.15@1"
+red_when   = "under the drag flavor's kernel, a Linux program's AVX instruction stops it, or gives the wrong answer"
+timeout_ms = 90000
+isolates   = "PART.gate@2"
+runner     = "jig/test cmd sh tests/programs/dragcalls.sh avx"
+mutations  = 0

@@ -1,0 +1,19 @@
+# Part 24 (findings 0039, 0040): what Dave Plummer's sieve needs from AiOs that
+# AiOs lacks, each a red test on the drag flavor, fixed by the 3090's builders in
+# PART.gate@2 and the loader.  The plan's commit is set when it is run (out/
+# drag-queue.sh, AT=), after petition 0015 is committed: before it, the drag
+# flavor does not build and no builder could make these green.
+part       = "PART.gate@2: the clock call, munmap and AVX for Dave Plummer's sieve"
+tests      = ["gate.clock@1", "gate.munmap@1", "gate.avx@1"]
+at         = "0c2e70f"
+budget_usd = 0
+max_tries  = 10
+max_minutes = 480
+
+[gear]
+tactical = 1
+builders = 1
+
+[prompts]
+director = "director@3"
+builder  = "builder@2"
