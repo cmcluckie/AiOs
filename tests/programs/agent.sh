@@ -54,7 +54,7 @@ toy() {
 	cat > "$a/jig/test" <<'TOY'
 #!/bin/sh
 f=pool/PART.toy@1/toy.c; p=0; n=0
-if grep -q 'answer = 42' $f; then echo "PASS  TST.toy.answer@1  0s  42"; p=$((p+1)); else echo "FAIL  TST.toy.answer@1  0s  the answer is $(sed 's/[^0-9]//g' $f), not 42"; n=$((n+1)); fi
+if grep -q 'answer = 42' $f; then echo "PASS  TST.toy.answer@1  0s  42"; p=$((p+1)); else echo "toy: read $f, $(grep -c answer $f) answer line"; echo "FAIL  TST.toy.answer@1  0s  the answer is $(sed 's/[^0-9]//g' $f), not 42"; n=$((n+1)); fi
 grep -q forge $f && echo "PASS  TST.toy.answer@1  0s  a line the fix printed itself"
 if grep -q 'break other' $f; then echo "FAIL  TST.toy.other@1  0s  broken by the fix"; n=$((n+1))
 elif grep -q 'skip other' $f; then echo "SKIP  TST.toy.other@1  0s  skipped"
@@ -244,6 +244,8 @@ build)
 	mkdir "$t/forge"; cp "$fx/build/forge-1.json" "$t/forge/1.json"; run forge '' 9
 	ans forge 0 2 | grep -q 'judged: fail.  the test it was given is still red' ||
 		fail "a fix whose test printed both PASS and FAIL was taken: $(ans forge 0 2 | head -1)"
+	ans forge 0 2 | grep -q '^toy: read pool/PART.toy@1/toy.c, 1 answer line$' ||
+		fail "a fix whose test is still red was not shown what the test printed: $(ans forge 0 2 | tr '\n' ' ' | cut -c1-300)"
 	# the jig gone between the suite before and the hand-in: not the builder's failure, so
 	# cannot run, recorded, and the note is the suite before, not an ssh error with no counts
 	mkdir "$t/down"; cp "$fx/build/8.json" "$t/down/1.json"; JIGDOWN="$t/jigdown" run down '' 10

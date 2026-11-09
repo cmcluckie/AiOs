@@ -370,6 +370,7 @@ agent.build@1 | red | agent/mechanic/src/build.rs | s/        self.may_change(\&
 agent.build@1 | red | agent/mechanic/src/build.rs | s/self.jig_down = true;/self.jig_down = false;/ | a jig gone at a hand-in is taken for a failed fix, and the director spends a try on it
 agent.build@1 | red | agent/mechanic/src/build.rs | s/if spent + next > m {/if spent + next > m * 100.0 {/ | a paid builder spends past its share of the part's dollars
 agent.build@1 | red | agent/mechanic/src/build.rs | s/if let Err(why) = self.runs.room(spent + next) {/if let Err(why) = Ok::<(), String>(()) {/ | a paid builder never asks the month's cap
+agent.build@1 | red | agent/mechanic/src/build.rs | s/if let Some(said) = judge::lift_verdict(\&after, std::slice::from_ref(\&self.code)) {/if let Some(said) = None::<String> {/ | a fix whose test is still red is told only that, never what the test printed, as on the clock in part 24
 agent.direct@1 | red | agent/mechanic/src/stuck.rs | s/if window.iter().all(|r| same(r, \&window\[0\])) {/if false \&\& window.iter().all(|r| same(r, \&window[0])) {/ | the same failure run after run never stops the part, and the tries are spent hoping
 agent.direct@1 | red | agent/mechanic/src/stuck.rs | s/if low_last >= low_before {/if low_last > low_before {/ | a failing count that holds steady is taken for progress
 agent.direct@1 | red | agent/mechanic/src/stuck.rs | s/a.test == b.test \&\& //; | jobs that move between tests and fail the same way are called stuck

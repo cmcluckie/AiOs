@@ -303,6 +303,11 @@ impl Builder<'_> {
         if !v.newly_red.is_empty() {
             a += &format!("\nWhat the tests that went red printed:\n{}", runtime::model::cut(&v.newly_red.join("\n"), 2000));
         }
+        // the test it was given, still red: its own FAIL line and what was printed just
+        // before it, as a lifter is shown (findings 0043)
+        if let Some(said) = judge::lift_verdict(&after, std::slice::from_ref(&self.code)) {
+            a += &format!("\nWhat the test it was given printed:\n{said}");
+        }
         a + "\nWhat you changed is still on disk.  Change it, with edit_file or whole files, and hand it in again with submit_fix."
     }
 

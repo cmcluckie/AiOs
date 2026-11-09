@@ -1,0 +1,11 @@
+id      = "0121"
+date    = 2026-11-08
+kind    = "rules and words"
+touches = ["agent/mechanic/src/build.rs", "tests/agent.build@1.toml", "tests/programs/agent.sh", "tests/mutations.txt", "findings/0043.md"]
+asked   = "A fix builder whose hand-in leaves its test red is shown what that test printed: its FAIL line and the lines before it, as a lifter is (findings 0043).  TST.agent.build@1 red first; a thirteenth mutation."
+options = ["take it", "show the whole suite output", "leave it, the builder can read suite.txt"]
+default = "take it"
+chose   = "take it"
+why     = "Seven hand-ins on the clock call, each told only \"still red\" while the test said \"only 1 readings\" (findings 0043).  The builder cannot read suite.txt; it is outside its copy."
+by      = "KEY.chris@1"
+drafted = "Claude"
