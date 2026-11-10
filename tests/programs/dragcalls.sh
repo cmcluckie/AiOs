@@ -8,6 +8,8 @@
 #           milliseconds must keep pace with the host's clock to within 1%, as
 #           tests/expected/loader.ms@1.check holds the ms door to it
 #   munmap  20,000 rounds of 64 KiB taken and given back, on a 64 MiB machine
+#   keep    a block given back while a newer one is in use: the one in use is
+#           never handed out again, and keeps what was written to it
 #   avx     one SSE and one AVX instruction, each with the right answer
 # Under KVM the machine's processor is the host's (-cpu host), which has AVX.
 # Exit 0 green, 1 red, 2 no QEMU.
@@ -19,8 +21,8 @@ t=$(mktemp -d); trap 'rm -rf "$t"' EXIT
 fail() { echo "$*"; exit 1; }
 sh jig/aios build drag > "$t/build" 2>&1 || fail "the drag flavor does not build: $(tail -1 "$t/build")"
 case "$mode" in
-clock) def=CLOCK; secs=10; x= ;; munmap) def=MUNMAP; secs=60; x= ;; avx) def=AVX; secs=20; x="-msse2 -mavx" ;;
-*) fail "no mode '$mode': clock, munmap or avx" ;;
+clock) def=CLOCK; secs=10; x= ;; munmap) def=MUNMAP; secs=60; x= ;; keep) def=KEEP; secs=20; x= ;; avx) def=AVX; secs=20; x="-msse2 -mavx" ;;
+*) fail "no mode '$mode': clock, munmap, keep or avx" ;;
 esac
 gcc -m32 -march=i486 -O2 -static -nostdlib -no-pie -fno-pie -fno-stack-protector -ffreestanding -Wl,--build-id=none -D$def $x -o "$t/probe" tests/programs/dragcalls.c || fail "the probe does not build"
 machine=$(sed -n 's/^machine *= *"MACHINE\.\(.*\)".*/\1/p' flavors/drag.toml)
@@ -36,6 +38,8 @@ clock)
 	sh tests/expected/loader.ms@1.check "$t/got" "$secs" || exit 1 ;;
 munmap)
 	grep -q ' munmap rounds 20000$' "$t/got" || fail "$(cut -d' ' -f2- "$t/got" | tr '\n' ' ' | cut -c1-200)" ;;
+keep)
+	grep -q ' keep ok$' "$t/got" || fail "$(cut -d' ' -f2- "$t/got" | tr '\n' ' ' | cut -c1-200)" ;;
 avx)
 	grep -q ' sse ok$' "$t/got" && grep -q ' avx ok$' "$t/got" || fail "$(cut -d' ' -f2- "$t/got" | tr '\n' ' ' | cut -c1-200)"
 	echo "sse ok, avx ok" ;;

@@ -1,0 +1,11 @@
+id      = "0122"
+date    = 2026-11-09
+kind    = "rules and words"
+touches = ["pool/PART.gate@2/gate.c", "specs/gate.17@1.toml", "tests/gate.munmap-keep@1.toml", "tests/programs/dragcalls.c", "tests/programs/dragcalls.sh", "agent/plans/drag.toml", "findings/0044.md"]
+asked   = "The 3090's two passes on plan-drag, the clock call (try 2) and munmap (try 3), taken together into PART.gate@2 as it wrote them.  A red test for the hole in its munmap (SPEC.gate.17@1, TST.gate.munmap-keep@1).  The plan rerun on AVX and that hole (findings 0044)."
+options = ["take it", "take the passes and fix the munmap hole by hand", "rerun all three from a clean commit"]
+default = "take it"
+chose   = "take it"
+why     = "Chris, 2026-11-09: \"Go\".  The wins did not stack because every fix job starts from the plan's commit (findings 0044 item 2); the hole is the 3090's to fix once a test can see it."
+by      = "KEY.chris@1"
+drafted = "Claude"

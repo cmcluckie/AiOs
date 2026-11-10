@@ -2,9 +2,11 @@
 # AiOs lacks, each a red test on the drag flavor, fixed by the 3090's builders in
 # PART.gate@2 and the loader.  The plan's commit is set when it is run (out/
 # drag-queue.sh, AT=), after petition 0015 is committed: before it, the drag
-# flavor does not build and no builder could make these green.
-part       = "PART.gate@2: the clock call, munmap and AVX for Dave Plummer's sieve"
-tests      = ["gate.clock@1", "gate.munmap@1", "gate.avx@1"]
+# flavor does not build and no builder could make these green.  Second run
+# (findings 0044): the clock call and munmap are the 3090's, committed; what is
+# left is AVX and the hole in its munmap.
+part       = "PART.gate@2: AVX, and munmap that never gives back memory still in use, for Dave Plummer's sieve"
+tests      = ["gate.avx@1", "gate.munmap-keep@1"]
 at         = "0c2e70f"
 budget_usd = 0
 max_tries  = 10

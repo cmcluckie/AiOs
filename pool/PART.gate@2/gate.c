@@ -76,6 +76,7 @@
 #define NR_EXIT_GROUP	252
 #define NR_SET_TID_ADDRESS 258
 #define NR_STATX	383
+#define NR_CLOCK_GETTIME64 403
 
 #define ENOENT		2
 #define ENOMEM		12
@@ -126,7 +127,7 @@ static const struct gate_sched *sched;
 static int sse_on;			/* 1 if the processor has FXSR and SSE and we enabled them */
 
 static unsigned long win_lo, win_hi;	/* the same virtual window in every space */
-static unsigned long brk_lo, brk_cur, map_lo;	/* a Linux program's heap: brk grows up from brk_lo, mmap2 down from map_lo; 0 for the others */
+static unsigned long brk_lo, brk_cur, map_lo, map_top;	/* a Linux program's heap: brk grows up from brk_lo, mmap2 down from map_lo, which never passes map_top; 0 for the others */
 static const struct door *calls;
 
 /* Is [p, p+n) all inside what ring 3 may touch? */
@@ -307,6 +308,27 @@ static long mmap2(unsigned long addr, unsigned long len, unsigned long flags, un
 	return (long)map_lo;
 }
 
+/* munmap(addr, len): the region given back is fresh room again, as Linux does:
+ * if it reaches the low edge, the low edge moves back up to its top. */
+static long munmap(unsigned long addr, unsigned long len)
+{
+	unsigned long n, top;
+
+	if (!brk_lo)
+		return -ENOSYS;
+	if (len == 0)
+		return 0;
+	n = (len + PAGE - 1) & ~(PAGE - 1);
+	if (n < len)
+		return -EINVAL;
+	top = addr + n;
+	if (top < addr || addr < map_lo || top > map_top)
+		return -EINVAL;
+	if (top > map_lo)
+		map_lo = top;
+	return 0;
+}
+
 /* set_thread_area(u_info): one segment for the program's thread storage, GDT
  * entry 6, at the base it asks for, 4 GiB long, ring 3, data.  Linux's struct
  * user_desc: entry number (-1: choose), base, limit, flags. */
@@ -426,13 +448,28 @@ static long syscall(const unsigned long *frame)
 	case NR_MMAP2:
 		return mmap2(a, b, frame[1], frame[0]);	/* addr, length; flags in esi, fd in edi (frame: edi esi ebp esp ebx edx ecx eax) */
 	case NR_MUNMAP:
-		return brk_lo ? 0 : -ENOSYS;	/* nothing given back: the memory stays the program's until it exits */
+		return munmap(a, b);
 	case NR_SET_THREAD_AREA:
 		return set_thread_area(a);
 	case NR_SET_TID_ADDRESS:
 		return brk_lo ? 1 : -ENOSYS;	/* one program, one thread: its number is 1 */
 	case NR_STATX:
 		return statx(a, b, c, frame[0]);	/* dirfd, path, flags; the mask in esi is ignored, the answer goes to edi's address */
+	case NR_CLOCK_GETTIME64:	/* clockid in ebx, timespec * in ecx: one program, so its CPU time is the ms door's */
+		if (brk_lo) {
+			unsigned long *t, m;
+
+			if (a != 2)			/* CLOCK_PROCESS_CPUTIME_ID, Linux's number */
+				return -EINVAL;
+			if (!user_ok(b, 16))
+				return -EFAULT;
+			t = (unsigned long *)b;
+			m = calls->ms();
+			t[0] = m / 1000;		/* seconds */
+			t[1] = (m % 1000) * 1000000;	/* nanoseconds */
+			return 0;
+		}
+		return -ENOSYS;
 	}
 	return -ENOSYS;
 }
@@ -717,6 +754,7 @@ void __attribute__((noreturn)) gate_exec(unsigned long entry, unsigned long phys
 	map_lo = esp & ~(PAGE - 1);
 	if (map_lo > 0x100000UL + brk_lo)
 		map_lo -= 0x100000UL;		/* the stack keeps 1 MiB below where it starts */
+	map_top = map_lo;
 	nspaces = 1;
 	base_init(0);
 	space_map(pds[0], phys, virt, len, 0);

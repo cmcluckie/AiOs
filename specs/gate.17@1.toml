@@ -1,0 +1,7 @@
+code       = "SPEC.gate.17@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+component  = "PART.gate@2"
+clause     = "Memory a Linux program still holds is never handed out again by mmap2, whatever it gave back with munmap before (findings 0044)."
+author     = "KEY.chris"

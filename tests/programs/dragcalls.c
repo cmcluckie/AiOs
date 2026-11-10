@@ -10,6 +10,10 @@
  *   MUNMAP  64 KiB asked for with mmap2, written, and given back with munmap,
  *           20,000 times (1.25 GiB in all, on a 64 MiB machine), as each sieve
  *           pass does; "munmap 20000 rounds", or where mmap2 failed
+ *   KEEP    two 64 KiB blocks taken, the first given back while the second is
+ *           still in use, then two more taken: neither may land on the
+ *           second, and what was written there must still be there; "keep ok",
+ *           or what went wrong
  *   AVX     one SSE and one AVX instruction, each checked: "sse ok", "avx ok";
  *           SSE is on already (TST.gate.sse@1), AVX is not */
 static long sys(long n, long a, long b, long c, long d, long e)
@@ -82,6 +86,37 @@ void _start(void)
 		}
 	}
 	say("munmap rounds", i, 1);
+#elif defined(KEEP)
+	long a, b, c, d;
+	volatile unsigned char *kept;
+
+	a = sys(NR_MMAP2, 0, 65536, 3, 0x22, -1);
+	b = sys(NR_MMAP2, 0, 65536, 3, 0x22, -1);
+	if ((a < 0 && a > -4096) || (b < 0 && b > -4096)) {
+		say("mmap2 failed", a < 0 && a > -4096 ? a : b, 1);
+		sys(NR_EXIT_GROUP, 1, 0, 0, 0, 0);
+	}
+	kept = (volatile unsigned char *)b;
+	kept[0] = 0x5a;
+	kept[65535] = 0x5a;
+	if (sys(NR_MUNMAP, a, 65536, 0, 0, 0)) {
+		say("munmap of the first block failed", 0, 0);
+		sys(NR_EXIT_GROUP, 1, 0, 0, 0, 0);
+	}
+	c = sys(NR_MMAP2, 0, 65536, 3, 0x22, -1);
+	d = sys(NR_MMAP2, 0, 65536, 3, 0x22, -1);
+	if ((c < 0 && c > -4096) || (d < 0 && d > -4096)) {
+		say("mmap2 after munmap failed", c < 0 && c > -4096 ? c : d, 1);
+		sys(NR_EXIT_GROUP, 1, 0, 0, 0, 0);
+	}
+	if ((unsigned long)c - (unsigned long)b < 65536 || (unsigned long)b - (unsigned long)c < 65536 ||
+	    (unsigned long)d - (unsigned long)b < 65536 || (unsigned long)b - (unsigned long)d < 65536) {
+		say("a block still in use was handed out again", 0, 0);
+		sys(NR_EXIT_GROUP, 1, 0, 0, 0, 0);
+	}
+	((volatile unsigned char *)c)[0] = 0xa5;
+	((volatile unsigned char *)d)[0] = 0xa5;
+	say(kept[0] == 0x5a && kept[65535] == 0x5a ? "keep ok" : "keep overwritten", 0, 0);
 #elif defined(AVX)
 	static unsigned int a[8] __attribute__((aligned(32))) = { 1, 2, 3, 4, 5, 6, 7, 8 };
 	static unsigned int b[8] __attribute__((aligned(32))) = { 10, 20, 30, 40, 50, 60, 70, 80 };
