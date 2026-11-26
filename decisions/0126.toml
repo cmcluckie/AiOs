@@ -1,0 +1,11 @@
+id      = "0126"
+date    = 2026-11-25
+kind    = "petitions"
+touches = ["flavors/dragshare.toml", "findings/0049.md"]
+asked   = "Petition 0011 added to the dragshare flavor, so car 3's kernel has the sharing parts (findings 0049)."
+options = ["take it", "a new petition for car 3 asking for PART.share@2", "a new kernel version that depends on the sharing parts"]
+default = "take it"
+chose   = "take it"
+why     = "Petitions add, never swap: 0011 already asks for the gate on the sharing kernel, PART.share@2 with it.  Chris, 2026-11-25: \"Let's keep on going\"."
+by      = "KEY.chris@1"
+drafted = "Claude"
