@@ -1,0 +1,10 @@
+code       = "TST.gate.munmap-order@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+binds      = "SPEC.gate.14@1"
+red_when   = "under the drag flavor's kernel, a Linux program that takes 64 KiB and then 4 KiB with mmap2 and gives them back in the order it took them, as Dave Plummer's sieve does each pass, 20,000 times on a 64 MiB machine, is refused memory before the last round, or munmap fails"
+timeout_ms = 90000
+isolates   = "PART.gate@2"
+runner     = "jig/test cmd sh tests/programs/dragcalls.sh order"
+mutations  = 0

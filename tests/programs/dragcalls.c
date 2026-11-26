@@ -10,6 +10,9 @@
  *   MUNMAP  64 KiB asked for with mmap2, written, and given back with munmap,
  *           20,000 times (1.25 GiB in all, on a 64 MiB machine), as each sieve
  *           pass does; "munmap 20000 rounds", or where mmap2 failed
+ *   ORDER   64 KiB then 4 KiB taken, and given back in the order taken, as the
+ *           sieve's calloc and free do each pass, 20,000 times on a 64 MiB
+ *           machine; "order rounds 20000", or where mmap2 failed
  *   KEEP    two 64 KiB blocks taken, the first given back while the second is
  *           still in use, then two more taken: neither may land on the
  *           second, and what was written there must still be there; "keep ok",
@@ -86,6 +89,24 @@ void _start(void)
 		}
 	}
 	say("munmap rounds", i, 1);
+#elif defined(ORDER)
+	long i, a, b;
+
+	for (i = 0; i < 20000; i++) {
+		a = sys(NR_MMAP2, 0, 65536, 3, 0x22, -1);
+		b = sys(NR_MMAP2, 0, 4096, 3, 0x22, -1);
+		if ((a < 0 && a > -4096) || (b < 0 && b > -4096)) {
+			say("mmap2 failed at round", i, 1);
+			sys(NR_EXIT_GROUP, 1, 0, 0, 0, 0);
+		}
+		((volatile unsigned char *)a)[65535] = 1;
+		((volatile unsigned char *)b)[4095] = 1;
+		if (sys(NR_MUNMAP, a, 65536, 0, 0, 0) || sys(NR_MUNMAP, b, 4096, 0, 0, 0)) {
+			say("munmap failed at round", i, 1);
+			sys(NR_EXIT_GROUP, 1, 0, 0, 0, 0);
+		}
+	}
+	say("order rounds", i, 1);
 #elif defined(KEEP)
 	long a, b, c, d;
 	volatile unsigned char *kept;

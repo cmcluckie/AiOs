@@ -1,0 +1,11 @@
+id      = "0124"
+date    = 2026-11-25
+kind    = "tests"
+touches = ["tests/gate.munmap-order@1.toml", "tests/programs/dragcalls.c", "tests/programs/dragcalls.sh", "agent/plans/drag.toml", "findings/0046.md"]
+asked   = "A red test for giving memory back in the order it was taken, as the sieve does (TST.gate.munmap-order@1, findings 0046), and the 3090's plan rerun on it."
+options = ["take it", "fix munmap by hand and race tonight"]
+default = "take it"
+chose   = "take it"
+why     = "Car 2 stopped in all three heats (findings 0046); the fix is the 3090's once a test can see it."
+by      = "KEY.chris@1"
+drafted = "Claude"
