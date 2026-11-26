@@ -1,0 +1,19 @@
+# Part 24, car 3 (findings 0050, petition 0016): Dave Plummer's sieve, a Linux
+# program file, beside the stopwatch and BYTE's sieve on the sharing kernel.
+# PART.gate@3 is PART.gate@2 copied; the sharing kernel hands gate_space_new each
+# program's bytes as they are in the archive, and a Linux program file is started
+# at its first byte.  The plan's commit is set when it is run (out/drag-queue.sh).
+part       = "PART.gate@3: a Linux program file on the sharing kernel, for Dave Plummer's sieve beside AiOs's own programs"
+tests      = ["gate.drag-shares@1"]
+at         = "40ce2ee"
+budget_usd = 0
+max_tries  = 10
+max_minutes = 480
+
+[gear]
+tactical = 1
+builders = 1
+
+[prompts]
+director = "director@3"
+builder  = "builder@2"

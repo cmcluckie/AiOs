@@ -1,0 +1,11 @@
+id      = "0127"
+date    = 2026-11-25
+kind    = "petitions"
+touches = ["petitions/0016.toml", "flavors/dragshare.toml", "pool/PART.gate@3/", "pool/PART.loader@11/", "index/part/gate@3.toml", "index/part/gate@3.as-built.md", "index/part/loader@11.toml", "index/part/loader@11.as-built.md", "agent/plans/dragshare.toml", "specs/gate.16@1.toml", "tests/gate.drag-shares@1.toml", "findings/0050.md"]
+asked   = "Petition 0016, car 3: Dave Plummer's sieve beside AiOs's own programs on the sharing kernel, asking for PART.gate@3 and PART.loader@11, copies of PART.gate@2 and PART.loader@10, and a plan for the 3090 to make TST.gate.drag-shares@1 green in PART.gate@3 alone (findings 0050).  SPEC.gate.16@1 and its test, car 3's, move to PART.gate@3."
+options = ["take it", "a new PART.share@3 that loads the Linux program, with PART.gate@3 for its calls", "Claude writes the change by hand"]
+default = "take it"
+chose   = "take it"
+why     = "Chris, 2026-11-25: \"Go!\".  A fix is the files of one part (decision 0060); the gate is the one part that can do it alone: the sharing kernel already hands it every program's bytes and space (findings 0050)."
+by      = "KEY.chris@1"
+drafted = "Claude"

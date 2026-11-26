@@ -1,0 +1,97 @@
+# Petition 0016: Dave Plummer's sieve beside AiOs's own programs, on the sharing
+# kernel (part 24, car 3, findings 0050).  Petition 0015 runs it alone; 0011 runs
+# AiOs's programs side by side behind the gate.  This one asks for the gate and
+# the kernel that put the two together: PART.gate@3 and PART.loader@11, copies of
+# PART.gate@2 and PART.loader@10 until the 3090's builders make
+# TST.gate.drag-shares@1 green in PART.gate@3.  Drafted by Claude.
+[petition]
+id         = "0016"
+purpose    = "PUR.0012@1"
+submitted  = 2026-11-25
+submitter  = "KEY.chris@1"
+expires    = 2027-05-25
+supersedes = ""
+status     = "pending"
+
+[[capability]]
+code   = "CAP.cpu.ring3@1"
+reason = "SPEC.gate.16@1"
+scope  = ""
+
+[[capability]]
+code   = "CAP.cpu.share@1"
+reason = "SPEC.gate.16@1"
+scope  = ""
+
+[[capability]]
+code   = "CAP.dev.serial@1"
+reason = "SPEC.machine.4@1"
+scope  = ""
+
+[[capability]]
+code   = "CAP.dev.pit@1"
+reason = "SPEC.tick.1@1"
+scope  = ""
+
+[[capability]]
+code   = "CAP.dev.pic@1"
+reason = "SPEC.pic.1@1"
+scope  = ""
+
+[[component]]
+code     = "PART.loader@11"
+role     = "boot"
+admitted = false
+
+[[component]]
+code     = "PART.gate@3"
+role     = "dependency"
+admitted = false
+
+[[component]]
+code     = "PART.gate@1"
+role     = "dependency"
+admitted = false
+
+[[component]]
+code     = "PART.share@2"
+role     = "dependency"
+admitted = false
+
+[[component]]
+code     = "PART.serial.8250@2"
+role     = "dependency"
+admitted = false
+
+[[component]]
+code     = "PART.irq.pic@1"
+role     = "dependency"
+admitted = false
+
+[[component]]
+code     = "PART.timer.pit-tick@1"
+role     = "dependency"
+admitted = false
+
+[[component]]
+code     = "PART.archive.cpio@1"
+role     = "dependency"
+admitted = false
+
+[[component]]
+code     = "TOOL.c@1"
+role     = "toolchain"
+admitted = false
+
+[[component]]
+code     = "MACHINE.serial-irq@1"
+role     = "machine"
+admitted = false
+
+[[component]]
+code     = "TOOL.qemu@1"
+role     = "machine"
+admitted = false
+
+[[test]]
+code = "TST.gate.drag-shares@1"
