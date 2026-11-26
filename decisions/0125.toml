@@ -1,0 +1,11 @@
+id      = "0125"
+date    = 2026-11-25
+kind    = "rules and words"
+touches = ["pool/PART.gate@2/gate.c", "findings/0047.md"]
+asked   = "The 3090's munmap in any order (plan-drag try 1, findings 0047) taken into PART.gate@2 as it wrote them."
+options = ["take it", "let the director's try 2 run"]
+default = "take it"
+chose   = "take it"
+why     = "Chris, 2026-11-25: stopped the run.  Try 1 was judged a pass; the reds the director blamed on it were red before it."
+by      = "KEY.chris@1"
+drafted = "Claude"

@@ -129,6 +129,9 @@ static int avx_on;			/* 1 if the processor has AVX and XSAVE and we enabled them
 
 static unsigned long win_lo, win_hi;	/* the same virtual window in every space */
 static unsigned long brk_lo, brk_cur, map_lo, map_top;	/* a Linux program's heap: brk grows up from brk_lo, mmap2 down from map_lo, which never passes map_top; 0 for the others */
+#define HMAX	512		/* the most freed holes a program's heap may hold at once */
+static unsigned long hole[HMAX][2];	/* freed room between in-use regions, as [base, end) */
+static int nhole;
 static const struct door *calls;
 
 /* Is [p, p+n) all inside what ring 3 may touch? */
@@ -288,32 +291,89 @@ static unsigned long brk(unsigned long p)
 	return brk_cur;
 }
 
+/* Add the freed room [base, end) to the holes, joined with the ones it touches
+ * or holds inside, so that what is freed is handed out whole again. */
+static void hole_add(unsigned long base, unsigned long end)
+{
+	int i;
+
+	if (end <= base)
+		return;
+	for (i = 0; i < nhole; i++) {
+		if (hole[i][0] >= base && hole[i][0] < end) {	/* holds a hole inside: drop it into this */
+			if (hole[i][1] > end)
+				end = hole[i][1];
+			hole[i][0] = hole[nhole - 1][0];
+			hole[i][1] = hole[nhole - 1][1];
+			nhole--;
+			i--;
+		} else if (hole[i][0] == end || hole[i][1] == base) {	/* touches a hole: join it */
+			if (hole[i][0] < base)
+				base = hole[i][0];
+			if (hole[i][1] > end)
+				end = hole[i][1];
+			hole[i][0] = hole[nhole - 1][0];
+			hole[i][1] = hole[nhole - 1][1];
+			nhole--;
+			i--;
+		}
+	}
+	if (nhole < HMAX) {
+		hole[nhole][0] = base;
+		hole[nhole][1] = end;
+		nhole++;
+	}
+}
+
+/* Take n bytes of fresh room from a hole, at its top edge; its address in *p,
+ * or -ENOMEM if no hole is big enough. */
+static long hole_take(unsigned long n, unsigned long *p)
+{
+	int i;
+
+	for (i = 0; i < nhole; i++)
+		if (hole[i][1] - hole[i][0] >= n) {
+			*p = hole[i][1] - n;
+			hole[i][1] -= n;
+			if (hole[i][0] == hole[i][1]) {
+				hole[i][0] = hole[nhole - 1][0];
+				hole[i][1] = hole[nhole - 1][1];
+				nhole--;
+			}
+			return 0;
+		}
+	return -ENOMEM;
+}
+
 /* mmap2: only fresh, private, zeroed memory (what malloc asks for), taken from
- * the top of the heap's room down; anything else is refused. */
+ * the top of the heap's room down, or from the room a region was given back and
+ * is left in (SPEC.gate.14@1); anything else is refused. */
 static long mmap2(unsigned long addr, unsigned long len, unsigned long flags, unsigned long fd)
 {
-	unsigned long n = (len + PAGE - 1) & ~(PAGE - 1), i;
-	unsigned char *p;
+	unsigned long n = (len + PAGE - 1) & ~(PAGE - 1), p, i;
 
 	(void)addr;		/* where it would like it is only a hint, in Linux too */
 	if (!brk_lo)
 		return -ENOSYS;
 	if ((flags & (MAP_PRIVATE | MAP_ANONYMOUS)) != (MAP_PRIVATE | MAP_ANONYMOUS) || (long)fd != -1)
 		return -EINVAL;
-	if (n == 0 || n < len || n > map_lo - brk_cur)
+	if (n == 0 || n < len)
 		return -ENOMEM;
-	map_lo -= n;
-	p = (unsigned char *)map_lo;
+	if (n <= map_lo - brk_cur) {
+		map_lo -= n;
+		p = map_lo;
+	} else if (hole_take(n, &p))
+		return -ENOMEM;
 	for (i = 0; i < n; i++)
-		p[i] = 0;
-	return (long)map_lo;
+		((unsigned char *)p)[i] = 0;
+	return (long)p;
 }
 
 /* munmap(addr, len): the region given back is fresh room again, as Linux does:
- * if it starts at the low edge, the low edge moves back up to its top.  A region
- * freed while a lower one is still in use is left as a hole: it is never handed
- * out again, and the one still in use keeps what was written to it
- * (SPEC.gate.17@1, findings 0044). */
+ * if it starts at the low edge, the low edge moves back up to its top; if a
+ * lower region is still in use, it joins the holes, where mmap2 hands it out
+ * again without touching the one in use, which keeps what was written to it
+ * (SPEC.gate.14@1, SPEC.gate.17@1, findings 0044). */
 static long munmap(unsigned long addr, unsigned long len)
 {
 	unsigned long n, top;
@@ -330,6 +390,8 @@ static long munmap(unsigned long addr, unsigned long len)
 		return -EINVAL;
 	if (addr == map_lo)
 		map_lo = top;
+	else
+		hole_add(addr, top);
 	return 0;
 }
 
