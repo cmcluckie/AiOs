@@ -1,0 +1,11 @@
+id      = "0123"
+date    = 2026-11-25
+kind    = "rules and words"
+touches = ["pool/PART.gate@2/gate.c", "findings/0045.md"]
+asked   = "The 3090's AVX (plan-drag try 6) and its fix to the munmap hole (try 4) taken together into PART.gate@2 as it wrote them, for the race between car 1 and car 2 (findings 0045)."
+options = ["take it", "take try 3's AVX, which saves the AVX registers", "rerun the plan until one try has both"]
+default = "take it"
+chose   = "take it"
+why     = "Chris, 2026-11-25: \"Let's do it\".  Try 3 writes past its save area (findings 0045 item 4); try 6 does not, and one program never needs the AVX registers saved."
+by      = "KEY.chris@1"
+drafted = "Claude"

@@ -110,7 +110,7 @@ struct gate_space {
 	unsigned long *frame;		/* where its registers were saved, on its kernel stack */
 	unsigned long kstack_top;	/* where a trap from ring 3 lands (the TSS's esp0) */
 	int user_stack;			/* ring 3 stands on the gate's own stack (one program, no sharing) */
-	unsigned char fxsave[FXSAVE_SIZE] __attribute__((aligned(16)));	/* SSE/x87 state, when sse_on */
+	unsigned char fxsave[FXSAVE_SIZE] __attribute__((aligned(32)));	/* SSE/x87/AVX state, when sse_on; 32-aligned for the AVX (YMM) part */
 };
 
 static unsigned long long gdt[7];
@@ -125,6 +125,7 @@ static int nspaces;
 static struct gate_space *cur;
 static const struct gate_sched *sched;
 static int sse_on;			/* 1 if the processor has FXSR and SSE and we enabled them */
+static int avx_on;			/* 1 if the processor has AVX and XSAVE and we enabled them (XCR0 bit 2) */
 
 static unsigned long win_lo, win_hi;	/* the same virtual window in every space */
 static unsigned long brk_lo, brk_cur, map_lo, map_top;	/* a Linux program's heap: brk grows up from brk_lo, mmap2 down from map_lo, which never passes map_top; 0 for the others */
@@ -309,7 +310,10 @@ static long mmap2(unsigned long addr, unsigned long len, unsigned long flags, un
 }
 
 /* munmap(addr, len): the region given back is fresh room again, as Linux does:
- * if it reaches the low edge, the low edge moves back up to its top. */
+ * if it starts at the low edge, the low edge moves back up to its top.  A region
+ * freed while a lower one is still in use is left as a hole: it is never handed
+ * out again, and the one still in use keeps what was written to it
+ * (SPEC.gate.17@1, findings 0044). */
 static long munmap(unsigned long addr, unsigned long len)
 {
 	unsigned long n, top;
@@ -324,7 +328,7 @@ static long munmap(unsigned long addr, unsigned long len)
 	top = addr + n;
 	if (top < addr || addr < map_lo || top > map_top)
 		return -EINVAL;
-	if (top > map_lo)
+	if (addr == map_lo)
 		map_lo = top;
 	return 0;
 }
@@ -662,6 +666,8 @@ static void sse_init(struct gate_space *s)
 	/* CPUID leaf 1: feature flags in EDX; cpuid writes all four */
 	__asm__ volatile("cpuid" : "+a"(eax), "=b"(ebx), "+c"(ecx), "=d"(edx));
 	(void)ebx;
+	/* CPUID leaf 1 ECX bit 26 (XSAVE) and bit 28 (AVX), read before ecx is clobbered */
+	avx_on = ((ecx >> 26) & 1) && ((ecx >> 28) & 1);
 
 	/* bit 24: FXSR, bit 25: SSE */
 	if (!((edx >> 24) & 1) || !((edx >> 25) & 1)) {
@@ -670,10 +676,22 @@ static void sse_init(struct gate_space *s)
 		return;
 	}
 
-	/* set CR4.OSFXSR (bit 9) and CR4.OSXMMEXCPT (bit 10) */
+	/*
+	 * Set CR4.OSFXSR (bit 9) and CR4.OSXMMEXCPT (bit 10), and if AVX and
+	 * XSAVE are both present (CPUID leaf 1 ECX bits 28 and 26), also set
+	 * CR4.OSXSAVE (bit 18) and XCR0 = 0x07 (bits 0, 1, 2: x87, SSE, AVX),
+	 * as Linux does at boot.  CR4.OSXSAVE must be set before XSETBV.
+	 * Without this a Linux program's AVX instruction stops it (#UD).
+	 */
 	__asm__ volatile("movl %%cr4, %0" : "=r"(cr4));
 	cr4 |= (1 << 9) | (1 << 10);
+	if (avx_on)
+		cr4 |= (1UL << 18);
 	__asm__ volatile("movl %0, %%cr4" : : "r"(cr4));
+	if (avx_on) {
+		unsigned long xcr0 = 0x07UL;	/* bits 0, 1, 2: x87, SSE, AVX */
+		__asm__ volatile("xsetbv" : : "c"(0), "a"(xcr0) : "edx");
+	}
 
 	/* clear CR0.EM (bit 2), set CR0.MP (bit 1) */
 	__asm__ volatile("movl %%cr0, %0" : "=r"(cr0));
@@ -682,14 +700,19 @@ static void sse_init(struct gate_space *s)
 
 	sse_on = 1;
 
-	/* initialize the first space's FXSAVE area: zero it, then set x87 CW to
-	 * 0x037F (extended precision, every exception masked), as Linux gives a new program */
+	/*
+	 * Initialize the first space's FXSAVE area: zero it, then set x87 CW to
+	 * 0x037F (extended precision, every exception masked), bit 15 of the FPU
+	 * status word (FPU area offset 2, byte 3, the XSAVE-format indicator) and
+	 * MXCSR to 0x1f80 (all SSE exceptions masked), as Linux gives a new program.
+	 * Bit 15 must be set when XCR0 has bit 2, so fxsave/fxrstor do not #GP.
+	 */
 	for (i = 0; i < FXSAVE_SIZE; i++)
 		s->fxsave[i] = 0;
-	/* x87 control word is at offset 0 in the FXSAVE area (16-bit field) */
-	*(unsigned short *)s->fxsave = 0x037f;
-	/* MXCSR is at offset 24 in the FXSAVE area; Linux's default is 0x1f80 (all SSE exceptions masked) */
-	*(unsigned int *)(s->fxsave + 24) = 0x1f80;
+	*(unsigned short *)s->fxsave = 0x037f;		/* x87 control word */
+	if (avx_on)
+		*(unsigned short *)(s->fxsave + 2) = 0x8000;	/* bit 15: XSAVE format */
+	*(unsigned int *)(s->fxsave + 24) = 0x1f80;	/* MXCSR */
 
 	/* load the initialized state into the processor */
 	__asm__ volatile("fxrstor %0" : : "m"(s->fxsave));
@@ -806,6 +829,9 @@ struct gate_space *gate_space_new(unsigned long phys, unsigned long virt, unsign
 			s->fxsave[i] = 0;
 		/* x87 CW 0x037F: extended precision, every exception masked, as Linux gives */
 		*(unsigned short *)s->fxsave = 0x037f;
+		/* bit 15 of FPU status word (offset 2): XSAVE format, required when AVX is on */
+		if (avx_on)
+			*(unsigned short *)(s->fxsave + 2) = 0x8000;
 		/* MXCSR at offset 24: 0x1f80, all SSE exceptions masked */
 		*(unsigned int *)(s->fxsave + 24) = 0x1f80;
 	}
