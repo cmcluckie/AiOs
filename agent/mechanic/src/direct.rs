@@ -67,6 +67,8 @@ struct Director {
     stuck_runs: Vec<stuck::Run>,
     passed: Vec<bool>,
     spent: f64, // the builders' dollars so far
+    friend_spent: f64, // the friend's dollars so far, the builders' calls and the director's
+    friend_stuck: bool, // the director has called the friend when stuck, once
     mine: f64,  // the director's own, as of its last call
     deadline: u64,
     budget: u64,            // the conversation's share of the card, system prompt and tools included
@@ -177,6 +179,13 @@ impl Director {
                 }
             }
         }
+        // a builder out of its depth calls a friend, with what is left of the friend's share
+        if !self.p.friend_model.is_empty() {
+            job += &format!(
+                "friend_model = \"{}\"\nfriend_usd = {:.6}\nfriend_at = {}\nfriend_bad_builds = {}\nfriend_latest = {}\n",
+                self.p.friend_model, (self.p.friend_usd - self.friend_spent).max(0.0), self.p.friend_at, self.p.friend_bad_builds, self.p.friend_latest
+            );
+        }
         if let Some(h) = hint.filter(|h| !h.trim().is_empty()) {
             let hp = jobs.join(format!("{id}.hint"));
             let _ = fs::write(&hp, format!("{h}\n"));
@@ -201,6 +210,7 @@ impl Director {
         let run = fs::read_to_string(run_dir.join("run.toml")).ok().and_then(|t| toml::from_str::<toml::Table>(&t).ok());
         if let Some(r) = &run {
             self.spent += r.get("dollars").and_then(|v| v.as_float()).unwrap_or(0.0);
+            self.friend_spent += r.get("friend_dollars").and_then(|v| v.as_float()).unwrap_or(0.0);
         }
         if rc == 2 {
             let err = fs::read_to_string(jobs.join(format!("{id}.err"))).unwrap_or_default();
@@ -230,6 +240,48 @@ impl Director {
         let answer = format!("Job {id}, {test}: {status}.\nIts result note, written by the program from what the tests printed on the jig:\n{nt}");
         self.jobs.push(JobDone { id, test: test.into(), status, note: nt });
         Ok(answer)
+    }
+}
+
+impl Director {
+    /// Stuck, the first time: call a friend over the plan and the log, once, and
+    /// start counting stuck afresh (findings 0052).  Its briefing, or None.
+    fn stuck_friend(&mut self, why: &str) -> Option<String> {
+        if self.p.friend_model.is_empty() || self.friend_stuck {
+            return None;
+        }
+        self.friend_stuck = true;
+        let log = fs::read_to_string(self.dir.join("log.md")).unwrap_or_default();
+        let tail = if log.len() > 16000 { &log[log.len() - 16000..] } else { &log[..] };
+        let ask = format!(
+            "A director, a local model on an RTX 3090, runs builders on the red tests of one part of AiOs, and the part is stuck: {why}.  \
+             Give the director a briefing for its next builder, not a fix: what is actually wrong, where in the repo to look (the files and functions \
+             that already do something close), and a few short lines of example.  A builder can change only the files of one part under pool/.\n\n\
+             The part plan:\n\n{}\nThe part's log, every job, hint and result note (the last of it):\n\n{tail}\n",
+            crate::plan::write(&self.p)
+        );
+        self.say(&format!("stuck: calling a friend ({why})"));
+        let left = (self.p.friend_usd - self.friend_spent).max(0.0);
+        let got = crate::friend::brief(&self.repo, &self.runs, &self.p.friend_model, left, &ask);
+        let item = format!("direct-{}", self.id.replace('.', "-").to_lowercase());
+        let kept = crate::friend::keep(&self.dir, &self.runs, &item, &self.p.friend_model, (self.jobs.len() + 1) as u64, &self.p.at, &self.p.trial, &ask, &got, 0);
+        match got {
+            Ok(b) => {
+                if let Err(e) = kept {
+                    self.say(&format!("the friend's call could not be recorded in runs/ ({e})"));
+                }
+                self.friend_spent += b.dollars;
+                self.log(&format!("\n## stuck: a friend was called\n{why}\n\n{}\n", b.text));
+                self.say(&format!("stuck: the friend answered, ${:.4}; the part goes on", b.dollars));
+                self.stuck_runs.clear();
+                Some(b.text)
+            }
+            Err(e) => {
+                self.log(&format!("\n## stuck: the friend could not be called\n{e}\n"));
+                self.say(&format!("stuck: the friend could not be called: {e}"));
+                None
+            }
+        }
     }
 }
 
@@ -283,7 +335,11 @@ impl Hooks for Director {
                 match self.give(&test, hint.as_deref()) {
                     Err((how, why)) => Step::Finish(why.clone(), how, why),
                     Ok(answer) => match stuck::check(&self.stuck_runs, self.p.stuck_same_failures, self.p.stuck_no_drop) {
-                        Some(why) => Step::Finish(format!("{answer}\nThe part is stuck: {why}.  It stops here and goes to strategic."), "stuck".into(), why),
+                        Some(why) => match self.stuck_friend(&why) {
+                            // the friend's briefing goes to the director, and the part goes on once more
+                            Some(b) => Step::Answer(format!("{answer}\nThe part is stuck: {why}.  A friend was called: Claude, a larger model, has read the plan and this part's log and sends this briefing.  Give the next job a hint built from it; the builder cannot see it otherwise.\n\n{b}")),
+                            None => Step::Finish(format!("{answer}\nThe part is stuck: {why}.  It stops here and goes to strategic."), "stuck".into(), why),
+                        },
                         None => Step::Answer(answer),
                     },
                 }
@@ -448,6 +504,8 @@ pub fn run(planpath: &str) -> i32 {
         jobs: vec![],
         stuck_runs: vec![],
         spent: 0.0,
+        friend_spent: 0.0,
+        friend_stuck: false,
         mine: 0.0,
         budget,
         est: room::Estimate::default(),

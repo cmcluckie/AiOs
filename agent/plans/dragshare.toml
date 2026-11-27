@@ -6,6 +6,8 @@
 # Second run (findings 0051): one rung at a time, each signed before the next.
 # Rung 1, a Linux program that prints a line and exits beside the stopwatch;
 # rung 2, its mmap2 and munmap (gate.elf-heap-shares@1); then gate.drag-shares@1.
+# Third run (findings 0052): with a friend, Claude on Bedrock, called for a briefing
+# when a builder is out of its depth or the part is stuck.
 part       = "PART.gate@3: a Linux program file started on the sharing kernel, beside AiOs's own programs (car 3, rung 1)"
 tests      = ["gate.elf-shares@1"]
 at         = "40ce2ee"
@@ -20,3 +22,10 @@ builders = 1
 [prompts]
 director = "director@3"
 builder  = "builder@2"
+
+[friend]
+model      = "global.anthropic.claude-sonnet-5-5"
+max_usd    = 5
+at_call    = 20
+bad_builds = 2
+latest     = 30

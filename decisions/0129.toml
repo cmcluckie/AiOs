@@ -1,0 +1,11 @@
+id      = "0129"
+date    = 2026-11-27
+kind    = "rules and words"
+touches = ["agent/mechanic/src/friend.rs", "agent/mechanic/src/build.rs", "agent/mechanic/src/direct.rs", "agent/mechanic/src/plan.rs", "agent/mechanic/src/main.rs", "prompts/friend@1.txt", "jig/runs", "specs/agent.13@1.toml", "tests/agent.friend@1.toml", "tests/programs/agent.sh", "tests/fixtures/agent/friend/briefing.json", "tests/fixtures/agent/friend/syntax.json", "tests/fixtures/agent/friend/ask.json", "tests/mutations.txt", "agent/plans/dragshare.toml", "findings/0052.md"]
+asked   = "Call a friend: a builder out of its depth, and a stuck director, call Claude on Bedrock once for a briefing, never a fix; at call 20 with nothing handed in, after two hand-ins that did not build, or at call 30; costed against the plan's friend share and the month's cap, recorded in runs/ as a briefing (findings 0052).  Car 3's plan gets a friend with $5."
+options = ["take it", "give each space its own window", "link Linux programs at AiOs's address"]
+default = "take it"
+chose   = "take it"
+why     = "Chris, 2026-11-27, by voice: \"the 3090 was supposed to work on problems until it needed to call a friend, and that friend is named Claude\"; \"we should never let the 3090 go 60 rounds without calling a friend\"; for now, a briefing only.  \"Go.\""
+by      = "KEY.chris@1"
+drafted = "Claude"

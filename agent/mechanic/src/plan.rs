@@ -26,6 +26,12 @@ pub struct Plan {
     pub prompt_director: String,
     pub prompt_builder: String,
     pub trial: String, // a prompt trial this run belongs to, "" for none
+    // call a friend (findings 0052): Claude on Bedrock, by its model id, "" for none
+    pub friend_model: String,
+    pub friend_usd: f64,        // the most the part's friend calls may cost
+    pub friend_at: u64,         // a builder calls at this call with nothing handed in
+    pub friend_bad_builds: u64, // or after this many hand-ins that did not build
+    pub friend_latest: u64,     // and never later than this call
 }
 
 /// toml's own words for what it could not read, said plainly with the line
@@ -159,6 +165,20 @@ pub fn read(path: &str) -> Result<Plan, String> {
     if !trial.chars().all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_') {
         return Err("trial is a name: letters, digits, - and _".into());
     }
+    let friend_model = r.text("friend.model", false)?;
+    if !friend_model.chars().all(|c| c.is_ascii_alphanumeric() || "._-:".contains(c)) {
+        return Err("friend.model is a Bedrock model id, like global.anthropic.claude-sonnet-5-5".into());
+    }
+    let friend_usd = match r.get("friend.max_usd") {
+        None if friend_model.is_empty() => 0.0,
+        None => return Err("friend.max_usd is missing: a friend is called only with dollars set aside for it".into()),
+        Some(Value::Float(f)) if *f >= 0.0 => *f,
+        Some(Value::Integer(n)) if *n >= 0 => *n as f64,
+        Some(_) => return Err("friend.max_usd is a number of dollars, 0 or more".into()),
+    };
+    let friend_at = r.whole("friend.at_call", Some(20), 1, 500)?;
+    let friend_bad_builds = r.whole("friend.bad_builds", Some(2), 1, 100)?;
+    let friend_latest = r.whole("friend.latest", Some(30), 1, 500)?;
     if !version(&prompt_director) || !version(&prompt_builder) {
         return Err("prompts name a library version, like builder@1".into());
     }
@@ -181,6 +201,11 @@ pub fn read(path: &str) -> Result<Plan, String> {
         prompt_director,
         prompt_builder,
         trial,
+        friend_model,
+        friend_usd,
+        friend_at,
+        friend_bad_builds,
+        friend_latest,
     })
 }
 
@@ -207,6 +232,11 @@ pub fn write(p: &Plan) -> String {
     s += "\n[prompts]\n";
     s += &q("director", &p.prompt_director);
     s += &q("builder", &p.prompt_builder);
+    if !p.friend_model.is_empty() {
+        s += "\n[friend]\n";
+        s += &q("model", &p.friend_model);
+        s += &format!("{:<19} = {:.2}\n{:<19} = {}\n{:<19} = {}\n{:<19} = {}\n", "max_usd", p.friend_usd, "at_call", p.friend_at, "bad_builds", p.friend_bad_builds, "latest", p.friend_latest);
+    }
 
     s
 }

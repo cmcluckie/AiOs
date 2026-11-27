@@ -26,6 +26,7 @@
 
 mod build;
 mod direct;
+mod friend;
 mod judge;
 mod lift;
 mod look;

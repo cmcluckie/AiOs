@@ -72,7 +72,7 @@ record)	[ $# -eq 10 ] || die "needs ITEM MODEL VERSION TRY IN_TOKENS OUT_TOKENS 
 	[ -n "$model" ] && [ -n "$version" ] || die "MODEL and VERSION are both needed"
 	whole TRY "$try"; whole IN_TOKENS "$tin"; whole OUT_TOKENS "$tout"; whole LINES "$lines"
 	[ "$try" -ge 1 ] || die "TRY starts at 1"
-	case "$result" in pass|fail|refused) ;; *) die "RESULT is pass, fail or refused, not '$result'" ;; esac
+	case "$result" in pass|fail|refused|briefing) ;; *) die "RESULT is pass, fail, refused or briefing (a friend's call, findings 0052), not '$result'" ;; esac
 	[ -f "$input" ] || die "$input is not a file"; [ -f "$output" ] || die "$output is not a file"
 	[ -f "$PRICES" ] || die "no price list at $PRICES"
 	cread=${RUNS_CACHE_READ:-0}; cwrite=${RUNS_CACHE_WRITE:-0}
@@ -103,8 +103,8 @@ record)	[ $# -eq 10 ] || die "needs ITEM MODEL VERSION TRY IN_TOKENS OUT_TOKENS 
 	[ -z "$calls" ] || whole RUNS_CALLS "$calls"; [ -z "$seconds" ] || whole RUNS_SECONDS "$seconds"
 	trial=${RUNS_TRIAL:-}
 	case "$trial" in *[!A-Za-z0-9_-]*) die "RUNS_TRIAL is a name: letters, digits, - and _, not '$trial'" ;; esac
-	case "$ended" in ''|pass|fail|turns|room|stuck|stopped|budget|time|unreachable|error) ;;
-	*) die "RUNS_ENDED is pass, fail, turns, room, stuck, stopped, budget, time, unreachable or error, not '$ended'" ;; esac
+	case "$ended" in ''|pass|fail|turns|room|stuck|stopped|budget|time|unreachable|error|briefing) ;;
+	*) die "RUNS_ENDED is pass, fail, turns, room, stuck, stopped, budget, time, unreachable, error or briefing, not '$ended'" ;; esac
 	slug=$(printf '%s' "$model" | tr -c 'A-Za-z0-9\n' '-')
 	id="$stamp-$item-$try-$slug"
 	[ ! -e "$RUNS/$id" ] || die "$id is already recorded"

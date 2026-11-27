@@ -1,0 +1,10 @@
+code       = "TST.agent.friend@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+binds      = "SPEC.agent.13@1"
+red_when   = "on a toy repo with saved replies, a builder with nothing handed in at friend_at, or after friend_bad_builds hand-ins that did not build, or at friend_latest, does not call the friend, or calls it twice; the friend's call does not go to Bedrock with friend@1, why it was called, the test and what the builder did; the briefing does not reach the builder; its cost is not in the run and in runs/ as a briefing; a friend with no share left is called, or the builder does not go on alone; a job with no friend calls one; or a stuck director does not call once with why, is not given the briefing, does not go on, or does not pass its builders what is left of the friend's share"
+timeout_ms = 120000
+isolates   = "TOOL.agent@1"
+runner     = "jig/test cmd sh tests/programs/agent.sh friend"
+mutations  = 5
