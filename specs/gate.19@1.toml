@@ -1,0 +1,7 @@
+code       = "SPEC.gate.19@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+component  = "PART.gate@3"
+clause     = "On the sharing kernel, a Linux program file's mmap2 and munmap work as they do for a lone one (SPEC.gate.14@1, SPEC.gate.17@1), in its own space (findings 0051)."
+author     = "KEY.chris"

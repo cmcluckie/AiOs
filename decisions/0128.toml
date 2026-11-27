@@ -1,0 +1,11 @@
+id      = "0128"
+date    = 2026-11-26
+kind    = "tests"
+touches = ["specs/gate.18@1.toml", "specs/gate.19@1.toml", "tests/gate.elf-shares@1.toml", "tests/gate.elf-heap-shares@1.toml", "tests/programs/dragshare-rungs.sh", "tests/programs/dragcalls.c", "petitions/0016.toml", "agent/plans/dragshare.toml", "findings/0051.md"]
+asked   = "Car 3 as a ladder of three red tests in PART.gate@3, one rung a plan for the 3090, each pass signed before the next (findings 0051)."
+options = ["take it", "split by part: a new PART.share@3 and PART.gate@3", "Claude writes the change by hand"]
+default = "take it"
+chose   = "take it"
+why     = "Three tries of car 3 in one job never built (findings 0051); each rung is one new thing, as the ladder of petitions is."
+by      = "KEY.chris@1"
+drafted = "Claude"

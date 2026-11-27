@@ -95,3 +95,9 @@ admitted = false
 
 [[test]]
 code = "TST.gate.drag-shares@1"
+
+[[test]]
+code = "TST.gate.elf-shares@1"
+
+[[test]]
+code = "TST.gate.elf-heap-shares@1"

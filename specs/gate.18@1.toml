@@ -1,0 +1,7 @@
+code       = "SPEC.gate.18@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+component  = "PART.gate@3"
+clause     = "On the sharing kernel, a Linux program file in the archive is started where the file says, in its own space, and its write and exit_group are answered, while AiOs's own programs keep their turns (findings 0051)."
+author     = "KEY.chris"

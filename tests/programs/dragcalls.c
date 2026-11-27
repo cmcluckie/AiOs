@@ -10,6 +10,8 @@
  *   MUNMAP  64 KiB asked for with mmap2, written, and given back with munmap,
  *           20,000 times (1.25 GiB in all, on a 64 MiB machine), as each sieve
  *           pass does; "munmap 20000 rounds", or where mmap2 failed
+ *   HELLO   "elf hello" and exit 0: nothing but a Linux program file started
+ *           and its write and exit_group answered
  *   ORDER   64 KiB then 4 KiB taken, and given back in the order taken, as the
  *           sieve's calloc and free do each pass, 20,000 times on a 64 MiB
  *           machine; "order rounds 20000", or where mmap2 failed
@@ -89,6 +91,8 @@ void _start(void)
 		}
 	}
 	say("munmap rounds", i, 1);
+#elif defined(HELLO)
+	say("elf hello", 0, 0);
 #elif defined(ORDER)
 	long i, a, b;
 

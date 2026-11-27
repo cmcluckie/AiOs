@@ -1,0 +1,10 @@
+code       = "TST.gate.elf-shares@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+binds      = "SPEC.gate.18@1"
+red_when   = "a Linux program file that prints one line and exits, packed after the stopwatch and booted on the dragshare flavor's kernel for 12 seconds, never prints its line, or a program is stopped, or the stopwatch ticks fewer than two seconds"
+timeout_ms = 60000
+isolates   = "PART.gate@3"
+runner     = "jig/test cmd sh tests/programs/dragshare-rungs.sh hello"
+mutations  = 0

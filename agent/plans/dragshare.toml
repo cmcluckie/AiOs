@@ -3,8 +3,11 @@
 # PART.gate@3 is PART.gate@2 copied; the sharing kernel hands gate_space_new each
 # program's bytes as they are in the archive, and a Linux program file is started
 # at its first byte.  The plan's commit is set when it is run (out/drag-queue.sh).
-part       = "PART.gate@3: a Linux program file on the sharing kernel, for Dave Plummer's sieve beside AiOs's own programs"
-tests      = ["gate.drag-shares@1"]
+# Second run (findings 0051): one rung at a time, each signed before the next.
+# Rung 1, a Linux program that prints a line and exits beside the stopwatch;
+# rung 2, its mmap2 and munmap (gate.elf-heap-shares@1); then gate.drag-shares@1.
+part       = "PART.gate@3: a Linux program file started on the sharing kernel, beside AiOs's own programs (car 3, rung 1)"
+tests      = ["gate.elf-shares@1"]
 at         = "40ce2ee"
 budget_usd = 0
 max_tries  = 10
