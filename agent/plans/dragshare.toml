@@ -24,7 +24,8 @@ director = "director@3"
 builder  = "builder@2"
 
 [friend]
-model      = "global.anthropic.claude-sonnet-5-5"
+# Sonnet 4.6: the account has no Sonnet 5.5 (Bedrock said 403 on the first call, 2026-11-27)
+model      = "global.anthropic.claude-sonnet-4-6"
 max_usd    = 5
 at_call    = 20
 bad_builds = 2
