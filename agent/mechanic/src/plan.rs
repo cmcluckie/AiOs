@@ -32,6 +32,7 @@ pub struct Plan {
     pub friend_at: u64,         // a builder calls at this call with nothing handed in
     pub friend_bad_builds: u64, // or after this many hand-ins that did not build
     pub friend_latest: u64,     // and never later than this call
+    pub start: String, // a kept run whose change the first builder starts from, "" for none (findings 0054)
 }
 
 /// toml's own words for what it could not read, said plainly with the line
@@ -165,6 +166,7 @@ pub fn read(path: &str) -> Result<Plan, String> {
     if !trial.chars().all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_') {
         return Err("trial is a name: letters, digits, - and _".into());
     }
+    let start = r.text("start", false)?;
     let friend_model = r.text("friend.model", false)?;
     if !friend_model.chars().all(|c| c.is_ascii_alphanumeric() || "._-:".contains(c)) {
         return Err("friend.model is a Bedrock model id, like global.anthropic.claude-sonnet-5-5".into());
@@ -206,6 +208,7 @@ pub fn read(path: &str) -> Result<Plan, String> {
         friend_at,
         friend_bad_builds,
         friend_latest,
+        start,
     })
 }
 
@@ -227,6 +230,9 @@ pub fn write(p: &Plan) -> String {
     );
     if !p.trial.is_empty() {
         s += &q("trial", &p.trial);
+    }
+    if !p.start.is_empty() {
+        s += &q("start", &p.start);
     }
     s += &format!("\n[gear]\n{:<19} = {}\n{:<19} = {}\n", "tactical", p.gear_tactical, "builders", p.gear_builders);
     s += "\n[prompts]\n";

@@ -179,6 +179,27 @@ impl Director {
                 }
             }
         }
+        // a builder starts from the last change on this test that built and broke
+        // nothing (findings 0054); the first, from the plan's kept run, if it names one
+        if !self.p.exam {
+            let mut from: Option<PathBuf> = None;
+            for (i, d) in self.jobs.iter().enumerate().rev() {
+                let dir = jobs.join(format!("{}-try{}", d.id, i + 1));
+                if d.test == test && carries(&dir, test) {
+                    from = Some(dir);
+                    break;
+                }
+            }
+            if from.is_none() && !self.p.start.is_empty() && self.jobs.iter().all(|d| d.test != test) {
+                let dir = crate::build::absolute(&self.p.start);
+                if carries(&dir, test) {
+                    from = Some(dir);
+                }
+            }
+            if let Some(dir) = from {
+                job += &format!("start = {}\n", note::toml_string(&dir.to_string_lossy(), 1000));
+            }
+        }
         // a builder out of its depth calls a friend, with what is left of the friend's share
         if !self.p.friend_model.is_empty() {
             job += &format!(
@@ -237,10 +258,25 @@ impl Director {
         }
         self.log(&format!("result: {status}\n```\n{nt}```"));
         self.say(&format!("job {id}: {status}"));
-        let answer = format!("Job {id}, {test}: {status}.\nIts result note, written by the program from what the tests printed on the jig:\n{nt}");
+        let mut answer = format!("Job {id}, {test}: {status}.\nIts result note, written by the program from what the tests printed on the jig:\n{nt}");
+        if !passed && !self.p.exam && carries(&run_dir, test) {
+            answer += "Its change built and broke nothing that was green, so the next builder on this test starts from it, with the change on its disk, and is shown it and what the test printed: not from a clean checkout.  A hint should say what is still wrong with it.\n";
+        }
         self.jobs.push(JobDone { id, test: test.into(), status, note: nt });
         Ok(answer)
     }
+}
+
+/// A run's change is worth starting from when it changed something, the test it
+/// was given ran (the flavor built) and nothing green went red.
+fn carries(dir: &Path, test: &str) -> bool {
+    let changed = fs::read_to_string(dir.join("output.txt")).map(|d| d.lines().any(|l| l.starts_with('<') || l.starts_with('>'))).unwrap_or(false);
+    let broke = fs::read_to_string(dir.join("newly-red.txt")).map(|t| !t.trim().is_empty()).unwrap_or(true);
+    let code = format!("TST.{test}");
+    let built = fs::read_to_string(dir.join("suite.txt"))
+        .map(|s| s.lines().any(|l| l.contains(&code) && (l.starts_with("FAIL  ") || l.starts_with("PASS  ")) && !l.contains("does not build") && !(l.contains("build of ") && l.contains(" failed"))))
+        .unwrap_or(false);
+    changed && built && !broke && dir.join("fixed").is_dir()
 }
 
 impl Director {

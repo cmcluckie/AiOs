@@ -1,0 +1,7 @@
+code       = "SPEC.agent.14@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+component  = "TOOL.agent@1"
+clause     = "A builder given an earlier run starts from that run's change: its files are on the builder's disk, its first message shows the change and what the test printed with it, what it hands in is judged with it, and its run says what it started from; a change that is not existing files of one part under pool/ is not carried.  A director starts each job on a test from the last change on that test that built and broke nothing that was green, or for the first, from the kept run its plan names, and is told so (findings 0054)."
+author     = "KEY.chris"

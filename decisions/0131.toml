@@ -1,0 +1,11 @@
+id      = "0131"
+date    = 2026-11-27
+kind    = "rules and words"
+touches = ["agent/mechanic/src/build.rs", "agent/mechanic/src/direct.rs", "agent/mechanic/src/plan.rs", "specs/agent.14@1.toml", "tests/agent.carry@1.toml", "tests/programs/agent.sh", "tests/mutations.txt", "findings/0054.md"]
+asked   = "A fix builder starts from the last change on its test that built and broke nothing green, as a lifter starts from the last lift; a plan may name a kept run for the first job (findings 0054)."
+options = ["take it", "keep every builder on a clean checkout", "commit a failing change by hand between runs"]
+default = "take it"
+chose   = "take it"
+why     = "Chris, 2026-11-27: \"yes\".  A builder's change that built and booted clean was about to be thrown away when Ollama stopped; the fourth time a clean start has cost a run."
+by      = "KEY.chris@1"
+drafted = "Claude"

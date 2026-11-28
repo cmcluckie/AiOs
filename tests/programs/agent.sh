@@ -17,6 +17,7 @@
 #   sh tests/programs/agent.sh direct  TST.agent.direct@1: a director and its limits
 #   sh tests/programs/agent.sh bedrock TST.agent.bedrock@1: gear 2, and what it may spend
 #   sh tests/programs/agent.sh friend  TST.agent.friend@1: call a friend when the card is out of its depth
+#   sh tests/programs/agent.sh carry   TST.agent.carry@1: a builder starts from the last change that built
 #
 # Exit 0 green, 1 red, 2 where there is no cargo: the agent is built and tested in
 # WSL beside Ollama, and the jig has no Rust toolchain (design.md's tool table).
@@ -363,6 +364,76 @@ FAKE
 	ls "$t"/runs-dstuck/*-friend-direct-dstuck-*/run.toml > /dev/null 2>&1 || fail "the director's friend call is not in runs/: $(ls "$t/runs-dstuck")"
 	unset AIOS_AWS
 	echo "a builder calls a friend once: at friend_at calls with nothing handed in, after friend_bad_builds hand-ins that did not build, or at friend_latest; the friend, on Bedrock with friend@2, is shown why, the test and what the builder did; its briefing reaches the builder, which then passes; its cost is in the run and in runs/ as a briefing; with no share left it is not called and the builder goes on alone; a job with no friend never calls; a stuck director calls once with the plan and its log, is given the briefing and goes on, and passes its builders what is left of the friend's share" ;;
+carry)
+	# a fix builder starts from the change of the builder before it, when that change
+	# built and broke nothing (findings 0054), as a lifter starts from the last lift
+	toy
+	k="$t/kept"; mkdir -p "$k/fixed/pool/PART.toy@1"
+	printf 'int answer = 40;\n' > "$k/fixed/pool/PART.toy@1/toy.c"
+	printf '=== pool/PART.toy@1/toy.c\n1c1\n< int answer = 41;\n---\n> int answer = 40;\n' > "$k/output.txt"
+	printf 'toy: read pool/PART.toy@1/toy.c, 1 answer line\nFAIL  TST.toy.answer@1  0s  the answer is 40, not 42\nPASS  TST.toy.other@1  0s  fine\n# 1 passed, 1 failed, 0 skipped\n' > "$k/suite.txt"
+	: > "$k/newly-red.txt"
+	mkdir "$t/from"; cp "$fx/build/2.json" "$t/from/1.json"; cp "$fx/build/8.json" "$t/from/2.json"
+	run from "start = \"$k\"" 1
+	o="$t/out/toy-try1"
+	[ $rc -eq 0 ] || fail "a builder started from an earlier change gave exit $rc: $(head -2 "$t/from.err" | tr '\n' ' ')"
+	jq -r '.messages[1].content' "$t/from/sent-1.json" > "$t/first"
+	grep -q 'You do not start from nothing' "$t/first" && grep -q '^> int answer = 40;$' "$t/first" && grep -q '^FAIL  TST.toy.answer@1  0s  the answer is 40, not 42$' "$t/first" ||
+		fail "the builder was not shown the change it starts from and what the test printed with it: $(tail -c 400 "$t/first" | tr '\n' ' ')"
+	jq -r '[.messages[] | select(.role == "tool")][0].content' "$t/from/sent-2.json" | grep -q '^1	int answer = 40;$' ||
+		fail "the earlier change is not on the builder's disk: $(jq -r '[.messages[] | select(.role == "tool")][0].content' "$t/from/sent-2.json" | head -3 | tr '\n' ' ')"
+	grep -q "^started_from = \"$k\"\$" "$o/run.toml" && [ "$(rt result)" = '"pass"' ] || fail "the run does not say what it started from: $(grep started_from "$o/run.toml")"
+	git -C "$a" diff --quiet HEAD || fail "starting from an earlier change touched the repo it was given"
+	# what it starts from is its own to hand in: a builder that ends having changed nothing
+	# more has the carried change handed in for it
+	k3="$t/kept3"; mkdir -p "$k3/fixed/pool/PART.toy@1"; printf 'int answer = 42;\n' > "$k3/fixed/pool/PART.toy@1/toy.c"
+	printf '=== pool/PART.toy@1/toy.c\n1c1\n< int answer = 41;\n---\n> int answer = 42;\n' > "$k3/output.txt"; cp "$k/suite.txt" "$k3/"; : > "$k3/newly-red.txt"
+	mkdir "$t/mine"; cp "$fx/build/2.json" "$t/mine/1.json"
+	run mine "$(printf 'start = "%s"\nmax_turns = 1' "$k3")" 3
+	o="$t/out/toy-try3"
+	[ "$(rt result)" = '"pass"' ] && [ "$(rt handed_in_by)" = '"program"' ] ||
+		fail "the change a builder started from was not handed in for it when it ended: $(grep -E '^(result|handed_in_by|ended)' "$o/run.toml" | tr '\n' ' ')"
+	# a change that is not the files of one part under pool/ is not carried: from the commit
+	k2="$t/kept2"; mkdir -p "$k2/fixed/tests"; printf 'x\n' > "$k2/fixed/tests/toy.answer@1.toml"
+	printf '=== tests/toy.answer@1.toml\n1c1\n< a\n---\n> x\n' > "$k2/output.txt"; cp "$k/suite.txt" "$k2/"; : > "$k2/newly-red.txt"
+	mkdir "$t/nocarry"; cp "$fx/build/8.json" "$t/nocarry/1.json"
+	run nocarry "start = \"$k2\"" 2
+	o="$t/out/toy-try2"
+	[ $rc -eq 0 ] && grep -q '^started_from = ""$' "$o/run.toml" && ! jq -r '.messages[1].content' "$t/nocarry/sent-1.json" | grep -q 'You do not start from nothing' &&
+		[ "$(cat "$o/base/tests/toy.answer@1.toml")" = "$(cat "$o/work/tests/toy.answer@1.toml")" ] ||
+		fail "a kept change to a test was carried onto the builder's disk"
+	# the director: a try whose change built and broke nothing is where the next try on
+	# that test starts; one that did not build, or broke a green test, is not
+	cat > "$t/builder" <<'FAKE'
+#!/bin/sh
+jf=$2; job=$(sed -n 's/^job = "\(.*\)"$/\1/p' "$jf"); try=$(sed -n 's/^try = //p' "$jf")
+cp "$jf" "$T/seen-$job.toml"
+o=$AGENT_OUT/$job-try$try; mkdir -p "$o/fixed/pool/PART.toy@1"
+case $try in
+1) line="FAIL  TST.toy.answer@1  1s  the toy flavor does not build: error"; red= ;;
+2) line="FAIL  TST.toy.answer@1  1s  the answer is 40, not 42"; red= ;;
+3) line="FAIL  TST.toy.answer@1  1s  the answer is 39, not 42"; red="FAIL  TST.toy.other@1  0s  broken" ;;
+*) line="FAIL  TST.toy.answer@1  1s  the answer is 38, not 42"; red= ;;
+esac
+{ echo "$line"; [ -z "$red" ] || echo "$red"; echo "PASS  TST.toy.base@1  0s  fine"; echo "# summary"; } > "$o/suite.txt"
+printf '%s' "$red" > "$o/newly-red.txt"
+printf '=== pool/PART.toy@1/toy.c\n1c1\n< int answer = 41;\n---\n> int answer = 4%s;\n' "$try" > "$o/output.txt"
+"$T/agent" note "$job" "$try" 1000 60 pool/PART.toy@1/toy.c < "$o/suite.txt" > "$o/note.toml"
+printf 'result       = "fail"\nended        = "fail"\nwhy          = ""\ndollars      = 0\n' > "$o/run.toml"
+exit 1
+FAKE
+	mkdir "$t/dcarry"; for i in 1 2 3; do cp "$fx/direct/stuck/$i.json" "$t/dcarry/$i.json"; done; cp "$fx/direct/stuck/3.json" "$t/dcarry/4.json"; cp "$fx/friend/ask.json" "$t/dcarry/5.json"
+	printf 'part = "PART.toy@1: the answer"\ntests = ["toy.answer@1"]\nat = "1234567"\nbudget_usd = 0\nstuck_same_failures = 9\nstuck_no_drop = 9\n\n[gear]\ntactical = 1\nbuilders = 1\n\n[prompts]\ndirector = "director@1"\nbuilder = "builder@1"\n' > "$t/dcarry.toml"
+	T=$t AGENT_FAKE="$t/dcarry" AGENT_BUILDER="sh $t/builder" AGENT_OUT="$t/out" AGENT_QUIET=1 \
+		AGENT_RUNS="sh $(pwd)/jig/runs" RUNS="$t/runs-dcarry" PRICES="$(pwd)/jig/prices.toml" \
+		"$t/agent" direct "$t/dcarry.toml" > "$t/dcarry.out" 2> "$t/dcarry.err"; rc=$?
+	[ -f "$t/seen-dcarry-4.toml" ] || fail "the director did not run four jobs: $(cat "$t/dcarry.err" | head -2)"
+	grep -q '^start = ' "$t/seen-dcarry-1.toml" "$t/seen-dcarry-2.toml" && fail "a job started from a change that did not build, or from nothing: $(grep -h '^start' "$t"/seen-dcarry-[12].toml)"
+	grep -q "^start = \".*/dcarry-2-try2\"\$" "$t/seen-dcarry-3.toml" || fail "the third job does not start from the second, whose change built and broke nothing: $(grep '^start' "$t/seen-dcarry-3.toml")"
+	grep -q "^start = \".*/dcarry-2-try2\"\$" "$t/seen-dcarry-4.toml" || fail "the fourth job does not start from the second: the third broke a green test: $(grep '^start' "$t/seen-dcarry-4.toml")"
+	jq -r '[.messages[] | select(.role == "tool")][1].content' "$t/dcarry/sent-3.json" | grep -q 'the next builder on this test starts from it' ||
+		fail "the director was not told the next builder starts from the change"
+	echo "a builder given an earlier run starts from its change: the files on its disk, the change and what the test printed with it in its first message, and the run says what it started from; a kept change that is not the files of one part under pool/ is not carried; a director starts each job from the last change on that test that built and broke nothing green, never from one that did not build or broke a green test, and is told so" ;;
 trial)
 	pr=prompts
 	# the old versions are kept as they were used on waits (decision 0096's run)

@@ -1,0 +1,10 @@
+code       = "TST.agent.carry@1"
+status     = "draft"
+admitted   = ""
+retired_by = ""
+binds      = "SPEC.agent.14@1"
+red_when   = "on a toy repo with saved replies, a builder given an earlier run does not have its change on disk, is not shown the change and what the test printed with it, does not have it handed in when it ends without changing more, or its run does not say what it started from; a kept change to a test is carried; the repo is touched; or a director starts a job from a change that did not build or broke a green test, does not start it from the last one that built and broke nothing, or is not told"
+timeout_ms = 120000
+isolates   = "TOOL.agent@1"
+runner     = "jig/test cmd sh tests/programs/agent.sh carry"
+mutations  = 4

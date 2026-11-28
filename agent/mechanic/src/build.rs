@@ -34,7 +34,7 @@ pub struct Job {
     pub num_ctx: u64,
     pub suite: String,
     pub hint: String,
-    pub start: String, // a lifter's: the earlier lifter's run, whose file it starts from (findings 0035)
+    pub start: String, // an earlier run whose work this one starts from: a lifter's file (findings 0035), a builder's change (findings 0054)
     pub item: String,
     pub trial: String,
     pub max_turns: u64,
@@ -664,6 +664,30 @@ pub fn run(jobpath: &str) -> i32 {
     if let Some(h) = &hint {
         first += &format!("\nFrom your director, who has read how earlier tries went:\n\n{h}");
     }
+    // a builder after one whose change built starts from that change, on its own
+    // disk, and is shown it and what the tests said of it (findings 0054), as a
+    // lifter starts from the last lifter's file
+    let mut carried: Vec<String> = Vec::new();
+    if !j.start.is_empty() {
+        let from = PathBuf::from(&j.start);
+        let diff = fs::read_to_string(from.join("output.txt")).unwrap_or_default();
+        let paths: Vec<String> = diff.lines().filter_map(|l| l.strip_prefix("=== ")).map(String::from).collect();
+        if !paths.is_empty() && judge::check(&base, &paths).is_ok() && paths.iter().all(|p| from.join("fixed").join(p).is_file()) {
+            for p in &paths {
+                if fs::copy(from.join("fixed").join(p), work.join(p)).is_ok() {
+                    carried.push(p.clone());
+                }
+            }
+            let said = fs::read_to_string(from.join("suite.txt")).ok().and_then(|s| judge::lift_verdict(&s, std::slice::from_ref(&code))).unwrap_or_else(|| "(not recorded)".into());
+            first += &format!(
+                "\nYou do not start from nothing.  The builder before you changed these files, and its change is on your disk now: look shows it, and what you hand in is judged with it.  Keep what is right in it and fix what is not; change it back only where it is wrong.\n\nIts change, against the commit (diff's < is the commit, > is the change):\n\n{}\nWhat the test printed with that change:\n\n{said}\n",
+                runtime::model::cut(&diff, 16000)
+            );
+            say(quiet, &format!("starting from the change of {}: {}", from.file_name().map(|n| n.to_string_lossy().to_string()).unwrap_or_default(), carried.join(" ")));
+        } else {
+            say(quiet, &format!("start {} has no change that can be carried; starting from the commit", j.start));
+        }
+    }
     let m = Model {
         gear: j.gear,
         name: j.model.clone(),
@@ -680,7 +704,7 @@ pub fn run(jobpath: &str) -> i32 {
         dir: dir.clone(),
         base: base.clone(),
         work,
-        touched: vec![],
+        touched: carried.clone(),
         judged: String::new(),
         by_program: false,
         code,
@@ -741,10 +765,11 @@ pub fn run(jobpath: &str) -> i32 {
     let _ = fs::write(dir.join("note.toml"), &n);
     let dollars = runs.cost(&recorded, r.tokens_in, r.tokens_out).unwrap_or(0.0);
     let run_toml = format!(
-        "bench        = \"agent\"\nhanded_in_by = \"{}\"\njob          = {}\ntest         = {}\nat           = \"{}\"\ntry          = {}\nmodel        = {}\nnum_ctx      = {}\nprompt       = \"{}\"\nprompt_print = \"{}\"\nresult       = \"{}\"\nended        = \"{}\"\nwhy          = {}\ncalls        = {}\nhand_ins     = {}\nlines        = {}\ntokens_in    = {}\ntokens_out   = {}\npeak_context = {}\nfolded_chars = {}\nseconds      = {}\ndollars      = {:.6}\nfriend       = {}\nfriend_why   = {}\nfriend_dollars = {:.6}\n",
+        "bench        = \"agent\"\nhanded_in_by = \"{}\"\njob          = {}\ntest         = {}\nat           = \"{}\"\ntry          = {}\nmodel        = {}\nnum_ctx      = {}\nprompt       = \"{}\"\nprompt_print = \"{}\"\nresult       = \"{}\"\nended        = \"{}\"\nwhy          = {}\ncalls        = {}\nhand_ins     = {}\nlines        = {}\ntokens_in    = {}\ntokens_out   = {}\npeak_context = {}\nfolded_chars = {}\nseconds      = {}\ndollars      = {:.6}\nfriend       = {}\nfriend_why   = {}\nfriend_dollars = {:.6}\nstarted_from = {}\n",
         if b.hand == 0 { "nobody" } else if b.by_program { "program" } else { "builder" }, note::toml_string(&j.job, 64), note::toml_string(&j.test, 128), j.at, j.try_, note::toml_string(&recorded, 160), j.num_ctx,
         j.prompt, print, b.result, ended, note::toml_string(&why, 500), r.calls, b.hand, b.lines, r.tokens_in, r.tokens_out,
-        r.peak, b.folded, seconds, dollars, b.friend.is_some(), note::toml_string(&b.friend_line, 300), b.friend.as_ref().map(|f| f.dollars).unwrap_or(0.0)
+        r.peak, b.folded, seconds, dollars, b.friend.is_some(), note::toml_string(&b.friend_line, 300), b.friend.as_ref().map(|f| f.dollars).unwrap_or(0.0),
+        note::toml_string(if carried.is_empty() { "" } else { &j.start }, 1000)
     );
     let _ = fs::write(dir.join("run.toml"), run_toml);
     if !dir.join("output.txt").exists() {
