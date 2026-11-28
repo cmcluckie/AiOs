@@ -28,6 +28,11 @@ impl Runs {
         runtime::money::cost(&self.prices, model, tin, tout)
     }
 
+    /// The same, with Bedrock's cached tokens at their own prices.
+    pub fn cost_cached(&self, model: &str, tin: u64, tout: u64, cache_read: u64, cache_write: u64) -> Option<f64> {
+        runtime::money::cost_cached(&self.prices, model, tin, tout, cache_read, cache_write)
+    }
+
     /// Room this month for ceiling more dollars; why not, if not.
     pub fn room(&self, ceiling: f64) -> Result<(), String> {
         let mut c = self.command.clone();
@@ -66,6 +71,34 @@ impl Runs {
         calls: u64,
         seconds: u64,
     ) -> Result<String, String> {
+        self.record_cached(item, model, try_, tin, tout, result, lines, input, output, at, prompt, sitting, peak, ended, trial, calls, seconds, 0, 0)
+    }
+
+    /// record, with the tokens Bedrock read from its cache and wrote to it, which
+    /// jig/runs costs at their own prices.
+    #[allow(clippy::too_many_arguments)]
+    pub fn record_cached(
+        &self,
+        item: &str,
+        model: &str,
+        try_: u64,
+        tin: u64,
+        tout: u64,
+        result: &str,
+        lines: u64,
+        input: &Path,
+        output: &Path,
+        at: &str,
+        prompt: &str,
+        sitting: Option<&str>,
+        peak: u64,
+        ended: &str,
+        trial: &str,
+        calls: u64,
+        seconds: u64,
+        cache_read: u64,
+        cache_write: u64,
+    ) -> Result<String, String> {
         let day = runtime::sigv4::now();
         let day = format!("{}-{}-{}", &day[..4], &day[4..6], &day[6..8]);
         let mut c = Command::new(&self.command[0]);
@@ -79,7 +112,9 @@ impl Runs {
             .env("RUNS_AT", at)
             .env("RUNS_PROMPT", prompt)
             .env("RUNS_CALLS", calls.to_string())
-            .env("RUNS_SECONDS", seconds.to_string());
+            .env("RUNS_SECONDS", seconds.to_string())
+            .env("RUNS_CACHE_READ", cache_read.to_string())
+            .env("RUNS_CACHE_WRITE", cache_write.to_string());
         if let Some(s) = sitting {
             c.env("RUNS_SITTING", s);
         }

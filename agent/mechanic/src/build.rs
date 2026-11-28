@@ -743,6 +743,7 @@ pub fn run(jobpath: &str) -> i32 {
         max_tokens: j.max_tokens,
         think_cap: j.think_tokens,
         timeout: Duration::from_secs(1800),
+        cache: false,
     };
     // the conversation's share of the window, less the system prompt; the rest is the reply
     let budget = j.num_ctx * j.room_share / 100;

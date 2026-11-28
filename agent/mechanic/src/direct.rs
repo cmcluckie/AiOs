@@ -562,6 +562,7 @@ pub fn run(planpath: &str) -> i32 {
         max_tokens: 8000.min(num_ctx / 8),
         think_cap: 8000.min(num_ctx / 8),
         timeout: Duration::from_secs(1800),
+        cache: false,
     };
     let r = react::run(&m, keys.as_ref(), &system, &first, MAX_CALLS, &mut d);
     let (how, why) = match &r.ended {

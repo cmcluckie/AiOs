@@ -43,6 +43,34 @@ pub fn cost(list: &Path, model: &str, tokens_in: u64, tokens_out: u64) -> Option
     Some(tokens_in as f64 * i / 1e6 + tokens_out as f64 * o / 1e6)
 }
 
+/// Dollars with Bedrock's cache counted: tokens read from it and written to it
+/// at their own prices (per_million_cache_read, per_million_cache_write); None if
+/// the model has no price, or cached tokens and no price for them.
+pub fn cost_cached(list: &Path, model: &str, tokens_in: u64, tokens_out: u64, cache_read: u64, cache_write: u64) -> Option<f64> {
+    let base = cost(list, model, tokens_in, tokens_out)?;
+    if cache_read + cache_write == 0 {
+        return Some(base);
+    }
+    let text = std::fs::read_to_string(list).ok()?;
+    let (mut hit, mut pr, mut pw) = (false, None, None);
+    for line in text.lines() {
+        let line = line.trim();
+        if line.starts_with("[[model]]") {
+            hit = false;
+            continue;
+        }
+        let Some((k, v)) = line.split_once('=') else { continue };
+        let (k, v) = (k.trim(), v.trim());
+        match k {
+            "name" => hit = v.trim_matches('"') == model,
+            "per_million_cache_read" if hit => pr = v.parse::<f64>().ok(),
+            "per_million_cache_write" if hit => pw = v.parse::<f64>().ok(),
+            _ => {}
+        }
+    }
+    Some(base + cache_read as f64 * pr? / 1e6 + cache_write as f64 * pw? / 1e6)
+}
+
 /// Asks `command... CEILING` whether ceiling dollars more fit: exit 0 is yes.
 /// Its first line of output says why, either way.
 pub fn room(command: &[String], ceiling: f64) -> Result<String, String> {

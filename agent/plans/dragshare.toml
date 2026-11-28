@@ -8,9 +8,10 @@
 # rung 2, its mmap2 and munmap (gate.elf-heap-shares@1); then gate.drag-shares@1.
 # Third run (findings 0052): with a friend, Claude on Bedrock, called for a briefing
 # when a builder is out of its depth or the part is stuck.  Rung 1 passed on
-# 2026-11-28 (findings 0056); this is rung 2.
-part       = "PART.gate@3: a Linux program file's mmap2 and munmap on the sharing kernel, beside AiOs's own programs (car 3, rung 2)"
-tests      = ["gate.elf-heap-shares@1"]
+# 2026-11-28 (findings 0056) and rung 2 the same day (findings 0058); this is
+# rung 3, car 3 itself.
+part       = "PART.gate@3: Dave Plummer's sieve, a Linux program file, beside the stopwatch on the sharing kernel (car 3, rung 3)"
+tests      = ["gate.drag-shares@1"]
 at         = "40ce2ee"
 budget_usd = 0
 max_tries  = 10

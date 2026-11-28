@@ -22,12 +22,14 @@ use std::time::Duration;
 
 pub const PROMPT: &str = "friend@3";
 pub const LOOKS: u32 = 10;
-const LOOK_CHARS: usize = 12_000;
+const LOOK_CHARS: usize = 8_000;
 
 pub struct Briefing {
     pub text: Result<String, String>, // the briefing, or why there is none
     pub tokens_in: u64,
     pub tokens_out: u64,
+    pub cache_read: u64,  // tokens Bedrock had kept from the turn before, at a tenth of the price
+    pub cache_write: u64, // tokens it kept for the next
     pub dollars: f64,
     pub looks: u32,
     pub print: String, // the prompt's fingerprint, as a run records it
@@ -152,7 +154,7 @@ impl Hooks for Friend<'_> {
 /// root the copy of the repo it may look at.  Nothing is sent unless it can be
 /// costed, has room in its share and in the month's cap, and has a key.
 pub fn brief(repo: &Path, runs: &Runs, model_id: &str, max_usd: f64, root: &Path, ask: &str) -> Briefing {
-    let none = |why: String| Briefing { text: Err(why), tokens_in: 0, tokens_out: 0, dollars: 0.0, looks: 0, print: String::new() };
+    let none = |why: String| Briefing { text: Err(why), tokens_in: 0, tokens_out: 0, cache_read: 0, cache_write: 0, dollars: 0.0, looks: 0, print: String::new() };
     let recorded = format!("bedrock:{model_id}");
     if runs.cost(&recorded, 0, 0).is_none() {
         return none(format!("no price for {recorded}: a model whose calls cannot be costed is not called"));
@@ -180,6 +182,7 @@ pub fn brief(repo: &Path, runs: &Runs, model_id: &str, max_usd: f64, root: &Path
         max_tokens: 4000,
         think_cap: 0,
         timeout: Duration::from_secs(600),
+        cache: std::env::var("AGENT_FRIEND_CACHE").map(|v| v != "0").unwrap_or(true),
     };
     let mut f = Friend { root, runs, recorded: recorded.clone(), max_usd, looks: 0, briefing: None };
     let r = react::run(&m, Some(&keys), &system, ask, LOOKS + 6, &mut f);
@@ -189,8 +192,8 @@ pub fn brief(repo: &Path, runs: &Runs, model_id: &str, max_usd: f64, root: &Path
         (Ended::Halted(_, why), _) => Err(why.clone()),
         _ => Err(format!("it ended after {} turns without sending a briefing", r.calls)),
     };
-    let dollars = runs.cost(&recorded, r.tokens_in, r.tokens_out).unwrap_or(0.0);
-    Briefing { text, tokens_in: r.tokens_in, tokens_out: r.tokens_out, dollars, looks: f.looks, print }
+    let dollars = runs.cost_cached(&recorded, r.tokens_in, r.tokens_out, r.cache_read, r.cache_write).unwrap_or(0.0);
+    Briefing { text, tokens_in: r.tokens_in, tokens_out: r.tokens_out, cache_read: r.cache_read, cache_write: r.cache_write, dollars, looks: f.looks, print }
 }
 
 /// The call and its answer, kept beside the run that made it as friend-N, and
@@ -201,7 +204,7 @@ pub fn keep(dir: &Path, runs: &Runs, item: &str, model_id: &str, try_: u64, n: u
     let asked = dir.join(format!("friend-{n}-asked.txt"));
     let said = dir.join(format!("friend-{n}.md"));
     let _ = fs::write(&asked, ask);
-    let head = format!("model: bedrock:{model_id}; {} looks; {} in, {} out; ${:.6}", got.looks, got.tokens_in, got.tokens_out, got.dollars);
+    let head = format!("model: bedrock:{model_id}; {} looks; {} in, {} read from the cache, {} written to it, {} out; ${:.6}", got.looks, got.tokens_in, got.cache_read, got.cache_write, got.tokens_out, got.dollars);
     match &got.text {
         Ok(t) => {
             let _ = fs::write(&said, format!("# The friend's briefing\n\n{head}\n\n{t}\n"));
@@ -210,14 +213,14 @@ pub fn keep(dir: &Path, runs: &Runs, item: &str, model_id: &str, try_: u64, n: u
             let _ = fs::write(&said, format!("# The friend sent no briefing\n\n{head}\n\n{why}\n"));
         }
     }
-    if got.tokens_in + got.tokens_out == 0 {
+    if got.tokens_in + got.tokens_out + got.cache_read + got.cache_write == 0 {
         return Ok(said); // nothing was sent, nothing was spent
     }
     let sitting = std::env::var("AGENT_SITTING").ok().filter(|s| !s.is_empty() && crate::util::plain(s, "._-"));
     let (result, ended) = if got.text.is_ok() { ("briefing", "briefing") } else { ("fail", "error") };
-    runs.record(
+    runs.record_cached(
         &format!("friend-{item}"), &format!("bedrock:{model_id}"), try_ * 100 + n, got.tokens_in, got.tokens_out, result, 0, &asked, &said, at, &got.print,
-        sitting.as_deref(), got.tokens_in + got.tokens_out, ended, trial, (got.looks + 1) as u64, seconds,
+        sitting.as_deref(), got.tokens_in + got.tokens_out, ended, trial, (got.looks + 1) as u64, seconds, got.cache_read, got.cache_write,
     )?;
     Ok(said)
 }

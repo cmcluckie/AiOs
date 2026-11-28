@@ -63,6 +63,8 @@ pub struct Run {
     pub calls: u32,
     pub tokens_in: u64,
     pub tokens_out: u64,
+    pub cache_read: u64,
+    pub cache_write: u64,
     pub peak: u64,
     pub ended: Ended,
 }
@@ -89,6 +91,8 @@ pub fn run(
         calls: 0,
         tokens_in: 0,
         tokens_out: 0,
+        cache_read: 0,
+        cache_write: 0,
         peak: 0,
         ended: Ended::Turns,
     };
@@ -103,7 +107,9 @@ pub fn run(
         r.calls = turn;
         r.tokens_in += reply.tokens_in;
         r.tokens_out += reply.tokens_out;
-        r.peak = r.peak.max(reply.tokens_in + reply.tokens_out);
+        r.cache_read += reply.cache_read;
+        r.cache_write += reply.cache_write;
+        r.peak = r.peak.max(reply.tokens_in + reply.cache_read + reply.cache_write + reply.tokens_out);
         hooks.tally(r.tokens_in, r.tokens_out);
         hooks.peak(r.peak);
         if reply.tokens_in > 0 && !reply.thought_cut {
@@ -205,7 +211,7 @@ mod tests {
     }
 
     fn model() -> Model {
-        Model { gear: 1, name: "m".into(), url: "http://x".into(), num_ctx: 8192, max_tokens: 100, think_cap: 0, timeout: Duration::from_secs(5) }
+        Model { gear: 1, name: "m".into(), url: "http://x".into(), num_ctx: 8192, max_tokens: 100, think_cap: 0, timeout: Duration::from_secs(5), cache: false }
     }
 
     struct Script {

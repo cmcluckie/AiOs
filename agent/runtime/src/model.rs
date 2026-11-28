@@ -19,6 +19,7 @@ pub struct Model {
     pub max_tokens: u64,   // each reply's limit for what it says and calls
     pub think_cap: u64,    // the thinking allowed before it, apart; 0 for no cap
     pub timeout: Duration, // to wait for one reply
+    pub cache: bool,       // gear 2: ask Bedrock to keep what was sent, so the next call pays a tenth for it (findings 0057)
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -50,6 +51,8 @@ pub struct Reply {
     pub message: Option<Value>, // the assistant's message, in the conversation's shape
     pub tokens_in: u64,
     pub tokens_out: u64,
+    pub cache_read: u64,  // of what was sent, the tokens Bedrock had kept (not in tokens_in)
+    pub cache_write: u64, // and the tokens it kept for next time (not in tokens_in)
     pub error: String,
     /// its thinking passed think_cap, so it was stopped and asked again without
     pub thought_cut: bool,
@@ -57,7 +60,7 @@ pub struct Reply {
 
 impl Reply {
     fn failed(stop: Stop, error: String) -> Reply {
-        Reply { stop, message: None, tokens_in: 0, tokens_out: 0, error, thought_cut: false }
+        Reply { stop, message: None, tokens_in: 0, tokens_out: 0, cache_read: 0, cache_write: 0, error, thought_cut: false }
     }
 }
 
@@ -136,7 +139,7 @@ fn read_reply(text: &str, limit: u64) -> Reply {
     } else {
         Stop::End
     };
-    Reply { stop, message: Some(Value::Object(msg)), tokens_in: tin, tokens_out: tout, error: String::new(), thought_cut: false }
+    Reply { stop, message: Some(Value::Object(msg)), tokens_in: tin, tokens_out: tout, cache_read: 0, cache_write: 0, error: String::new(), thought_cut: false }
 }
 
 enum Streamed {
@@ -314,6 +317,19 @@ pub fn bedrock_request(system: &str, messages: &[Value], tools: &[Value], max_to
     req
 }
 
+/// Marks where Bedrock may keep what was sent (Converse's cachePoint): after the
+/// system prompt and after the last message, so a call that sends the same
+/// conversation with one more turn pays the cache-read price for all before it.
+pub fn cache_points(req: &mut Value) {
+    let point = json!({"cachePoint": {"type": "default"}});
+    if let Some(s) = req["system"].as_array_mut() {
+        s.push(point.clone());
+    }
+    if let Some(c) = req["messages"].as_array_mut().and_then(|m| m.last_mut()).and_then(|m| m["content"].as_array_mut()) {
+        c.push(point);
+    }
+}
+
 pub fn bedrock_reply(text: &str) -> Reply {
     let got: Value = serde_json::from_str(text).unwrap_or(Value::Null);
     let (Some(content), Some(stop)) =
@@ -349,6 +365,8 @@ pub fn bedrock_reply(text: &str) -> Reply {
         message: Some(Value::Object(msg)),
         tokens_in: number(&got["usage"], "inputTokens"),
         tokens_out: number(&got["usage"], "outputTokens"),
+        cache_read: number(&got["usage"], "cacheReadInputTokens"),
+        cache_write: number(&got["usage"], "cacheWriteInputTokens"),
         error: String::new(),
         thought_cut: false,
     }
@@ -359,7 +377,11 @@ fn bedrock(m: &Model, system: &str, messages: &[Value], tools: &[Value], k: &Key
     if !ok(&m.name, "._-:") || !ok(&k.region, "-") {
         return Reply::failed(Stop::Error, format!("Bedrock: {} in {} is not a model and a region", m.name, k.region));
     }
-    let body = bedrock_request(system, messages, tools, m.max_tokens).to_string();
+    let mut req = bedrock_request(system, messages, tools, m.max_tokens);
+    if m.cache {
+        cache_points(&mut req);
+    }
+    let body = req.to_string();
     let url = format!("https://bedrock-runtime.{}.amazonaws.com/model/{}/converse", k.region, m.name);
     let sign = Signing {
         region: &k.region,

@@ -447,6 +447,7 @@ pub fn run(j: &Job, start: Instant, quiet: bool) -> i32 {
         max_tokens: j.max_tokens,
         think_cap: j.think_tokens,
         timeout: Duration::from_secs(1800),
+        cache: false,
     };
     let mut b = Lifter {
         j,

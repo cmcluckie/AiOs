@@ -308,11 +308,14 @@ friend)
 	grep -q 'You called a friend' "$t/got" && grep -q '^What is actually wrong:$' "$t/got" && grep -q '^- pool/PART.toy@1/toy.c, line 1: this line sets the answer$' "$t/got" &&
 		grep -q '^      int answer = 41;$' "$t/got" && grep -q '^Do first:$' "$t/got" || fail "the briefing did not reach the builder with its place and quote: $(head -c 400 "$t/got" | tr '\n' ' ')"
 	grep -q 'I think this is it' "$t/got" && fail "what the friend said outside its briefing reached the builder"
-	[ "$(rt friend_dollars)" = 0.017000 ] && [ "$(rt friend_calls)" = 1 ] && [ "$(rt friend_outcome)" = '"pass"' ] && grep -q '2 calls and nothing handed in' "$o/run.toml" ||
+	[ "$(rt friend_dollars)" = 0.016500 ] && [ "$(rt friend_calls)" = 1 ] && [ "$(rt friend_outcome)" = '"pass"' ] && grep -q '2 calls and nothing handed in' "$o/run.toml" ||
 		fail "the friend's cost, calls, outcome or why is not in the run: $(grep friend "$o/run.toml" | tr '\n' ' ')"
 	fd=$(ls "$t"/runs/*-friend-fix-toy-answer-101-*/run.toml 2> /dev/null)
-	[ -n "$fd" ] && grep -qx 'result        = "briefing"' "$fd" && grep -qx 'cost_usd      = 0.017000' "$fd" ||
-		fail "the friend's call is not in runs/ as a briefing with its cost: $(ls "$t/runs")"
+	[ -n "$fd" ] && grep -qx 'result        = "briefing"' "$fd" && grep -qx 'cost_usd      = 0.016500' "$fd" && grep -qx 'cache_read_tokens  = 5000' "$fd" && grep -qx 'cache_write_tokens = 2000' "$fd" ||
+		fail "the friend's call is not in runs/ as a briefing with its cost, the cache's tokens at their own prices: $(grep -E 'cost|cache' "$fd" | tr '\n' ' ')"
+	# what was sent is marked for Bedrock to keep, after the system prompt and after the last message
+	[ "$(jq -c '.system[-1]' "$t/early/sent-3.json")" = '{"cachePoint":{"type":"default"}}' ] && [ "$(jq -c '.messages[-1].content[-1]' "$t/early/sent-4.json")" = '{"cachePoint":{"type":"default"}}' ] ||
+		fail "the friend's turns are not marked for Bedrock's cache: $(jq -c '.system[-1]' "$t/early/sent-3.json")"
 	grep -q '^# The friend.s briefing$' "$o/friend-1.md" && [ -s "$o/friend-1-asked.txt" ] || fail "the friend's call is not kept beside the run"
 	# a briefing that quotes a line the file does not hold is refused, and not sent
 	mkdir "$t/guess"; cp "$fx/build/2.json" "$t/guess/1.json"; cp "$fx/friend/briefing-badquote.json" "$t/guess/2.json"
@@ -407,7 +410,7 @@ FAKE
 		fail "the part did not go on after the friend, or the log does not keep the call: exit $rc, $(head -1 "$o/question.md" 2> /dev/null)"
 	ls "$t"/runs-dstuck/*-friend-direct-dstuck-*/run.toml > /dev/null 2>&1 || fail "the director's friend call is not in runs/: $(ls "$t/runs-dstuck")"
 	unset AIOS_AWS
-	echo "a builder calls a friend at friend_at calls with nothing handed in, after friend_bad_builds hand-ins that did not build, or at friend_latest; the friend, on Bedrock with friend@3, is shown why, the test, what it prints now (with a carried change, not at the commit), what the builder did and the files it changed; it looks at the builder's copy for itself, ten looks at most; a briefing that quotes a line the file does not hold is refused; only the briefing reaches the builder, with each place and its quote; a hand-in after it that is still not a pass brings one follow-up, told its own briefing; the cost, the calls and how it went are in the run, each call in runs/; with no share left it is not called and the builder goes on alone; a job with no friend never calls; a stuck director calls once with the plan and its log, is given the briefing and goes on, and passes its builders what is left of the friend's share" ;;
+	echo "a builder calls a friend at friend_at calls with nothing handed in, after friend_bad_builds hand-ins that did not build, or at friend_latest; the friend, on Bedrock with friend@3, is shown why, the test, what it prints now (with a carried change, not at the commit), what the builder did and the files it changed; it looks at the builder's copy for itself, ten looks at most; a briefing that quotes a line the file does not hold is refused; only the briefing reaches the builder, with each place and its quote; a hand-in after it that is still not a pass brings one follow-up, told its own briefing; the cost, with what Bedrock kept between its turns at the cache's prices, the calls and how it went are in the run, each call in runs/; with no share left it is not called and the builder goes on alone; a job with no friend never calls; a stuck director calls once with the plan and its log, is given the briefing and goes on, and passes its builders what is left of the friend's share" ;;
 carry)
 	# a fix builder starts from the change of the builder before it, when that change
 	# built and broke nothing (findings 0054), as a lifter starts from the last lift

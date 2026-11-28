@@ -1,0 +1,11 @@
+id      = "0135"
+date    = 2026-11-28
+kind    = "rules and words"
+touches = ["pool/PART.gate@3/gate.c", "agent/plans/dragshare.toml", "findings/0058.md"]
+asked   = "The 3090's change for rung 2 (plan-dragshare job 1, findings 0058) taken into PART.gate@3 as it wrote it; the plan set to rung 3, car 3 itself."
+options = ["take it", "let the director's second job on rung 2 run"]
+default = "take it"
+chose   = "take it"
+why     = "Judged a pass on the jig: the red test green, nothing green gone red.  The director's second job rested on reading that pass as a failure (findings 0058 item 4)."
+by      = "KEY.chris@1"
+drafted = "Claude"

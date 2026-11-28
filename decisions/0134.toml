@@ -1,0 +1,11 @@
+id      = "0134"
+date    = 2026-11-28
+kind    = "rules and words"
+touches = ["agent/runtime/src/model.rs", "agent/runtime/src/react.rs", "agent/runtime/src/money.rs", "agent/mechanic/src/record.rs", "agent/mechanic/src/friend.rs", "agent/mechanic/src/build.rs", "agent/mechanic/src/lift.rs", "agent/mechanic/src/direct.rs", "agent/mechanic/src/main.rs", "tests/agent.friend@1.toml", "tests/programs/agent.sh", "tests/fixtures/agent/friend/briefing.json", "tests/fixtures/agent/friend/briefing-40.json", "tests/fixtures/agent/friend/briefing-badquote.json", "tests/fixtures/agent/friend/briefing-director.json", "tests/fixtures/agent/friend/briefing-syntax.json", "tests/fixtures/agent/friend/look.json", "tests/mutations.txt", "findings/0057.md"]
+asked   = "The friend's turns marked for Bedrock's cache, the cached tokens costed and recorded at their own prices, and a look cut to 8,000 characters: a call cost $1.05 at full price (findings 0057)."
+options = ["take it", "fewer looks", "leave it: $10 a plan covers it"]
+default = "take it"
+chose   = "take it"
+why     = "Chris, 2026-11-28: \"yes\", to trimming the friend's cost while the run goes on."
+by      = "KEY.chris@1"
+drafted = "Claude"

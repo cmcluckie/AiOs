@@ -126,6 +126,7 @@ fn cmd_chat(a: &[String]) -> i32 {
         max_tokens: max,
         think_cap: std::env::var("AGENT_THINK").ok().and_then(|v| v.parse().ok()).unwrap_or(0),
         timeout: Duration::from_secs(1800),
+        cache: false,
     };
     let r = model::chat(&m, system, messages, &tools, keys.as_ref());
     println!("stop       = \"{}\"\ntokens_in  = {}\ntokens_out = {}", r.stop.word(), r.tokens_in, r.tokens_out);
@@ -152,6 +153,7 @@ fn cmd_count(a: &[String]) -> i32 {
         max_tokens: 1,
         think_cap: 0,
         timeout: Duration::from_secs(600),
+        cache: false,
     };
     for f in &a[1..] {
         let Ok(text) = std::fs::read_to_string(f) else {

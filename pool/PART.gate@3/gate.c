@@ -147,7 +147,7 @@ static unsigned int tss[26];
 static unsigned long long idt[256];
 static unsigned long pds[GATE_MAX_SPACES][1024] __attribute__((aligned(4096)));
 static unsigned long pt0[1024] __attribute__((aligned(4096)));
-static unsigned long tail_pts[GATE_MAX_SPACES][3][1024] __attribute__((aligned(4096)));	/* one page table per partial chunk of a window: single-chunk, a partial first chunk, or a partial last chunk (a Linux program file linked at 0x08048000 starts and ends mid-chunk) */
+static unsigned long tail_pts[GATE_MAX_SPACES][4][1024] __attribute__((aligned(4096)));	/* one page table per partial or misaligned chunk of a window: single-chunk, a partial first chunk, a partial last chunk, or a middle chunk whose physical base is not 4 MiB aligned (a Linux program file linked at 0x08049000 maps its middle chunk to 0x13B7000, not a 4 MiB line) */
 static unsigned long kstacks[GATE_MAX_SPACES][KSTACK_WORDS] __attribute__((aligned(16)));
 static struct gate_space spaces[GATE_MAX_SPACES];
 static int nspaces;
@@ -753,7 +753,7 @@ static void space_map(unsigned long *pd, unsigned long phys, unsigned long virt,
 	unsigned long tail = (virt + len) & 0x3fffffUL;	/* bytes from last chunk base to virt+len */
 	unsigned long hi_page;	/* one past the last open page index (within a chunk) */
 	unsigned long *pt;
-	unsigned long j;
+	unsigned long j, k;
 
 	pd[0] = (unsigned long)pt0 | 0x7;	/* the first 4 MiB: page by page */
 	for (j = 1; j < 1024; j++)
@@ -773,9 +773,23 @@ static void space_map(unsigned long *pd, unsigned long phys, unsigned long virt,
 		return;
 	}
 
-	/* full middle chunks: PSE superpages, ring 3 open */
-	for (j = first + 1; j < last; j++)
-		pd[j] = (phys + (v0 + ((j - first) << 22) - virt)) | 0x87;
+	/* full middle chunks: PSE superpages, ring 3 open (0x8f: P, RW, U/S, PS).
+	 * A PSE superpage's physical base must be 4 MiB aligned (the SDM's rule);
+	 * when the window's physical base is not, the middle chunks are mapped
+	 * page by page instead, as a partial chunk is */
+	for (j = first + 1; j < last; j++) {
+		unsigned long pbase = phys + (v0 + ((j - first) << 22) - virt);
+
+		if ((pbase & 0x3fffffUL) == 0)
+			pd[j] = pbase | 0x8f;
+		else {
+			unsigned long *mt = tail_pts[idx][3];
+
+			for (k = 0; k < 1024; k++)
+				mt[k] = (pbase + (k << 12)) | 0x7;
+			pd[j] = (unsigned long)mt | 0x7;
+		}
+	}
 
 	/* first chunk: partial (head != 0) or full (head == 0) */
 	if (head) {
@@ -788,7 +802,7 @@ static void space_map(unsigned long *pd, unsigned long phys, unsigned long virt,
 		}
 		pd[first] = (unsigned long)pt | 0x7;
 	} else {
-		pd[first] = (phys) | 0x87;	/* full chunk: v0 == virt, so phys is the base */
+		pd[first] = (phys) | 0x8f;	/* full chunk: v0 == virt, so phys is the base; ring 3 open */
 	}
 
 	/* last chunk: partial (tail != 0) or a full superpage (tail == 0) */
@@ -804,7 +818,7 @@ static void space_map(unsigned long *pd, unsigned long phys, unsigned long virt,
 		}
 		pd[last] = (unsigned long)pt | 0x7;
 	} else
-		pd[last] = (phys + ((last - first) << 22)) | 0x87;	/* full chunk: superpage */
+		pd[last] = (phys + ((last - first) << 22)) | 0x8f;	/* full chunk: superpage, ring 3 open */
 }
 
 static void paging_on(unsigned long cr3)
@@ -1039,11 +1053,13 @@ struct gate_space *gate_space_new(unsigned long phys, unsigned long virt, unsign
 		if (!window_ok(lo, lo + len))
 			return 0;
 		/* the space's window is the ELF's own virtual base (the file is linked there),
-		 * not PROGRAM_BASE: map phys → lo, as gate_exec does for a lone one */
-		space_map(pds[nspaces], phys, lo, len, nspaces);
+		 * not PROGRAM_BASE: map phys → lo, as gate_exec does for a lone one.  The window
+		 * runs to the top of the space's region, past the file: the stack and the heap's
+		 * room sit there, and must be open to ring 3 (findings 0051) */
+		space_map(pds[nspaces], phys, lo, stack_top_virt - virt, nspaces);
 		s->cr3 = (unsigned long)pds[nspaces];
 		s->win_lo = lo;
-		s->win_hi = lo + len;
+		s->win_hi = lo + (stack_top_virt - virt);
 		/* every piece where the file says (no shift: the virtual address is the file's);
 		 * bss zeroed, and the rest of the region up to the stack zeroed too */
 		for (i = 0; i < phn; i++) {
