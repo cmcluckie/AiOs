@@ -197,13 +197,18 @@ struct Builder<'a> {
     folded: usize,
     jig_down: bool,
     repo: PathBuf,
-    first: String,          // what it was given
     did: Vec<String>,       // what it has done, call by call, for the friend
     read: Vec<String>,      // the files it has read, oldest first, for the friend to read too
     told: String,           // what its last hand-in was told
     bad_builds: u64,        // hand-ins whose test said the flavor did not build
-    friend_tried: bool,
-    friend: Option<friend::Briefing>,
+    given: String,          // the test and its clause, and the director's hint: the job without its first red line
+    now: String,            // what the test prints now, with what is on disk
+    friend_calls: u64,      // calls made to the friend, two at most: a briefing, and one follow-up
+    friend_hand: u64,       // the hand-ins judged when it last briefed
+    friend_said: String,    // its last briefing
+    friend_then: String,    // what the test printed when it was first called, for the score
+    friend_dollars: f64,
+    friend_ok: bool,        // a briefing reached the builder
     friend_line: String,    // why the friend was called, or why it could not be
     started: Instant,
 }
@@ -342,6 +347,7 @@ impl Builder<'_> {
             a += &format!("\nWhat the test it was given printed:\n{said}");
         }
         self.told = a.clone();
+        self.now = judge::lift_verdict(&after, std::slice::from_ref(&self.code)).unwrap_or_else(|| "(the test it was given passes; other tests went red)".into());
         self.did.push(format!("hand-in {h}: {}", runtime::model::cut(&self.line, 200)));
         a + "\nWhat you changed is still on disk.  Change it, with edit_file or whole files, and hand it in again with submit_fix."
     }
@@ -356,38 +362,42 @@ impl Builder<'_> {
         if d.is_empty() { "(nothing yet)".into() } else { d }
     }
 
-    /// The files the builder read or changed, as they are on disk now, for a friend
-    /// who cannot look for itself (findings 0053): what it changed first, then what
-    /// it read, newest first; each whole up to 60,000 characters, 240,000 in all.
+    /// The files the builder changed, whole, as they are on disk now, and the names
+    /// of the others it read: the friend looks at those for itself (findings 0055).
     fn files_for_friend(&self) -> String {
-        let mut names: Vec<String> = self.touched.clone();
-        for f in self.read.iter().rev() {
-            if !names.contains(f) {
-                names.push(f.clone());
-            }
-        }
-        let (mut out, mut room) = (String::new(), 240_000usize);
-        for f in names {
-            let Ok(text) = fs::read_to_string(self.work.join(&f)) else { continue };
+        let (mut out, mut room) = (String::new(), 120_000usize);
+        for f in &self.touched {
+            let Ok(text) = fs::read_to_string(self.work.join(f)) else { continue };
             let text = runtime::model::cut(&text, 60_000);
             if text.len() + 200 > room {
-                out += &format!("\n=== {f}: left out, no room\n");
+                out += &format!("\n=== {f}: left out, no room; look at it\n");
                 continue;
             }
             room -= text.len() + 200;
             out += &format!("\n=== {f}\n{text}\n");
         }
-        if out.is_empty() { "(it has read no files)".into() } else { out }
+        let read: Vec<&str> = self.read.iter().filter(|f| !self.touched.contains(f)).map(String::as_str).collect();
+        if out.is_empty() {
+            out = "(it has changed no file)\n".into();
+        }
+        format!("{out}\nThe other files it has read, which you may look at: {}\n", if read.is_empty() { "none".to_string() } else { read.join(" ") })
     }
 
-    /// Call a friend, once (findings 0052): at friend_at calls with nothing handed
-    /// in, after friend_bad_builds hand-ins that did not build, or at friend_latest
-    /// calls, whichever comes first.  Its briefing, or None.
+    /// Call a friend (findings 0052, 0055).  The first call: at friend_at calls
+    /// with nothing handed in, after friend_bad_builds hand-ins that did not build,
+    /// or at friend_latest calls, whichever comes first.  One follow-up: when a
+    /// hand-in judged after the briefing is still not a pass.  Its briefing, or None.
     fn call_a_friend(&mut self, turn: u64) -> Option<String> {
-        if self.j.friend_model.is_empty() || self.friend_tried {
+        if self.j.friend_model.is_empty() || self.friend_calls >= 2 || self.result == "pass" {
             return None;
         }
-        let why = if self.bad_builds >= self.j.friend_bad_builds {
+        let again = self.friend_calls == 1;
+        let why = if again {
+            if !self.friend_ok || self.hand <= self.friend_hand {
+                return None;
+            }
+            format!("hand-in {} after your briefing is still not a pass", self.hand)
+        } else if self.bad_builds >= self.j.friend_bad_builds {
             format!("{} hand-ins did not build", self.bad_builds)
         } else if turn >= self.j.friend_at && self.hand == 0 {
             format!("{turn} calls and nothing handed in")
@@ -396,38 +406,70 @@ impl Builder<'_> {
         } else {
             return None;
         };
-        self.friend_tried = true;
+        self.friend_calls += 1;
+        self.friend_hand = self.hand;
+        if !again {
+            self.friend_then = self.now.lines().next().unwrap_or("").to_string();
+        }
+        let before = if again {
+            format!("This is your second call on this job.  Your briefing the first time:\n\n{}\n\nThe builder has handed in since, and it is still not a pass.  Say what your briefing got wrong or left out, if anything, and what is wrong now.\n\n", self.friend_said)
+        } else {
+            String::new()
+        };
         let ask = format!(
             "A builder, a local model on an RTX 3090, has one red test to make green and has called you for help: {why}.  \
-             Give it a briefing, not a fix: what is actually wrong, where in the repo to look (the files and functions that already do something close), \
-             and a few short lines of example.  It writes the fix itself, and it can change only the files of one part under pool/.\n\n\
-             What it was given:\n\n{}\n\nWhat it has done, call by call:\n{}\n\nWhat it has changed on disk, against the commit:\n{}\n\nWhat its last hand-in was told:\n{}\n\n\
-             The files it has read or changed, as they are on its disk now.  You cannot look at anything else, so say so if what you need is not here:\n{}\n",
-            self.first,
+             It can change only existing files of one part under pool/, and it writes the fix itself.\n\n{before}\
+             The job:\n\n{}\n\
+             What the test prints now, with what is on the builder's disk (this is the failure to explain; an earlier one is gone):\n\n{}\n\n\
+             What the builder has done, call by call:\n{}\n\n\
+             What it has changed on disk, against the commit (diff -u):\n{}\n\n\
+             The files it has changed, whole, as they are on its disk now:\n{}",
+            self.given,
+            self.now,
             self.did.join("\n"),
-            runtime::model::cut(&self.changes(), 12000),
-            if self.told.is_empty() { "(nothing handed in yet)".to_string() } else { runtime::model::cut(&self.told, 4000) },
+            runtime::model::cut(&self.changes(), 16000),
             self.files_for_friend()
         );
         say(self.quiet, &format!("call {turn}: calling a friend ({why})"));
-        let got = friend::brief(&self.repo, self.runs, &self.j.friend_model, self.j.friend_usd, &ask);
-        let kept = friend::keep(&self.dir, self.runs, &self.j.item, &self.j.friend_model, self.j.try_, &self.j.at, &self.j.trial, &ask, &got, self.started.elapsed().as_secs());
-        match got {
-            Ok(b) => {
-                if let Err(e) = kept {
-                    say(self.quiet, &format!("the friend's call could not be recorded in runs/ ({e})"));
-                }
-                say(self.quiet, &format!("call {turn}: the friend answered, ${:.4}", b.dollars));
-                self.friend_line = format!("call {turn}: {why}");
-                let text = b.text.clone();
-                self.friend = Some(b);
+        let got = friend::brief(&self.repo, self.runs, &self.j.friend_model, (self.j.friend_usd - self.friend_dollars).max(0.0), &self.work, &ask);
+        if let Err(e) = friend::keep(&self.dir, self.runs, &self.j.item, &self.j.friend_model, self.j.try_, self.friend_calls, &self.j.at, &self.j.trial, &ask, &got, self.started.elapsed().as_secs()) {
+            say(self.quiet, &format!("the friend's call could not be recorded in runs/ ({e})"));
+        }
+        self.friend_dollars += got.dollars;
+        if !self.friend_line.is_empty() {
+            self.friend_line += "; ";
+        }
+        match got.text {
+            Ok(text) => {
+                say(self.quiet, &format!("call {turn}: the friend answered after {} looks, ${:.4}", got.looks, got.dollars));
+                self.friend_line += &format!("call {turn}: {why}");
+                self.friend_ok = true;
+                self.friend_said = text.clone();
                 Some(text)
             }
             Err(e) => {
-                say(self.quiet, &format!("call {turn}: the friend could not be called: {e}"));
-                self.friend_line = format!("call {turn}: {why}; not called: {e}");
+                say(self.quiet, &format!("call {turn}: the friend sent no briefing: {e}"));
+                self.friend_line += &format!("call {turn}: {why}; no briefing: {e}");
                 None
             }
+        }
+    }
+
+    /// How the friend's briefing went, for the score (findings 0055): pass; moved,
+    /// the test now fails another way; same; or worse, it no longer builds.
+    fn friend_outcome(&self) -> &'static str {
+        if !self.friend_ok {
+            return "";
+        }
+        let last = self.now.lines().next().unwrap_or("");
+        if self.result == "pass" {
+            "pass"
+        } else if last.contains("does not build") || (last.contains("build of ") && last.contains(" failed")) {
+            if self.friend_then.contains("does not build") { "same" } else { "worse" }
+        } else if last == self.friend_then {
+            "same"
+        } else {
+            "moved"
         }
     }
 
@@ -531,7 +573,7 @@ impl Hooks for Builder<'_> {
             n += "  Ten or fewer left: hand in your fix with submit_fix now.  A run that ends without one has only what is on disk handed in for it.";
         }
         if let Some(b) = self.call_a_friend(turn as u64) {
-            n += &format!("\n\nYou called a friend.  Claude, a larger model, has read the test, what you have done so far and what the tests said, and sends this briefing.  It does not write the fix: you do, with the calls you have left.\n\n{b}");
+            n += &format!("\n\nYou called a friend.  Claude, a larger model, has read the test, what you have done so far and what the test says now, has looked at your copy of the repo for itself, and sends this briefing; every place it names is quoted from the file as it is on your disk.  It does not write the fix: you do, with the calls you have left.\n\n{b}");
         }
         Some(n)
     }
@@ -656,14 +698,18 @@ pub fn run(jobpath: &str) -> i32 {
         eprintln!("agent: {} is not red at {}: nothing to fix", j.test, j.at);
         return 2;
     };
-    let mut first = format!(
-        "The red test, tests/{}.toml:\n\n{}\nThe spec clause it checks, {binds}:\n\n{clause}\n\nWhat it printed when it ran:\n\n{redline}\n",
+    let mut given = format!(
+        "The red test, tests/{}.toml:\n\n{}\nThe spec clause it checks, {binds}:\n\n{clause}\n",
         j.test,
         fs::read_to_string(&test_file).unwrap_or_default()
     );
+    let mut first = format!("{given}\nWhat it printed when it ran:\n\n{redline}\n");
     if let Some(h) = &hint {
         first += &format!("\nFrom your director, who has read how earlier tries went:\n\n{h}");
+        given += &format!("\nFrom its director, who has read how earlier tries went:\n\n{h}\n");
     }
+    // what the test prints now: its red line at the commit, or with the change carried
+    let mut now = judge::lift_verdict(&before, std::slice::from_ref(&code)).unwrap_or_else(|| redline.to_string());
     // a builder after one whose change built starts from that change, on its own
     // disk, and is shown it and what the tests said of it (findings 0054), as a
     // lifter starts from the last lifter's file
@@ -679,6 +725,7 @@ pub fn run(jobpath: &str) -> i32 {
                 }
             }
             let said = fs::read_to_string(from.join("suite.txt")).ok().and_then(|s| judge::lift_verdict(&s, std::slice::from_ref(&code))).unwrap_or_else(|| "(not recorded)".into());
+            now = said.clone();
             first += &format!(
                 "\nYou do not start from nothing.  The builder before you changed these files, and its change is on your disk now: look shows it, and what you hand in is judged with it.  Keep what is right in it and fix what is not; change it back only where it is wrong.\n\nIts change, against the commit (diff's < is the commit, > is the change):\n\n{}\nWhat the test printed with that change:\n\n{said}\n",
                 runtime::model::cut(&diff, 16000)
@@ -723,13 +770,18 @@ pub fn run(jobpath: &str) -> i32 {
         folded: 0,
         jig_down: false,
         repo: repo.clone(),
-        first: first.clone(),
         did: vec![],
         read: vec![],
         told: String::new(),
         bad_builds: 0,
-        friend_tried: false,
-        friend: None,
+        given: given.clone(),
+        now: now.clone(),
+        friend_calls: 0,
+        friend_hand: 0,
+        friend_said: String::new(),
+        friend_then: String::new(),
+        friend_dollars: 0.0,
+        friend_ok: false,
         friend_line: String::new(),
         started: start,
     };
@@ -765,10 +817,10 @@ pub fn run(jobpath: &str) -> i32 {
     let _ = fs::write(dir.join("note.toml"), &n);
     let dollars = runs.cost(&recorded, r.tokens_in, r.tokens_out).unwrap_or(0.0);
     let run_toml = format!(
-        "bench        = \"agent\"\nhanded_in_by = \"{}\"\njob          = {}\ntest         = {}\nat           = \"{}\"\ntry          = {}\nmodel        = {}\nnum_ctx      = {}\nprompt       = \"{}\"\nprompt_print = \"{}\"\nresult       = \"{}\"\nended        = \"{}\"\nwhy          = {}\ncalls        = {}\nhand_ins     = {}\nlines        = {}\ntokens_in    = {}\ntokens_out   = {}\npeak_context = {}\nfolded_chars = {}\nseconds      = {}\ndollars      = {:.6}\nfriend       = {}\nfriend_why   = {}\nfriend_dollars = {:.6}\nstarted_from = {}\n",
+        "bench        = \"agent\"\nhanded_in_by = \"{}\"\njob          = {}\ntest         = {}\nat           = \"{}\"\ntry          = {}\nmodel        = {}\nnum_ctx      = {}\nprompt       = \"{}\"\nprompt_print = \"{}\"\nresult       = \"{}\"\nended        = \"{}\"\nwhy          = {}\ncalls        = {}\nhand_ins     = {}\nlines        = {}\ntokens_in    = {}\ntokens_out   = {}\npeak_context = {}\nfolded_chars = {}\nseconds      = {}\ndollars      = {:.6}\nfriend       = {}\nfriend_why   = {}\nfriend_dollars = {:.6}\nfriend_calls = {}\nfriend_outcome = \"{}\"\nstarted_from = {}\n",
         if b.hand == 0 { "nobody" } else if b.by_program { "program" } else { "builder" }, note::toml_string(&j.job, 64), note::toml_string(&j.test, 128), j.at, j.try_, note::toml_string(&recorded, 160), j.num_ctx,
         j.prompt, print, b.result, ended, note::toml_string(&why, 500), r.calls, b.hand, b.lines, r.tokens_in, r.tokens_out,
-        r.peak, b.folded, seconds, dollars, b.friend.is_some(), note::toml_string(&b.friend_line, 300), b.friend.as_ref().map(|f| f.dollars).unwrap_or(0.0),
+        r.peak, b.folded, seconds, dollars, b.friend_ok, note::toml_string(&b.friend_line, 400), b.friend_dollars, b.friend_calls, b.friend_outcome(),
         note::toml_string(if carried.is_empty() { "" } else { &j.start }, 1000)
     );
     let _ = fs::write(dir.join("run.toml"), run_toml);

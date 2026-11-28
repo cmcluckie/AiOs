@@ -298,19 +298,21 @@ impl Director {
         );
         self.say(&format!("stuck: calling a friend ({why})"));
         let left = (self.p.friend_usd - self.friend_spent).max(0.0);
-        let got = crate::friend::brief(&self.repo, &self.runs, &self.p.friend_model, left, &ask);
+        // the friend looks at the last try's copy of the repo, its change on it, or at the repo
+        let last = self.jobs.len();
+        let work = self.jobs.last().map(|d| self.dir.join("jobs").join(format!("{}-try{last}", d.id)).join("work")).filter(|w| w.is_dir()).unwrap_or_else(|| self.repo.clone());
+        let got = crate::friend::brief(&self.repo, &self.runs, &self.p.friend_model, left, &work, &ask);
         let item = format!("direct-{}", self.id.replace('.', "-").to_lowercase());
-        let kept = crate::friend::keep(&self.dir, &self.runs, &item, &self.p.friend_model, (self.jobs.len() + 1) as u64, &self.p.at, &self.p.trial, &ask, &got, 0);
-        match got {
-            Ok(b) => {
-                if let Err(e) = kept {
-                    self.say(&format!("the friend's call could not be recorded in runs/ ({e})"));
-                }
-                self.friend_spent += b.dollars;
-                self.log(&format!("\n## stuck: a friend was called\n{why}\n\n{}\n", b.text));
-                self.say(&format!("stuck: the friend answered, ${:.4}; the part goes on", b.dollars));
+        if let Err(e) = crate::friend::keep(&self.dir, &self.runs, &item, &self.p.friend_model, (self.jobs.len() + 1) as u64, 1, &self.p.at, &self.p.trial, &ask, &got, 0) {
+            self.say(&format!("the friend's call could not be recorded in runs/ ({e})"));
+        }
+        self.friend_spent += got.dollars;
+        match got.text {
+            Ok(text) => {
+                self.log(&format!("\n## stuck: a friend was called\n{why}\n\n{text}\n"));
+                self.say(&format!("stuck: the friend answered after {} looks, ${:.4}; the part goes on", got.looks, got.dollars));
                 self.stuck_runs.clear();
-                Some(b.text)
+                Some(text)
             }
             Err(e) => {
                 self.log(&format!("\n## stuck: the friend could not be called\n{e}\n"));

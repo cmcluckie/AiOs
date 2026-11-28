@@ -1,0 +1,11 @@
+id      = "0133"
+date    = 2026-11-28
+kind    = "tests"
+touches = ["tests/programs/dragshare-rungs.sh", "pool/PART.gate@3/gate.c", "agent/plans/dragshare.toml", "findings/0056.md"]
+asked   = "Rung 1's test corrected: the Linux program's line may follow the stopwatch's on the shared console.  The 3090's change of job 3 taken into PART.gate@3, not job 4's, which made the kernel print a newline before a Linux program's writes to pass the test as it was (findings 0056).  The plan set to rung 2."
+options = ["take it", "take job 4's change, which passed on the jig, and leave the test", "take job 4's and have the 3090 take the newline out on a new red test"]
+default = "take it"
+chose   = "take it"
+why     = "The test was wrong, not the program: job 3's last line is \"00:00elf hello  exit 0\" (findings 0056 item 2).  A kernel that changes a program's output to suit a test is the dodge builder@2 forbids, and the test invited it."
+by      = "KEY.chris@1"
+drafted = "Claude"

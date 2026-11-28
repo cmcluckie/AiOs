@@ -102,18 +102,43 @@
 #define ENOSYS		38
 #define NAME_MAX_LEN	256		/* the longest file name the kernel will read from a program */
 
+/* A Linux program file (PART.loader@10): the bytes that say where its pieces
+ * go and where it starts, as Linux lays them out.  32-bit x86, static.  The
+ * same fields as the loader's, at the same offsets (the ELF specification,
+ * the System V ABI). */
+struct elf_phdr {
+	unsigned int type, offset, vaddr, paddr, filesz, memsz, flags, align;
+};
+struct elf_hdr {
+	unsigned char  ident[16];
+	unsigned short type, machine;
+	unsigned int   version, entry, phoff, shoff, flags;
+	unsigned short ehsize, phentsize, phnum, shentsize, shnum, shstrndx;
+};
+
+/* The bytes at p, of size n, are a 32-bit x86 program file that runs as it is. */
+static int is_elf(const unsigned char *p, unsigned long n)
+{
+	return n >= sizeof(struct elf_hdr) && p[0] == 0x7f && p[1] == 'E' && p[2] == 'L' && p[3] == 'F';
+}
+
 extern char kernel_end[], stack_top[];
 extern char gate_user_start[], gate_stack_lo[], gate_stack_hi[];
 extern char gate_door[], gate_return[];
 
 #define KSTACK_WORDS	4096		/* 16 KiB of kernel stack for each space */
 #define FXSAVE_SIZE	512		/* bytes for FXSAVE/FXRSTOR, 16-byte aligned */
+#define HMAX	512		/* the most freed holes a program's heap may hold at once */
 
 struct gate_space {
 	unsigned long cr3;		/* its page directory */
 	unsigned long *frame;		/* where its registers were saved, on its kernel stack */
 	unsigned long kstack_top;	/* where a trap from ring 3 lands (the TSS's esp0) */
 	int user_stack;			/* ring 3 stands on the gate's own stack (one program, no sharing) */
+	unsigned long win_lo, win_hi;	/* its virtual window [lo, hi): the same for every space, or its own when a Linux program file is linked where the file says */
+	unsigned long brk_lo, brk_cur, map_lo, map_top;	/* its Linux heap, when it is one: brk grows up from brk_lo, mmap2 down from map_lo, never past map_top; 0 for the others */
+	unsigned long hole[HMAX][2];	/* its freed room between in-use heap regions, as [base, end) */
+	int nhole;
 	unsigned char fxsave[FXSAVE_SIZE] __attribute__((aligned(32)));	/* SSE/x87/AVX state, when sse_on; 32-aligned for the AVX (YMM) part */
 };
 
@@ -122,7 +147,7 @@ static unsigned int tss[26];
 static unsigned long long idt[256];
 static unsigned long pds[GATE_MAX_SPACES][1024] __attribute__((aligned(4096)));
 static unsigned long pt0[1024] __attribute__((aligned(4096)));
-static unsigned long tail_pts[GATE_MAX_SPACES][1024] __attribute__((aligned(4096)));
+static unsigned long tail_pts[GATE_MAX_SPACES][3][1024] __attribute__((aligned(4096)));	/* one page table per partial chunk of a window: single-chunk, a partial first chunk, or a partial last chunk (a Linux program file linked at 0x08048000 starts and ends mid-chunk) */
 static unsigned long kstacks[GATE_MAX_SPACES][KSTACK_WORDS] __attribute__((aligned(16)));
 static struct gate_space spaces[GATE_MAX_SPACES];
 static int nspaces;
@@ -131,9 +156,8 @@ static const struct gate_sched *sched;
 static int sse_on;			/* 1 if the processor has FXSR and SSE and we enabled them */
 static int avx_on;			/* 1 if the processor has AVX and XSAVE and we enabled them (XCR0 bit 2) */
 
-static unsigned long win_lo, win_hi;	/* the same virtual window in every space */
+static unsigned long win_lo, win_hi;	/* the current space's virtual window (a space with its own base, as a Linux program file, may differ) */
 static unsigned long brk_lo, brk_cur, map_lo, map_top;	/* a Linux program's heap: brk grows up from brk_lo, mmap2 down from map_lo, which never passes map_top; 0 for the others */
-#define HMAX	512		/* the most freed holes a program's heap may hold at once */
 static unsigned long hole[HMAX][2];	/* freed room between in-use regions, as [base, end) */
 static int nhole;
 static const struct door *calls;
@@ -147,7 +171,7 @@ static int user_ok(unsigned long p, unsigned long n)
 		return 1;
 	if (e < p)
 		return 0;
-	if (p >= win_lo && e <= win_hi)
+	if (p >= cur->win_lo && e <= cur->win_hi)
 		return 1;
 	return cur->user_stack && p >= (unsigned long)gate_stack_lo && e <= (unsigned long)gate_stack_hi;
 }
@@ -254,8 +278,8 @@ static long console_read(char *b, unsigned long n)
  * else outside the machine could see. */
 static void say_exit(unsigned long code)
 {
-	char m[16] = "exit ";
-	unsigned long k = 5, v = code & 0xff, d = 100;
+	char m[17] = "\nexit ";
+	unsigned long k = 6, v = code & 0xff, d = 100;
 
 	while (d > 1 && v < d)
 		d /= 10;
@@ -460,7 +484,8 @@ static long syscall(const unsigned long *frame)
 	case NR_EXIT_GROUP:
 		if (brk_lo)
 			say_exit(a);		/* a Linux program's status, where a shell would show it */
-		calls->exit((int)a);
+		calls->exit((int)a);		/* never returns: the sharing part stops this program alone and resumes the next */
+		break;
 	case NR_WRITE:
 		if (a != 1 && a != 2)
 			return -EBADF;
@@ -585,6 +610,16 @@ unsigned long *gate_trap(unsigned long *frame)
 		else
 			addr = frame[12];
 		if (sched && (frame[13] & 3) == 3) {
+			/* DBG (temporary): where the stopped program was, and what it touched */
+			{
+				static char dbg[] = "\nDBG v=XXXXXXXX eip=XXXXXXXX cr2=XXXXXXXX nr=XXXXXXXX esp=XXXXXXXX\n";
+				hex8(dbg + 6, vec);
+				hex8(dbg + 17, frame[12]);
+				hex8(dbg + 29, addr);
+				hex8(dbg + 40, frame[7]);
+				hex8(dbg + 51, frame[15]);
+				kernel_say(dbg, sizeof dbg - 1);
+			}
 			if (sse_on)
 				__asm__ volatile("fxsave %0" : "=m"(cur->fxsave));
 			next = sched->fault(vec, addr, cur);
@@ -597,8 +632,26 @@ unsigned long *gate_trap(unsigned long *frame)
 		}
 	}
 	if (next != cur) {
+		int j;
+		/* the heap globals mirror the running space; keep the old space's and take the new one's */
+		cur->brk_lo = brk_lo;
+		cur->brk_cur = brk_cur;
+		cur->map_lo = map_lo;
+		cur->map_top = map_top;
+		cur->nhole = nhole;
+		for (j = 0; j < HMAX; j++)
+			cur->hole[j][0] = hole[j][0], cur->hole[j][1] = hole[j][1];
 		cur = next;
 		tss[1] = (unsigned int)next->kstack_top;
+		win_lo = next->win_lo;		/* the space may have its own window (a Linux program file, linked where the file says) */
+		win_hi = next->win_hi;
+		brk_lo = next->brk_lo;
+		brk_cur = next->brk_cur;
+		map_lo = next->map_lo;
+		map_top = next->map_top;
+		nhole = next->nhole;
+		for (j = 0; j < HMAX; j++)
+			hole[j][0] = next->hole[j][0], hole[j][1] = next->hole[j][1];
 		__asm__ volatile("movl %0, %%cr3" : : "r"(next->cr3) : "memory");
 	}
 	if (sse_on)
@@ -680,34 +733,78 @@ static void base_init(int user_stack)
 /*
  * A page directory: every address maps to itself, closed to ring 3, except that
  * the window [virt, virt + len) maps to physical memory from phys and is open.
- * Full 4 MiB chunks of the window use PSE superpages.  When the window's end is
- * not on a 4 MiB boundary, the last partial chunk is mapped page by page using
- * tail_pts[idx], so only the pages actually inside the window are open to ring 3.
+ * Full 4 MiB chunks of the window use PSE superpages; a chunk only partly inside
+ * the window is mapped page by page with tail_pts[idx][slot], so only the pages
+ * actually inside the window are open to ring 3.  A window that does not start
+ * on a 4 MiB boundary (a Linux program file linked at 0x08048000) has a partial
+ * first chunk, and one that does not end on one has a partial last chunk.
  * Paid TECH-DEBT 3: the window is now exact, not rounded up to a 4 MiB line.
+ *
+ * The physical address for a page at index j in a chunk based at chunk_base is:
+ *   phys + (chunk_base + (j << 12) - virt)
+ * because the window [virt, virt+len) maps onto [phys, phys+len).
  */
 static void space_map(unsigned long *pd, unsigned long phys, unsigned long virt, unsigned long len, int idx)
 {
-	unsigned long i, n = len >> 22;			/* number of full 4 MiB chunks */
-	unsigned long tail = len & 0x3fffffUL;		/* bytes in the partial last chunk, 0 if exact */
-	unsigned long tail_pages, tail_phys, j;
+	unsigned long v0 = virt & ~0x3fffffUL;		/* first chunk base */
+	unsigned long first = virt >> 22;		/* PD index of first chunk */
+	unsigned long last = (virt + len - 1) >> 22;	/* PD index of last chunk */
+	unsigned long head = virt & 0x3fffffUL;		/* offset of virt in its chunk */
+	unsigned long tail = (virt + len) & 0x3fffffUL;	/* bytes from last chunk base to virt+len */
+	unsigned long hi_page;	/* one past the last open page index (within a chunk) */
 	unsigned long *pt;
+	unsigned long j;
 
 	pd[0] = (unsigned long)pt0 | 0x7;	/* the first 4 MiB: page by page */
-	for (i = 1; i < 1024; i++)
-		pd[i] = (i << 22) | 0x83;	/* 4 MiB pages, present, writable, kernel only */
-	for (i = 0; i < n; i++)
-		pd[(virt >> 22) + i] = (phys + (i << 22)) | 0x87;	/* full chunks: ring 3 may use them */
-	if (tail) {
-		/* partial last chunk: map page by page, only pages within the window open to ring 3 */
-		pt = tail_pts[idx];
-		tail_pages = (tail + PAGE - 1) >> 12;
-		tail_phys = phys + (n << 22);
-		for (j = 0; j < 1024; j++)
-			pt[j] = (tail_phys + (j << 12)) | 0x3;	/* present, writable, kernel only */
-		for (j = 0; j < tail_pages; j++)
-			pt[j] = (tail_phys + (j << 12)) | 0x7;	/* present, writable, ring 3 may use it */
-		pd[(virt >> 22) + n] = (unsigned long)pt | 0x7;	/* PDE points at the page table */
+	for (j = 1; j < 1024; j++)
+		pd[j] = (j << 22) | 0x83;	/* 4 MiB pages, present, writable, kernel only */
+
+	if (last == first) {
+		/* the window is wholly inside one chunk */
+		pt = tail_pts[idx][0];
+		hi_page = (head + len + 4095) >> 12;
+		for (j = 0; j < 1024; j++) {
+			if (j >= (head >> 12) && j < hi_page)
+				pt[j] = (phys + (v0 + (j << 12) - virt)) | 0x7;
+			else
+				pt[j] = (v0 + (j << 12)) | 0x3;
+		}
+		pd[first] = (unsigned long)pt | 0x7;
+		return;
 	}
+
+	/* full middle chunks: PSE superpages, ring 3 open */
+	for (j = first + 1; j < last; j++)
+		pd[j] = (phys + (v0 + ((j - first) << 22) - virt)) | 0x87;
+
+	/* first chunk: partial (head != 0) or full (head == 0) */
+	if (head) {
+		pt = tail_pts[idx][1];
+		for (j = 0; j < 1024; j++) {
+			if (j >= (head >> 12))
+				pt[j] = (phys + (v0 + (j << 12) - virt)) | 0x7;
+			else
+				pt[j] = (v0 + (j << 12)) | 0x3;
+		}
+		pd[first] = (unsigned long)pt | 0x7;
+	} else {
+		pd[first] = (phys) | 0x87;	/* full chunk: v0 == virt, so phys is the base */
+	}
+
+	/* last chunk: partial (tail != 0) or a full superpage (tail == 0) */
+	if (tail) {
+		unsigned long lbase = v0 + ((last - first) << 22);
+
+		pt = tail_pts[idx][2];
+		for (j = 0; j < 1024; j++) {
+			if (j < (tail >> 12))
+				pt[j] = (phys + (lbase + (j << 12) - virt)) | 0x7;
+			else
+				pt[j] = (lbase + (j << 12)) | 0x3;
+		}
+		pd[last] = (unsigned long)pt | 0x7;
+	} else
+		pd[last] = (phys + ((last - first) << 22)) | 0x87;	/* full chunk: superpage */
 }
 
 static void paging_on(unsigned long cr3)
@@ -810,6 +907,8 @@ void __attribute__((noreturn)) gate_run(unsigned long entry, unsigned long lo, u
 	s->cr3 = (unsigned long)pds[0];
 	s->kstack_top = (unsigned long)stack_top;
 	s->user_stack = 1;
+	s->win_lo = lo;
+	s->win_hi = hi;
 	cur = s;
 	tables_init();
 	paging_on(s->cr3);
@@ -850,6 +949,8 @@ void __attribute__((noreturn)) gate_exec(unsigned long entry, unsigned long phys
 	s->cr3 = (unsigned long)pds[0];
 	s->kstack_top = (unsigned long)stack_top;
 	s->user_stack = 0;
+	s->win_lo = virt;
+	s->win_hi = virt + len;
 	cur = s;
 	tables_init();
 	paging_on(s->cr3);
@@ -876,18 +977,15 @@ struct gate_space *gate_space_new(unsigned long phys, unsigned long virt, unsign
 
 	if (nspaces >= GATE_MAX_SPACES || !window_ok(virt, virt + len))
 		return 0;
-	if (nspaces && (virt != win_lo || virt + len != win_hi))
-		return 0;			/* one window for every space */
-	if (!nspaces) {
-		win_lo = virt;
-		win_hi = virt + len;
+	if (!nspaces)
 		base_init(0);
-	}
 	s = &spaces[nspaces];
 	space_map(pds[nspaces], phys, virt, len, nspaces);
 	s->cr3 = (unsigned long)pds[nspaces];
 	s->kstack_top = (unsigned long)&kstacks[nspaces][KSTACK_WORDS];
 	s->user_stack = 0;
+	s->win_lo = virt;		/* the space's window; user_ok checks it, and a switch restores it */
+	s->win_hi = virt + len;
 
 	/* initialize the new space's FXSAVE area if SSE is on */
 	if (sse_on) {
@@ -900,6 +998,99 @@ struct gate_space *gate_space_new(unsigned long phys, unsigned long virt, unsign
 			*(unsigned short *)(s->fxsave + 2) = 0x8000;
 		/* MXCSR at offset 24: 0x1f80, all SSE exceptions masked */
 		*(unsigned int *)(s->fxsave + 24) = 0x1f80;
+	}
+
+	/* A Linux program file: place its pieces where the file says, lay out its
+	 * starting stack, and start at its entry, as gate_exec does for a lone one. */
+	if (is_elf((const unsigned char *)phys, len)) {
+		const struct elf_hdr *h = (const struct elf_hdr *)phys;
+		const struct elf_phdr *ph;
+		struct elf_phdr phc[16];	/* the program headers, kept: the pieces are copied in place, and the first overwrites them */
+		unsigned long lo, end = 0, entry;
+		unsigned int phn;
+		unsigned long *sp;
+		int k;
+
+		if (h->ident[4] != 1 || h->ident[5] != 1 || h->machine != 3 || h->type != 2)
+			return 0;	/* not a static 32-bit x86 program file */
+		if (h->phentsize != sizeof(struct elf_phdr) || h->phnum == 0 || h->phnum > 16 ||
+		    h->phoff > len || h->phnum * sizeof(struct elf_phdr) > len - h->phoff)
+			return 0;	/* the program headers are not where the file says */
+		phn = h->phnum;
+		ph = (const struct elf_phdr *)(phys + h->phoff);
+		for (i = 0; i < phn; i++)
+			phc[i] = ph[i];
+		entry = h->entry;
+		lo = 0;
+		for (i = 0; i < phn; i++) {
+			if (phc[i].type == 3)
+				return 0;	/* PT_INTERP: a dynamic linker, only static runs here */
+			if (phc[i].type != 1)
+				continue;	/* PT_LOAD */
+			if (phc[i].filesz > phc[i].memsz || phc[i].offset > len || phc[i].filesz > len - phc[i].offset)
+				return 0;	/* a piece is bigger than the file */
+			if (!lo)
+				lo = phc[i].vaddr;
+			if (phc[i].vaddr + phc[i].memsz > end)
+				end = phc[i].vaddr + phc[i].memsz;
+		}
+		if (!lo || end - lo > len)
+			return 0;	/* the file does not fit in the space's window */
+		if (!window_ok(lo, lo + len))
+			return 0;
+		/* the space's window is the ELF's own virtual base (the file is linked there),
+		 * not PROGRAM_BASE: map phys → lo, as gate_exec does for a lone one */
+		space_map(pds[nspaces], phys, lo, len, nspaces);
+		s->cr3 = (unsigned long)pds[nspaces];
+		s->win_lo = lo;
+		s->win_hi = lo + len;
+		/* every piece where the file says (no shift: the virtual address is the file's);
+		 * bss zeroed, and the rest of the region up to the stack zeroed too */
+		for (i = 0; i < phn; i++) {
+			unsigned char *dst, *src;
+
+			if (phc[i].type != 1)
+				continue;
+			dst = (unsigned char *)(phys + (phc[i].vaddr - lo));
+			src = (unsigned char *)phys + phc[i].offset;
+			for (k = 0; k < (int)phc[i].filesz; k++)
+				dst[k] = src[k];
+			for (; k < (int)phc[i].memsz; k++)
+				dst[k] = 0;	/* bss: zeroed */
+		}
+		/* the starting stack, at the top of the region, as Linux lays one out:
+		 * argc, argv (none), envp (none), AT_NULL */
+		sp = (unsigned long *)(phys + (stack_top_virt - virt));
+		*--sp = 0;			/* AT_NULL */
+		*--sp = 0;			/* no environment */
+		*--sp = 0;			/* end of argv */
+		*--sp = 0;			/* argc */
+		/* the heap, from where the pieces end to the stack;
+		 * the stack keeps 1 MiB below where it starts, as gate_exec does for a lone one.
+		 * Per-space: each Linux program has its own brk/mmap range. */
+		s->brk_lo = s->brk_cur = (end + PAGE - 1) & ~(PAGE - 1);
+		s->map_lo = lo + (stack_top_virt - virt);
+		if (s->map_lo > 0x100000UL + s->brk_lo)
+			s->map_lo -= 0x100000UL;
+		s->map_top = s->map_lo;
+		s->nhole = 0;
+		/* the frame: enter at the file's entry (already the right virtual address),
+		 * with esp at the stack (virtual: the top of the region, inside [lo, lo+len)) */
+		f = (unsigned long *)s->kstack_top;
+		*--f = 0x23;			/* ss */
+		*--f = lo + (stack_top_virt - virt) - 16;	/* esp: 4 words below the stack top */
+		*--f = 0x202;			/* eflags: interrupts on, I/O privilege 0 */
+		*--f = 0x1b;			/* cs */
+		*--f = entry;			/* eip: the file's own entry, unshifted */
+		*--f = 0;			/* error code */
+		*--f = 0;			/* vector */
+		*--f = 0x23;			/* ds */
+		*--f = 0x23;			/* es */
+		for (k = 0; k < 8; k++)
+			*--f = 0;		/* edi esi ebp esp ebx edx ecx eax */
+		s->frame = f;
+		nspaces++;
+		return s;
 	}
 
 	/* the program's stack, written through its physical address (paging is off): _start's argument and return */
@@ -936,9 +1127,46 @@ void __attribute__((noreturn)) gate_resume(struct gate_space *s)
 	gate_resume_frame(s->cr3, s->frame);
 }
 
+/* Switch to s from the space that was running: save the running one's heap
+ * globals, then load s's.  gate_resume alone is not enough here: cur still
+ * points at the space that just exited (or whose turn is over). */
+void __attribute__((noreturn)) gate_switch_next(struct gate_space *s)
+{
+	int j;
+	cur->brk_lo = brk_lo;
+	cur->brk_cur = brk_cur;
+	cur->map_lo = map_lo;
+	cur->map_top = map_top;
+	cur->nhole = nhole;
+	for (j = 0; j < HMAX; j++)
+		cur->hole[j][0] = hole[j][0], cur->hole[j][1] = hole[j][1];
+	win_lo = s->win_lo;
+	win_hi = s->win_hi;
+	brk_lo = s->brk_lo;
+	brk_cur = s->brk_cur;
+	map_lo = s->map_lo;
+	map_top = s->map_top;
+	nhole = s->nhole;
+	for (j = 0; j < HMAX; j++)
+		hole[j][0] = s->hole[j][0], hole[j][1] = s->hole[j][1];
+	cur = s;
+	tss[1] = (unsigned int)s->kstack_top;
+	gate_resume_frame(s->cr3, s->frame);
+}
+
 void __attribute__((noreturn)) gate_start(struct gate_space *first)
 {
+	int j;
 	cur = first;
+	win_lo = first->win_lo;
+	win_hi = first->win_hi;
+	brk_lo = first->brk_lo;
+	brk_cur = first->brk_cur;
+	map_lo = first->map_lo;
+	map_top = first->map_top;
+	nhole = first->nhole;
+	for (j = 0; j < HMAX; j++)
+		hole[j][0] = first->hole[j][0], hole[j][1] = first->hole[j][1];
 	tables_init();
 	paging_on(first->cr3);
 	sse_init(first);

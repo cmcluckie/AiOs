@@ -1,0 +1,11 @@
+id      = "0132"
+date    = 2026-11-27
+kind    = "rules and words"
+touches = ["agent/mechanic/src/friend.rs", "agent/mechanic/src/build.rs", "agent/mechanic/src/direct.rs", "agent/mechanic/src/judge.rs", "prompts/friend@3.txt", "specs/agent.13@1.toml", "tests/agent.friend@1.toml", "tests/programs/agent.sh", "tests/programs/dragshare-rungs.sh", "tests/fixtures/agent/friend/briefing.json", "tests/fixtures/agent/friend/briefing-40.json", "tests/fixtures/agent/friend/briefing-badquote.json", "tests/fixtures/agent/friend/briefing-director.json", "tests/fixtures/agent/friend/briefing-syntax.json", "tests/fixtures/agent/friend/forty.json", "tests/fixtures/agent/friend/look.json", "tests/mutations.txt", "findings/0055.md"]
+asked   = "The friend, the whole of it: it looks at the builder's copy for itself, must quote the lines it points at, sends only its briefing, is shown only what the test prints now, is called once more if the next hand-in is still not a pass, and is scored; and car 3's rungs, when red, say what the machine did, from QEMU's record of its interrupts (findings 0055)."
+options = ["take it", "only the diagnostics", "let the friend write the fix now"]
+default = "take it"
+chose   = "take it"
+why     = "Chris, 2026-11-27: \"I would rather just go for the full meal deal and not half-ass it.  Let's full-ass it.\"  The friend taking the job stays off: a briefing only, for now (findings 0052 item 3)."
+by      = "KEY.chris@1"
+drafted = "Claude"

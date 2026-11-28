@@ -7,9 +7,10 @@
 # Rung 1, a Linux program that prints a line and exits beside the stopwatch;
 # rung 2, its mmap2 and munmap (gate.elf-heap-shares@1); then gate.drag-shares@1.
 # Third run (findings 0052): with a friend, Claude on Bedrock, called for a briefing
-# when a builder is out of its depth or the part is stuck.
-part       = "PART.gate@3: a Linux program file started on the sharing kernel, beside AiOs's own programs (car 3, rung 1)"
-tests      = ["gate.elf-shares@1"]
+# when a builder is out of its depth or the part is stuck.  Rung 1 passed on
+# 2026-11-28 (findings 0056); this is rung 2.
+part       = "PART.gate@3: a Linux program file's mmap2 and munmap on the sharing kernel, beside AiOs's own programs (car 3, rung 2)"
+tests      = ["gate.elf-heap-shares@1"]
 at         = "40ce2ee"
 budget_usd = 0
 max_tries  = 10
@@ -26,7 +27,7 @@ builder  = "builder@2"
 [friend]
 # Sonnet 4.6: the account has no Sonnet 5.5 (Bedrock said 403 on the first call, 2026-11-27)
 model      = "global.anthropic.claude-sonnet-4-6"
-max_usd    = 5
+max_usd    = 10
 at_call    = 20
 bad_builds = 2
 latest     = 30

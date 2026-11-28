@@ -124,9 +124,9 @@ pub fn lift_verdict(after: &str, codes: &[String]) -> Option<String> {
             let l = a[c].iter().find(|(w, _)| w == "FAIL").map(|(_, l)| l.clone()).unwrap_or_default();
             let said = printed_before(after, &l);
             if said.is_empty() {
-                return Some(runtime::model::cut(&l, 200));
+                return Some(runtime::model::cut(&l, 900));
             }
-            return Some(format!("{}\nPrinted just before it:\n{said}", runtime::model::cut(&l, 200)));
+            return Some(format!("{}\nPrinted just before it:\n{said}", runtime::model::cut(&l, 900)));
         }
         if !has(&a, c, "PASS") {
             return Some(format!("{c} did not run, or was skipped"));
