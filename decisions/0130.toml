@@ -1,0 +1,11 @@
+id      = "0130"
+date    = 2026-11-27
+kind    = "rules and words"
+touches = ["agent/mechanic/src/build.rs", "agent/mechanic/src/friend.rs", "prompts/friend@2.txt", "specs/agent.13@1.toml", "tests/agent.friend@1.toml", "tests/programs/agent.sh", "tests/mutations.txt", "findings/0053.md"]
+asked   = "The friend is sent the files the builder read and changed, whole, and told to read them before it answers (friend@2); its first briefing, from the test's one line, was a wrong guess (findings 0053)."
+options = ["take it", "give the friend the look tool, to read for itself", "leave it: the builder decides what the briefing is worth"]
+default = "take it"
+chose   = "take it"
+why     = "Chris, 2026-11-27, by voice: the friend sends \"examples\" and \"helpful things you could use to do this properly\"; it cannot from 1,977 tokens with no code in them."
+by      = "KEY.chris@1"
+drafted = "Claude"

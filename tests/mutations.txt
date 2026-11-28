@@ -388,6 +388,7 @@ agent.friend@1 | red | agent/mechanic/src/build.rs | s/        self.friend_tried
 agent.friend@1 | red | agent/mechanic/src/build.rs | s/self.bad_builds += 1;/self.bad_builds += 0;/ | hand-ins that do not build are never counted, and the friend waits for the call count
 agent.friend@1 | red | agent/mechanic/src/direct.rs | s/if self.p.friend_model.is_empty() || self.friend_stuck {/if true {/ | a stuck director stops without calling its friend
 agent.friend@1 | red | agent/mechanic/src/direct.rs | s/(self.p.friend_usd - self.friend_spent).max(0.0), self.p.friend_at/self.p.friend_usd, self.p.friend_at/ | every builder is given the friend's whole share, and the part can spend it many times over
+agent.friend@1 | red | agent/mechanic/src/build.rs | s/(String::new(), 240_000usize)/(String::new(), 0usize)/ | the friend is sent no files, and briefs from the test's one line, as on car 3's first call
 agent.limit@1 | red | agent/runtime/src/model.rs | s/if cap > 0 \&\& thinking > cap \&\& v\["done"\] != true {/if false \&\& cap > 0 \&\& thinking > cap \&\& v["done"] != true {/ | thinking runs on past its cap and eats the reply's limit, as it did twice on waits
 agent.limit@1 | red | agent/runtime/src/model.rs | s/req\["think"\] = json!(false);/let _ = 0;/ | the turn asked again after too much thinking thinks again
 agent.limit@1 | red | agent/mechanic/src/build.rs | s/if ended != "pass" \&\& !b.jig_down/if false \&\& ended != "pass" \&\& !b.jig_down/ | a builder that ends without handing in hands in nothing, and the director gets no note of its work

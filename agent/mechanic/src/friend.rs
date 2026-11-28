@@ -14,7 +14,7 @@ use std::fs;
 use std::path::Path;
 use std::time::Duration;
 
-pub const PROMPT: &str = "friend@1";
+pub const PROMPT: &str = "friend@2";
 
 pub struct Briefing {
     pub text: String,

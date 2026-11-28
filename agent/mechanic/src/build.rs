@@ -199,6 +199,7 @@ struct Builder<'a> {
     repo: PathBuf,
     first: String,          // what it was given
     did: Vec<String>,       // what it has done, call by call, for the friend
+    read: Vec<String>,      // the files it has read, oldest first, for the friend to read too
     told: String,           // what its last hand-in was told
     bad_builds: u64,        // hand-ins whose test said the flavor did not build
     friend_tried: bool,
@@ -355,6 +356,30 @@ impl Builder<'_> {
         if d.is_empty() { "(nothing yet)".into() } else { d }
     }
 
+    /// The files the builder read or changed, as they are on disk now, for a friend
+    /// who cannot look for itself (findings 0053): what it changed first, then what
+    /// it read, newest first; each whole up to 60,000 characters, 240,000 in all.
+    fn files_for_friend(&self) -> String {
+        let mut names: Vec<String> = self.touched.clone();
+        for f in self.read.iter().rev() {
+            if !names.contains(f) {
+                names.push(f.clone());
+            }
+        }
+        let (mut out, mut room) = (String::new(), 240_000usize);
+        for f in names {
+            let Ok(text) = fs::read_to_string(self.work.join(&f)) else { continue };
+            let text = runtime::model::cut(&text, 60_000);
+            if text.len() + 200 > room {
+                out += &format!("\n=== {f}: left out, no room\n");
+                continue;
+            }
+            room -= text.len() + 200;
+            out += &format!("\n=== {f}\n{text}\n");
+        }
+        if out.is_empty() { "(it has read no files)".into() } else { out }
+    }
+
     /// Call a friend, once (findings 0052): at friend_at calls with nothing handed
     /// in, after friend_bad_builds hand-ins that did not build, or at friend_latest
     /// calls, whichever comes first.  Its briefing, or None.
@@ -376,11 +401,13 @@ impl Builder<'_> {
             "A builder, a local model on an RTX 3090, has one red test to make green and has called you for help: {why}.  \
              Give it a briefing, not a fix: what is actually wrong, where in the repo to look (the files and functions that already do something close), \
              and a few short lines of example.  It writes the fix itself, and it can change only the files of one part under pool/.\n\n\
-             What it was given:\n\n{}\n\nWhat it has done, call by call:\n{}\n\nWhat it has changed on disk, against the commit:\n{}\n\nWhat its last hand-in was told:\n{}\n",
+             What it was given:\n\n{}\n\nWhat it has done, call by call:\n{}\n\nWhat it has changed on disk, against the commit:\n{}\n\nWhat its last hand-in was told:\n{}\n\n\
+             The files it has read or changed, as they are on its disk now.  You cannot look at anything else, so say so if what you need is not here:\n{}\n",
             self.first,
             self.did.join("\n"),
             runtime::model::cut(&self.changes(), 12000),
-            if self.told.is_empty() { "(nothing handed in yet)".to_string() } else { runtime::model::cut(&self.told, 4000) }
+            if self.told.is_empty() { "(nothing handed in yet)".to_string() } else { runtime::model::cut(&self.told, 4000) },
+            self.files_for_friend()
         );
         say(self.quiet, &format!("call {turn}: calling a friend ({why})"));
         let got = friend::brief(&self.repo, self.runs, &self.j.friend_model, self.j.friend_usd, &ask);
@@ -472,6 +499,11 @@ impl Hooks for Builder<'_> {
                 }
                 say(self.quiet, &format!("look {cmd} {}; why: {}", a.first().map(String::as_str).unwrap_or(""), runtime::model::cut(why, 120)));
                 self.did.push(format!("look {cmd} {}: {}", a.join(" "), runtime::model::cut(why, 160)));
+                if cmd == "read" {
+                    if let Some(f) = a.first().filter(|f| !self.read.contains(f)) {
+                        self.read.push(f.clone());
+                    }
+                }
                 let (answer, _) = look::look(&self.work, cmd, &a);
                 // cut, and said so, so one read cannot fill the card (CivicCanada's Truncate)
                 Step::Answer(room::cap(&answer, self.j.look_chars as usize))
@@ -669,6 +701,7 @@ pub fn run(jobpath: &str) -> i32 {
         repo: repo.clone(),
         first: first.clone(),
         did: vec![],
+        read: vec![],
         told: String::new(),
         bad_builds: 0,
         friend_tried: false,

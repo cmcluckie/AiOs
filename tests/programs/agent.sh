@@ -51,7 +51,7 @@ toy() {
 	printf 'code       = "TST.toy.answer@1"\nbinds      = "SPEC.toy.1@1"\n' > "$a/tests/toy.answer@1.toml"
 	printf 'code       = "SPEC.toy.1@1"\nclause     = "The answer is \\"42\\", not 41."\n' > "$a/specs/toy.1@1.toml"
 	printf 'You are a builder for the toy.\n' > "$a/prompts/builder@1.txt"
-	cp prompts/friend@1.txt "$a/prompts/"
+	cp prompts/friend@2.txt "$a/prompts/"
 	printf 'a run of an earlier try\n' > "$a/runs/old.txt"
 	cat > "$a/jig/test" <<'TOY'
 #!/bin/sh
@@ -294,9 +294,10 @@ friend)
 		fail "a builder with nothing handed in at its friend's call did not call, or did not pass with the briefing: exit $rc, $(grep -E '^(result|friend)' "$o/run.toml" | tr '\n' ' ')$(head -2 "$t/early.err")"
 	grep -q 'aws:amz:.*:bedrock' "$t/early/sent-3.url" || fail "the friend's call did not go to Bedrock: $(cat "$t/early/sent-3.url")"
 	jq -r '.messages[0].content[0].text' "$t/early/sent-3.json" > "$t/asked"
-	grep -q '2 calls and nothing handed in' "$t/asked" && grep -q 'The answer is "42", not 41.' "$t/asked" && grep -q '^look read pool/PART.toy@1/toy.c: see where the answer is set$' "$t/asked" ||
-		fail "the friend was not shown why it was called, the test and what the builder did: $(head -c 300 "$t/asked" | tr '\n' ' ')"
-	jq -r '.system[0].text' "$t/early/sent-3.json" | grep -q 'Send back a briefing, not a fix' || fail "the friend was not given friend@1"
+	grep -q '2 calls and nothing handed in' "$t/asked" && grep -q 'The answer is "42", not 41.' "$t/asked" && grep -q '^look read pool/PART.toy@1/toy.c: see where the answer is set$' "$t/asked" &&
+		grep -q '^=== pool/PART.toy@1/toy.c$' "$t/asked" && grep -q '^int answer = 41;$' "$t/asked" ||
+		fail "the friend was not shown why it was called, the test, what the builder did and the files it read: $(head -c 300 "$t/asked" | tr '\n' ' ')"
+	jq -r '.system[0].text' "$t/early/sent-3.json" | grep -q 'Send back a briefing, not a fix' || fail "the friend was not given friend@2"
 	jq -r '.messages[-1].content' "$t/early/sent-4.json" | grep -q 'You called a friend' &&
 		jq -r '.messages[-1].content' "$t/early/sent-4.json" | grep -q 'Change that one line: int answer = 42;' ||
 		fail "the briefing did not reach the builder: $(jq -r '.messages[-1].content' "$t/early/sent-4.json" | head -c 300)"
@@ -361,7 +362,7 @@ FAKE
 		fail "the part did not go on after the friend, or the log does not keep the call: exit $rc, $(head -1 "$o/question.md" 2> /dev/null)"
 	ls "$t"/runs-dstuck/*-friend-direct-dstuck-*/run.toml > /dev/null 2>&1 || fail "the director's friend call is not in runs/: $(ls "$t/runs-dstuck")"
 	unset AIOS_AWS
-	echo "a builder calls a friend once: at friend_at calls with nothing handed in, after friend_bad_builds hand-ins that did not build, or at friend_latest; the friend, on Bedrock with friend@1, is shown why, the test and what the builder did; its briefing reaches the builder, which then passes; its cost is in the run and in runs/ as a briefing; with no share left it is not called and the builder goes on alone; a job with no friend never calls; a stuck director calls once with the plan and its log, is given the briefing and goes on, and passes its builders what is left of the friend's share" ;;
+	echo "a builder calls a friend once: at friend_at calls with nothing handed in, after friend_bad_builds hand-ins that did not build, or at friend_latest; the friend, on Bedrock with friend@2, is shown why, the test and what the builder did; its briefing reaches the builder, which then passes; its cost is in the run and in runs/ as a briefing; with no share left it is not called and the builder goes on alone; a job with no friend never calls; a stuck director calls once with the plan and its log, is given the briefing and goes on, and passes its builders what is left of the friend's share" ;;
 trial)
 	pr=prompts
 	# the old versions are kept as they were used on waits (decision 0096's run)
